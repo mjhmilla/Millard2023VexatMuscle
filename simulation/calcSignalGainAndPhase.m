@@ -159,7 +159,13 @@ for idxModel = 1:1:length(simSeriesFiles)
           freqSimData.gain(:,idx)   = ...
             abs(  freqSimData.fxy(:,idx)./freqSimData.fxx(:,idx));
           freqSimData.phase(:,idx)  =...
-            -angle(freqSimData.fxy(:,idx)./freqSimData.fxx(:,idx));
+            angle(freqSimData.fxy(:,idx)./freqSimData.fxx(:,idx));
+
+          %When the xcorr operator is used above a negative sign needs
+          %to be used to get the correct sense of the phase.
+          %freqSimData.phase(:,idx)  =...
+          %  -angle(freqSimData.fxy(:,idx)./freqSimData.fxx(:,idx));
+
           axy                       = abs(  freqSimData.fxy(:,idx));
           freqSimData.coherenceSq(:,idx) = ...
               (axy.*axy) ...
@@ -212,6 +218,10 @@ for idxModel = 1:1:length(simSeriesFiles)
                     freqSimData.gain(indexCorrFreqRange,idx),...
                     freqSimData.phase(indexCorrFreqRange,idx),...
                     argScaling,objScaling);
+          if(idxModel==1 && idx==16)
+            err0=errFcn0(x0);
+            here=1;
+          end
 
           paramOpt  = []; 
           fval      = [];

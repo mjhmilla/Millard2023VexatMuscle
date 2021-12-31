@@ -1,22 +1,28 @@
-function [success] = plotFrequencyResponsePUB20191227(...
-                      dataInputFolder,...
-                      freqSeriesFiles_RT,...
-                      freqSeriesName_RT,...
-                      freqSeriesColor_RT,...
-                      freqSeriesFiles_ET,...
-                      freqSeriesName_ET,...
-                      freqSeriesColor_ET,...                      
-                      inputFunctions,...                      
-                      normFiberLength,...
-                      nominalForce,...
-                      nominalForceTargetIndex,...
-                      dataKBR1994Fig3Gain,...
-                      dataKBR1994Fig3Phase,...                      
-                      flag_useElasticTendon,...  
-                      flag_Mode15Hz90HzBoth,...
-                      plotNameEnding,...
-                      plotLayoutSettings,...
-                      pubOutputFolder)
+function [success] = plotAccelerationEquationFactors( ...
+                          dataInputFolder,...
+                            freqSeriesFiles_RT,...
+                            freqSeriesName_RT,...
+                            freqSeriesColor_RT,...
+                            freqSeriesFiles_ET,...
+                            freqSeriesName_ET,...
+                            freqSeriesColor_ET,...                            
+                          simSeriesFiles_RT,...
+                          simSeriesName_RT,...
+                          simSeriesColor_RT,...
+                          simSeriesFiles_ET,...
+                          simSeriesName_ET,...
+                          simSeriesColor_ET,...                      
+                            inputFunctions,...                      
+                            normFiberLength,...
+                            nominalForce,...
+                            nominalForceTargetIndex,...
+                            dataKBR1994Fig3Gain,...
+                            dataKBR1994Fig3Phase,...                      
+                            flag_useElasticTendon,...  
+                            flag_Mode15Hz90HzBoth,...
+                          plotNameEnding,...
+                          plotLayoutSettings,...
+                          pubOutputFolder)
                       
 success = 0;
 
@@ -40,6 +46,18 @@ freqSeriesColor = [freqSeriesColor_ET(2,:);...
                    freqSeriesColor_ET(1,:);...
                    freqSeriesColor_RT(1,:)];
 
+simSeriesFiles =  {simSeriesFiles_ET{1,2},...
+                   simSeriesFiles_RT{1,2},...
+                   simSeriesFiles_ET{1,1},...
+                   simSeriesFiles_RT{1,1}};
+simSeriesName =   {simSeriesName_ET{1,2},...
+                   simSeriesName_RT{1,2},...
+                   simSeriesName_ET{1,1},...
+                   simSeriesName_RT{1,1}};
+simSeriesColor =  [simSeriesColor_ET(2,:);...
+                   simSeriesColor_RT(2,:);...
+                   simSeriesColor_ET(1,:);...
+                   simSeriesColor_RT(1,:)];
 
 numberOfHorizontalPlotColumns = plotLayoutSettings.numberOfHorizontalPlotColumns;
 numberOfVerticalPlotRows      = plotLayoutSettings.numberOfVerticalPlotRows;
@@ -60,7 +78,7 @@ sampleFrequency = inputFunctions.sampleFrequency;
 
 
 
-fig_freqResponse43 = figure;
+fig_AccelerationTerms = figure;
 
 
 
@@ -127,7 +145,7 @@ xSpace = 0.04;
 %%
 % Plot Layout
 %%
-figure(fig_freqResponse43);
+figure(fig_AccelerationTerms);
   currentSubPlot  = subPlotRectangle43;
   currentSubPlot(1,1) = currentSubPlot(1,1)*0.5; 
   subPlotHeight   = subPlotRectangle43(1,4);
@@ -238,6 +256,8 @@ for z=1:1:length(freqSeriesFiles)
   modelColor = freqSeriesColor(z,:);
   tmp = load([dataInputFolder, freqSeriesFiles{1,z}]);
   freqSimData = tmp.freqSimData;
+  
+  benchRecordSet = load([dataInputFolder, simSeriesFiles{1,z}]);
 
   fprintf('%s VAF: %1.1f pm %1.1f, [%1.1f, %1.1f]\n',...
            freqSeriesName{1,z}, ...
@@ -299,7 +319,7 @@ for z=1:1:length(freqSeriesFiles)
    
                       
                         
-    if(flagPlotEmpty(z,1)==1 && k==length(modelAmpPlot))
+    if(flagPlotEmpty(z,1)==1 && k==length(modelAmpPlot) && flag_Hill==0)
 
       yo = freqSimData.nominalForce(1,idxSim);
 
@@ -320,13 +340,48 @@ for z=1:1:length(freqSeriesFiles)
       lineLabel = [ freqSeriesName{z}];
 
 
+      numberOfSamples     = size(benchRecordSet.benchRecord.state,1);
+      numberOfSimulations = size(benchRecordSet.benchRecord.state,2);
+      numberOfStates      = size(benchRecordSet.benchRecord.state,3);
+
+
+      state = reshape( benchRecordSet.benchRecord.state(:,idxSim,:),...
+                       numberOfSamples, numberOfStates);
+      dstate = reshape( benchRecordSet.benchRecord.dstate(:,idxSim,:),...
+                       numberOfSamples, numberOfStates);
+      
+      la    = [];
+      dla   = [];
+      ddla  = [];      
+      l1    = [];
+      dl1   = [];
+
+
+      switch numberOfStates
+          case 3
+              la    =  state(:,2);
+              dla   =  state(:,1);
+              ddla  = dstate(:,1);      
+              l1    =  state(:,3);
+              dl1   = dstate(:,3);
+              
+          case 4
+              la    =  state(:,3);
+              dla   =  state(:,2);
+              ddla  = dstate(:,2);      
+              l1    =  state(:,4);
+              dl1   = dstate(:,4);
+              
+          otherwise
+              assert(0,'Model has unexpected number of states')
+      end
 
       pidKD = plot( inputFunctions.time(idxChunk,1),...
-             freqSimData.forceKD(idxChunk,idxSim)+yo,...
+             la(idxChunk,:),...
              'Color',lineColorKD(k,:),...
              'LineWidth',lineWidthKD);
       hold on;
-
+      assert(0,'Here!');
 
       pidMdl = plot( inputFunctions.time(idxChunk,1),...
             freqSimData.force(idxChunk,idxSim),...
@@ -435,170 +490,170 @@ for z=1:1:length(freqSeriesFiles)
 %%
 % Plot the experimental data
 %%
-  for k=1:1:length(expAmpPlot)
-
-    idxSim = 0;
-    tol = 1e-6;
-    for m=1:1:size(freqSimData.force,2)     
-      if( abs(freqSimData.amplitudeMM(1,m) - expAmpPlot(1,k)) <= tol && ...
-          abs(freqSimData.bandwidthHz(1,m) - expBWPlot(1,k))  <= tol && ...
-          abs(freqSimData.nominalForceDesired(1,m)- modelForce(1,k)) <= tol && ...
-          abs(freqSimData.normFiberLength(1,m)-modelNormFiberLength(1,k)) <= tol)
-
-        if(idxSim == 0)
-          idxSim = m;
-        else
-          assert(0); %Error condition: there should not be 2 simulations with 
-                     %the same configuration
-        end
-      end
-    end      
-
-    fprintf('%i. K: %1.3f D: %1.3f\n',idxSim,...
-              freqSimData.stiffness(1,idxSim)./1000,...
-              freqSimData.damping(1,idxSim)./1000);
-
-    %
-    idxRange = [freqSimData.idxFreqRange(1,idxSim):1: ...
-                freqSimData.idxFreqRange(2,idxSim)];
-
-    idxCutoff = freqSimData.idxFreqRange(1,idxSim);
-
-
-    subplot('Position', subPlotList(idxGain,:));
-
-    markType = '.';
-    markFaceColor = freqSeriesColor(z,:);
-    markSize = 2;
-    lineWidth = 0.5;
-    kdMarkType = '-';
-    kdLineWidth= 1;
-    kdWhiteLineWidth = 2;
-    kdLineColor = freqSeriesColor(z,:);
-    if(k==2)        
-      markType = 'o';
-      markFaceColor = [1,1,1];
-      markSize = 3;
-      lineWidth=0.1;
-      kdMarkType = '-';
-      kdLineWidth= 1;
-      kdWhiteLineWidth = 3;
-      kdLineColor = freqSeriesColor(z,:).*0.5 + [1,1,1].*0.5;
-
-    end
-
-    trialName = sprintf(': %1.1fmm %1.0fHz',...
-                        freqSimData.amplitudeMM(1,idxSim),...
-                        freqSimData.bandwidthHz(1,idxSim));
-
-    plot(freqSimData.freqHz(idxRange,1), ...
-         freqSimData.gain(idxRange,idxSim)./1000,...
-         markType,'Color',kdLineColor, ...
-         'MarkerFaceColor',markFaceColor,'LineWidth',lineWidth,...
-         'MarkerSize',markSize,'DisplayName',[freqSeriesName{z},trialName]);  
-    hold on;
-
-    pidW=plot(freqSimData.freqHz(idxRange,1), ...
-         freqSimData.gainKD(idxRange,idxSim)./1000,...
-         '-','Color',[1,1,1], ...
-         'LineWidth',kdWhiteLineWidth);  
-    hold on;
-    set(get(get(pidW,'Annotation'),...
-              'LegendInformation'),...
-              'IconDisplayStyle','off');      
-
-    pidL=plot(freqSimData.freqHz(idxRange,1), ...
-         freqSimData.gainKD(idxRange,idxSim)./1000,...
-         kdMarkType,'Color',kdLineColor, ...
-         'LineWidth',kdLineWidth,'DisplayName', ['K-$$\beta$$',trialName]);
-    hold on;
-
-    lineHandlesModelGain = [lineHandlesModelGain,...
-                            pidW,...
-                            pidL];
-
-
-
-    fmin = 0.;
-    fmax = max(modelBWPlot);
-    gmin = 0.;%min(freqSimData.gain(idxRange,idxSim)./1000);
-    gmax = 8.01;
-
-    if(k == 1)
-      idxSubPlot = idxGain;
-      text(fmin-0.1*(fmax-fmin), 1.1*gmax,...
-             subPlotLabel{1,idxSubPlot},...
-             'FontSize',figLabelFontSize);   
-      hold on;
-    end
-
-    box off;
-    set(gca,'color','none')        
-
-
-    hold on;
-
-
-    ylim([gmin,gmax]);
-    xlim([fmin,fmax+0.01]);
-    xticks(xTicksVector);
-    yticks([0,2,4,6,8]);
-
-
-    %tc0 = text(fmin-0.15*(fmax-fmin), 1.45*(gmax),...
-    %       'C.','FontSize',11);       
-
-    subplot('Position', subPlotList(idxPhase,:));
-
-    plot(freqSimData.freqHz(idxRange,1), ...
-         freqSimData.phase(idxRange,idxSim).*(180/pi),...
-         markType,'Color',kdLineColor, ...
-         'MarkerFaceColor',markFaceColor,'LineWidth',0.5,...
-         'MarkerSize',markSize,...
-         'DisplayName',[freqSeriesName{z},trialName]);   
-    hold on;
-
-    pidW=plot(freqSimData.freqHz(idxRange,1), ...
-         freqSimData.phaseKD(idxRange,idxSim).*(180/pi),...
-         '-','Color',[1,1,1], ...
-         'LineWidth',kdWhiteLineWidth);  
-    hold on;
-    set(get(get(pidW,'Annotation'),...
-              'LegendInformation'),...
-              'IconDisplayStyle','off');      
-
-    pidL=plot(freqSimData.freqHz(idxRange,1), ...
-         freqSimData.phaseKD(idxRange,idxSim).*(180/pi),...
-         kdMarkType,'Color',kdLineColor, ...
-         'LineWidth',kdLineWidth,'DisplayName',['K-$$\beta$$',trialName]);  
-    hold on;      
-
-    lineHandlesModelPhase = [lineHandlesModelPhase,...
-                            pidW,...
-                            pidL];
-
-
-    box off;
-    set(gca,'color','none')
-
-    pmin = 0;
-    pmax = 90.01;
-
-    ylim([pmin,pmax]);
-    xlim([fmin,fmax+0.01]);
-    xticks(xTicksVector);
-    yticks([0,45,90]);
-
-    if(k == 1)
-      idxSubPlot = idxPhase;      
-      text(fmin-0.1*(fmax-fmin), 1.1*pmax,...
-             subPlotLabel{1,idxSubPlot},...
-             'FontSize',figLabelFontSize);   
-      hold on;
-    end
-
-
-  end
+%   for k=1:1:length(expAmpPlot)
+% 
+%     idxSim = 0;
+%     tol = 1e-6;
+%     for m=1:1:size(freqSimData.force,2)     
+%       if( abs(freqSimData.amplitudeMM(1,m) - expAmpPlot(1,k)) <= tol && ...
+%           abs(freqSimData.bandwidthHz(1,m) - expBWPlot(1,k))  <= tol && ...
+%           abs(freqSimData.nominalForceDesired(1,m)- modelForce(1,k)) <= tol && ...
+%           abs(freqSimData.normFiberLength(1,m)-modelNormFiberLength(1,k)) <= tol)
+% 
+%         if(idxSim == 0)
+%           idxSim = m;
+%         else
+%           assert(0); %Error condition: there should not be 2 simulations with 
+%                      %the same configuration
+%         end
+%       end
+%     end      
+% 
+%     fprintf('%i. K: %1.3f D: %1.3f\n',idxSim,...
+%               freqSimData.stiffness(1,idxSim)./1000,...
+%               freqSimData.damping(1,idxSim)./1000);
+% 
+%     %
+%     idxRange = [freqSimData.idxFreqRange(1,idxSim):1: ...
+%                 freqSimData.idxFreqRange(2,idxSim)];
+% 
+%     idxCutoff = freqSimData.idxFreqRange(1,idxSim);
+% 
+% 
+%     subplot('Position', subPlotList(idxGain,:));
+% 
+%     markType = '.';
+%     markFaceColor = freqSeriesColor(z,:);
+%     markSize = 2;
+%     lineWidth = 0.5;
+%     kdMarkType = '-';
+%     kdLineWidth= 1;
+%     kdWhiteLineWidth = 2;
+%     kdLineColor = freqSeriesColor(z,:);
+%     if(k==2)        
+%       markType = 'o';
+%       markFaceColor = [1,1,1];
+%       markSize = 3;
+%       lineWidth=0.1;
+%       kdMarkType = '-';
+%       kdLineWidth= 1;
+%       kdWhiteLineWidth = 3;
+%       kdLineColor = freqSeriesColor(z,:).*0.5 + [1,1,1].*0.5;
+% 
+%     end
+% 
+%     trialName = sprintf(': %1.1fmm %1.0fHz',...
+%                         freqSimData.amplitudeMM(1,idxSim),...
+%                         freqSimData.bandwidthHz(1,idxSim));
+% 
+%     plot(freqSimData.freqHz(idxRange,1), ...
+%          freqSimData.gain(idxRange,idxSim)./1000,...
+%          markType,'Color',kdLineColor, ...
+%          'MarkerFaceColor',markFaceColor,'LineWidth',lineWidth,...
+%          'MarkerSize',markSize,'DisplayName',[freqSeriesName{z},trialName]);  
+%     hold on;
+% 
+%     pidW=plot(freqSimData.freqHz(idxRange,1), ...
+%          freqSimData.gainKD(idxRange,idxSim)./1000,...
+%          '-','Color',[1,1,1], ...
+%          'LineWidth',kdWhiteLineWidth);  
+%     hold on;
+%     set(get(get(pidW,'Annotation'),...
+%               'LegendInformation'),...
+%               'IconDisplayStyle','off');      
+% 
+%     pidL=plot(freqSimData.freqHz(idxRange,1), ...
+%          freqSimData.gainKD(idxRange,idxSim)./1000,...
+%          kdMarkType,'Color',kdLineColor, ...
+%          'LineWidth',kdLineWidth,'DisplayName', ['K-$$\beta$$',trialName]);
+%     hold on;
+% 
+%     lineHandlesModelGain = [lineHandlesModelGain,...
+%                             pidW,...
+%                             pidL];
+% 
+% 
+% 
+%     fmin = 0.;
+%     fmax = max(modelBWPlot);
+%     gmin = 0.;%min(freqSimData.gain(idxRange,idxSim)./1000);
+%     gmax = 8.01;
+% 
+%     if(k == 1)
+%       idxSubPlot = idxGain;
+%       text(fmin-0.1*(fmax-fmin), 1.1*gmax,...
+%              subPlotLabel{1,idxSubPlot},...
+%              'FontSize',figLabelFontSize);   
+%       hold on;
+%     end
+% 
+%     box off;
+%     set(gca,'color','none')        
+% 
+% 
+%     hold on;
+% 
+% 
+%     ylim([gmin,gmax]);
+%     xlim([fmin,fmax+0.01]);
+%     xticks(xTicksVector);
+%     yticks([0,2,4,6,8]);
+% 
+% 
+%     %tc0 = text(fmin-0.15*(fmax-fmin), 1.45*(gmax),...
+%     %       'C.','FontSize',11);       
+% 
+%     subplot('Position', subPlotList(idxPhase,:));
+% 
+%     plot(freqSimData.freqHz(idxRange,1), ...
+%          freqSimData.phase(idxRange,idxSim).*(180/pi),...
+%          markType,'Color',kdLineColor, ...
+%          'MarkerFaceColor',markFaceColor,'LineWidth',0.5,...
+%          'MarkerSize',markSize,...
+%          'DisplayName',[freqSeriesName{z},trialName]);   
+%     hold on;
+% 
+%     pidW=plot(freqSimData.freqHz(idxRange,1), ...
+%          freqSimData.phaseKD(idxRange,idxSim).*(180/pi),...
+%          '-','Color',[1,1,1], ...
+%          'LineWidth',kdWhiteLineWidth);  
+%     hold on;
+%     set(get(get(pidW,'Annotation'),...
+%               'LegendInformation'),...
+%               'IconDisplayStyle','off');      
+% 
+%     pidL=plot(freqSimData.freqHz(idxRange,1), ...
+%          freqSimData.phaseKD(idxRange,idxSim).*(180/pi),...
+%          kdMarkType,'Color',kdLineColor, ...
+%          'LineWidth',kdLineWidth,'DisplayName',['K-$$\beta$$',trialName]);  
+%     hold on;      
+% 
+%     lineHandlesModelPhase = [lineHandlesModelPhase,...
+%                             pidW,...
+%                             pidL];
+% 
+% 
+%     box off;
+%     set(gca,'color','none')
+% 
+%     pmin = 0;
+%     pmax = 90.01;
+% 
+%     ylim([pmin,pmax]);
+%     xlim([fmin,fmax+0.01]);
+%     xticks(xTicksVector);
+%     yticks([0,45,90]);
+% 
+%     if(k == 1)
+%       idxSubPlot = idxPhase;      
+%       text(fmin-0.1*(fmax-fmin), 1.1*pmax,...
+%              subPlotLabel{1,idxSubPlot},...
+%              'FontSize',figLabelFontSize);   
+%       hold on;
+%     end
+% 
+% 
+%   end
 
 end
 
@@ -766,13 +821,13 @@ end
 %end
 
 
-set(fig_freqResponse43,'Units','centimeters',...
+set(fig_AccelerationTerms,'Units','centimeters',...
 'PaperUnits','centimeters',...
 'PaperSize',[pageWidth pageHeight],...
 'PaperPositionMode','manual',...
 'PaperPosition',[0 0 pageWidth pageHeight]);     
 %set(findall(figList(i).h,'-property','FontSize'),'FontSize',10);     
-set(fig_freqResponse43,'renderer','painters');     
+set(fig_AccelerationTerms,'renderer','painters');     
 set(gcf,'InvertHardCopy','off')
 
 tendonTag = '_RigidAndElasticTendon';
@@ -789,7 +844,7 @@ switch flag_Mode15Hz90HzBoth
     assert(0);
 end
 
-print('-dpdf', [pubOutputFolder,'fig_Pub_ModelFrequencyResponse',...
+print('-dpdf', [pubOutputFolder,'fig_Pub_ModelAccelerationTerms',...
                 tendonTag,'_',plotBW,'_',plotNameEnding,'.pdf']); 
 
 

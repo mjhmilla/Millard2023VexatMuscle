@@ -111,7 +111,7 @@ betaN2ApHN  = modelConstants.betaN2ApHN  ;
 
 fvNVelocityScaling = modelConstants.fvNVelocityScaling;
 tauShortening      = modelConstants.tauShortening       ;
-tauLenthening      = modelConstants.tauLengthening     ;
+tauLengthening      = modelConstants.tauLengthening     ;
 tauSlowToFastCoefficient = modelConstants.tauSlowToFastCoefficient;
 tauSlowToFastOffsetCoefficient = ...
   modelConstants.tauSlowToFastOffsetCoefficient;
@@ -430,19 +430,62 @@ dlxHN = dlxH*lce_lceN;
 fxHN  = kxHNN*lxHN + betaxHNN*dlxHN;
 
 
-% Attachment point acceleration
+
+
+%lambda  = tanh( dlfNN*tauSlowToFastCoefficient + tauSlowToFastOffsetCoefficient)*0.5 + 0.5;
+
+%tvNN=0.05; %Transition velocity
+%lambda = exp(- dlaNN*dlaNN/(tvNN*tvNN));
+
+%2021/12/31
+%This alone will never work nicely: if the CE is switching from lengthening
+%to shortening, as would be the case during cyclical movement, the CE will
+%stick at a shortening velocity of zero as tau switches from slow to fast.
+%
+%This can be remedied by adding dwell time dynamics so that the CE has
+%to remain at a zero velocity for a period of time before its time dynamics
+%slow down. This would require adding a state lambda to the model that has
+%the following differential equation. The next question is what kind of
+%experiment would need to be replicated to evaluate dwell time dynamics?
+%
+%The experiments of Joyce 1969 come to mind: when a rapid ramp lenthening
+%is applied to a quiet muscle the first transient is larger than appears to
+%a muscle which was being lengthened or shortened in the prior moments. The
+%experiments of Kirsch et al. also come to mind, specifically to see what
+%governs the increase in phase response between the 15-90 Hz signals.
+%Perhaps repeating Kirsch et al. but under two conditions: one that has a
+%zero-mean perturbation wave form and one with a perturbation waveform that
+%is not zero mean but follows a ramp.
+%
+%dlambda = (exp(- dlaNN*dlaNN/(tvNN*tvNN)) - lambda)/tauLambda;
+
+tauFast=tauShortening;
+tauSlow=tauLengthening;
+tau = (tauFast+tauSlow)*0.5;%tauSlow*(lambda)+tauFast*(1-lambda);
+%tau     = tauLengthening*lambda + tauShortening*(1-lambda);
+
+
+betaCXHN   =(betaCXHNLengthening + betaCXHNShortening)*0.5;
+
+%betaCXHN   =betaCXHNLengthening*lambda + betaCXHNShortening*(1-lambda);
+%30/12/2021
+%If betaCXHN is constant + the slow time constant is 0.1 
+%there is no phase difference in the model's response
+%
+%If betaCXHN is variable + the slow time constant is 0.01 
+%there is a phase difference in the model's response and coefficient
+%scatter
+%
+%If betaCXHN is constant + the slow time constant is 0.01 
+%there is a phase difference in the model's response and coefficient
+%scatter
+%
+%Therefore the interpolated damping model does nothing. Eliminiate it.
+
+% Attachment point acceleration: lxHN+dlxHN
 % Active? Acceleration driven so that x-bridge force tracks 
 %         Hill in the long run
 % Passive? Acceleration driven so that the cross-bridge strain is 0
-
-lambda  = tanh( dlfNN*tauSlowToFastCoefficient + tauSlowToFastOffsetCoefficient)*0.5 + 0.5;
-
-tau     = tauLenthening*lambda + tauShortening*(1-lambda);
-
-
-betaCXHN   =betaCXHNLengthening*lambda + betaCXHNShortening*(1-lambda);
-
-%Question: should betaCXHN*dlaNN be scaled by activation? Or by (0.1 + 0.9*a)
 
 ddlaHN = ((fxHN  - a*flN*(fvN))/(tau)) - betaCXHN*dlaNN + (lxHN + dlxHN) ;
 ddlaH  = ddlaHN*lceN_lce;
@@ -454,8 +497,8 @@ ddlaH  = ddlaHN*lceN_lce;
 
 %fxHN  = kxHNN*(1+dlfNN)*lxHN + betaxHNN*(1+dlfNN)*dlxHN;
 %fxHNStatic  = a*flN*(1+dlfNN);
-%tauLengthening = tauLenthening;
-%tauShortening  = tauLenthening*10;
+%tauLengthening = tauLengthening;
+%tauShortening  = tauLengthening*10;
 %tau     = tauLengthening*lambda + tauShortening*(1-lambda);
 %ddlaHN = (fxHN-fxHNStatic)/(tau)  - betaCXHN*dlaNN + (lxHN + dlxHN); %- betaCXHN*dlaNN +
 

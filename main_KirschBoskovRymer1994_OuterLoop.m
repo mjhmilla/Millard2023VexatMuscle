@@ -6,10 +6,9 @@ clear all;
 %Run all of the simulations
 %%
 
-flag_runSimulations     = 1;
-flag_frequencyAnalysis  = 1;
+flag_runSimulations     = 0;
+flag_frequencyAnalysis  = 0;
 flag_generatePlots      = 1;
-
 
 
 
@@ -22,6 +21,7 @@ if(flag_runSimulations == 1)
   flag_useElasticTendon       = 1;
   flag_useFiberDamping       = 1;
   flag_frequencyAnalysisMuscleModels            = 0;
+  flag_plotAccelerationEquationFactors          = 0;  
   flag_pubPlotFrequencyResponseKBR1994Fig3      = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig9Fig10  = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig12      = 0;
@@ -37,6 +37,7 @@ if(flag_runSimulations == 1)
   flag_useElasticTendon       = 0;
   flag_useFiberDamping       = 1;
   flag_frequencyAnalysisMuscleModels            = 0;
+  flag_plotAccelerationEquationFactors          = 0;  
   flag_pubPlotFrequencyResponseKBR1994Fig3      = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig9Fig10  = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig12      = 0;
@@ -52,6 +53,7 @@ if(flag_runSimulations == 1)
   flag_useElasticTendon       = 1;
   flag_useFiberDamping       = 1;
   flag_frequencyAnalysisMuscleModels            = 0;
+  flag_plotAccelerationEquationFactors          = 0;  
   flag_pubPlotFrequencyResponseKBR1994Fig3      = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig9Fig10  = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig12      = 0;
@@ -67,6 +69,7 @@ if(flag_runSimulations == 1)
   flag_useElasticTendon       = 0;
   flag_useFiberDamping       = 1;
   flag_frequencyAnalysisMuscleModels            = 0;
+  flag_plotAccelerationEquationFactors          = 0;  
   flag_pubPlotFrequencyResponseKBR1994Fig3      = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig9Fig10  = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig12      = 0;
@@ -93,6 +96,7 @@ if(flag_frequencyAnalysis==1)
   flag_useElasticTendon       = 0;
   flag_useFiberDamping       = 1;
   flag_frequencyAnalysisMuscleModels            = 1;
+  flag_plotAccelerationEquationFactors          = 0;  
   flag_pubPlotFrequencyResponseKBR1994Fig3      = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig9Fig10  = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig12      = 0;
@@ -108,6 +112,7 @@ if(flag_frequencyAnalysis==1)
   flag_useElasticTendon       = 1;
   flag_useFiberDamping       = 1;
   flag_frequencyAnalysisMuscleModels            = 1;
+  flag_plotAccelerationEquationFactors          = 0;  
   flag_pubPlotFrequencyResponseKBR1994Fig3      = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig9Fig10  = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig12      = 0;
@@ -123,6 +128,7 @@ if(flag_frequencyAnalysis==1)
   flag_useElasticTendon       = 0;
   flag_useFiberDamping       = 1;
   flag_frequencyAnalysisMuscleModels            = 1;
+  flag_plotAccelerationEquationFactors          = 0;  
   flag_pubPlotFrequencyResponseKBR1994Fig3      = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig9Fig10  = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig12      = 0;
@@ -138,6 +144,7 @@ if(flag_frequencyAnalysis==1)
   flag_useElasticTendon       = 1;
   flag_useFiberDamping       = 1;
   flag_frequencyAnalysisMuscleModels            = 1;
+  flag_plotAccelerationEquationFactors          = 0;  
   flag_pubPlotFrequencyResponseKBR1994Fig3      = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig9Fig10  = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig12      = 0;
@@ -160,6 +167,7 @@ if(flag_generatePlots==1)
   flag_useElasticTendon       = 1;
   flag_useFiberDamping       = 1;
   flag_frequencyAnalysisMuscleModels            = 0;
+  flag_plotAccelerationEquationFactors          = 1;  
   flag_pubPlotFrequencyResponseKBR1994Fig3      = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig9Fig10  = 1;
   flag_pubPlotStiffnessDampingKBR1994Fig12      = 1;
@@ -173,6 +181,7 @@ if(flag_generatePlots==1)
   flag_useElasticTendon       = 0;
   flag_useFiberDamping       = 1;
   flag_frequencyAnalysisMuscleModels            = 0;
+  flag_plotAccelerationEquationFactors          = 1;  
   flag_pubPlotFrequencyResponseKBR1994Fig3      = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig9Fig10  = 1;
   flag_pubPlotStiffnessDampingKBR1994Fig12      = 1;
@@ -193,6 +202,7 @@ if(flag_generatePlots==1)
   flag_useElasticTendon       = 0;
   flag_useFiberDamping       = 1;
   flag_frequencyAnalysisMuscleModels            = 0;
+  flag_plotAccelerationEquationFactors          = 1;
   flag_pubPlotFrequencyResponseKBR1994Fig3      = 1;
   flag_pubPlotStiffnessDampingKBR1994Fig9Fig10  = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig12      = 0;
@@ -208,6 +218,7 @@ if(flag_generatePlots==1)
   flag_useElasticTendon       = 1;
   flag_useFiberDamping       = 1;
   flag_frequencyAnalysisMuscleModels            = 0;
+  flag_plotAccelerationEquationFactors          = 1;  
   flag_pubPlotFrequencyResponseKBR1994Fig3      = 1;
   flag_pubPlotStiffnessDampingKBR1994Fig9Fig10  = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig12      = 0;

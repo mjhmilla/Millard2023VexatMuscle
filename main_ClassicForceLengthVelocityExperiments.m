@@ -5,13 +5,13 @@ flag_outerLoopMode = 1;
 % Run once set to 1
 % Run a second time set to 2 
 
-if(flag_outerLoopMode == 0 && flag_buildCombinedPlot == 1)
+if(flag_outerLoopMode == 0)
   clc;  
   close all;      
   clear all;
 
   flag_outerLoopMode      = 0;
-  flag_buildCombinedPlot  = 1;
+  flag_buildCombinedPlot  = 0;
   
   figCombined = figure;
   
