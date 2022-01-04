@@ -978,6 +978,9 @@ mtInfo.state.derivative = NaN;
 %This field does not appear in the OpenSim model
 mtInfo.initialization = init;
 
+mtInfo.extra = [];
+mtInfo.extraLabels = {};
+
 if useElasticTendon == 1
     mtInfo.state.value      = lceAT;
     mtInfo.state.derivative = dlceAT;

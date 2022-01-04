@@ -69,9 +69,9 @@ useElasticTendon = modelConfig.useElasticTendon;
 
 
 if(useElasticTendon==1)
-  assert(length(muscleState) == 4,'This is a 4 state muscle model!');
+  assert(length(muscleState) == 5,'This is a 5 state muscle model!');
 else
-  assert(length(muscleState) == 3,'This is a 3 state muscle model!');
+  assert(length(muscleState) == 4,'This is a 4 state muscle model!');
 end
 %%
 %Create function handles for the curves to make the code easier to read                                                  
@@ -180,6 +180,10 @@ normCrossBridgeCyclingDampingShortening = sarcomereProperties.normCrossBridgeCyc
 %laN     = sarcomereProperties.normActinLength;  
 lmHN    = sarcomereProperties.normMyosinHalfLength;
 
+%Stick velocity: add to sarcomereProperties
+dlaHNLambda = 0.005; %Velocities less than this will be treated as sticking
+tauLambda   = 0.01; %Time constant of lambda
+
 
 %la  = laN*lceOpt;
 lmH = lmHN*lceOpt;
@@ -196,7 +200,7 @@ lce    = 0.;
 dlaH   = 0.;  
 laH    = 0.;  
 l1H    = 0.;
-
+lambda = 0.;
 
 % I've removed the calcium-based force enhancement states for the two 
 % titin segments from the model for now: this makes at most 5% difference
@@ -208,10 +212,12 @@ if(useElasticTendon == 1)
   dlaH   = muscleState(2);  
   laH    = muscleState(3);  
   l1H    = muscleState(4);
+  lambda = muscleState(5);
 else
   dlaH   = muscleState(1);  
   laH    = muscleState(2);  
   l1H    = muscleState(3);
+  lambda = muscleState(4);
 end  
 
 %Future: update state to be the fiber length along the tendon.
@@ -313,6 +319,8 @@ modelConstants = struct( ...
     'lceMin'        , lceMin           , ...
     'kAXHN'         , kAXHN            , ...
     'betaAXHN'      , betaAXHN         , ...
+    'dlaHNLambda'   , dlaHNLambda      , ...
+    'tauLambda'     , tauLambda        , ...
     'normCrossBridgeCyclingDampingLengthening'  , normCrossBridgeCyclingDampingLengthening, ...
     'normCrossBridgeCyclingDampingShortening'  , normCrossBridgeCyclingDampingShortening, ...
       'betaNum'     , betaNum          , ...                          
@@ -446,7 +454,14 @@ modelCachedValues = struct(...
     'DfTN_DltN'       , NaN ,...
     'dT', NaN,...
     'dV', NaN,...
-    'dW', NaN);
+    'dW', NaN,...
+        'tau',NaN,...
+        'gamma',NaN,...
+        'lambda',lambda,...
+        'dlambda',NaN,...
+        'ddlaHN_HillError',NaN,...
+        'ddlaHN_Damping',NaN,...
+        'ddlaHN_Tracking',NaN);
 
 %Careful: 
 % :Quantities below are in units of Joules
@@ -484,6 +499,7 @@ if(modelConfig.initializeState==1)
   laHN = 0.5*lceN - lmHN;  
   laH  = laHN*lceN_lce;
   dlaH = 0;
+
   
   l1HN = normMuscleCurves.forceLengthIgpCurve.xEnd(1)*lceN;
   l1H = l1HN * liN_li;
@@ -503,7 +519,7 @@ if(modelConfig.initializeState==1)
   modelCachedValues.laH  = laH;
   modelCachedValues.dlaH = dlaH;
   modelCachedValues.l1H  = l1H;
-
+  modelCachedValues.lambda= 0;
 
   [errF,errFJac,errI,errIJac,modelCachedValuesUpd] = ...
     calcEquilibriumErrorOpus31( vars,...
@@ -529,6 +545,7 @@ if(modelConfig.initializeState==1)
     modelCachedValues.laH  = laH;
     modelCachedValues.dlaH = 0;
     modelCachedValues.l1H  = l1H;
+    modelCachedValues.lambda= 0;
 
 
     [errF,errFJac,errI,errIJac,modelCachedValuesUpd] = ...
@@ -1185,6 +1202,9 @@ pe = pt+pi1+pi2+pc;
 mtInfo.muscleDynamicsInfo.activation                = a;
 mtInfo.muscleDynamicsInfo.activationDerivative      = dadt;
 
+mtInfo.muscleDynamicsInfo.lambda                    = modelCachedValues.lambda;
+mtInfo.muscleDynamicsInfo.dlambda                   = modelCachedValues.dlambda;
+
 mtInfo.muscleDynamicsInfo.tendonForce               = modelCachedValues.fTN*fiso;     % force                N
 mtInfo.muscleDynamicsInfo.normTendonForce           = modelCachedValues.fTN;          % force/force          N/N
 mtInfo.muscleDynamicsInfo.tendonStiffness           = kt;                             % force/length         N/m
@@ -1287,25 +1307,34 @@ if useElasticTendon == 1
   mtInfo.state.value      = [modelCachedValues.lce;...
                              modelCachedValues.dlaH; ...
                              modelCachedValues.laH;...
-                             modelCachedValues.l1H];
+                             modelCachedValues.l1H;...
+                             modelCachedValues.lambda];
 
 
   mtInfo.state.derivative = [modelCachedValues.dlce;...
                              modelCachedValues.ddlaH; ...
                              modelCachedValues.dlaH;...
-                             modelCachedValues.dl1H];
+                             modelCachedValues.dl1H;...
+                             modelCachedValues.dlambda];
 else
   mtInfo.state.value      = [modelCachedValues.dlaH; ...
                              modelCachedValues.laH;...
-                             modelCachedValues.l1H];
+                             modelCachedValues.l1H;...
+                             modelCachedValues.lambda];
 
 
   mtInfo.state.derivative = [modelCachedValues.ddlaH; ...
                              modelCachedValues.dlaH;...
-                             modelCachedValues.dl1H];
+                             modelCachedValues.dl1H;...
+                             modelCachedValues.dlambda];
 end
 
-
+mtInfo.extra = [modelCachedValues.tau,...
+                modelCachedValues.gamma,...
+                modelCachedValues.ddlaHN_HillError,...
+                modelCachedValues.ddlaHN_Damping,...
+                modelCachedValues.ddlaHN_Tracking];
+mtInfo.extraLabels={'$$\tau$$','$$\gamma$$','Hill Tracking','Cycle Damping','CE Tracking'};
 
 if(sum(isnan(mtInfo.state.derivative)) > 0)
    here = 1; 

@@ -134,13 +134,13 @@ disp('Running Opus 31  Kirsch, Boskov, and Rymer 1994  Simulations');
             nStates = 0;
             labelStates = {''};
             if(flag_useElasticTendon==1)
-              nStates = 4;
+              nStates = 5;
               labelStates= {'$$\ell_{CE}$$','$$\dot{\ell}_{a}$$',...
-                 '$$\ell_{a}$$','$$\ell_1$$'};%,'$$f_{e}^1$$', '$$f_{e}^2$$'};
+                 '$$\ell_{a}$$','$$\ell_1$$','$$\lambda$$'};%,'$$f_{e}^1$$', '$$f_{e}^2$$'};
             else
-              nStates = 3;
+              nStates = 4;
               labelStates= {'$$\dot{\ell}_{a}$$',...
-                 '$$\ell_{a}$$','$$\ell_1$$'};%,'$$f_{e}^1$$', '$$f_{e}^2$$'};            
+                 '$$\ell_{a}$$','$$\ell_1$$','$$\lambda$$'};%,'$$f_{e}^1$$', '$$f_{e}^2$$'};            
             end
 
             benchConfig.numberOfMuscleStates  = nStates;

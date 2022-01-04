@@ -209,8 +209,14 @@ if(isempty(benchRecord)==1)
   benchRecord.eventNormFiberLength  = zeros(npts,numberOfSimulations);
   benchRecord.eventPathLength       = zeros(npts,numberOfSimulations);  
   benchRecord.eventNormFiberVelocity= zeros(npts,numberOfSimulations);
+   
+
+  benchRecord.extra =  zeros(  npts,...
+                             numberOfSimulations,...
+                             10 );
+  benchRecord.extraLabels = {};
   
-  
+
   benchRecord.state = zeros(  npts,...
                               numberOfSimulations,...
                               benchConfig.numberOfMuscleStates);
@@ -437,7 +443,6 @@ if(isempty(benchConfig.eventFcn)==0)
                                pathStateEvent,...
                                eventState(j,2:1:(n+1)));
     
-    
     benchRecord.eventNormActiveFiberForce(j,idxSim) = ...
       mtInfo.muscleDynamicsInfo.normActiveFiberForce;    
     
@@ -488,6 +493,13 @@ for j=1:1:length(tV)
                                pathState,...
                                muscleState);
                              
+
+    if(isempty(mtInfo.extra)==0)
+        numberOfExtra = length(mtInfo.extra);
+        benchRecord.extra(j,idxSim,1:numberOfExtra)=mtInfo.extra';
+        benchRecord.extraLabels = mtInfo.extraLabels;
+    end
+
                              
     benchRecord.state(j,idxSim,:)=mtInfo.state.value';
     benchRecord.dstate(j,idxSim,:)=mtInfo.state.derivative';
@@ -645,386 +657,6 @@ if(benchConfig.numberOfMuscleStates == 0)
 end
 
 benchRecord.cpuTime(idxSim) = cpuTime;
-
-% flag_usingOctave = flag_useOctave;
-% numberOfVerticalPlotRows      = 3;
-% numberOfHorizontalPlotColumns = 2;
-% flag_fixedPlotWidth = 0;
-% plotHeight=7;
-% 
-% plotConfig;
-
-
-% n = 0;
-% if(numberOfSimulations > 1)
-%     n = (simulationIndex-1)/(numberOfSimulations-1);
-% end
-% clr01 =  benchConfig.color0.*(1-n) ...
-%        + benchConfig.color1.*n;
-% 
-% 
-% if(isempty(figBasicInfo) == 0) 
-%     figure(figBasicInfo);
-% 
-%     flag_forceComponentPlots = 0;
-% 
-%     if(flag_forceComponentPlots == 1)
-%         act = benchRecord.activation(:,idxSim);
-%         fl  = benchRecord.fiberActiveForceLengthMultiplier(j,idxSim);
-%         afl = act.*fl;
-%         
-%         fmax = max(benchRecord.normFiberForceAlongTendon(:,idxSim));
-%         
-%         subplot('Position',reshape(subPlotPanel(1,1,:),1,4));
-%             simH = plot(benchRecord.time(:,idxSim),...
-%                  benchRecord.tendonForce(:,idxSim),...
-%                  'Color',clr01);
-%             hold on;
-%             axis square;
-%             %ylim([0,fmax]);
-%             box off;
-%             xlabel('Time (s)'); 
-%             ylabel('Norm. Force ($$\tilde{f}^{T}$$)');
-%             title([benchConfig.name]);
-%             
-%         subplot('Position',reshape(subPlotPanel(1,2,:),1,4));
-%             simH = plot(benchRecord.time(:,idxSim),...
-%                  benchRecord.crossBridgeForce(:,idxSim),...
-%                  'Color',clr01);
-%             hold on;
-%             axis square;
-%             %ylim([0,1]);
-%             box off;
-%             xlabel('Time (s)'); 
-%             ylabel('Norm. Force ($$k^{x}\ell^{x}$$)');
-%             title([benchConfig.name]);                     
-% 
-%         subplot('Position',reshape(subPlotPanel(2,1,:),1,4));
-%             simH = plot(benchRecord.time(:,idxSim),...
-%                  benchRecord.fastForceVelocityForce(:,idxSim),...
-%                  'Color',clr01);
-%             hold on;
-%             axis square;
-%             %ylim([0,1]);
-%             box off;
-%             xlabel('Time (s)'); 
-%             ylabel('Norm. Force ($$f^{f}+\mathrm{f}^{f}_{o}$$)');
-%             title([benchConfig.name]);  
-% 
-%         subplot('Position',reshape(subPlotPanel(2,2,:),1,4));
-%             simH = plot(benchRecord.time(:,idxSim),...
-%                  benchRecord.slowForceVelocityForce(:,idxSim),...
-%                  'Color',clr01);
-%             hold on;
-%             axis square;
-%             %ylim([0,1]);
-%             box off;
-%             xlabel('Time (s)'); 
-%             ylabel('Norm. Force ($$f^{s}$$)');
-%             title([benchConfig.name]); 
-% 
-%     else
-%         
-%         
-%         subplot('Position',reshape(subPlotPanel(2,2,:),1,4));
-%             plot(benchRecord.time(:,idxSim),...
-%                  benchRecord.normFiberLength(:,idxSim),...
-%                  'Color',clr01);
-%             hold on;
-%             box off;
-%             %axis tight;
-%             xlabel('Time (s)'); 
-%             ylabel('Norm. Length ($$\tilde{\ell}^{M}$$)');
-%             title([benchConfig.name]);                
-% 
-% 
-%         subplot('Position',reshape(subPlotPanel(1,1,:),1,4));
-%             simH = plot(benchRecord.time(:,idxSim),...
-%                  benchRecord.normFiberForceAlongTendon(:,idxSim),...
-%                  'Color',clr01);
-%             hold on;
-%             %axis tight;
-%             %axis square;
-%             box off;
-%             xlabel('Time (s)'); 
-%             ylabel('Norm. Force ($$\tilde{fce}^{M}\cos\alpha$$)');
-%             title([benchConfig.name]);                     
-% 
-%             %legend(simH, legendCellString,'Location','Best');
-%             %legend boxoff;
-% 
-% 
-%         subplot('Position',reshape(subPlotPanel(2,1,:),1,4));
-%             plot(benchRecord.time(:,idxSim),...
-%                  benchRecord.crossBridgeStiffness(:,idxSim),...
-%                  'Color',clr01);
-%             hold on;             
-%             axis tight;
-%             %ylim([-1.5,15]);
-%             axis square;
-%             box off;
-%             xlabel('Time (s)'); 
-%             ylabel('Norm. Stiffness ($$(k/(\mathbf{f}_0^{M})/(\ell^{M}_o))$$)');           
-% 
-% 
-% 
-%           idxRampStart = 0;
-%           idxRampEnd = 0;
-%           pathVelocityPrev = 0;
-%           smallVelocity = 1e-3;
-%           for(z=2:1:size(benchRecord.pathVelocity,1))
-%               pathVelocity = benchRecord.pathVelocity(z,idxSim);
-%               
-%               if(idxRampStart == 0 && ...
-%                       abs(pathVelocity) > smallVelocity ...
-%                       && abs(pathVelocityPrev)<=smallVelocity)
-%                  idxRampStart = z-1; 
-%               end
-%               if(idxRampEnd == 0 && idxRampStart > 0 ...
-%                      && abs(pathVelocity) <= smallVelocity ...
-%                      && abs(pathVelocityPrev)>smallVelocity)
-%                  idxRampEnd = z-1; 
-%               end          
-%               pathVelocityPrev = pathVelocity;
-%           end
-%           idxSeries = [idxRampStart:1:idxRampEnd];
-% 
-%         if(idxRampStart < idxRampEnd && idxRampStart > 0)
-%             subplot('Position',reshape(subPlotPanel(1,2,:),1,4));
-%                 plot(benchRecord.normFiberLength(idxSeries,idxSim),...
-%                      benchRecord.normActiveFiberForce(idxSeries,idxSim),...
-%                      'Color',clr01);
-%                 hold on;
-%                 box off;
-%                 %axis sq
-%                 %axis tight;
-%                 xlabel('Norm. Length ($$\tilde{\ell}^{M}$$)');
-%                 ylabel('Norm. Active Force ($$\tilde{fae}^{M}$$)');
-%         end
-%     end
-%          
-% 
-% end
-% 
-% if(isempty(figEnergyInfo) == 0)
-%     figure(figEnergyInfo);
-%     subplot('Position',reshape(subPlotPanel(1,1,:),1,4));
-%         plot(benchRecord.time(:,idxSim), ...
-%              benchRecord.tendonPotentialEnergy(:,idxSim),...
-%             'Color',clr01);
-%         axis tight;
-%         axis square;
-%         box off;
-%         xlabel('Time (s)'); 
-%         ylabel('Tendon Strain Energy (J)');
-%         title([benchConfig.name]);                      
-%         hold on;
-%         
-%     subplot('Position',reshape(subPlotPanel(1,2,:),1,4));
-%         plot(benchRecord.time(:,idxSim), ...
-%              benchRecord.fiberPotentialEnergy(:,idxSim),...
-%             'Color',clr01);
-%         axis tight;
-%         axis square;
-%         box off;
-%         xlabel('Time (s)'); 
-%         ylabel('Fiber Strain Energy (J)');                 
-%         hold on;
-%                   
-%     subplot('Position',reshape(subPlotPanel(2,1,:),1,4));
-%         plot(benchRecord.time(:,idxSim),...
-%              benchRecord.systemEnergyLessWork(:,idxSim),...
-%             'Color',clr01);
-%         axis tight;
-%         axis square;
-%         box off;
-%         xlabel('Time (s)'); 
-%         ylabel('System Energy - Work (J)');               
-%         hold on;
-%         
-%     subplot('Position',reshape(subPlotPanel(2,2,:),1,4));
-%         plot(benchRecord.time(:,idxSim), ...
-%              benchRecord.fiberActiveWork(:,idxSim),...
-%             'Color',clr01);
-%         axis tight;
-%         axis square;
-%         box off;
-%         xlabel('Time (s)'); 
-%         ylabel('Active Fiber Work (J)');                
-%         hold on;
-%         
-% 
-%     subplot('Position',reshape(subPlotPanel(3,1,:),1,4));
-%         plot(benchRecord.time(:,idxSim), ...
-%              benchRecord.dampingWork(:,idxSim),...
-%             'Color',clr01);
-%         axis tight;
-%         axis square;
-%         box off;
-%         xlabel('Time (s)'); 
-%         ylabel('Damping Work (J)');                 
-%         hold on;
-% 
-%     subplot('Position',reshape(subPlotPanel(3,2,:),1,4));
-%         plot(benchRecord.time(:,idxSim), ...
-%              benchRecord.boundaryWork(:,idxSim),...
-%             'Color',clr01);
-%         axis tight;
-%         axis square;
-%         box off;
-%         xlabel('Time (s)'); 
-%         ylabel('Boundary Work (J)');                   
-%         hold on;
-% % end
-% % 
-% % if(isempty(figPowerInfo) == 0)
-% %     figure(figPowerInfo);
-% %     subplot('Position',reshape(subPlotPanel(1,1,:),1,4));
-% %         plot(benchRecord.time(:,idxSim), ...
-% %              benchRecord.tendonPower(:,idxSim),...
-% %             'Color',clr01);
-% %         axis tight;
-% %         axis square;
-% %         box off;
-% %         xlabel('Time (s)'); 
-% %         ylabel('Tendon Strain Power (W)');
-% %         hold on;
-% %         
-% %     subplot('Position',reshape(subPlotPanel(1,2,:),1,4));
-% %         plot(benchRecord.time(:,idxSim),...
-% %              benchRecord.fiberParallelElementPower(:,idxSim),...
-% %             'Color',clr01);
-% %         axis tight;
-% %         axis square;
-% %         box off;
-% %         xlabel('Time (s)'); 
-% %         ylabel('Fiber Strain Power (W)');                   
-% %         hold on;
-% %             
-% %     subplot('Position',reshape(subPlotPanel(2,1,:),1,4));
-% %         plot(benchRecord.time(:,idxSim), ...
-% %              benchRecord.dSystemEnergyLessWork(:,idxSim),...
-% %             'Color',clr01);
-% %         axis tight;
-% %         axis square;
-% %         box off;
-% %         xlabel('Time (s)'); 
-% %         ylabel('System power - work power (W)');                  
-% %         hold on;
-% %         
-% %     subplot('Position',reshape(subPlotPanel(2,2,:),1,4));
-% %         plot(benchRecord.time(:,idxSim), ...
-% %              benchRecord.fiberActivePower(:,idxSim),...
-% %             'Color',clr01);
-% %         axis tight;
-% %         axis square;
-% %         box off;
-% %         xlabel('Time (s)'); 
-% %         ylabel('Active Fiber Power (W)');                                 
-% %         hold on;
-% %         
-% %     subplot('Position',reshape(subPlotPanel(3,1,:),1,4));
-% %         plot(benchRecord.time(:,idxSim), ...
-% %              benchRecord.dampingPower(:,idxSim),...
-% %             'Color',clr01);
-% %         axis tight;
-% %         axis square;
-% %         box off;
-% %         xlabel('Time (s)'); 
-% %         ylabel('Damping Power (W)');                    
-% %         hold on;
-% % 
-% %     subplot('Position',reshape(subPlotPanel(3,2,:),1,4));
-% %         plot(benchRecord.time(:,idxSim), ... 
-% %             benchRecord.boundaryPower(:,idxSim),...
-% %             'Color',clr01);
-% %         axis tight;
-% %         axis square;
-% %         box off;
-% %         xlabel('Time (s)'); 
-% %         ylabel('Boundary Power (W)');                
-% %         hold on;
-% end
-% 
-% if(isempty(figStateInfo)==0)
-%   nRows = floor(sqrt(benchConfig.numberOfMuscleStates));
-%   nCols = ceil(sqrt(benchConfig.numberOfMuscleStates));
-%  
-%   figure(figStateInfo);
-%   for z =1:1:benchConfig.numberOfMuscleStates
-%     
-%     subplot(nRows,nCols,z);
-%     
-%       stateVec = reshape( benchRecord.state(:,idxSim,z), npts,1 );
-%       plot(benchRecord.time(:,idxSim),stateVec,'Color',clr01);
-%       hold on;
-%       xlabel('Time (s)')
-%       ylabel(benchConfig.stateLabels{z});
-%   end
-%   
-% end
-% 
-% 
-% 
-% %%%
-% %
-% % HERE
-% %%
-% flag_debuggingPlots = 0;
-% if(flag_debuggingPlots==1)
-%   fig_state = figure;
-%   fig_dstate= figure;
-%   fig_diag  = figure;
-%   subPlotIndices = [1,1;1,2;2,1;2,2;3,1;3,2];
-%   
-%   stateVec  = zeros(size(benchRecord.state,1), ...
-%                     benchConfig.numberOfMuscleStates);
-%   dstateVec = zeros(size(benchRecord.state,1),...
-%                     benchConfig.numberOfMuscleStates);
-%   
-%   
-%   for i=1:1:benchConfig.numberOfMuscleStates
-%     
-%     for j=1:1:size(benchRecord.state,1)
-%       stateVec(j,i)  = benchRecord.state(j,idxSim,i);
-%       dstateVec(j,i) = benchRecord.dstate(j,idxSim,i);
-%     end
-% 
-%     rc = subPlotIndices(i,:);
-%     
-%     figure(fig_state);
-%     subplot('Position',reshape(subPlotPanel(rc(1),rc(2),:),1,4));
-%     plot( benchRecord.time(:,idxSim),...
-%           stateVec(:,i), 'Color', clr01);
-%     axis square;
-%     hold on;
-%     xlabel('Time (s)');
-%     ylabel(benchConfig.stateLabels{i});
-%     
-%     figure(fig_dstate);
-%     subplot('Position',reshape(subPlotPanel(rc(1),rc(2),:),1,4));
-%     plot( benchRecord.time(:,idxSim),...
-%           dstateVec(:,i), 'Color', clr01);
-%     axis square;        
-%     hold on;
-%     xlabel('Time (s)');
-%     ylabel(['d/dt ',benchConfig.stateLabels{i}]);    
-%     
-%   end
-%   
-%   if(benchConfig.numberOfMuscleStates >= 2)
-%     figure(fig_diag);
-%       subplot('Position',reshape(subPlotPanel(rc(1),rc(2),:),1,4));
-%       plot( benchRecord.time(:,idxSim),...
-%             dstateVec(:,1)*0.5-dstateVec(:,2), 'Color', clr01);
-%       hold on;
-%       axis square;    
-%       xlabel('Time (s)');
-%       ylabel(['d/dt 0.5*',benchConfig.stateLabels{1},...
-%               '-d/dt',benchConfig.stateLabels{2}]);      
-%   end
-% end
-% 
 
 
                                          

@@ -142,6 +142,9 @@ scaleIGP    = modelConstants.scaleIGP;
 
 DftfcnN_DltN_max = modelConstants.DftfcnN_DltN_max;
 
+dlaHNLambda = modelConstants.dlaHNLambda;
+tauLambda   = modelConstants.tauLambda;
+
 %%
 %Cached Quantities 
 %%
@@ -173,7 +176,10 @@ dlaH            = modelCache.dlaH         ;
 ddlaH           = modelCache.ddlaH        ;
 laHN            = modelCache.laHN         ; 
 dlaHN           = modelCache.dlaHN        ;
-ddlaHN          = modelCache.ddlaHN       ;     
+ddlaHN          = modelCache.ddlaHN       ;    
+
+lambda         = modelCache.lambda       ;
+dlambda        = modelCache.dlambda      ;
 
 l1H            = modelCache.l1H           ;
 l1HN           = modelCache.l1HN          ;
@@ -383,7 +389,9 @@ dlaHN  = dlaH*dlce_dlceN;
 dlaNN  = dlaH*dlce_dlceNN*lceH_lce;
 dlfNN  = dlaNN;
 dlceNN = dlce*dlce_dlceNN;
-fvN    = calcFvDer(dlfNN*fvNVelocityScaling,0);
+%fvN    = calcFvDer(dlceNN,0);
+fvNVelocityScaling=1.15;%1.15;
+fvN=calcFvDer(dlfNN*fvNVelocityScaling,0);
 
 %%------------------------------------------------------------------------------
 %Titin segments 
@@ -459,14 +467,27 @@ fxHN  = kxHNN*lxHN + betaxHNN*dlxHN;
 %
 %dlambda = (exp(- dlaNN*dlaNN/(tvNN*tvNN)) - lambda)/tauLambda;
 
-tauFast=tauShortening;
-tauSlow=tauLengthening;
-tau = (tauFast+tauSlow)*0.5;%tauSlow*(lambda)+tauFast*(1-lambda);
+%t0 = dlaNN/modelConstants.dlaHNLambda;
+%dlambda = (exp( -t0*t0 ) - lambda)/tauLambda;
+
+dlambda = (dlceNN-lambda)/tauLambda;
+t0=(lambda/modelConstants.dlaHNLambda);
+gamma = 1-exp(-t0*t0);
+
+%tauFast=tauShortening;
+%tauSlow=tauLengthening;
+tauFast = 0.001;
+tauSlow = 0.1;
+tau  = tauSlow*(1-gamma) + tauFast*(gamma);
+%tau = (tauFast+tauSlow)*0.5;%tauSlow*(lambda)+tauFast*(1-lambda);
+%tau = 0.001;
 %tau     = tauLengthening*lambda + tauShortening*(1-lambda);
 
 
-betaCXHN   =(betaCXHNLengthening + betaCXHNShortening)*0.5;
-
+%betaCXHN   =(betaCXHNLengthening + betaCXHNShortening)*0.5;
+betaCXHNSlow = 1000;
+betaCXHNFast = 10;
+betaCXHN = 1;%betaCXHNSlow*(1-gamma) + betaCXHNFast*(gamma);
 %betaCXHN   =betaCXHNLengthening*lambda + betaCXHNShortening*(1-lambda);
 %30/12/2021
 %If betaCXHN is constant + the slow time constant is 0.1 
@@ -487,7 +508,15 @@ betaCXHN   =(betaCXHNLengthening + betaCXHNShortening)*0.5;
 %         Hill in the long run
 % Passive? Acceleration driven so that the cross-bridge strain is 0
 
-ddlaHN = ((fxHN  - a*flN*(fvN))/(tau)) - betaCXHN*dlaNN + (lxHN + dlxHN) ;
+
+lambda              =   0;
+ddlaHN_HillError    =   ((fxHN  - a*flN*(fvN))/(tau));
+ddlaHN_Damping      = - betaCXHN*dlaNN;
+
+ka                  = (a/0.05);
+ddlaHN_Tracking     =   exp(-ka*ka)*(lxHN + dlxHN);
+%ddlaHN_Tracking      = (lxHN + dlxHN);
+ddlaHN = ddlaHN_HillError + ddlaHN_Damping + ddlaHN_Tracking;
 ddlaH  = ddlaHN*lceN_lce;
 
 %%
@@ -575,6 +604,14 @@ if(flag_updateModelCache == 1)
     modelCache.fxHN     = fxHN;
     modelCache.ddlaHN   = ddlaHN;
     modelCache.ddlaH    = ddlaH;
+
+    modelCache.tau      = tau;
+    modelCache.lambda   = lambda;
+    modelCache.dlambda  = dlambda;
+    modelCache.gamma    = gamma;
+    modelCache.ddlaHN_HillError = ddlaHN_HillError;
+    modelCache.ddlaHN_Damping   = ddlaHN_Damping;
+    modelCache.ddlaHN_Tracking  = ddlaHN_Tracking;
     
     modelCache.fvN      = fvN;
     modelCache.dlfNN    = dlfNN;

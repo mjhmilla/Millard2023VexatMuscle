@@ -265,9 +265,9 @@ modelConfig = struct( ...
 
 nStates = 0;
 if(flag_useElasticTendon==1)
-  nStates = 4;
+  nStates = 5;
 else
-  nStates = 3;
+  nStates = 4;
 end
 
 activationState0 = [0;actBest];

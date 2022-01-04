@@ -76,7 +76,11 @@ if(flag_outerLoopMode == 0)
   
   figClassicFl = figure;
   figClassicFv = figure;
+  figClassicFv_Opus31AccelerationFactors = figure;
+  figClassicFl_Opus31AccelerationFactors = figure;
+
   
+
 end
 
 dataFolder            = 'experiments/StandardTests/';
@@ -326,7 +330,8 @@ if(flag_plotData == 1)
   
   subPlotPanel(1,1,:)=subPlotHerzogLeonard2000Stability(2,1,:);
   subPlotPanel(2,1,:)=subPlotHerzogLeonard2000Stability(3,1,:);
-  
+  subPlotPanel(3,1,:)=subPlotPanel(1,1,:);
+  subPlotPanel(3,1,1)=subPlotPanel(3,1,1)+subPlotPanel(3,1,3)*1.2;
   %%
   % Force-Length Plots: Plot the reference curves
   %%
@@ -533,13 +538,15 @@ if(flag_plotData == 1)
   figure(figClassicFv);
   subplot('Position',reshape(subPlotPanel(1,1,:),1,4));    
   
-  if(flag_buildCombinedPlot==1)  
+  if(flag_buildCombinedPlot~=0)  
     plot(forceVelocityCurveSample.x,...
          forceVelocityCurveSample.y,...
          '-','Color',[0.75,0.75,0.75].*1,'LineWidth',3);
     hold on;  
   end
   
+
+
   halfTrials = size(dataForceVelocityHill.benchRecord.time,2)/2;
   idxA = round(halfTrials*0.5);
   idxB = round(halfTrials*0.5)+halfTrials;
@@ -595,7 +602,9 @@ if(flag_plotData == 1)
                 'LineWidth',lineWidthHill,...
                 'DisplayName',nameHill);
           box off;
-          hold on;        
+          hold on; 
+
+         
       %end     
     end
   end
@@ -633,13 +642,36 @@ if(flag_plotData == 1)
              'DisplayName',nameOpus31);
         hold on;  
         box off;
+        
+
+        
+        subplot('Position',reshape(subPlotPanel(3,1,:),1,4));
+          plot( dataForceVelocity31.benchRecord.time(:,k), ...
+              dataForceVelocity31.benchRecord.normFiberLength(:,k),...
+             '-','Color',lineColorOpus31,...
+             'LineWidth',lineWidthOpus31,...
+             'DisplayName',nameOpus31);
+          hold on;
+          plot( dataForceVelocity31.benchRecord.eventTime(:,k), ...              
+              dataForceVelocity31.benchRecord.eventNormFiberLength(1,k),...
+             'o','Color',lineColorOpus31,'LineWidth',0.5,...
+             'MarkerSize',markerSize,...
+             'MarkerFaceColor',lineColorOpus31,...
+             'LineWidth',lineWidthOpus31,...
+             'DisplayName',nameOpus31);
+          hold on;
+        xlabel('Time (s)');
+        ylabel('Norm. Fiber Length');
+
+        box off;
+        subplot('Position',reshape(subPlotPanel(2,1,:),1,4));
     end
    
     %end      
   end
 
   subplot('Position',reshape(subPlotPanel(1,1,:),1,4));
-  ylim([0.0,1.6]);
+  ylim([-0.05,1.6]);
   if(flag_buildCombinedPlot==2)    
     xlabel('Norm. Velocity ($v^{M} / v^M_\circ$)');
     ylabel('Norm. Force ($f^{M} / f^M_\circ$)');
@@ -677,7 +709,7 @@ if(flag_plotData == 1)
   end
 
   subplot('Position',reshape(subPlotPanel(2,1,:),1,4));
-  ylim([0.0,1.5]);
+  ylim([0.0,1.75]);
   if(flag_buildCombinedPlot==2)  
     xlabel('Time (s)');
     ylabel('Norm. Force ($f^{M} / f^M_\circ$)');

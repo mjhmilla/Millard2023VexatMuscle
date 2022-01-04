@@ -6,8 +6,8 @@ clear all;
 %Run all of the simulations
 %%
 
-flag_runSimulations     = 0;
-flag_frequencyAnalysis  = 0;
+flag_runSimulations     = 1;
+flag_frequencyAnalysis  = 1;
 flag_generatePlots      = 1;
 
 

@@ -67,11 +67,11 @@ benchConfig.color1                = [0,0,1];
 nStates = 0;
 labelStates = {''};
 if(flag_useElasticTendon==1)
-  nStates = 4;
-  labelStates= {'$$\ell_{CE}$$','$$\dot{\ell}_{a}$$','$$\ell_{a}$$','$$\ell_1$$'};
+  nStates = 5;
+  labelStates= {'$$\ell_{CE}$$','$$\dot{\ell}_{a}$$','$$\ell_{a}$$','$$\ell_1$$','$$\lambda$$'};
 else
-  nStates = 3;
-  labelStates= {'$$\dot{\ell}_{a}$$','$$\ell_{a}$$','$$\ell_1$$'};        
+  nStates = 4;
+  labelStates= {'$$\dot{\ell}_{a}$$','$$\ell_{a}$$','$$\ell_1$$','$$\lambda$$'};        
 end
 
 benchConfig.numberOfMuscleStates  = nStates;
@@ -453,11 +453,16 @@ if(flag_forceVelocitySimulations==1)
 
 
       lceThreshold = lceNCenter*lceOpt;
-                  
+      
       idxThresholdState   = 1;
       eventThresholdValue = lceThreshold; 
       eventDirection      = velDir;
-      if(flag_useElasticTendon == 0 || abs(normVelocitySeries(z,1)) <= sqrt(eps))
+
+      %Fiber length is not a state for a rigid tendon model. Since the
+      %middle of the ramp, by construction, will give us the desired 
+      %fiber length we can trigger the event to occur at the middle of the
+      %ramp.
+      if(flag_useElasticTendon == 0 || abs(normVelocitySeries(z,1)) <= sqrt(eps)) %
         idxThresholdState   = -1;
         eventThresholdValue = tRampMid;
         eventDirection      = 1;
