@@ -478,7 +478,8 @@ gamma = 1-exp(-t0*t0);
 %tauSlow=tauLengthening;
 tauFast = 0.001;
 tauSlow = 0.1;
-tau  = tauSlow*(1-gamma) + tauFast*(gamma);
+tau = 0.001;
+%tau  = tauSlow*(1-gamma) + tauFast*(gamma);
 %tau = (tauFast+tauSlow)*0.5;%tauSlow*(lambda)+tauFast*(1-lambda);
 %tau = 0.001;
 %tau     = tauLengthening*lambda + tauShortening*(1-lambda);
@@ -516,7 +517,24 @@ ddlaHN_Damping      = - betaCXHN*dlaNN;
 ka                  = (a/0.05);
 ddlaHN_Tracking     =   exp(-ka*ka)*(lxHN + dlxHN);
 %ddlaHN_Tracking      = (lxHN + dlxHN);
-ddlaHN = ddlaHN_HillError + ddlaHN_Damping + ddlaHN_Tracking;
+%ddlaHN = ddlaHN_HillError + ddlaHN_Damping + ddlaHN_Tracking;
+%tau=0.01;
+
+%kxHNN*lxHN + betaxHNN*dlxHN
+m      = 0.01;
+
+
+wnx    = sqrt(kxHNN/m);%10*2*pi;
+
+%  kxHNN     = a*flN*kAXHN;
+%  betaxHNN  = a*flN*betaAXHN;
+%  zeta = beta/(2*wnx)
+
+zetax  = sqrt(a*flN)*betaAXHN/(sqrt(kAXHN/m)*2);
+zeta   = 1;
+ddlaHN = -((a*flN*fvN/m) - (2*zeta*wnx)*dlxHN - (wnx*wnx)*lxHN)...
+           + ddlaHN_Tracking; %- betaCXHN*dlaNN
+
 ddlaH  = ddlaHN*lceN_lce;
 
 %%

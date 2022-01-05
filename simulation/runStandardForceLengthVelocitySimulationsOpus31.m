@@ -67,11 +67,11 @@ benchConfig.color1                = [0,0,1];
 nStates = 0;
 labelStates = {''};
 if(flag_useElasticTendon==1)
-  nStates = 5;
-  labelStates= {'$$\ell_{CE}$$','$$\dot{\ell}_{a}$$','$$\ell_{a}$$','$$\ell_1$$','$$\lambda$$'};
-else
   nStates = 4;
-  labelStates= {'$$\dot{\ell}_{a}$$','$$\ell_{a}$$','$$\ell_1$$','$$\lambda$$'};        
+  labelStates= {'$$\ell_{CE}$$','$$\dot{\ell}_{a}$$','$$\ell_{a}$$','$$\ell_1$$'};%,'$$\lambda$$'};
+else
+  nStates = 3;
+  labelStates= {'$$\dot{\ell}_{a}$$','$$\ell_{a}$$','$$\ell_1$$'};%,'$$\lambda$$'};        
 end
 
 benchConfig.numberOfMuscleStates  = nStates;

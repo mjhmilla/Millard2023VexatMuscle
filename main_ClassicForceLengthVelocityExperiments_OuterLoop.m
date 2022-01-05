@@ -12,6 +12,7 @@ disp('calcEquilibriumErrorOpus31 line 471 betaCXHN manually set');
 disp('calcEquilibriumErrorOpus31 line 466 tau manually set');
 disp('calcMillard2019MuscleInfoOpus31 line 184 added dlaHNLambda and tauLambda manually');
 disp('calcEquilibriumErrorOpus31 line 470 manually added tauFast and tauSlow')
+disp('calcEquilibriumErrorOpus31 ddlaHN updated');
 flag_plotDataComparison           = 1;  
 
 
@@ -28,7 +29,7 @@ flag_forceVelocitySimulations      = 1;
 normFiberLengthAtForceVelocitySample  = 1.;
 
 maxShorteningVelocity = 4.0;
-forceVelocityNormFiberHalfLength = 0.05;
+forceVelocityNormFiberHalfLength = 0.1;
 
 numberOfLengthSteps   = 3;
 numberOfVelocitySteps = 3;

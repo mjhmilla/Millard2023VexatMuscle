@@ -107,7 +107,7 @@ if(flag_appendEnergetics == 1)
     dV = mtInfo.muscleDynamicsInfo.dV;
     dW = mtInfo.muscleDynamicsInfo.dW;
   
-    if(isempty(mtInfo.state.derivative)==1)
+    if(sum(isnan(mtInfo.state.derivative))==length(mtInfo.state.derivative))
       dState = [ activationState(1);...
                  dT; dV; -dW];          
     else
@@ -118,7 +118,7 @@ if(flag_appendEnergetics == 1)
     
            
 else
-    if(isempty(mtInfo.state.derivative)==1)
+    if(sum(isnan(mtInfo.state.derivative))==length(mtInfo.state.derivative))
       dState = [ activationState(1)];          
     else
       dState = [ activationState(1);...
