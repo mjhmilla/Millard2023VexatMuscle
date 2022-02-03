@@ -316,12 +316,12 @@ for z=1:1:length(freqSeriesFiles)
               ddlaN = dstate(:,1)./optimalFiberLength;      
               l1N   =  state(:,3)./optimalFiberLength;
               dl1N  = dstate(:,3)./optimalFiberLength;
-              hillTerm     = extra(:,3);
-              dampingTerm  = extra(:,4);
-              trackingTerm = extra(:,5);              
-              hillTermLabel     = benchRecordSet.benchRecord.extraLabels{3};
-              dampingTermLabel  = benchRecordSet.benchRecord.extraLabels{4};
-              trackingTermLabel = benchRecordSet.benchRecord.extraLabels{5};
+              hillTerm     = extra(:,2);
+              dampingTerm  = extra(:,3);
+              trackingTerm = extra(:,4);              
+              hillTermLabel     = benchRecordSet.benchRecord.extraLabels{2};
+              dampingTermLabel  = benchRecordSet.benchRecord.extraLabels{3};
+              trackingTermLabel = benchRecordSet.benchRecord.extraLabels{4};
               
           case 4
               laN   =  state(:,3)./optimalFiberLength;
@@ -329,12 +329,12 @@ for z=1:1:length(freqSeriesFiles)
               ddlaN = dstate(:,2)./optimalFiberLength;      
               l1N   =  state(:,4)./optimalFiberLength;
               dl1N  = dstate(:,4)./optimalFiberLength;
-              hillTerm     = extra(:,3);
-              dampingTerm  = extra(:,4);
-              trackingTerm = extra(:,5);              
-              hillTermLabel     = benchRecordSet.benchRecord.extraLabels{3};
-              dampingTermLabel  = benchRecordSet.benchRecord.extraLabels{4};
-              trackingTermLabel = benchRecordSet.benchRecord.extraLabels{5};
+              hillTerm     = extra(:,2);
+              dampingTerm  = extra(:,3);
+              trackingTerm = extra(:,4);              
+              hillTermLabel     = benchRecordSet.benchRecord.extraLabels{2};
+              dampingTermLabel  = benchRecordSet.benchRecord.extraLabels{3};
+              trackingTermLabel = benchRecordSet.benchRecord.extraLabels{4};
           otherwise
               assert(0,'Model has unexpected number of states')
       end

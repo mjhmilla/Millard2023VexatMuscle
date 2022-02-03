@@ -20,14 +20,14 @@ function [errF, errFJac, errI, errIJac, modelCache] ...
 % |              
 % |================[|]===============|                     assuming
 %                   |     kx                               symmetry
-%                   |--|/\/\|--|                        |   |   |
-%                   |     bx   |========================|   |===|
-%                   |--[    ]--|                        |   |   |        kt
-%                                                       |   |   |   |--|/\/\|--|
-% |     Ig1              PEVK             Ig2           |   |   |---|    bt    |---
-% |---|\/\/\|--|-------|\/\/\/|--------|----------------|---|---|   |--[    ]--|
+%                   |--|/\/\|--|                        |   
+%                   |     bx   |========================|   
+%                   |--[    ]--|                        |        kt
+%                                                       |   |--|/\/\|--|
+% |     IgP       PEVK    IgD                           |---|    bt    |---
+% |---|\/\/\|--|\/\/\/|--------|------------------------|   |--[    ]--|
 % |===========[|]====================|                  |   |   |
-% |---- la --->|                                        |   |   |
+% |---- l1 --->|                                        |   |   |
 % |---------------------|\/\/\/\/\/\|-------------------|   |---| fecm
 % |---------------------[           ]-------------------|   |---| becm
 %
@@ -98,8 +98,7 @@ lceMin      = modelConstants.lceMin      ;
 kAXHN        = modelConstants.kAXHN        ;
 betaAXHN     = modelConstants.betaAXHN     ;
 
-betaCXHNLengthening  = modelConstants.normCrossBridgeCyclingDampingLengthening   ;
-betaCXHNShortening  = modelConstants.normCrossBridgeCyclingDampingShortening   ;
+betaCXHN  = modelConstants.normCrossBridgeCyclingDamping   ;
 
 betaNum     = modelConstants.betaNum     ;
 betafTN     = modelConstants.betafTN      ;
@@ -109,12 +108,9 @@ betafEcmHN   = modelConstants.betafEcmHN    ;
 betaN2AaHN  = modelConstants.betaN2AaHN  ;
 betaN2ApHN  = modelConstants.betaN2ApHN  ;
 
-fvNVelocityScaling = modelConstants.fvNVelocityScaling;
-tauShortening      = modelConstants.tauShortening       ;
-tauLengthening      = modelConstants.tauLengthening     ;
-tauSlowToFastCoefficient = modelConstants.tauSlowToFastCoefficient;
-tauSlowToFastOffsetCoefficient = ...
-  modelConstants.tauSlowToFastOffsetCoefficient;
+forceVelocityCalibrationFactor = modelConstants.forceVelocityCalibrationFactor;
+tau                = modelConstants.tau       ;
+lowActivationThreshold = modelConstants.lowActivationThreshold;
 
 
 lTitinFixedHN = modelConstants.lTitinFixedHN      ;
@@ -142,8 +138,6 @@ scaleIGP    = modelConstants.scaleIGP;
 
 DftfcnN_DltN_max = modelConstants.DftfcnN_DltN_max;
 
-dlaHNLambda = modelConstants.dlaHNLambda;
-tauLambda   = modelConstants.tauLambda;
 
 %%
 %Cached Quantities 
@@ -390,8 +384,8 @@ dlaNN  = dlaH*dlce_dlceNN*lceH_lce;
 dlfNN  = dlaNN;
 dlceNN = dlce*dlce_dlceNN;
 %fvN    = calcFvDer(dlceNN,0);
-fvNVelocityScaling=1.15;%1.15;
-fvN=calcFvDer(dlfNN*fvNVelocityScaling,0);
+
+fvN=calcFvDer(dlfNN*forceVelocityCalibrationFactor,0);
 
 %%------------------------------------------------------------------------------
 %Titin segments 
@@ -438,116 +432,33 @@ dlxHN = dlxH*lce_lceN;
 fxHN  = kxHNN*lxHN + betaxHNN*dlxHN;
 
 
-
-
-%lambda  = tanh( dlfNN*tauSlowToFastCoefficient + tauSlowToFastOffsetCoefficient)*0.5 + 0.5;
-
-%tvNN=0.05; %Transition velocity
-%lambda = exp(- dlaNN*dlaNN/(tvNN*tvNN));
-
-%2021/12/31
-%This alone will never work nicely: if the CE is switching from lengthening
-%to shortening, as would be the case during cyclical movement, the CE will
-%stick at a shortening velocity of zero as tau switches from slow to fast.
-%
-%This can be remedied by adding dwell time dynamics so that the CE has
-%to remain at a zero velocity for a period of time before its time dynamics
-%slow down. This would require adding a state lambda to the model that has
-%the following differential equation. The next question is what kind of
-%experiment would need to be replicated to evaluate dwell time dynamics?
-%
-%The experiments of Joyce 1969 come to mind: when a rapid ramp lenthening
-%is applied to a quiet muscle the first transient is larger than appears to
-%a muscle which was being lengthened or shortened in the prior moments. The
-%experiments of Kirsch et al. also come to mind, specifically to see what
-%governs the increase in phase response between the 15-90 Hz signals.
-%Perhaps repeating Kirsch et al. but under two conditions: one that has a
-%zero-mean perturbation wave form and one with a perturbation waveform that
-%is not zero mean but follows a ramp.
-%
-%dlambda = (exp(- dlaNN*dlaNN/(tvNN*tvNN)) - lambda)/tauLambda;
-
-%t0 = dlaNN/modelConstants.dlaHNLambda;
-%dlambda = (exp( -t0*t0 ) - lambda)/tauLambda;
-
-dlambda = (dlceNN-lambda)/tauLambda;
-t0=(lambda/modelConstants.dlaHNLambda);
-gamma = 1-exp(-t0*t0);
-
-%tauFast=tauShortening;
-%tauSlow=tauLengthening;
-tauFast = 0.001;
-tauSlow = 0.1;
-tau = 0.001;
-%tau  = tauSlow*(1-gamma) + tauFast*(gamma);
-%tau = (tauFast+tauSlow)*0.5;%tauSlow*(lambda)+tauFast*(1-lambda);
-%tau = 0.001;
-%tau     = tauLengthening*lambda + tauShortening*(1-lambda);
-
-
-%betaCXHN   =(betaCXHNLengthening + betaCXHNShortening)*0.5;
-betaCXHNSlow = 1000;
-betaCXHNFast = 10;
-betaCXHN = 1;%betaCXHNSlow*(1-gamma) + betaCXHNFast*(gamma);
-%betaCXHN   =betaCXHNLengthening*lambda + betaCXHNShortening*(1-lambda);
-%30/12/2021
-%If betaCXHN is constant + the slow time constant is 0.1 
-%there is no phase difference in the model's response
-%
-%If betaCXHN is variable + the slow time constant is 0.01 
-%there is a phase difference in the model's response and coefficient
-%scatter
-%
-%If betaCXHN is constant + the slow time constant is 0.01 
-%there is a phase difference in the model's response and coefficient
-%scatter
-%
-%Therefore the interpolated damping model does nothing. Eliminiate it.
-
-% Attachment point acceleration: lxHN+dlxHN
-% Active? Acceleration driven so that x-bridge force tracks 
-%         Hill in the long run
-% Passive? Acceleration driven so that the cross-bridge strain is 0
-
-
 lambda              =   0;
 ddlaHN_HillError    =   ((fxHN  - a*flN*(fvN))/(tau));
 ddlaHN_Damping      = - betaCXHN*dlaNN;
 
-ka                  = (a/0.05);
+ka                  = (a/lowActivationThreshold);
 ddlaHN_Tracking     =   exp(-ka*ka)*(lxHN + dlxHN);
-%ddlaHN_Tracking      = (lxHN + dlxHN);
-%ddlaHN = ddlaHN_HillError + ddlaHN_Damping + ddlaHN_Tracking;
-%tau=0.01;
+ddlaHN = ddlaHN_HillError + ddlaHN_Damping + ddlaHN_Tracking;
 
-%kxHNN*lxHN + betaxHNN*dlxHN
-m      = 0.01;
+%An alternate update rule for cross-bridge cycling. Note that since
+%the zetax term is greater than the physical damping term in the model, this
+%has the property of positive feedback: the more active lengthening takes place
+%the more resistant to the movement of ls becomes. This has some positive
+%aspects: simulations of Herzog & Leonard 2002 are improved, and the time
+%constant used can be much bigger. This has two points which give me pause: 
+%first, is there evidence of a positive feedback mechanism?; second, such a 
+%mechanism cannot continue without restraint, so what happens during a really 
+%long active stretch?.
 
+%m      = 0.01;
+%wnx    = sqrt(kxHNN/m);%10*2*pi;
+%zetax  = sqrt(a*flN)*betaAXHN/(sqrt(kAXHN/m)*2);
 
-wnx    = sqrt(kxHNN/m);%10*2*pi;
-
-%  kxHNN     = a*flN*kAXHN;
-%  betaxHNN  = a*flN*betaAXHN;
-%  zeta = beta/(2*wnx)
-
-zetax  = sqrt(a*flN)*betaAXHN/(sqrt(kAXHN/m)*2);
-zeta   = 1;
-ddlaHN = -((a*flN*fvN/m) - (2*zeta*wnx)*dlxHN - (wnx*wnx)*lxHN)...
-           + ddlaHN_Tracking; %- betaCXHN*dlaNN
+%ddlaHN = -(a*flN*fvN/m + (2*zetax*wnx)*dlaHN) + (2*zetax*wnx)*dlxHN + wnx*wnx*lxHN...
+%           + ddlaHN_Tracking; 
 
 ddlaH  = ddlaHN*lceN_lce;
 
-%%
-% Experimenting with penalty functions that do not depend on embedding
-% Hill's curve
-%%
-
-%fxHN  = kxHNN*(1+dlfNN)*lxHN + betaxHNN*(1+dlfNN)*dlxHN;
-%fxHNStatic  = a*flN*(1+dlfNN);
-%tauLengthening = tauLengthening;
-%tauShortening  = tauLengthening*10;
-%tau     = tauLengthening*lambda + tauShortening*(1-lambda);
-%ddlaHN = (fxHN-fxHNStatic)/(tau)  - betaCXHN*dlaNN + (lxHN + dlxHN); %- betaCXHN*dlaNN +
 
 
 %Tendon force
@@ -626,7 +537,6 @@ if(flag_updateModelCache == 1)
     modelCache.tau      = tau;
     modelCache.lambda   = lambda;
     modelCache.dlambda  = dlambda;
-    modelCache.gamma    = gamma;
     modelCache.ddlaHN_HillError = ddlaHN_HillError;
     modelCache.ddlaHN_Damping   = ddlaHN_Damping;
     modelCache.ddlaHN_Tracking  = ddlaHN_Tracking;

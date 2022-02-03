@@ -2,9 +2,28 @@ clc;
 close all;
 clear all;
 
-
-
-
+%%
+% @author Matthew Millard
+% @date 3 Febuary 2022 
+%
+% Figure 3 of Lin & Rymer makes me think that there is a dwell time dependency:
+% the stiffness of the activated cat soleus increases as time passes from the
+% first lengthening. Dwell time dependency terms show up, interestingly, in 
+% another macroscopic phenomena that is dependent on the microscopic: friction.
+% Here I'm using this little script to have a look at what the consequences
+% might be if I introduce a dwell time dependency term into the model. I'm 
+% hestitant to do this with the present implementation of the model, as it
+% will add a state, and will make the current matlab implementation even slower.
+% Pressure is mounting to code up a fast C++ implementation.
+%
+% Lin DC, Rymer WZ. Mechanical properties of cat soleus muscle elicited by 
+% sequential ramp stretches: implications for control of muscle. Journal of 
+% neurophysiology. 1993 Sep 1;70(3):997-1008.
+%
+% Gonthier Y, McPhee J, Lange C, Piedboeuf JC. A regularized contact model with 
+% asymmetric damping and dwell-time dependent friction. Multibody System 
+% Dynamics. 2004 Apr;11(3):209-33.
+%%
 
 npts = 1000;
 timeStart   = 0;

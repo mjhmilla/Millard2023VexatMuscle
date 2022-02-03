@@ -22,16 +22,12 @@ sarcomerePropertiesUpd = sarcomereProperties;
 %%
 % Simple updates
 %%
-sarcomerePropertiesUpd.slidingTimeConstantLengthening ...
-  = sarcomerePropertiesUpd.slidingTimeConstantLengthening*scaleSlidingTimeConstant;
-sarcomerePropertiesUpd.slidingTimeConstantShortening ...
-  = sarcomerePropertiesUpd.slidingTimeConstantShortening*scaleSlidingTimeConstant;
+sarcomerePropertiesUpd.slidingTimeConstant ...
+  = sarcomerePropertiesUpd.slidingTimeConstant*scaleSlidingTimeConstant;
 
 
-sarcomerePropertiesUpd.normCrossBridgeCyclingDampingLengthening  ...
-  = sarcomereProperties.normCrossBridgeCyclingDampingLengthening*scaleCrossBridgeCyclingDamping;     
-sarcomerePropertiesUpd.normCrossBridgeCyclingDampingShortening  ...
-  = sarcomereProperties.normCrossBridgeCyclingDampingShortening*scaleCrossBridgeCyclingDamping;     
+sarcomerePropertiesUpd.normCrossBridgeCyclingDamping  ...
+  = sarcomereProperties.normCrossBridgeCyclingDamping*scaleCrossBridgeCyclingDamping;     
 
 muscleArchitectureUpd.normTendonDampingLinear   = normTendonDampingLinear;
 muscleArchitectureUpd.normTendonDampingConstant = normTendonDampingConstant;

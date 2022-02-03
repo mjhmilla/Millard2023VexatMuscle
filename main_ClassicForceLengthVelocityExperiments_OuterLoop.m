@@ -63,16 +63,3 @@ if(flag_simulateElasticTendon==1)
   main_ClassicForceLengthVelocityExperiments;
 end
   
-
-
-% 1 Feb 2021
-% The model gives descent results, with a slower time constant (which
-% improves the results of Kirch et al., and speeds up the simulations)
-% if the sarcomere properties are massaged a bit:
-%
-% sarcomerePropertiesOpus31.fvNVelocityScaling = 1;
-% sarcomerePropertiesOpus31.slidingTimeConstantSlow = 0.002;
-% sarcomerePropertiesOpus31.slidingTimeConstantFast = 0.002;
-% 
-% sarcomerePropertiesOpus31.normCrossBridgeCyclingDampingSlow = 10;%120/10;
-% sarcomerePropertiesOpus31.normCrossBridgeCyclingDampingFast = 1;%20/10;
