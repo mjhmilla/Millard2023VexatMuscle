@@ -7,12 +7,9 @@ flag_simulateHillModel            = 0;
 flag_simulateOpus31Model          = 1;
 flag_simulateRigidTendon          = 1;
 flag_simulateElasticTendon        = 0;
-disp('calcEquilibriumErrorOpus31 line 386 manually set scaling');
-disp('calcEquilibriumErrorOpus31 line 471 betaCXHN manually set');
-disp('calcEquilibriumErrorOpus31 line 466 tau manually set');
-disp('calcMillard2019MuscleInfoOpus31 line 184 added dlaHNLambda and tauLambda manually');
-disp('calcEquilibriumErrorOpus31 line 470 manually added tauFast and tauSlow')
-disp('calcEquilibriumErrorOpus31 ddlaHN updated');
+
+
+
 flag_plotDataComparison           = 1;  
 
 
@@ -21,6 +18,7 @@ fiberDampingCoefficient           = 0.01;
 
 flag_useFig3KirchBoskovRymer1994  = 0; 
 flag_useOctave                    = 0;
+
 
 flag_activeForceLengthSimulations  = 1;
 flag_passiveForceLengthSimulations = 1;  
@@ -52,14 +50,37 @@ if(flag_simulateRigidTendon==1)
   if(flag_plotDataComparison==1)
       flag_buildCombinedPlot  = 1;  
   end
-  flag_useElasticTendon   = 0;   
+
+  flag_useElasticTendon   = 0;  
+  flag_useCrossbridgeStiffnessCalibratedCurves = 0; 
   main_ClassicForceLengthVelocityExperiments;
+
+
+  if(flag_simulateOpus31Model==1)
+    flag_useCrossbridgeStiffnessCalibratedCurves = 1;  
+    flag_simulateHillModelStashed = flag_simulateHillModel;
+    
+    flag_simulateHillModel=0;   
+    main_ClassicForceLengthVelocityExperiments;
+    flag_simulateHillModel=flag_simulateHillModelStashed
+  end
 end
 if(flag_simulateElasticTendon==1)
   if(flag_plotDataComparison==1)
       flag_buildCombinedPlot  = 2; 
   end   
   flag_useElasticTendon   = 1;   
+
+  flag_useCrossbridgeStiffnessCalibratedCurves = 0; 
   main_ClassicForceLengthVelocityExperiments;
+
+  if(flag_simulateOpus31Model==1)
+    flag_useCrossbridgeStiffnessCalibratedCurves = 1;  
+    flag_simulateHillModelStashed = flag_simulateHillModel;
+    
+    flag_simulateHillModel=0;   
+    main_ClassicForceLengthVelocityExperiments;
+    flag_simulateHillModel=flag_simulateHillModelStashed
+  end
 end
   

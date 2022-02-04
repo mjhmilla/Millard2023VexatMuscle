@@ -5,8 +5,10 @@ function [activeForceLengthCurve, ...
                                       normActinLength, ...
                                       normZLineThickness,...
                                       normSarcomereLengthZeroForce,...
+                                      normCrossbridgeStiffness,...
                                       curviness, ...
                                       shiftLengthActiveForceLengthCurveDescendingCurve,...
+                                      flag_compensateForCrossbridgeStiffness,...
                                       flag_enableNumericallyNonZeroGradient, ...
                                       smallNumericallyNonZeroNumber,...
                                       computeIntegral, ...
@@ -75,6 +77,11 @@ if(flag_enableNumericallyNonZeroGradient == 1)
 
   p0DyDx =  smallNumericallyNonZeroNumber;  
   p5DyDx = -smallNumericallyNonZeroNumber;
+end
+
+if(flag_compensateForCrossbridgeStiffness==1)
+  p0DyDx = p0DyDx - c0y/normCrossbridgeStiffness;
+  p5DyDx = p5DyDx - c4y/normCrossbridgeStiffness;
 end
 
 % Corner 0: zero force happens ... for some (largely) unknown reason.
@@ -147,6 +154,10 @@ netNormInterferenceTension     = 0.5;
 c1y = ( normShallowPlateauInterference*netNormInterferenceTension ...
       + normShallowPlateauOverlap )/normMaxOverlap;
 
+if(flag_compensateForCrossbridgeStiffness==1)
+  c1x = c1x - c1y/normCrossbridgeStiffness;
+end
+
 
 % Corner 3: maximum overlap, short end of the plateau
 %  
@@ -161,6 +172,9 @@ c1y = ( normShallowPlateauInterference*netNormInterferenceTension ...
 c2x = 1.0 - normMyosinBareLength; %The
 c2y = 1.0;
 
+if(flag_compensateForCrossbridgeStiffness==1)
+  c2x = c2x - c2y/normCrossbridgeStiffness;
+end
 
 % Corner 4: maximum overlap, long end of the plateau
 %  
@@ -175,6 +189,9 @@ c2y = 1.0;
 c3x = 1.0 + normMyosinBareLength; %The
 c3y = 1.0;
 
+if(flag_compensateForCrossbridgeStiffness==1)
+  c3x = c3x - c3y/normCrossbridgeStiffness;
+end
 
 % Corner 3: Overlap is lost
 %
@@ -188,6 +205,11 @@ c3y = 1.0;
 
 c4x = 2*normZLineThickness + 2*normActinLength + normMyosinLength;
 %c4y : already set 
+
+if(flag_compensateForCrossbridgeStiffness==1)
+  c4x = c4x - c4y/normCrossbridgeStiffness;
+end
+
 
 %%
 % Calculate the control point locations and slopes
