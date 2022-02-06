@@ -79,10 +79,6 @@ if(flag_enableNumericallyNonZeroGradient == 1)
   p5DyDx = -smallNumericallyNonZeroNumber;
 end
 
-if(flag_compensateForCrossbridgeStiffness==1)
-  p0DyDx = p0DyDx - c0y/normCrossbridgeStiffness;
-  p5DyDx = p5DyDx - c4y/normCrossbridgeStiffness;
-end
 
 % Corner 0: zero force happens ... for some (largely) unknown reason.
 %
@@ -154,9 +150,9 @@ netNormInterferenceTension     = 0.5;
 c1y = ( normShallowPlateauInterference*netNormInterferenceTension ...
       + normShallowPlateauOverlap )/normMaxOverlap;
 
-if(flag_compensateForCrossbridgeStiffness==1)
-  c1x = c1x - c1y/normCrossbridgeStiffness;
-end
+% if(flag_compensateForCrossbridgeStiffness==1)
+%   c1x = c1x - c1y/(c1y*normCrossbridgeStiffness);
+% end
 
 
 % Corner 3: maximum overlap, short end of the plateau
@@ -172,9 +168,9 @@ end
 c2x = 1.0 - normMyosinBareLength; %The
 c2y = 1.0;
 
-if(flag_compensateForCrossbridgeStiffness==1)
-  c2x = c2x - c2y/normCrossbridgeStiffness;
-end
+% if(flag_compensateForCrossbridgeStiffness==1)
+%   c2x = c2x - c2y/(c2y*normCrossbridgeStiffness);
+% end
 
 % Corner 4: maximum overlap, long end of the plateau
 %  
@@ -189,9 +185,9 @@ end
 c3x = 1.0 + normMyosinBareLength; %The
 c3y = 1.0;
 
-if(flag_compensateForCrossbridgeStiffness==1)
-  c3x = c3x - c3y/normCrossbridgeStiffness;
-end
+% if(flag_compensateForCrossbridgeStiffness==1)
+%   c3x = c3x - c3y/(c3y*normCrossbridgeStiffness);
+% end
 
 % Corner 3: Overlap is lost
 %
@@ -206,9 +202,6 @@ end
 c4x = 2*normZLineThickness + 2*normActinLength + normMyosinLength;
 %c4y : already set 
 
-if(flag_compensateForCrossbridgeStiffness==1)
-  c4x = c4x - c4y/normCrossbridgeStiffness;
-end
 
 
 %%
@@ -247,9 +240,11 @@ p3x     = c2x + 0.5*c2c3x;
 p3y     = c2y + 0.5*c2c3y;
 p3DyDx  = (c2c3y)/(c2c3x);
 
-assert( abs(p3x - 1.0) < 1e-6);
-assert( abs(p3y - 1.0) < 1e-6);
-assert( abs(p3DyDx )   < 1e-6);
+if(flag_compensateForCrossbridgeStiffness==0)
+    assert( abs(p3x - 1.0) < 1e-6);
+    assert( abs(p3y - 1.0) < 1e-6);
+    assert( abs(p3DyDx )   < 1e-6);
+end
 
 p3x     = 1.;
 p3y     = 1.;
@@ -280,6 +275,13 @@ activeForceLengthCurveAnnotationPoints.y ...
                       c2y;...
                       c3y;...
                       c4y];                    
+
+if(flag_compensateForCrossbridgeStiffness==1)
+    p1x = p1x - p1y/(p1y*normCrossbridgeStiffness);
+    p2x = p2x - p2y/(p2y*normCrossbridgeStiffness);
+    p3x = p3x - p3y/(p3y*normCrossbridgeStiffness);
+    p4x = p4x - p4y/(p4y*normCrossbridgeStiffness);    
+end
 
 %Compute the locations of the control points
 b0 = calcQuinticBezierCornerControlPoints( p0x, p0y,  p0DyDx, 0, ...

@@ -1,5 +1,5 @@
 function fig = plotStructOfBezierSplines( curveStruct ,...
-                                          ignoreStructsWithThisKeyWord)
+                                          ignoreStructsWithTheseKeyWords)
 
 
 curveNames =fieldnames(curveStruct);
@@ -7,11 +7,16 @@ curveNames =fieldnames(curveStruct);
 fig  = [];
 
 for i=1:1:length(curveNames)
-  
-  idxKeyWord = strfind(curveNames{i},ignoreStructsWithThisKeyWord);
-  
+
+  flag_ignore=0;
+  for j=1:1:length(ignoreStructsWithTheseKeyWords)
+    idxKeyWord = strfind(curveNames{i},ignoreStructsWithTheseKeyWords{j});
+    if(isempty(idxKeyWord)==0)
+        flag_ignore=1;
+    end
+  end
   if(isempty(curveStruct.(curveNames{i})) == 0 ...
-     && isempty(idxKeyWord) == 1)
+     && flag_ignore==0)
     
     fig.(curveNames{i}) = figure;
 

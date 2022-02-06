@@ -1,4 +1,4 @@
-flag_outerLoopMode = 1;
+flag_outerLoopMode = 0;
 
 if(flag_outerLoopMode == 0)
 
@@ -96,7 +96,7 @@ createMusculoTendonFcn = ...
       flag_useOctave);
 
 figH = plotStructOfBezierSplines( felineSoleusNormMuscleCurves,...
-                                  'Inverse');                          
+                                  {'Inverse','use'});                          
 
 %%
 % Note the average offset between the active-force-length curve and

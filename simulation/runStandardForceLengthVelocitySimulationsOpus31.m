@@ -108,8 +108,9 @@ if(flag_activeForceLengthSimulations==1)
 
   lceNormMin            = normMuscleCurves.activeForceLengthCurve.xEnd(1);
   lceNormMax            = normMuscleCurves.activeForceLengthCurve.xEnd(2);
+  lceDelta = (lceNormMax-lceNormMin)/20;
   lceSteps              = numberOfLengthSteps;
-  normFiberLengthVector = [lceNormMin:(lceNormMax-lceNormMin)/(lceSteps-1):lceNormMax]';
+  normFiberLengthVector = [(lceNormMin):(lceNormMax-lceNormMin)/(lceSteps-1):(lceNormMax)]';
 
   [val, idx] = min(abs(normFiberLengthVector-1));
   normFiberLengthVector(idx)=1; %The optimal fiber length occurs perfectly once.
@@ -237,7 +238,7 @@ if(flag_passiveForceLengthSimulations==1)
   lpEnd   = lceATMax + ltSlk;
   
   tRampStart  = 0.1;
-  tRampEnd    = ((lpEnd-lpStart)/lceOpt)*20 + tRampStart;
+  tRampEnd    = ((lpEnd-lpStart)/lceOpt)*10 + tRampStart;
   rampSlope   = (lpEnd-lpStart)/(tRampEnd-tRampStart);
   pathFcn     = @(argT)calcRampStateSharp(argT,tRampStart,tRampEnd,lpStart,rampSlope);
 

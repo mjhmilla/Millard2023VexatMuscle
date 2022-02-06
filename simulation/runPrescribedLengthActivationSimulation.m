@@ -478,7 +478,11 @@ for j=1:1:length(tV)
     dmuscleState     = zeros(benchConfig.numberOfMuscleStates,1);
     
      if(benchConfig.numberOfMuscleStates ~= 0)
-        muscleState = muscleStateV(j,:)'; 
+        if( j > size(muscleStateV,1))
+            here=1;
+        else
+            muscleState = muscleStateV(j,:)'; 
+        end
      end
     
     
