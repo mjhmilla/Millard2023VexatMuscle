@@ -33,6 +33,7 @@ if(flag_outerLoopMode == 0)
   flag_forceVelocitySimulations      = 0;
   
   normFiberLengthAtForceVelocitySample  = 1.;
+  flag_removeActiveTitinForces = 0;
   
   maxShorteningVelocity = 4.5;
   forceVelocityNormFiberHalfLength = 0.05;
@@ -124,6 +125,8 @@ musculotendonProperties   = defaultFelineSoleus.musculotendon;
 sarcomereProperties       = defaultFelineSoleus.sarcomere;
 normMuscleCurves          = defaultFelineSoleus.curves;
 
+
+
 normTendonDampingConstant = ...
     musculotendonProperties.normTendonDampingConstant;
 normTendonDampingLinear = ...
@@ -179,6 +182,11 @@ else
   sarcomerePropertiesOpus31       = sarcomerePropertiesOpus31_RT;
   musculotendonPropertiesOpus31   = musculotendonPropertiesOpus31_RT;
   
+end
+
+if(flag_removeActiveTitinForces==1)
+    sarcomerePropertiesOpus31.normMaxActiveTitinToActinDamping = ...
+        sarcomerePropertiesOpus31.normPassiveTitinToActinDamping;
 end
 
 %%
@@ -392,6 +400,10 @@ if(flag_plotData == 1)
     calcBezierYFcnXCurveSampleVector(...
     normMuscleCurves.activeForceLengthCurve, 100,[]);
 
+  activeForceLengthCalibratedCurveSample = ...
+    calcBezierYFcnXCurveSampleVector(...
+    normMuscleCurves.activeForceLengthCalibratedCurve, 100,[]);
+
   passiveForceLengthCurveSample = ...
     calcBezierYFcnXCurveSampleVector(...
     normMuscleCurves.fiberForceLengthCurve, 100,[]);
@@ -405,6 +417,11 @@ if(flag_plotData == 1)
          activeForceLengthCurveSample.y,...
          '-','Color',[0.75,0.75,0.75].*1,'LineWidth',3);
     hold on;  
+    plot(activeForceLengthCalibratedCurveSample.x,...
+         activeForceLengthCalibratedCurveSample.y,...
+         '--','Color',[0.75,0.75,0.75].*0,'LineWidth',0.5);
+    hold on;  
+    
     plot(passiveForceLengthCurveSample.x,...
          passiveForceLengthCurveSample.y,...
          '-','Color',[0.75,0.75,0.75].*1,'LineWidth',3);
@@ -664,6 +681,9 @@ if(flag_plotData == 1)
   forceVelocityCurveSample = ...
     calcBezierYFcnXCurveSampleVector(...
     normMuscleCurves.fiberForceVelocityCurve, 100,[]);
+  forceVelocityCalibratedCurveSample = ...
+    calcBezierYFcnXCurveSampleVector(...
+    normMuscleCurves.fiberForceVelocityCalibratedCurve, 100,[]);
 
   figure(figClassicFv);
   subplot('Position',reshape(subPlotPanel(1,1,:),1,4));    
@@ -673,6 +693,11 @@ if(flag_plotData == 1)
          forceVelocityCurveSample.y,...
          '-','Color',[0.75,0.75,0.75].*1,'LineWidth',3);
     hold on;  
+    plot(forceVelocityCalibratedCurveSample.x,...
+         forceVelocityCalibratedCurveSample.y,...
+         '--','Color',[0.75,0.75,0.75].*0,'LineWidth',0.5);
+    hold on;  
+
   end
   
 
@@ -739,11 +764,11 @@ if(flag_plotData == 1)
     end
   end
     
-  assert(  size(dataForceVelocity31.benchRecord.time,2) ...
-        == size(dataForceVelocityHill.benchRecord.time,2) );
+  %assert(  size(dataForceVelocity31.benchRecord.time,2) ...
+  %      == size(dataForceVelocityHill.benchRecord.time,2) );
 
-  assert(  size(dataForceVelocity31Cal.benchRecord.time,2) ...
-        == size(dataForceVelocityHill.benchRecord.time,2) );
+  %assert(  size(dataForceVelocity31Cal.benchRecord.time,2) ...
+  %      == size(dataForceVelocityHill.benchRecord.time,2) );
 
   % Uncalibrated Opus 31 results
   for k=1:1:size(dataForceVelocity31.benchRecord.time,2)  
