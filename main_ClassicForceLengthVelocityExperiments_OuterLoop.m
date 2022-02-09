@@ -3,15 +3,15 @@ close all;
 clear all;
 
 %Parameters that do not change
-flag_simulateHillModel            = 1;  
-flag_simulateOpus31Model          = 1;
+flag_simulateHillModel            = 0;  
+flag_simulateOpus31Model          = 0;
 flag_useSimulatePlotRigidTendon   = 1;
 flag_useSimulatePlotElasticTendon = 1;
 
 flag_removeActiveTitinForces      = 0;
 
 flag_plotDataComparison           = 1;  
-
+flag_plotHillModel                = 0;
 
 flag_useFiberDamping              = 1;
 fiberDampingCoefficient           = 0.01;
