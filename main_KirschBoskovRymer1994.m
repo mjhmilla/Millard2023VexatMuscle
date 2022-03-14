@@ -23,7 +23,8 @@ if(flag_outerLoopMode == 0)
   flag_pubPlotStiffnessDampingKBR1994Fig9Fig10  = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig12      = 0;
   flag_pubTabulateStiffnessDampingVariation     = 0;
-  
+  flag_useCalibratedOpus31Curves= 1;
+
 end 
 
 
@@ -349,6 +350,8 @@ tmp = load('output/structs/defaultFelineSoleus.mat');
 musculotendonProperties   = tmp.defaultFelineSoleus.musculotendon;
 sarcomereProperties       = tmp.defaultFelineSoleus.sarcomere;
 normMuscleCurves          = tmp.defaultFelineSoleus.curves;
+
+normMuscleCurves.useCalibratedCurves=flag_useCalibratedOpus31Curves;
 
 normTendonDampingConstant = ...
     musculotendonProperties.normTendonDampingConstant;

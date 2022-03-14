@@ -17,7 +17,9 @@ if(flag_outerLoopMode == 0)% && flag_buildCombinedPlot == 1)
   
   flag_simulateHillModel                        = 1; 
   flag_simulateOpus31Model                      = 1;
-  
+  flag_useCalibratedOpus31Curves                = 1;
+  flag_useTitinCurvesWithRigidIgDSegment        = 1;
+
   flag_useFig3KirchBoskovRymer1994              = 0; 
   flag_useElasticTendon                         = 0;  
   flag_useFiberDamping                          = 1;
@@ -105,6 +107,10 @@ load('output/structs/defaultFelineSoleus.mat')
 musculotendonProperties   = defaultFelineSoleus.musculotendon;
 sarcomereProperties       = defaultFelineSoleus.sarcomere;
 normMuscleCurves          = defaultFelineSoleus.curves;
+
+normMuscleCurves.useCalibratedCurves = flag_useCalibratedOpus31Curves;
+normMuscleCurves.useTitinCurvesWithRigidIgDSegment=...
+    flag_useTitinCurvesWithRigidIgDSegment;
 
 normTendonDampingConstant = ...
     musculotendonProperties.normTendonDampingConstant;
@@ -199,6 +205,8 @@ if(isempty(normActiveTitinToActinDamping)==0)
 else
   normActiveTitinToActinDamping = sarcomereProperties.normMaxActiveTitinToActinDamping;
 end
+
+
 
 %%
 % Meta configuration properties: Do not touch.  

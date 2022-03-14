@@ -190,6 +190,8 @@ if(flag_removeActiveTitinForces==1)
         sarcomerePropertiesOpus31.normPassiveTitinToActinDamping;
 end
 
+
+
 %%
 % Generate model & parameter specific names
 %%

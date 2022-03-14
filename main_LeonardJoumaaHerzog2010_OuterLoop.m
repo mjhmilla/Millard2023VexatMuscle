@@ -7,6 +7,8 @@ clear all;
 flag_simulateActiveStretch  = 1;
 flag_simulatePassiveStretch = 1;
 
+flag_useCalibratedOpus31Curves= 1;
+
 nominalNormalizedFiberLength = 1.0;
 
 normActiveTitinToActinDamping   = [];% take the default. Prev. 6; 

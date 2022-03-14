@@ -12,6 +12,7 @@ if(flag_outerLoopMode == 0)
 
   flag_simulateHillModel                        = 0; 
   flag_simulateOpus31Model                      = 0;
+  flag_useCalibratedOpus31Curves= 1;
 
   flag_simulateActiveStretch  = 1;
   flag_simulatePassiveStretch = 1;
@@ -88,6 +89,8 @@ load('output/structs/defaultFelineSoleus.mat')
 musculotendonProperties   = defaultFelineSoleus.musculotendon;
 sarcomereProperties       = defaultFelineSoleus.sarcomere;
 normMuscleCurves          = defaultFelineSoleus.curves;
+
+normMuscleCurves.useCalibratedCurves = flag_useCalibratedOpus31Curves;
 
 normTendonDampingConstant = ...
     musculotendonProperties.normTendonDampingConstant;

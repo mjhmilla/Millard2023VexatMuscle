@@ -16,7 +16,7 @@ function [sarcomereProperties] = ...
 %
 % The fraction of the passive force length curve that is attributed to
 % the extracellular matrix comes from the average of the maximum and
-% minimum fraction observed by Pardo et al. in the study they conducted
+% minimum fraction observed by Prado et al. in the study they conducted
 % on rabbit skeletal muscle.
 %
 % Finally, the terminal stiffness of the section of titin between the
@@ -195,7 +195,7 @@ loptIGDTotalNorm  = 1*0.5-(loptT12Norm+loptIGPNorm+loptPEVKNorm); %0.5: applies 
 
 %IGD: This is the small section of the distal Ig that section that
 % is still free to stretch. The rest is bound to myosin and does not 
-% flex at all.
+% stretch at all.
 
 disp('Reminder: remove all lfiso variables');
 lfisoIGPNorm  = 0.45812/optSarcomereLengthHuman;
@@ -252,8 +252,8 @@ loptIGDFixedCat = normHalfMyosinLength*optSarcomereLength;
 loptIGDFreeCat =  loptIGDFreeNorm*optSarcomereLength;
 
 
-fprintf('%e\t%e\tIgDFixedCat\n', loptIGDFixedCat, loptIGDFixedNorm);
-fprintf('%e\t%e\tIgDFreeCat\n' , loptIGDFreeCat, loptIGDFreeNorm);
+fprintf('%e\t%e\tIgDFixedCat\n'            , loptIGDFixedCat, loptIGDFixedNorm);
+fprintf('%e\t%e\tIgDFreeCat\n'             , loptIGDFreeCat, loptIGDFreeNorm);
 fprintf('%e\tNorm. IgP Stretch Rate\n'     , normStretchRateIgP);
 fprintf('%e\tNorm. Pevk Stretch Rate\n'    , normStretchRatePevk);
 fprintf('%e\tNorm. IgD Stretch Rate\n'     , normStretchRateIgDFree);
@@ -450,6 +450,7 @@ sarcomereProperties = ...
             'normCrossBridgeCyclingDamping'    , 1.,...
             'normMaxActiveTitinToActinDamping' , 20,... 
             'normPassiveTitinToActinDamping'   , 0.25, ...
+            'normPevkToActinAttachmentPoint'   , 0.5,... 
             'slidingTimeConstant', 0.001,...
             'forceVelocityCalibrationFactor',1.15,...          
             'activationTimeConstant',0.03,...

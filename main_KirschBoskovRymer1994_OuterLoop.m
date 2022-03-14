@@ -11,6 +11,7 @@ flag_frequencyAnalysis  = 0;
 flag_generatePlots      = 1;
 
 
+flag_useCalibratedOpus31Curves= 1;
 
 
 if(flag_runSimulations == 1)
