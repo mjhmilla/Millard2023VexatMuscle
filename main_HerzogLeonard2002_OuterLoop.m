@@ -29,7 +29,7 @@ flag_simulateStatic         = 1;
 flag_simulateHillModel        = 0; 
 flag_simulateOpus31Model      = 1;
 flag_useCalibratedOpus31Curves= 1;
-flag_useTitinCurvesWithRigidIgDSegment   = 1;
+flag_useTitinCurvesWithRigidIgDSegment   = 0;
 flag_plotDataComparison       = 1;
 
 tmp = load('output/structs/normalizedFiberLengthStartHerzogLeonard2002.mat',...
@@ -43,7 +43,7 @@ nominalNormalizedFiberLength  = tmp.lceNStart;
 scaleMaximumIsometricForce     = [];
 scaleOptimalFiberLength        = [];%[]: take the default. Prev. 1.0;
 scaleSlidingTimeConstant       = [];%[]: take the default. Prev. 0.2;
-normActiveTitinToActinDamping  = 200;%[]: take the default. Prev. 6; 
+normActiveTitinToActinDamping  = [];%[]: take the default. Prev. 6; 
 normPassiveTitinToActinDamping = [];%[]: take the default. Prev. 1.5; 
 
 
