@@ -406,8 +406,14 @@ if(flag_plotData == 1)
   
   subPlotPanel(1,1,:)=subPlotHerzogLeonard2000Stability(2,1,:);
   subPlotPanel(2,1,:)=subPlotHerzogLeonard2000Stability(3,1,:);
+  subPlotPanel(1,1,2) = subPlotPanel(1,1,2) + 0.5*subPlotPanel(1,1,4);
+  subPlotPanel(2,1,2) = subPlotPanel(2,1,2) + 0.5*subPlotPanel(1,1,4); 
   subPlotPanel(3,1,:)=subPlotPanel(1,1,:);
   subPlotPanel(3,1,1)=subPlotPanel(3,1,1)+subPlotPanel(3,1,3)*1.2;
+  subPlotPanel(4,1,:)=subPlotPanel(2,1,:);
+  subPlotPanel(4,1,1)=subPlotPanel(4,1,1)+subPlotPanel(4,1,3)*1.2;
+  subPlotPanel(5,1,:)=subPlotPanel(2,1,:);
+  subPlotPanel(5,1,2)=subPlotPanel(5,1,2)-subPlotPanel(5,1,4)*1.2;
   %%
   % Force-Length Plots: Plot the reference curves
   %%
@@ -838,9 +844,7 @@ if(flag_plotData == 1)
              'DisplayName',nameOpus31);
         hold on;  
         box off;
-        
-
-        
+                
         subplot('Position',reshape(subPlotPanel(3,1,:),1,4));
           plot( dataForceVelocity31.benchRecord.time(:,k), ...
               dataForceVelocity31.benchRecord.normFiberLength(:,k),...
@@ -857,10 +861,72 @@ if(flag_plotData == 1)
              'DisplayName',nameOpus31);
           hold on;
         xlabel('Time (s)');
-        ylabel('Norm. Fiber Length');
-
+        ylabel('Norm. Fiber Length');        
         box off;
-        subplot('Position',reshape(subPlotPanel(2,1,:),1,4));
+
+        %subplot('Position',reshape(subPlotPanel(2,1,:),1,4));
+
+        if(isempty(dataForceVelocity31.benchRecord.extra)==0)
+            n = size(dataForceVelocity31.benchRecord.time,1);
+            idxfxHN  = 6;
+            idxfEcmHN= 7;
+            idxf1HN  = 8;
+            idxf2HN  = 9;
+            idxfTN   = 10;
+            
+            fxHNData = reshape(...
+                dataForceVelocity31.benchRecord.extra(:,k,idxfxHN),n,1);
+            fecmHNData = reshape(...
+                dataForceVelocity31.benchRecord.extra(:,k,idxfEcmHN),n,1);
+            f1HNData = reshape(...
+                dataForceVelocity31.benchRecord.extra(:,k,idxf1HN),n,1);
+            f2HNData = reshape(...
+                dataForceVelocity31.benchRecord.extra(:,k,idxf2HN),n,1);
+            fTNData = reshape(...
+                dataForceVelocity31.benchRecord.extra(:,k,idxfTN),n,1);
+    
+            if k==idxA
+                subplot('Position',reshape(subPlotPanel(4,1,:),1,4));
+            end
+            if k==idxB
+                subplot('Position',reshape(subPlotPanel(5,1,:),1,4));                
+            end
+            plot( dataForceVelocity31.benchRecord.time(:,k), ...
+                  fxHNData,...
+                  '-','Color',[0,0,0],...
+                  'LineWidth',0.5,...
+                  'DisplayName','fx');
+            hold on;
+            plot( dataForceVelocity31.benchRecord.time(:,k), ...
+                  fecmHNData,...
+                  '-','Color',[0,1,0],...
+                  'LineWidth',0.5,...
+                  'DisplayName','fecm');
+            hold on;
+            plot( dataForceVelocity31.benchRecord.time(:,k), ...
+                  f1HNData,...
+                  '-','Color',[0,0,1],...
+                  'LineWidth',0.5,...
+                  'DisplayName','f1');            
+            hold on;
+            plot( dataForceVelocity31.benchRecord.time(:,k), ...
+                  f2HNData,...
+                  '-','Color',[1,0,1],...
+                  'LineWidth',0.5,...
+                  'DisplayName','f2');            
+            hold on;
+            plot( dataForceVelocity31.benchRecord.time(:,k), ...
+                  fTNData,...
+                  '-','Color',[0,1,1],...
+                  'LineWidth',0.5,...
+                  'DisplayName','ft');            
+            hold on;
+            legend;
+            xlabel('Time (s)');
+            ylabel('Norm. Force ($f^{M} / f^M_\circ$)');
+            box off;
+        end
+         
     end
    
     %end      
