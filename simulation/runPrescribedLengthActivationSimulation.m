@@ -234,6 +234,7 @@ end
 pathFcn       = benchConfig.pathFcn;
 excitationFcn = benchConfig.excitationFcn;
 activationFcn = benchConfig.activationFcn;
+activationTitinActinFcn = benchConfig.activationTitinActinFcn;
               
 dfcn = @(argt,argState)...
         calcPrescribedMusculotendonStateDerivativeWrapper(...
@@ -242,6 +243,7 @@ dfcn = @(argt,argState)...
                           pathFcn,...
                           excitationFcn,...
                           activationFcn,...
+                          activationTitinActinFcn,...
                           calcMuscleInfoFcn,...
                           flag_appendEnergetics);
 
@@ -292,7 +294,7 @@ if(benchConfig.numberOfMuscleStates ~= 0 ...
     muscleState0 = initSoln.muscleState(:);       
 end
 
-initialState = [benchConfig.initialActivation; muscleState0];
+initialState = [benchConfig.initialActivation; benchConfig.initialActivation; muscleState0];
 
 
 %%
@@ -393,10 +395,11 @@ workOfActiveFiber = zeros(size(xe));
 workOfDamping     = zeros(size(xe));
 
 activation = ye(:,1);
+activationTitinActin=ye(:,2);
 
 n = benchConfig.numberOfMuscleStates;
 if(n >= 1)            
-    muscleStateV = ye(:,2:1:(n+1));
+    muscleStateV = ye(:,3:1:(n+2));
 end
 
 energeticsT    = [];
@@ -488,12 +491,17 @@ for j=1:1:length(tV)
     
     dactivation = activationFcn(excitationFcn(tV(j)), activation(j));
     activationState = [dactivation,activation(j)];
+
+    dactivationTitinActin = activationTitinActinFcn(excitationFcn(tV(j)), activationTitinActin(j));
+    activationTitinActinState = [dactivationTitinActin,activationTitinActin(j)];
+
     pathState       = pathFcn(tV(j));
 
     dlp = pathState(1);
     lp  = pathState(2);
     
-    mtInfo = calcMuscleInfoFcn(activationState,...                                   
+    mtInfo = calcMuscleInfoFcn(activationState,...   
+                               activationTitinActinState,...
                                pathState,...
                                muscleState);
                              

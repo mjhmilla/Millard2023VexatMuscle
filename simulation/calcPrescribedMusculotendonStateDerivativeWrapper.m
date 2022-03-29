@@ -4,6 +4,7 @@ function dState = ...
                                                       calcPrescribedPathFcn,...
                                                       calcPrescribedExcitationFcn,...
                                                       calcActivationDot,...
+                                                      calcActivationTitinActinDot,...
                                                       calcMuscleInfoFcn,...
                                                       flag_appendEnergetics)
 %%
@@ -65,13 +66,14 @@ pathState       = calcPrescribedPathFcn(t);
 stateLength     = length(state);
 muscleState     = [];
 if(flag_appendEnergetics==1)
-  muscleState     = state(2:(stateLength-3));  
+  muscleState     = state(3:(stateLength-3));  
 else
-  muscleState     = state(2:end);
+  muscleState     = state(3:end);
 end
 
 
-activation      = state(1);
+activation              = state(1);
+activationTitinActin    = state(2);
 
 if(activation < 0)
   here=1;
@@ -81,11 +83,17 @@ excitation       = calcPrescribedExcitationFcn(t);
 [activationDot, activationClamped] = calcActivationDot(excitation,activation);
 activationState = [activationDot;activationClamped]; 
 
+[activationTitinActinDot, activationTitinActinClamped] = ...
+    calcActivationTitinActinDot(excitation,activationTitinActin);
+activationTitinActinState = [activationTitinActinDot;activationTitinActinClamped]; 
+
+
 if(excitation > 0.01)
    here=1; 
 end
 
 mtInfo = calcMuscleInfoFcn(activationState,...
+                           activationTitinActinState,...
                            pathState,...
                            muscleState);      
 
@@ -109,9 +117,11 @@ if(flag_appendEnergetics == 1)
   
     if(sum(isnan(mtInfo.state.derivative))==length(mtInfo.state.derivative))
       dState = [ activationState(1);...
+                 activationTitinActinState(1);...
                  dT; dV; -dW];          
     else
       dState = [ activationState(1);...
+                 activationTitinActinState(1);...
                  mtInfo.state.derivative; ...
                  dT; dV; -dW];          
     end
@@ -119,9 +129,11 @@ if(flag_appendEnergetics == 1)
            
 else
     if(sum(isnan(mtInfo.state.derivative))==length(mtInfo.state.derivative))
-      dState = [ activationState(1)];          
+      dState = [ activationState(1);...
+                 activationTitinActinState(1)];          
     else
       dState = [ activationState(1);...
+                 activationTitinActinState(1);...
                  mtInfo.state.derivative];          
     end
 end

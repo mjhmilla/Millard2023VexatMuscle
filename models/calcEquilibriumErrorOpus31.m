@@ -198,6 +198,12 @@ dalpha         = modelCache.dalpha        ;
 %Force quantities
 a              = modelCache.a             ;
 dadt           = modelCache.dadt          ;
+
+an             = modelCache.an            ;
+dandt          = modelCache.dandt         ;
+
+
+
 lfN            = modelCache.lfN           ; %Fiber length excluding x-bridge strain
 dlfNN          = modelCache.dlfNN         ; %Fiber velocity excluding x-bridge strain rate
 flN            = modelCache.flN           ; 
@@ -405,7 +411,7 @@ fvN=calcFvDer(dlfNN*forceVelocityCalibrationFactor,0);
 %Note 2: this damping coefficient is the same in lengthening as it is
 %        in shortening. This might not be the case! Something interesting
 %        to test with an experiment
-beta1HNN = betaN2ApHN + betaN2AaHN*a; 
+beta1HNN = betaN2ApHN + betaN2AaHN*an; 
 
 dl1HN = (f2HN-f1HN)/beta1HNN;
 dl1H  = dl1HN*lceN_lce;
