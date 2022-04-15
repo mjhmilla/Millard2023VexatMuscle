@@ -160,35 +160,41 @@ yLow     = yfoot + kLow*(xLow-xfoot);
 %ypts = [p0(:,2) p1(:,2)];
 
 p01L = calcQuinticBezierCornerControlPoints(...
-    xZero-(xIso-xZero), yZero-(yIso-yZero),  kToe, 0, ...
-                xZero,               yZero, kZero, 0, c);
+                -xIso, -yIso,   kToe, 0, ...
+                -xZero, -yZero, kZero, 0, c);
 
+p01M = calcQuinticBezierCornerControlPoints(...
+                -xZero, -yZero, kZero, 0, ...
+                 xZero,  yZero, kZero, 0, c);
 
-p01R = calcQuinticBezierCornerControlPoints(xZero, yZero,kZero, 0, ...
-                                           xIso, yIso, kToe, 0,c);
+p01R = calcQuinticBezierCornerControlPoints(xZero, yZero, kZero, 0, ...
+                                             xIso,  yIso,  kToe, 0, c);
 
-xpts = [p01L(:,1) p01R(:,1)];
-ypts = [p01L(:,2) p01R(:,2)];
+xpts = [p01L(:,1) p01M(:,1) p01R(:,1)];
+ypts = [p01L(:,2) p01M(:,2) p01R(:,2)];
+
 
 
 %Create the curve structure
 fiberForceLengthCurve.xpts    = xpts;
 fiberForceLengthCurve.ypts    = ypts;
 
-fiberForceLengthCurve.xEnd         = [(xZero-(xIso-xZero)), xIso];
-fiberForceLengthCurve.yEnd         = [(yZero-(yIso-yZero)), yIso];
-fiberForceLengthCurve.dydxEnd      = [                kToe, kToe];
+
+fiberForceLengthCurve.xEnd         = [-xIso, xIso];
+fiberForceLengthCurve.yEnd         = [-yIso, yIso];
+fiberForceLengthCurve.dydxEnd      = [ kToe, kToe];
 fiberForceLengthCurve.d2ydx2End    = [0, 0];
+fiberForceLengthCurve.integral     = [];
 
-fiberForceLengthCurve.integral = [];
 
 
-if(computeIntegral == 1)
-    xScaling = normLengthToe;
-    fiberForceLengthCurve.integral = ...
-        createCurveIntegralStructure(fiberForceLengthCurve, ...
-                                     1000,...
-                                     1e-12,...
-                                     xScaling, flag_usingOctave,1);    
-end
+% if(computeIntegral == 1)
+%     xScaling = normLengthToe;
+%     fiberForceLengthCurve.integral = ...
+%         createCurveIntegralStructure(fiberForceLengthCurve, ...
+%                                      1000,...
+%                                      1e-12,...
+%                                      xScaling, flag_usingOctave,1);    
+% end
+
                                    

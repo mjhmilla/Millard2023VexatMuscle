@@ -265,15 +265,18 @@ if(flag_updatePositionLevel == 1)
 
   l1HN  = l1H*li_liN;    % Norm. length titin segment: z_line-PEVK/IG2 border
 
+
+
   l2H   = lceH  - (l1H+lTitinFixedHN*lceOpt);     % Length IG2 (PEVK/IG2) - m-line
   l2HN  = l2H*lce_lceN;    % Norm. length IG2
+
 
   laHN  = laH*lce_lceN;
 
 
-  if(lce < lceOpt*sin(alphaOpt)+1e-5)
-    here=1;
-  end
+%   if(lce < lceOpt*sin(alphaOpt)+1e-5)
+%     here=1;
+%   end
   
   fibKin  = calcFixedWidthPennatedFiberKinematicsAlongTendon(...
                   lce,NaN,lceOpt,alphaOpt);
