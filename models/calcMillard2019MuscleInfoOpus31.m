@@ -104,7 +104,8 @@ calcFeHDer  = @(arg1,arg2)calcBezierYFcnXDerivative(arg1, ...
 
 
 %Titin proximal force-length curve: Z-line to N2A
-if(normMuscleCurves.useTitinCurvesWithRigidIgDSegment==1)  
+if(normMuscleCurves.useTitinCurvesWithRigidIgDSegment==1)
+    assert(normMuscleCurves.useTwoSidedTitinCurves == 0)
     calcF1HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
                           normMuscleCurves.forceLengthProximalTitinCurve, ...
                           arg2);  
@@ -112,12 +113,21 @@ if(normMuscleCurves.useTitinCurvesWithRigidIgDSegment==1)
                           normMuscleCurves.forceLengthDistalTitinCurve, ...
                           arg2);  
 else
-    calcF1HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
-                          normMuscleCurves.forceLengthProximalTitinCurve, ...
-                          arg2);  
-    calcF2HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
-                          normMuscleCurves.forceLengthDistalTitinCurve, ...
-                          arg2);  
+    if(normMuscleCurves.useTwoSidedTitinCurves == 1)
+        calcF1HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
+                              normMuscleCurves.forceLengthProximalTitinTwoSidedCurve, ...
+                              arg2);  
+        calcF2HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
+                              normMuscleCurves.forceLengthDistalTitinTwoSidedCurve, ...
+                              arg2);  
+    else
+        calcF1HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
+                              normMuscleCurves.forceLengthProximalTitinCurve, ...
+                              arg2);  
+        calcF2HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
+                              normMuscleCurves.forceLengthDistalTitinCurve, ...
+                              arg2);  
+    end
 end                    
                     
 %Normalized length of the rigid IG2 section
@@ -1009,6 +1019,22 @@ deHN = modelCachedValues.betaEcmHNN*(1/lceN_lce);
 deH  = fiso*deHN;
 deN  = deHN*0.5;
 de   = deH*0.5;
+
+%Philosophy point:
+%  The bond between titin and actin is not really a physical damper. Its 
+%  probably electrostatic and has a high stiffness and zero damping. However
+%  the way the bond slides along actin is reministent of damping - much like the
+%  modelled bond between the XE element and actin.
+%
+%  And thus the damping contribution that we evaluate here, while mathematically
+%  correct, should be ignored because this damping only arises because of the
+%  simplified model we are using to model the titin-actin bond. Here I leave
+%  the de value unchanged to be mathematically consistent. However, I do not
+%  expect to see any evidence of damping from the titin-actin bond.
+%
+%  By leaving this de value as is, during the Herzog & Leonard 2002 simulations
+%  there is a curious spike in the damping coefficient when the muscle is de
+%  activated.
 
 %%
 % Calculate the stiffness & damping of the cross-bridges

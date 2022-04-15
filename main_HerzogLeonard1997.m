@@ -19,7 +19,6 @@ if(flag_outerLoopMode == 0)% && flag_buildCombinedPlot == 1)
   flag_simulateOpus31Model                      = 1;
   flag_useCalibratedOpus31Curves                = 1;
   flag_useTitinCurvesWithRigidIgDSegment        = 1;
-  flag_useTwoSidedTitinCurves                   = 0;
 
   flag_useFig3KirchBoskovRymer1994              = 0; 
   flag_useElasticTendon                         = 0;  
@@ -112,7 +111,6 @@ normMuscleCurves          = defaultFelineSoleus.curves;
 normMuscleCurves.useCalibratedCurves = flag_useCalibratedOpus31Curves;
 normMuscleCurves.useTitinCurvesWithRigidIgDSegment=...
     flag_useTitinCurvesWithRigidIgDSegment;
-normMuscleCurves.useTwoSidedTitinCurves = flag_useTwoSidedTitinCurves;
 
 normTendonDampingConstant = ...
     musculotendonProperties.normTendonDampingConstant;

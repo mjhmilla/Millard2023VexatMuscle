@@ -34,7 +34,8 @@ if(flag_outerLoopMode == 0)
   flag_forceVelocitySimulations      = 0;
   
   normFiberLengthAtForceVelocitySample  = 1.;
-  flag_removeActiveTitinForces = 0;
+  flag_removeActiveTitinForces          = 0;
+  flag_useTwoSidedTitinCurves           = 1;
   
   maxShorteningVelocity = 4.5;
   forceVelocityNormFiberHalfLength = 0.05;
@@ -251,6 +252,8 @@ if(flag_simulateOpus31Model == 1)
 
 
   normMuscleCurves.useCalibratedCurves = 1;
+  normMuscleCurves.useTwoSidedTitinCurves = flag_useTwoSidedTitinCurves;
+
 
   [success] = runStandardForceLengthVelocitySimulationsOpus31(...
                 normFiberLengthAtForceVelocitySample,...

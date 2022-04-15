@@ -9,6 +9,7 @@ flag_useSimulatePlotRigidTendon   = 0;
 flag_useSimulatePlotElasticTendon = 1;
 
 flag_removeActiveTitinForces      = 0;
+flag_useTwoSidedTitinCurves       = 1;
 
 flag_plotDataComparison           = 1;  
 flag_plotHillModel                = 0;
