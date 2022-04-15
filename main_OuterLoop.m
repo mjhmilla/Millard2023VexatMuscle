@@ -4,9 +4,8 @@ clear all;
 
 
 fitCrossBridgeStiffnessDampingToKirch199490Hz = 1;
-flag_useFixedLambdaECM = 0;
-flag_makeAndSavePubPlots = 1;
-disp('Deprecated: flag_useFixedLambdaECM');
+flag_useFixedLambdaECM      = 0; %Deprecated: flag_useFixedLambdaECM
+flag_makeAndSavePubPlots    = 1;
 
 main_createDefaultFelineSoleusModel;
 

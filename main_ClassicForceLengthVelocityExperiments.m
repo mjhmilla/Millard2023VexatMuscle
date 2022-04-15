@@ -1060,7 +1060,7 @@ if(flag_plotData == 1)
   end
 
   subplot('Position',reshape(subPlotPanel(2,1,:),1,4));
-  ylim([0.0,1.75]);
+  ylim([0.0,1.9]);
   if(flag_buildCombinedPlot==2)  
     xlabel('Time (s)');
     ylabel('Norm. Force ($f^{M} / f^M_\circ$)');

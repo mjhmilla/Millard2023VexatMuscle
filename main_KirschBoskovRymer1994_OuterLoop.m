@@ -12,7 +12,7 @@ flag_generatePlots      = 1;
 
 
 flag_useCalibratedOpus31Curves= 1;
-
+flag_useTwoSidedTitinCurves   = 1;
 
 if(flag_runSimulations == 1)
   %Hill and the proposed model

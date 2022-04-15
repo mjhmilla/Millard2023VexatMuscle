@@ -1,4 +1,4 @@
-flag_outerLoopMode = 0;
+flag_outerLoopMode = 1;
 
 if(flag_outerLoopMode == 0)
 

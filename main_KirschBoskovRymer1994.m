@@ -17,14 +17,15 @@ if(flag_outerLoopMode == 0)
   flag_fitToFig3KirchBoskovRymer1994            = 0; 
   flag_useElasticTendon                         = 1;
   flag_useFiberDamping                          = 1;
+  
   flag_frequencyAnalysisMuscleModels            = 0;
   flag_plotAccelerationEquationFactors          = 0;  
   flag_pubPlotFrequencyResponseKBR1994Fig3      = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig9Fig10  = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig12      = 0;
   flag_pubTabulateStiffnessDampingVariation     = 0;
-  flag_useCalibratedOpus31Curves= 1;
-
+  flag_useCalibratedOpus31Curves                = 1;
+  flag_useTwoSidedTitinCurves                   = 1;
 end 
 
 

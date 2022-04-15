@@ -10,9 +10,11 @@ if(flag_outerLoopMode == 0)
   close all;
   clear all;
 
-  flag_simulateHillModel                        = 0; 
-  flag_simulateOpus31Model                      = 0;
-  flag_useCalibratedOpus31Curves= 1;
+  flag_simulateHillModel            = 0; 
+  flag_simulateOpus31Model          = 0;
+
+  flag_useCalibratedOpus31Curves    = 1;
+  flag_useTwoSidedTitinCurves       = 1;
 
   flag_simulateActiveStretch  = 1;
   flag_simulatePassiveStretch = 1;
@@ -90,7 +92,8 @@ musculotendonProperties   = defaultFelineSoleus.musculotendon;
 sarcomereProperties       = defaultFelineSoleus.sarcomere;
 normMuscleCurves          = defaultFelineSoleus.curves;
 
-normMuscleCurves.useCalibratedCurves = flag_useCalibratedOpus31Curves;
+normMuscleCurves.useCalibratedCurves    = flag_useCalibratedOpus31Curves;
+normMuscleCurves.useTwoSidedTitinCurves = flag_useTwoSidedTitinCurves;
 
 normTendonDampingConstant = ...
     musculotendonProperties.normTendonDampingConstant;
