@@ -1,5 +1,6 @@
 function [success] = runLeonardJoumaaHerzog2010SimulationsOpus31(...
                           nominalNormalizedFiberLength,...
+                          activeForceKeyPoints,...
                           passiveForceKeyPoints,...
                           timeSpan,...
                           lengthRampKeyPoints,...
@@ -47,38 +48,42 @@ disp('Running Opus 31 Leonard, Joumaa, and Herzog 2010 Simulations');
                     passiveForceKeyPoints(2,1),...
                     normMuscleCurves.fiberForceLengthCurve,...
                     0);
-            
-            fpe1Ratio = passiveForceKeyPoints(2,2)/fpe1;
-            
-            assert(fpe1Ratio < 1,['The scaling below assumes the default',...
-                            ' passive force length curve(s) are too stiff.']);
 
-            if(fpe1Ratio < sarcomereProperties.extraCellularMatrixPassiveForceFraction)
+
+            
+            
+            lambda=sarcomereProperties.extraCellularMatrixPassiveForceFraction;
+
+            fpe1Ratio = passiveForceKeyPoints(2,2)/(fpe1*(1-lambda));
+            
+
+%             assert(fpe1Ratio < 1,['The scaling below assumes the default',...
+%                             ' passive force length curve(s) are too stiff.']);
+
+            %if(fpe1Ratio < sarcomereProperties.extraCellularMatrixPassiveForceFraction)
               %Remove the ECM entirely and scale titin. These are skinned
               %fibers so removing the ECM is justified.
-              ecmFraction   = sarcomereProperties.extraCellularMatrixPassiveForceFraction;
-              titinFraction = 1-ecmFraction;
-
-              sarcomereProperties.scaleECM = fpe1Ratio/100;
-              titinScaling = fpe1Ratio/titinFraction;
               
               if(flag_fitTitin==1)
-                sarcomereProperties.scaleIGP  = titinScaling*0.7;
-                sarcomereProperties.scalePEVK = 1.7;  
+                sarcomereProperties.scaleECM = 0;
                 
+                activeScaling = activeForceKeyPoints(2,2)/3.77761;                
+                sarcomereProperties.scalePEVK= fpe1Ratio*activeScaling;
+                sarcomereProperties.scaleIGP = fpe1Ratio/activeScaling;
               else
-                sarcomereProperties.scaleIGP  = 1;
-                sarcomereProperties.scalePEVK = 1;                
+                sarcomereProperties.scaleECM = 0;
+                sarcomereProperties.scaleIGP = fpe1Ratio;
+                sarcomereProperties.scalePEVK= fpe1Ratio;
               end
               
 
-            else
-              %Remove ECM until the desired target is met.
-              ecmFraction   = sarcomereProperties.extraCellularMatrixPassiveForceFraction;
-              titinFraction = 1-ecmFraction;
-
-              sarcomereProperties.scaleECM = (fpe1-ecmFraction)/ecmFraction;              
-            end
+%             else
+%               %Remove ECM until the desired target is met.
+%               ecmFraction   = sarcomereProperties.extraCellularMatrixPassiveForceFraction;
+%               titinFraction = 1-ecmFraction;
+% 
+%               sarcomereProperties.scaleECM = (fpe1-ecmFraction)/ecmFraction;              
+%             end
 
             %%
             % Evaluate the model when it is passive and at its nominal length

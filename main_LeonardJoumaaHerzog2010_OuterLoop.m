@@ -3,6 +3,10 @@ close all;
 clear all;
 
 
+
+flag_defaultSimulation   =1;
+flag_calibratedSimulation=1;
+
 %Generic config.
 flag_simulateActiveStretch      = 1;
 flag_simulatePassiveStretch     = 1;
@@ -16,7 +20,7 @@ normActiveTitinToActinDamping   = [];% take the default. Prev. 6;
 normPassiveTitinToActinDamping  = []; %[]: take the default. Prev. 1.5; 
 
 flag_useOctave                    = 0;
-tunedOpus31Results = 'experiments/LeonardJoumaaHerzog2010/benchRecordOpus31_RigidTendon_K44p31D0p50Tau_LJH2010__TiAD1000p00_TiPD1p50_NomLen1p00_90Hz_TiAdj.mat';
+tunedOpus31Results = 'benchRecordOpus31_RigidTendon_K39p47D0p35Tau_LJH2010__TiAD1000p00_TiPD0p25_NomLen1p00_90Hz_TiAdj';
 
 flag_useFig3KirchBoskovRymer1994  = 0; 
 flag_useElasticTendon             = 0; 
@@ -24,22 +28,26 @@ flag_useFiberDamping              = 1;
 fiberDampingCoefficient           = 0.01;
 
 %Simulation specific config: default models
-
-flag_simulateHillModel      = 1; 
-flag_simulateOpus31Model    = 1;
-flag_plotData               = 0;  
-flag_savePlotsToFile        = 0;
-flag_fitTitin               = 0;  
-
-main_LeonardJoumaaHerzog2010;
+if(flag_defaultSimulation==1)
+    flag_simulateHillModel      = 0; 
+    flag_simulateOpus31Model    = 1;
+    flag_plotData               = 0;  
+    flag_savePlotsToFile        = 0;
+    flag_fitTitin               = 0;  
+    
+    main_LeonardJoumaaHerzog2010;
+end
 
 %Simulation specific config: adj. models
-flag_simulateHillModel          = 1; 
-flag_simulateOpus31Model        = 1;
-flag_fitTitin                   = 1;
-normActiveTitinToActinDamping   = 1000;
-main_LeonardJoumaaHerzog2010;
-
+if(flag_calibratedSimulation==1)
+    flag_simulateHillModel          = 0; 
+    flag_simulateOpus31Model        = 1;
+    flag_plotData                   = 0;  
+    flag_savePlotsToFile            = 0;    
+    flag_fitTitin                   = 1;
+    normActiveTitinToActinDamping   = 1000;
+    main_LeonardJoumaaHerzog2010;
+end
 %Plot.
 flag_simulateHillModel          = 0; 
 flag_simulateOpus31Model        = 0;

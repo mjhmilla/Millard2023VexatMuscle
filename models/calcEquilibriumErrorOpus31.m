@@ -260,6 +260,10 @@ if(flag_updatePositionLevel == 1)
   lceH   = lce*lce_lceH;  % Half fiber length
   lceHN  = lce*lce_lceHN; % Half norm. fiber length
 
+if(lceN > 2.0)
+    here=1;
+end
+
   lxH   = lceH - (lmH+laH);
   lxHN  = lxH*lce_lceN;
 
@@ -410,7 +414,7 @@ beta1HNN = betaN2ApHN + betaN2AaHN*a;
 dl1HN = (f2HN-f1HN)/beta1HNN;
 dl1H  = dl1HN*lceN_lce;
 
-dl2H  = dlceH - dl1H; %Treating the IG2 section as rigid
+dl2H  = dlceH - dl1H; 
 dl2HN = dl2H*lce_lceN;
 
 
