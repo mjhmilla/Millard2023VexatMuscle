@@ -175,9 +175,9 @@ disp('Running Opus 31 Herzog and Leonard 2002 Simulations');
           %%
             benchConfig.npts                  = (timeSpan(1,2)-timeSpan(1,1))*1000;
 
-            numericalTolerance = 1e-8;
+            numericalTolerance = 1e-6;
             if(flag_useElasticTendon==0)
-              numericalTolerance = 1e-9;
+              numericalTolerance = 1e-7;
               %Surprisingly the rigid tendon simulations are quite a bit
               %more challenging to simulate than the elastic tendon simulations
             end

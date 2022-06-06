@@ -18,8 +18,8 @@ if(flag_outerLoopMode == 0)% && flag_buildCombinedPlot == 1)
   flag_simulateHillModel                        = 1; 
   flag_simulateOpus31Model                      = 1;
   flag_useCalibratedOpus31Curves                = 1;
-  flag_useTitinCurvesWithRigidIgDSegment        = 1;
-  flag_useTwoSidedTitinCurves                   = 0;
+  flag_useTitinCurvesWithRigidIgDSegment        = 0;
+  flag_useTwoSidedTitinCurves                   = 1;
 
   flag_useFig3KirchBoskovRymer1994              = 0; 
   flag_useElasticTendon                         = 0;  
@@ -132,10 +132,12 @@ end
 load(['output/structs/felineSoleusRigidTendonKBR1994',figNameGainPhase,'.mat']);
 musculotendonPropertiesOpus31_RT = felineSoleusRigidTendonKBR1994.musculotendon;
 sarcomerePropertiesOpus31_RT     = felineSoleusRigidTendonKBR1994.sarcomere;
+normMuscleCurves_RT              = felineSoleusRigidTendonKBR1994.curves;
 
 load(['output/structs/felineSoleusElasticTendonKBR1994',figNameGainPhase,'.mat']);
 musculotendonPropertiesOpus31_ET = felineSoleusElasticTendonKBR1994.musculotendon;
 sarcomerePropertiesOpus31_ET     = felineSoleusElasticTendonKBR1994.sarcomere;
+normMuscleCurves_ET              = felineSoleusElasticTendonKBR1994.curves;
 
 sarcomerePropertiesOpus31     = [];
 musculotendonPropertiesOpus31 = [];
@@ -143,10 +145,17 @@ musculotendonPropertiesOpus31 = [];
 if(flag_useElasticTendon==1)
   sarcomerePropertiesOpus31 = sarcomerePropertiesOpus31_ET;
   musculotendonPropertiesOpus31 = musculotendonPropertiesOpus31_ET;
+  normMuscleCurvesOpus31 = normMuscleCurves_ET;
 else
   sarcomerePropertiesOpus31 = sarcomerePropertiesOpus31_RT;  
   musculotendonPropertiesOpus31 = musculotendonPropertiesOpus31_RT;
+  normMuscleCurvesOpus31 = normMuscleCurves_RT;  
 end
+
+normMuscleCurvesOpus31.useCalibratedCurves = flag_useCalibratedOpus31Curves;
+normMuscleCurvesOpus31.useTitinCurvesWithRigidIgDSegment=...
+    flag_useTitinCurvesWithRigidIgDSegment;
+normMuscleCurvesOpus31.useTwoSidedTitinCurves = flag_useTwoSidedTitinCurves;
 
 if(isempty(scaleOptimalFiberLength)==0)
   musculotendonProperties.optimalFiberLength = ...
@@ -362,7 +371,7 @@ if(flag_testOpus31DerivativeFunction==1)
                                             muscleState,...
                                             musculotendonPropertiesOpus31,...
                                             sarcomerePropertiesOpus31,...
-                                            normMuscleCurves,...
+                                            normMuscleCurvesOpus31,...
                                             modelConfig);
                                                 
 end
@@ -379,7 +388,7 @@ if(flag_simulateOpus31Model==1)
                             flag_useElasticTendon,...
                             musculotendonPropertiesOpus31,...
                             sarcomerePropertiesOpus31,...
-                            normMuscleCurves,...
+                            normMuscleCurvesOpus31,...
                             outputFileEndingOpus31, ...
                             dataFolder,...
                             flag_simulateActiveStretch,...

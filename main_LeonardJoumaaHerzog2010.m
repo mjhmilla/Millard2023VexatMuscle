@@ -113,6 +113,8 @@ end
 load(['output/structs/felineSoleusRigidTendonKBR1994',figNameGainPhase,'.mat']);
 musculotendonPropertiesOpus31_RT = felineSoleusRigidTendonKBR1994.musculotendon;
 sarcomerePropertiesOpus31_RT     = felineSoleusRigidTendonKBR1994.sarcomere;
+normMuscleCurves_RT              = felineSoleusRigidTendonKBR1994.curves;
+
 
 sarcomerePropertiesOpus31_ET      = [];
 musculotendonPropertiesOpus31_ET  = [];
@@ -126,8 +128,11 @@ if(flag_useElasticTendon==1)
 else
   sarcomerePropertiesOpus31     = sarcomerePropertiesOpus31_RT;  
   musculotendonPropertiesOpus31 = musculotendonPropertiesOpus31_RT;
+  normMuscleCurvesOpus31 = normMuscleCurves_RT;
 end
 
+normMuscleCurvesOpus31.useCalibratedCurves    = flag_useCalibratedOpus31Curves;
+normMuscleCurvesOpus31.useTwoSidedTitinCurves = flag_useTwoSidedTitinCurves;
 
 if(isempty(normPassiveTitinToActinDamping)==0)
   sarcomereProperties.normPassiveTitinToActinDamping          = normPassiveTitinToActinDamping;
@@ -254,7 +259,7 @@ if(flag_simulateOpus31Model==1)
                   flag_useElasticTendon,...
                   musculotendonPropertiesOpus31,...
                   sarcomerePropertiesOpus31,...
-                  normMuscleCurves,...
+                  normMuscleCurvesOpus31,...
                   outputFileEndingOpus31, ...
                   dataFolder,...
                   flag_fitTitin,...

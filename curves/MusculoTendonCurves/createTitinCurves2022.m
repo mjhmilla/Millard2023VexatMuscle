@@ -278,11 +278,11 @@ end
 
 forceLengthProximalTitinCurve.name = sprintf('%s.%s',...
   muscleName,'forceLengthProximalTitinCurve');
-fprintf('    forceLengthProximalTitinCurve created\n');
+%fprintf('    forceLengthProximalTitinCurve created\n');
 
 forceLengthProximalTitinInverseCurve = ...
       createInverseCurve(forceLengthProximalTitinCurve); 
-fprintf('    forceLengthProximalTitinInverseCurve created\n');
+%fprintf('    forceLengthProximalTitinInverseCurve created\n');
 
 
 %%
@@ -315,11 +315,12 @@ else
 end
 forceLengthDistalTitinCurve.name = sprintf('%s.%s',...
   muscleName,'forceLengthDistalTitinCurve');
-fprintf('    forceLengthDistalTitinCurve created\n');
+%fprintf('    forceLengthDistalTitinCurve created\n');
 
 forceLengthDistalTitinInverseCurve = ...
       createInverseCurve(forceLengthDistalTitinCurve); 
-fprintf('    forceLengthDistalTitinInverseCurve created\n');
+
+%fprintf('    forceLengthDistalTitinInverseCurve created\n');
 
 %%
 % For reference: IgP curve
