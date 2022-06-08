@@ -3,8 +3,8 @@ close all;
 clear all;
 
 %Parameters that do not change
-flag_simulateHillModel            = 0;  
-flag_simulateOpus31Model          = 0;
+flag_simulateHillModel            = 1;  
+flag_simulateOpus31Model          = 1;
 flag_useSimulatePlotRigidTendon   = 1;
 flag_useSimulatePlotElasticTendon = 1;
 

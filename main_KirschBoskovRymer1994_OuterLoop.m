@@ -29,6 +29,9 @@ if(flag_runSimulations == 1)
   flag_pubPlotStiffnessDampingKBR1994Fig12      = 0;
   flag_pubTabulateStiffnessDampingVariation     = 0;
 
+  flag_generateRandomInput    = 1;
+  flag_processInputFunctions  = 1;
+
   main_KirschBoskovRymer1994;
 
   close all;
@@ -46,6 +49,9 @@ if(flag_runSimulations == 1)
   flag_pubPlotStiffnessDampingKBR1994Fig9Fig10  = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig12      = 0;
   flag_pubTabulateStiffnessDampingVariation     = 0;
+
+  flag_generateRandomInput    = 0;
+  flag_processInputFunctions  = 0;
 
   main_KirschBoskovRymer1994;
 
@@ -65,6 +71,9 @@ if(flag_runSimulations == 1)
   flag_pubPlotStiffnessDampingKBR1994Fig12      = 0;
   flag_pubTabulateStiffnessDampingVariation     = 0;
 
+  flag_generateRandomInput    = 0;
+  flag_processInputFunctions  = 0;
+
   main_KirschBoskovRymer1994;
 
   close all;  
@@ -82,6 +91,9 @@ if(flag_runSimulations == 1)
   flag_pubPlotStiffnessDampingKBR1994Fig9Fig10  = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig12      = 0;
   flag_pubTabulateStiffnessDampingVariation     = 0;
+
+  flag_generateRandomInput    = 0;
+  flag_processInputFunctions  = 0;
 
   main_KirschBoskovRymer1994;
 
@@ -149,7 +161,7 @@ if(flag_frequencyAnalysis==1)
 
   close all;
 
-  %Elastic tendon - fit Kx and betaX to Kirsch et al. Fig 3    
+  Elastic tendon - fit Kx and betaX to Kirsch et al. Fig 3    
   flag_simulateHillModel      = 0; 
   flag_simulateOpus31Model    = 0;
   flag_fitToFig3KirchBoskovRymer1994            = 1; 

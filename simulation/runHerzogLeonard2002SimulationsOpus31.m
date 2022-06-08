@@ -16,7 +16,7 @@ function [success] = runHerzogLeonard2002SimulationsOpus31(...
                           flag_useOctave)
 success = 0;
 
-disp('Running Opus 31 Herzog and Leonard 2002 Simulations');
+%disp('Running Opus 31 Herzog and Leonard 2002 Simulations');
 
   idx=1;
   benchRecord = [];
@@ -276,7 +276,7 @@ disp('Running Opus 31 Herzog and Leonard 2002 Simulations');
                                            idx, numberOfSimulations,...
                                            flag_appendEnergetics,...
                                            flag_useOctave);
-             fprintf('%i / %i\n', idx, numberOfSimulations);                            
+             %fprintf('%i / %i\n', idx, numberOfSimulations);                            
              idx=idx+1;
            end
            if(flag_simulateStatic == 1)
@@ -290,7 +290,7 @@ disp('Running Opus 31 Herzog and Leonard 2002 Simulations');
                                            idx, numberOfSimulations,...
                                            flag_appendEnergetics,...
                                            flag_useOctave);
-              fprintf('%i / %i\n', idx, numberOfSimulations);                           
+              %fprintf('%i / %i\n', idx, numberOfSimulations);                           
               idx=idx+1;
            end
 
@@ -306,7 +306,7 @@ disp('Running Opus 31 Herzog and Leonard 2002 Simulations');
                                            idx, numberOfSimulations,...
                                            flag_appendEnergetics,...
                                            flag_useOctave);
-              fprintf('%i / %i\n', idx, numberOfSimulations);                           
+              %fprintf('%i / %i\n', idx, numberOfSimulations);                           
               idx=idx+1;
           end
                                        

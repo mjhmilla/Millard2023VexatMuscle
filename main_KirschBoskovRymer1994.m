@@ -26,6 +26,9 @@ if(flag_outerLoopMode == 0)
   flag_pubTabulateStiffnessDampingVariation     = 0;
   flag_useCalibratedOpus31Curves                = 1;
   flag_useTwoSidedTitinCurves                   = 1;
+
+  flag_generateRandomInput    = 0;
+  flag_processInputFunctions  = 0;
 end 
 
 
@@ -72,8 +75,7 @@ plotConfig;
 % I. Generate purturbation wave forms
 %%
 
-flag_generateRandomInput    = 0;
-flag_processInputFunctions  = 0;
+
 flag_plotInput              = 0;
 
 % Perturbation waveform settings
