@@ -27,7 +27,11 @@ sarcomerePropertiesOpus31.normMaxActiveTitinToActinDamping = ...
 %% Create the updated f1(l1) and f2(l2) curves
 flag_useElasticIgD        = 1;
 flag_useHumanIgDGeometry  = 0;
-flag_createTwoSidedCurves = normMuscleCurves.useCalibratedCurves;
+flag_createTwoSidedCurves = 0;
+
+normMuscleCurves.useCalibratedCurves =1;
+normMuscleCurves.useTwoSidedTitinCurves=0;
+
 
 [normMuscleCurves.forceLengthProximalTitinCurve,...
  normMuscleCurves.forceLengthProximalTitinInverseCurve,...

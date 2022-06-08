@@ -30,7 +30,7 @@ if(flag_outerLoopMode == 0)
      
   figLeonardJoumaaHerzog2010Fig2Comparision = figure;
   flag_useOctave                    = 0;
-  tunedOpus31Results = 'experiments/LeonardJoumaaHerzog2010/benchRecordOpus31_RigidTendon_K44p31D0p50Tau_LJH2010__TiAD1000p00_TiPD1p50_NomLen1p00_90Hz_TiAdj.mat';
+  %tunedOpus31Results = 'experiments/LeonardJoumaaHerzog2010/benchRecordOpus31_RigidTendon_K44p31D0p50Tau_LJH2010__TiAD1000p00_TiPD1p50_NomLen1p00_90Hz_TiAdj.mat';
 
   flag_useFig3KirchBoskovRymer1994              = 0; 
   flag_useElasticTendon                         = 0; 
@@ -315,7 +315,24 @@ if(flag_plotData == 1)
                     nameModification,outputFileEndingOpus31,'_TiDefault.mat'];
   dataOpus31 = load(fileNameOpus31);
   
-  dataOpus31Tuned = load(tunedOpus31Results);
+  dataFolderContents = dir(dataFolder);
+
+  strA = sprintf('_TiAD%1.2f',tunedNormActiveTitinToActinDamping);
+  strA(strfind(strA,'.'))='p';
+  tunedFileDateNum = 0;
+  tunedFileName = '';
+
+  for idxFile=1:1:length(dataFolderContents)
+    if(contains(dataFolderContents(idxFile).name,strA))
+        if (dataFolderContents(idxFile).datenum > tunedFileDateNum)
+            tunedFileName = dataFolderContents(idxFile).name;
+            tunedFileDateNum = dataFolderContents(idxFile).datenum;
+        end
+    end
+  end
+  
+
+  dataOpus31Tuned = load([dataFolder,tunedFileName]);
   
 
   fileNameDampedEq = [dataFolder,'benchRecordHill_',...

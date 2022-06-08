@@ -40,10 +40,14 @@ inputFunctions = struct('padding', paddingPoints,...
                      
 if(flag_generateRandomInput==1)
   xo = randn(samplePoints,1);
-
+  
   assert(paddingPoints*10 < samplePoints,...
     'Padding points exceed 1/10th of the sample');
   
+  xo(paddingPoints:1:(samplePoints-paddingPoints)) = ...
+      xo(paddingPoints:1:(samplePoints-paddingPoints)) ...
+      -mean(xo(paddingPoints:1:(samplePoints-paddingPoints)));
+
   xo(1:1:paddingPoints) = 0;
   xo((samplePoints-paddingPoints):1:samplePoints) = 0;
 
@@ -146,7 +150,9 @@ if(flag_processInputFunctions == 1)
       s = complex(0,1).*(inputFunctions.freq(:,1));
       xdotS = ifft(inputFunctions.y(:,idx).*s,'symmetric'); 
       
-      assert(abs(xdotS(1,1)) < 1e-4,'Initial xdot should be close to zero');
+      assert(abs(xdotS(1,1)) < 1e-3,...
+          ['Initial xdot is ',num2str(abs(xdotS(1,1))),...
+          ' but should be close to zero']);
       xdotS(1,1) = 0.;   %Muscle model currently can only be initialized
                          %with a velocity that is < sqrt(eps)
       inputFunctions.xdot(:,idx) = xdotS;

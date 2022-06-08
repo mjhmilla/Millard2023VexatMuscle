@@ -109,9 +109,9 @@ betaN2AaHN  = modelConstants.betaN2AaHN  ;
 betaN2ApHN  = modelConstants.betaN2ApHN  ;
 
 forceVelocityCalibrationFactor = modelConstants.forceVelocityCalibrationFactor;
-tau                = modelConstants.tau       ;
-lowActivationThreshold = modelConstants.lowActivationThreshold;
-
+tau                     = modelConstants.tau       ;
+lowActivationThreshold  = modelConstants.lowActivationThreshold;
+lowActivationGain       = modelConstants.lowActivationGain;
 
 lTitinFixedHN = modelConstants.lTitinFixedHN      ;
 lmHN          = modelConstants.lmHN        ;
@@ -444,7 +444,7 @@ ddlaHN_HillError    =   ((fxHN  - a*flN*(fvN))/(tau));
 ddlaHN_Damping      = - betaCXHN*dlaNN;
 
 ka                  = (a/lowActivationThreshold);
-ddlaHN_Tracking     =   exp(-ka*ka)*(lxHN + dlxHN);
+ddlaHN_Tracking     =   lowActivationGain*exp(-ka*ka)*(lxHN + dlxHN);
 ddlaHN = ddlaHN_HillError + ddlaHN_Damping + ddlaHN_Tracking;
 
 %An alternate update rule for cross-bridge cycling. Note that since

@@ -59,7 +59,7 @@ if(flag_runSimulations == 1)
 
   %Proposed model only
   %Elastic tendon
-  flag_simulateHillModel      = 0; 
+  flag_simulateHillModel      = 1; 
   flag_simulateOpus31Model    = 1;
   flag_fitToFig3KirchBoskovRymer1994            = 1;
   flag_useElasticTendon       = 1;
@@ -80,7 +80,7 @@ if(flag_runSimulations == 1)
 
   %Proposed model only
   %Rigid tendon  
-  flag_simulateHillModel      = 0; 
+  flag_simulateHillModel      = 1; 
   flag_simulateOpus31Model    = 1;
   flag_fitToFig3KirchBoskovRymer1994            = 1;
   flag_useElasticTendon       = 0;
@@ -110,6 +110,8 @@ end
 %%
 
 if(flag_frequencyAnalysis==1)
+  flag_generateRandomInput    = 0;
+  flag_processInputFunctions  = 0;
   %Rigid tendon - do not fit Kx and betaX to Kirsch et al. Fig 3
   flag_simulateHillModel      = 0; 
   flag_simulateOpus31Model    = 0;
@@ -161,7 +163,7 @@ if(flag_frequencyAnalysis==1)
 
   close all;
 
-  Elastic tendon - fit Kx and betaX to Kirsch et al. Fig 3    
+%  Elastic tendon - fit Kx and betaX to Kirsch et al. Fig 3    
   flag_simulateHillModel      = 0; 
   flag_simulateOpus31Model    = 0;
   flag_fitToFig3KirchBoskovRymer1994            = 1; 
