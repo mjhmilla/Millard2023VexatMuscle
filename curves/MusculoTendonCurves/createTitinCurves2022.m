@@ -8,6 +8,7 @@ function [forceLengthProximalTitinCurve, forceLengthProximalTitinInverseCurve,..
                                    flag_createTwoSidedCurves,...
                                    flag_computeCurveIntegrals,...
                                    flag_useElasticIgD,...
+                                   flag_activeTitinModel,...
                                    flag_useHumanIgDGeometry,...
                                    flag_useOctave)
                                  
@@ -74,21 +75,46 @@ igpStretchRate     = sarcomereProperties.IGPNormStretchRate;
 pevkStretchRate = 0;
 distalStretchRate=0;   % From the pevk-actin attachment point to myosin
 proximalStretchRate=0; % From the z-line to the pevk-actin attachment point
+
 if(flag_useElasticIgD==1)
-  pevkStretchRate = sarcomereProperties.PEVKNormStretchRate ...
-                      +sarcomereProperties.IGDFreeNormStretchRate;
 
-  distalStretchRate = (1-normPevkToActinAttachmentPoint)*sarcomereProperties.PEVKNormStretchRate ...
-                      +sarcomereProperties.IGDFreeNormStretchRate;  
-  
-  proximalStretchRate = sarcomereProperties.IGPNormStretchRate ...
-    + normPevkToActinAttachmentPoint*sarcomereProperties.PEVKNormStretchRate;               
+  %Sticky spring: lump IgD and part of PEVK distal to attachment point 
+  if(flag_activeTitinModel == 0)
+    %Lump IgD with PEVK
+    pevkStretchRate = sarcomereProperties.PEVKNormStretchRate ...
+                        +sarcomereProperties.IGDFreeNormStretchRate;
+
+    distalStretchRate = (1-normPevkToActinAttachmentPoint)*sarcomereProperties.PEVKNormStretchRate ...
+                        +sarcomereProperties.IGDFreeNormStretchRate;  
+    
+    proximalStretchRate = sarcomereProperties.IGPNormStretchRate ...
+      + normPevkToActinAttachmentPoint*sarcomereProperties.PEVKNormStretchRate;               
+
+  %Stiff spring: lump IgP and IgD together
+  elseif(flag_activeTitinModel==1)
+
+    %Lump IgD with IgP 
+    proximalStretchRate = sarcomereProperties.IGPNormStretchRate ...
+                        + sarcomereProperties.IGDFreeNormStretchRate;               
+
+    distalStretchRate = sarcomereProperties.PEVKNormStretchRate;  
+
+  else
+    assert(0,'flag_IgDLumpingMethod must be 0 or 1');  
+  end
+
 else
-  pevkStretchRate   = sarcomereProperties.PEVKNormStretchRate;   
-  distalStretchRate = normPevkToActinAttachmentPoint*sarcomereProperties.PEVKNormStretchRate;  
 
-  proximalStretchRate = sarcomereProperties.IGPNormStretchRate ...
-    + normPevkToActinAttachmentPoint*sarcomereProperties.PEVKNormStretchRate;    
+  if(flag_activeTitinModel == 0)
+    pevkStretchRate   = sarcomereProperties.PEVKNormStretchRate;   
+    distalStretchRate = normPevkToActinAttachmentPoint*sarcomereProperties.PEVKNormStretchRate;  
+
+    proximalStretchRate = sarcomereProperties.IGPNormStretchRate ...
+      + normPevkToActinAttachmentPoint*sarcomereProperties.PEVKNormStretchRate;    
+  else
+    distalStretchRate = sarcomereProperties.PEVKNormStretchRate;  
+    proximalStretchRate = sarcomereProperties.IGPNormStretchRate;            
+  end
 end
 
                                     

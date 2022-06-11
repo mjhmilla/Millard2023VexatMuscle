@@ -126,13 +126,17 @@ save('output/structs/defaultFelineSoleus.mat',...
 
 if(flag_fitActiveTitinProperties== 0 )
     if(isempty(elasticTendonReferenceModel)==0)
+        disp('Using reference model');        
         tmp=load(elasticTendonReferenceModel);
         modelName = fields(tmp);
         felineSoleusSarcomerePropertiesUpd_ET= tmp.(modelName{1}).sarcomere;
         felineSoleusNormMuscleCurvesUpd_ET= tmp.(modelName{1}).curves;
     else
-        assert(0,['Error: flag_fitActiveTitinProperties is disabled ',...
-            'but no elasticTendonReferenceModel is provided']);
+        %assert(0,['Error: flag_fitActiveTitinProperties is disabled ',...
+        %    'but no elasticTendonReferenceModel is provided']);
+        disp('Using default model');
+        felineSoleusSarcomerePropertiesUpd_ET = felineSoleusSarcomerePropertiesDefault;
+        felineSoleusNormMuscleCurvesUpd_ET    = felineSoleusNormMuscleCurvesDefault;
     end
 
 else
@@ -183,13 +187,16 @@ end
 
 if(flag_fitActiveTitinProperties== 0 )
     if(isempty(rigidTendonReferenceModel)==0)
+        disp('Using default model');        
         tmp=load(rigidTendonReferenceModel);
         modelName = fields(tmp);
         felineSoleusSarcomerePropertiesUpd_RT= tmp.(modelName{1}).sarcomere;
         felineSoleusNormMuscleCurvesUpd_RT= tmp.(modelName{1}).curves;
     else
-        assert(0,['Error: flag_fitActiveTitinProperties is disabled ',...
-            'but no rigidTendonReferenceModel is provided']);
+        disp('Using reference model');
+        felineSoleusSarcomerePropertiesUpd_RT = felineSoleusSarcomerePropertiesDefault;
+        felineSoleusNormMuscleCurvesUpd_RT    = felineSoleusNormMuscleCurvesDefault;
+
     end
 
 else

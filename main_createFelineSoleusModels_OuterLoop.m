@@ -1,4 +1,6 @@
-flag_fitActiveTitinProperties=1; 
+flag_fitActiveTitinProperties              =0; 
+
+
 disp(['Note: flag_fitActiveTitinProperties must be set to 1 the first']);
 disp([' time you run this script.']);
 %0: Use previously computed values
@@ -9,10 +11,10 @@ fitCrossBridgeStiffnessDampingToKirch199490Hz = 1;
 flag_useFixedLambdaECM      = 0; %Deprecated: leave as 0
 
 
-rigidTendonReferenceModel = ...
-    'output/structs/felineSoleusRigidTendonKBR1994Fig12.mat';
-elasticTendonReferenceModel=...
-    'output/structs/felineSoleusElasticTendonKBR1994Fig12.mat';
+rigidTendonReferenceModel = [];%...
+%    'output/structs/felineSoleusRigidTendonKBR1994Fig12.mat';
+elasticTendonReferenceModel=[];%...
+%    'output/structs/felineSoleusElasticTendonKBR1994Fig12.mat';
 
 flag_fitToFig3KirchBoskovRymer1994 = 0;
 flag_makeAndSavePubPlots = 1;

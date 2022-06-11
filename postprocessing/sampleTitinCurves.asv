@@ -8,7 +8,7 @@ function [curveSampleECMHalf, curveSampleTitin, curveSampleTitinActive,...
                     forceLengthPevkInverseCurve,...
                     normLengthZToT12,...
                     normLengthProximalSegmentAtOptimalFiberLength,...
-                    normLengthPEVKAtOptimalFiberLength,...
+                    normLengthDistalSegmentAtOptimalFiberLength,...
                     normLengthIgdFixed, ...
                     titinModelType)
                                 
@@ -100,11 +100,6 @@ for i=1:1:length(sampleVectorHalfLength)
     ligpHSaturated=normLengthProximalSegmentAtOptimalFiberLength;
   end
 
-  lpevkHSaturated = lpevkH;
-  if(lpevkH > normLengthPEVKAtOptimalFiberLength)
-    lpevkHSaturated=normLengthPEVKAtOptimalFiberLength;
-  end
-
   if(titinModelType==0)
 
       curveSampleTitinActive.x(i,1)     = normLengthZToT12 + normLengthIgdFixed + ligpHSaturated + lpevkH;
@@ -114,10 +109,9 @@ for i=1:1:length(sampleVectorHalfLength)
       curveSampleTitinActive.d3ydx3(i,1)= NaN;
   end
   if(titinModelType==1)
-      %With this model the prox and distal Ig segments are lumped together.
-      curveSampleTitinActive.x(i,1)     = normLengthZToT12 + normLengthIgdFixed + ligpH + lpevkHSaturated;
+      curveSampleTitinActive.x(i,1)     = normLengthZToT12 + ligpH;
       curveSampleTitinActive.y(i,1)     = curveSampleIgp.y(i,1);
-      curveSampleTitinActive.dydx(i,1)  = curveSampleIgp.dydx(i,1);
+      curveSampleTitinActive.dydx(i,1)  = curveSamplePevk.dydx(i,1);
       curveSampleTitinActive.d2ydx2(i,1)= NaN;
       curveSampleTitinActive.d3ydx3(i,1)= NaN;
 

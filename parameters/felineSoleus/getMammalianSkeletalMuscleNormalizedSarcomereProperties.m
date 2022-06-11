@@ -422,6 +422,76 @@ disp('Remove kNormIgd');
 kNormIgp = kNormPevkIGd*(deltaIgdFree+deltaPEVK)/(deltaIgp);
              
 
+% 2022/06/11
+% M.Millard
+%
+titinModelStickySpring      =0; %As in the PEVK element viscously sticks to actin
+% The idea is similar to that originally proposed by Rode et al., though the 
+% details differ: 
+%   - here there is one point in the PEVK segment that bonds to actin
+%   - the bond is viscous in nature and slides due to imbalanced forces
+%
+% Rode C, Siebert T, Blickhan R. Titin-induced force enhancement and force 
+% depression: a ‘sticky-spring’mechanism in muscle contractions?. Journal of 
+% theoretical biology. 2009 Jul 21;259(2):350-60.
+%
+% Though I've used this model for nearly 2 years, there are two problems with
+% it: 
+%
+% 1. Although I can replicate Leonard, Joumaa, and Herzog using this model, the
+%    PEVK + IgD segments are required to flex far far beyond their maximum 
+%    contour lengths. 
+%
+% 2. This model, I strongly suspect, would not be able to replice the force
+%    traces in Figure 1 of Hisey et al.: when starting from a short length the 
+%    PEVK-actin bond would be much closer to the Z-line than the trials that
+%    begin at a longer length. Where the biological muscle ends up with a 
+%    peak and RFE that is very similar between trials, the simulation would
+%    produce very different force profiles: the trial in which the CE was
+%    activated at the shortest length would produce far larger forces than the
+%    other trials.
+%
+% Hisey B, Leonard TR, Herzog W. Does residual force enhancement increase with 
+% increasing stretch magnitudes?. Journal of biomechanics. 
+% 2009 Jul 22;42(10):1488-92.
+%
+
+titinModelActiveSpring        =1; 
+% After an email exhange with W.Herzog, he mentioned that his hypothesis is that
+% the PEVK segment, and perhaps also the Ig segment stiffen under exposure to 
+% calcium and this is what produces the large response in force. Single molecule
+% studies of both PEVK (Labeit et al.) and the I27 domains of Ig (DuVall) reveal
+% that both of these segments increase in stiffness when exposed to calcium. 
+% Calcium will bind to the PEVK region specifically (Tatsumi et al.). Although
+% mechanically realistic models of titin exist (Schappacher-Tilp et al.) these
+% require hundreds of state variables to represent the domains. Here we will use
+% a very simple lumped model to simulate the PEVK region's resistence to 
+% lengthening when exposed to calcium: it will be placed in parallel with a big
+% damper which is calcium activated, and saturates under low activation (perhaps
+% as low as 1%, Fukutani et al.).
+%
+% To do: check if pCa4 is consistent with a Ca^2+ concentraction in vivo
+%
+% Labeit D, Watanabe K, Witt C, Fujita H, Wu Y, Lahmers S, Funck T, Labeit S, 
+% Granzier H. Calcium-dependent molecular spring elements in the giant protein 
+% titin. Proceedings of the National Academy of Sciences. 2003 Nov 11;100(23):13716-21.
+%
+% Tatsumi R, Maeda K, Hattori A, Takahashi K. Calcium binding to an elastic 
+% portion of connectin/titin filaments. Journal of Muscle Research & Cell 
+% Motility. 2001 Feb;22(2):149-62.
+%
+% DuVall MM, Gifford JL, Amrein M, Herzog W. Altered mechanical properties of titin 
+% immunoglobulin domain 27 in the presence of calcium. European Biophysics 
+% Journal. 2013 Apr;42(4):301-7.
+%
+% Schappacher-Tilp G, Leonard T, Desch G, Herzog W. A novel three-filament model 
+% of force generation in eccentric contraction of skeletal muscles. PloS one. 
+% 2015 Mar 27;10(3):e0117634.
+%
+% Fukutani A, Herzog W. Residual Force Enhancement Is Preserved for Conditions 
+% of Reduced Contractile Force. Medicine and Science in Sports and Exercise. 
+% 2018 Jun 1;50(6):1186-91.
+%
 
 disp('  Note: set normECMDamping to 0, from 1e-4');
 sarcomereProperties = ...
@@ -450,7 +520,7 @@ sarcomereProperties = ...
             'normCrossBridgeCyclingDamping'    , 1.,...
             'normMaxActiveTitinToActinDamping' , 65,... 
             'normPassiveTitinToActinDamping'   , 0.25, ...
-            'normPevkToActinAttachmentPoint'   , 0.5,... 
+            'normPevkToActinAttachmentPoint'   , 0.0,... 
             'slidingTimeConstant', 0.001,...
             'forceVelocityCalibrationFactor',1.15,...          
             'activationTimeConstant',0.03,...
@@ -462,4 +532,9 @@ sarcomereProperties = ...
             'fitCrossBridgeStiffnessDampingToKirch199490Hz',...
              fitCrossBridgeStiffnessDampingToKirch199490Hz,...
              'lowActivationThreshold',0.05,...
-             'lowActivationGain',1000);
+             'lowActivationGain',1000,...
+             'titinModelType',titinModelActiveSpring,...
+             'normPassivePevkDamping', 0.25,...
+             'normActivePevkDamping',100,...
+             'activationThresholdActivePevkDamping',0.01); 
+
