@@ -156,7 +156,7 @@ function [success] = plotMuscleCurves( felineSoleusNormMuscleCurves,...
   plotProps(idx).lineWidth   = 0.5;
   plotProps(idx).xlabel = 'Normalized Length ($$\ell/\ell^{M}_{o}$$)';
   plotProps(idx).ylabel = 'Normalized Force ($$f/f^{M}_{o}$$)';
-  plotProps(idx).title  = 'A. ECM ($$\mathbf{f}^{ECM}$$) \& Titin ($$\mathbf{f}^{IgP}+\mathbf{f}^{PEVK}$$)';  
+  plotProps(idx).title  = 'A. ECM ($$\mathbf{f}^{ECM}$$) \& Titin ($$\mathbf{f}^{1}+\mathbf{f}^{2}$$)';  
   
   %%
   % PE: IgP, PEVK, Titin
@@ -829,23 +829,25 @@ end
 
   yTxt = (1-lambdaECM)*(0.8);
   xTxt = interp1( curveSampleProximalTitinPD.y, curveSampleProximalTitinPD.x, yTxt);
-  xTxt = xTxt + 0.025.*(max(curveSampleDistalTitinPD.x)-min(curveSampleDistalTitinPD.x));
+  xTxt = xTxt - 0.025.*(max(curveSampleProximalTitinPD.x)-min(curveSampleProximalTitinPD.x));
 
   hIgp = text(xTxt, yTxt,...
         ['$$\mathbf{f}^{1}$$'],'FontSize',8,...
-        'HorizontalAlignment','left',...
-        'VerticalAlignment','bottom');     
+        'HorizontalAlignment','right',...
+        'VerticalAlignment','bottom');%,...
+%        'Color',colorProximal);     
   hold on;
 
   yTxt = (1-lambdaECM)*0.5;
   xTxt = interp1( curveSampleProximalTitinPD.y, curveSampleProximalTitinPD.x, yTxt);  
-  xTxt = xTxt + 0.025.*(max(curveSampleDistalTitinPD.x)-min(curveSampleDistalTitinPD.x));
+  xTxt = xTxt - 0.025.*(max(curveSampleProximalTitinPD.x)-min(curveSampleProximalTitinPD.x));
 
   kP = felineSoleusNormMuscleCurves.forceLengthProximalTitinCurve.dydxEnd(1,2);
   hP = text(xTxt,yTxt,...
        ['$$\hat{k}^{1}_o=',num2str(round(kP,2)),'$$'],'FontSize',8,...
-       'HorizontalAlignment','left',...
-       'VerticalAlignment','bottom');      
+       'HorizontalAlignment','right',...
+       'VerticalAlignment','bottom');%,...
+%       'Color',colorProximal);      
   hold on;   
   
   %angleIgp = atan(curveSampleIgp.dydx(end))*(180/pi);
@@ -867,25 +869,27 @@ end
 
   yTxt = (1-lambdaECM)*0.8;
   xTxt = interp1( curveSampleDistalTitinPD.y, curveSampleDistalTitinPD.x, yTxt);  
-  xTxt = xTxt - 0.025.*(max(curveSampleDistalTitinPD.x)-min(curveSampleDistalTitinPD.x));
+  xTxt = xTxt + 0.05.*(max(curveSampleDistalTitinPD.x)-min(curveSampleDistalTitinPD.x));
   
 
   %eIsoPevk = lpevkFiso/lpevkOpt;
   hpevk = text(xTxt,yTxt,...
        ['$$\mathbf{f}^{2}$$'],'FontSize',8,...
-       'HorizontalAlignment','right',...
-       'VerticalAlignment','bottom');      
+       'HorizontalAlignment','left',...
+       'VerticalAlignment','bottom');%,...
+ %      'Color',colorDistal);      
   hold on;  
   
   yTxt = (1-lambdaECM)*0.5;
   xTxt = interp1( curveSampleDistalTitinPD.y, curveSampleDistalTitinPD.x, yTxt);  
-  xTxt = xTxt - 0.025.*(max(curveSampleDistalTitinPD.x)-min(curveSampleDistalTitinPD.x));
+  xTxt = xTxt + 0.05.*(max(curveSampleDistalTitinPD.x)-min(curveSampleDistalTitinPD.x));
 
   kD = felineSoleusNormMuscleCurves.forceLengthDistalTitinCurve.dydxEnd(1,2);
   hD = text(xTxt,yTxt,...
        ['$$\hat{k}^{2}_o=',num2str(round(kD,2)),'$$'],'FontSize',8,...
-       'HorizontalAlignment','right',...
-       'VerticalAlignment','bottom');      
+       'HorizontalAlignment','left',...
+       'VerticalAlignment','bottom');%,...
+%       'Color',colorDistal);      
   hold on;    
   
   %anglePevk = atan(curveSamplePevkIgd.dydx(end))*(180/pi);
