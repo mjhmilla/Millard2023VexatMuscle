@@ -133,8 +133,15 @@ ltN_lt      = modelConstants.ltN_lt      ;
 liN_li      = modelConstants.liN_li      ;
 
 scaleECM    = modelConstants.scaleECM;
-scalePEVK   = modelConstants.scalePEVK;
-scaleIGP    = modelConstants.scaleIGP;
+scaleTitinDistal      = modelConstants.scaleTitinDistal;
+scaleTitinProximal    = modelConstants.scaleTitinProximal;
+
+betaPevkPHN = modelConstants.betaPevkPHN;
+betaPevkAHN = modelConstants.betaPevkAHN; 
+activationThresholdActivePevkDamping = ...
+  modelConstants.activationThresholdActivePevkDamping;
+
+titinModelType=modelConstants.titinModelType;
 
 DftfcnN_DltN_max = modelConstants.DftfcnN_DltN_max;
 
@@ -212,6 +219,7 @@ beta1HNN       = modelCache.beta1HNN;
 f2H            = modelCache.f2H              ;
 f2HN           = modelCache.f2HN             ;
 k2HNN          = modelCache.k2HNN;
+beta2HNN       = modelCache.beta2HNN;
 
 fxHN           = modelCache.fxHN             ;
 kxHNN          = modelCache.kxHNN             ;
@@ -301,8 +309,8 @@ end
   flN       = calcFalDer(lamN,0);
   kxHNN     = a*flN*kAXHN;
   betaxHNN  = a*flN*betaAXHN;
-  f1HN      = scaleIGP*calcF1HDer(l1HN,0);
-  f2HN      = scalePEVK*calcF2HDer(l2HN,0);
+  f1HN      = scaleTitinProximal*calcF1HDer(l1HN,0);
+  f2HN      = scaleTitinDistal*calcF2HDer(l2HN,0);
   fEcmfcnHN = scaleECM*calcFeHDer(lceHN,0);
 
   if(flag_useElasticTendon == 1)
@@ -409,14 +417,60 @@ fvN=calcFvDer(dlfNN*forceVelocityCalibrationFactor,0);
 %Note 2: this damping coefficient is the same in lengthening as it is
 %        in shortening. This might not be the case! Something interesting
 %        to test with an experiment
-beta1HNN = betaN2ApHN + betaN2AaHN*a; 
 
-dl1HN = (f2HN-f1HN)/beta1HNN;
-dl1H  = dl1HN*lceN_lce;
+switch titinModelType
+  case 0
+    %Sticky-Spring active titin model:
+    %   Damping acts between actin and some point on the PEVK segment
+    %
+    %|     IgP       PEVK    IgD                           |
+    %|---|\/\/\|--|\/\/\/|--------|------------------------|
+    %|===========[b]====================|                  |
+    %|---- l1 --->|                                        |   
+    % 
 
-dl2H  = dlceH - dl1H; 
-dl2HN = dl2H*lce_lceN;
+    beta1HNN = betaN2ApHN + betaN2AaHN*a; 
+    beta2HNN = 0;
 
+    dl1HN = (f2HN-f1HN)/beta1HNN;
+    dl1H  = dl1HN*lceN_lce;
+
+    dl2H  = dlceH - dl1H; 
+    dl2HN = dl2H*lce_lceN;
+  case 1 
+    %Stiff-spring model:
+    %  Damping acts on the PEVK element
+    %
+    %|     IgP       PEVK    IgD                           |
+    %|---|\/\/\|--|\/\/\/\|--------|------------------------|
+    %|            |       |
+    %|            |--[ ]--|
+    %|                b
+    %|---- l1 --->|                                        |   
+    %
+    %From Fukutani and Herzog it is known that the active properties of titin
+    %appear to be saturated at very low levels of calcium concentration. Here
+    %we use a function that smoothly saturates to 1 as activation becomes 
+    %greater than activationThresholdActivePevkDamping.
+    %
+    % Fukutani A, Herzog W. Residual Force Enhancement Is Preserved for Conditions 
+    % of Reduced Contractile Force. Medicine and Science in Sports and Exercise. 
+    % 2018 Jun 1;50(6):1186-91.
+    kaP = a/activationThresholdActivePevkDamping;
+    aP = 1.-exp((-kaP*kaP));
+
+    beta1HNN = 0;
+    beta2HNN = betaPevkPHN + betaPevkAHN*(1-exp(-aP)); 
+
+    dl2HN = (f1HN-f2HN)/beta2HNN;
+    dl2H  = dl2HN*lceN_lce;
+
+    dl1H  = dlceH - dl2H; 
+    dl1HN = dl1H*lce_lceN;
+
+  otherwise
+    assert(0,'titinModelType must be 0 (sticky-spring) or 1 (stiff spring');
+end
 
 
 
@@ -515,6 +569,8 @@ if(flag_updateModelCache == 1)
     modelCache.dl2H        = dl2H       ; 
     modelCache.dl2HN       = dl2HN      ; 
 
+    modelCache.beta2HNN    = beta2HNN   ;
+
     modelCache.dlxH        = dlxH       ; 
     modelCache.dlxHN       = dlxHN      ; 
 
@@ -556,13 +612,27 @@ if(flag_updateModelCache == 1)
     %Power quantities
 
     modelCache.dw_lp    =   fiso*fTN*dlp;               % W: work    
-    modelCache.dw_n2aH  = - fiso*(f2HN-f1HN)*dl1H;      % W: work
+
+    switch titinModelType
+      case 0
+        modelCache.dw_12AH  = - fiso*(f2HN-f1HN)*dl1H;      % W: work
+        modelCache.dw_1kH   =  (fiso*f1HN)*dl1H;            % V: potential
+        modelCache.dw_2kH   =  (fiso*f2HN)*dl2H;            % V: potential
+
+      case 1
+
+        modelCache.dw_12AH  = - fiso*(f1HN-f2HN)*dl2H;      % W: work
+        modelCache.dw_1kH   =  (fiso*f1HN)*dl1H ;           % V: potential
+        modelCache.dw_2kH   =  (fiso*f2HN)*dl2H;            % V: potential 
+
+    otherwise
+      assert(0,'titinModelType must be 0 (sticky-spring) or 1 (stiff spring');
+    end
+
     modelCache.dw_xkH   =  (fiso*kxHNN*lxHN)*dlxH;      % V: potential
     modelCache.dw_xdH   = -(fiso*betaxHNN*dlxHN)*dlxH;  % W: work
     modelCache.dw_xaH   = -(fiso*fxHN)*dlaH;            % W: work
-    modelCache.dw_1kH   =  (fiso*f1HN)*dl1H;            % V: potential
     %modelCache.dw_1dH   = 0;                            % element has no damping
-    modelCache.dw_2kH   =  (fiso*f2HN)*dl2H;            % V: potential
     %modelCache.dw_2dH   = 0;                            % element has no damping
     modelCache.dw_Tk    =  (fiso*fTkN)*dlt;             % V: potential
     modelCache.dw_Td    = -(fiso*fTdN)*dlt;             % W: work
@@ -577,7 +647,7 @@ if(flag_updateModelCache == 1)
                     + modelCache.dw_Tk;
 
     modelCache.dW =   modelCache.dw_lp ...
-                      + 2*modelCache.dw_n2aH ...
+                      + 2*modelCache.dw_12AH ...
                       + 2*modelCache.dw_xdH ...
                       + 2*modelCache.dw_xaH ...
                       + 2*modelCache.dw_EcmdH ...
@@ -612,16 +682,20 @@ Ddalpha_Ddlce = fibKinDer.Ddalpha_Ddlce;
 %                DftN_DdltN*DdltN_DdlceN*DdlceN_Ddlce
 %
 
-D_f2HN_D_l2HN = 0;
-if(flag_updateModelCache==1 && flag_evaluateDerivatives || flag_evaluateJacobian)
-  D_f2HN_D_l2HN     = scalePEVK*calcF2HDer( l2HN,1 );
-end
 
 
 if(flag_updateModelCache==1 && flag_evaluateDerivatives)
 
   %Evaluate the necessary curve derivatives
-  D_f1HN_D_l1HN       = scaleIGP*calcF1HDer(l1HN,1);
+
+  D_f1HN_D_l1HN     = scaleTitinProximal*calcF1HDer(l1HN,1);
+  D_f2HN_D_l2HN     = scaleTitinDistal*calcF2HDer( l2HN,1 );
+
+  D_f1HN_D_l1HN     = scaleTitinProximal*calcF1HDer(l1HN,1);
+  D_f2HN_D_l2HN     = scaleTitinDistal*calcF2HDer( l2HN,1 );
+
+
+
   D_fEcmfcnHN_D_lceHN = scaleECM*calcFeHDer(lceHN,1 );
 
   D_fTfcnN_D_ltN = 0;
@@ -745,8 +819,8 @@ if(flag_evaluateJacobian == 1)
   %Titin segment between the N2A epitope and the M-line
   %%----------------------------------------------------------------------------
   %
-  % f2HN          = scalePEVK*calcF2HDer(l2HN,0)
-  % D_f2HN_D_l2HN = scalePEVK*calcF2HDer(l2HN,1)
+  % f2HN          = scaleTitinDistal*calcF2HDer(l2HN,0)
+  % D_f2HN_D_l2HN = scaleTitinDistal*calcF2HDer(l2HN,1)
   % 
   % l2HN           = lceHN - l1N
   % dl2HN          = dlceHN - dl1N
@@ -821,12 +895,13 @@ if(flag_evaluateInitializationFunctions==1)
   errIJac = zeros(2+flag_useElasticTendon,2+flag_useElasticTendon); %Numerical for now
 
   if(flag_useElasticTendon == 1)
+
     errI(1,1) = -(fxHN + f2HN + fEcmHN)*cosAlpha + fTN; 
     %When f1HN=f2HN the passive force developed by fEcm + f2 = fpe;  
-    errI(2,1) = f1HN-f2HN;
+    errI(2,1) = f1HN-f2HN; %This error term works for titin models 0 and 1
     errI(3,1) = ddlaHN;
   else
-    errI(1,1) = f1HN-f2HN;
+    errI(1,1) = f1HN-f2HN; %This error term works for titin models 0 and 1
     errI(2,1) = ddlaHN;    
   end
 

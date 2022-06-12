@@ -68,12 +68,12 @@ disp('Running Opus 31 Leonard, Joumaa, and Herzog 2010 Simulations');
                 sarcomereProperties.scaleECM = 0;
                 
                 activeScaling = activeForceKeyPoints(2,2)/3.77761;                
-                sarcomereProperties.scalePEVK= fpe1Ratio*activeScaling;
-                sarcomereProperties.scaleIGP = fpe1Ratio/activeScaling;
+                sarcomereProperties.scaleTitinDistal= fpe1Ratio*activeScaling;
+                sarcomereProperties.scaleTitinProximal = fpe1Ratio/activeScaling;
               else
                 sarcomereProperties.scaleECM = 0;
-                sarcomereProperties.scaleIGP = fpe1Ratio;
-                sarcomereProperties.scalePEVK= fpe1Ratio;
+                sarcomereProperties.scaleTitinProximal = fpe1Ratio;
+                sarcomereProperties.scaleTitinDistal   = fpe1Ratio;
               end
               
 

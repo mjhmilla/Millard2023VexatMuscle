@@ -421,8 +421,8 @@ fprintf('  ecm & titin curves:\n');
 flag_useDeprecatedTitinCurves = 0;
 if(flag_useDeprecatedTitinCurves==0)
   
-flag_computeCurveIntegrals=1;
-flag_computeIntegral=1;
+flag_computeCurveIntegrals=0;
+flag_computeIntegral=0;
   
 lambdaECM = sarcomereProperties.extraCellularMatrixPassiveForceFraction;    
 normMuscleCurves.forceLengthECMHalfCurve  = ...
