@@ -211,27 +211,31 @@ flN            = modelCache.flN           ;
 fvN            = modelCache.fvN           ;
 
 
-f1H            = modelCache.f1H              ;
-f1HN           = modelCache.f1HN             ;
-k1HNN          = modelCache.k1HNN;
-beta1HNN       = modelCache.beta1HNN;
+f1H            = modelCache.f1H           ;
+f1HN           = modelCache.f1HN          ;
+f1kHN          = modelCache.f1kHN         ;
+f1dHN          = modelCache.f1dHN         ;
+k1HNN          = modelCache.k1HNN         ;
+beta1HNN       = modelCache.beta1HNN      ;
 
-f2H            = modelCache.f2H              ;
-f2HN           = modelCache.f2HN             ;
-k2HNN          = modelCache.k2HNN;
-beta2HNN       = modelCache.beta2HNN;
+f2H            = modelCache.f2H           ;
+f2HN           = modelCache.f2HN          ;
+f2kHN          = modelCache.f2kHN         ;
+f2dHN          = modelCache.f2dHN         ;
+k2HNN          = modelCache.k2HNN         ;
+beta2HNN       = modelCache.beta2HNN      ;
 
-fxHN           = modelCache.fxHN             ;
-kxHNN          = modelCache.kxHNN             ;
-betaxHNN       = modelCache.betaxHNN          ;
+fxHN           = modelCache.fxHN          ;
+kxHNN          = modelCache.kxHNN         ;
+betaxHNN       = modelCache.betaxHNN      ;
 
-fTfcnN         = modelCache.fTfcnN           ;
-DfTfcnN_DltN   = modelCache.DfTfcnN_DltN     ;
-fTkN           = modelCache.fTkN             ;
-fTdN           = modelCache.fTdN             ;
-fTN            = modelCache.fTN              ;
-kTNN           = modelCache.kTNN             ;
-betaTNN        = modelCache.betaTNN          ;
+fTfcnN         = modelCache.fTfcnN        ;
+DfTfcnN_DltN   = modelCache.DfTfcnN_DltN  ;
+fTkN           = modelCache.fTkN          ;
+fTdN           = modelCache.fTdN          ;
+fTN            = modelCache.fTN           ;
+kTNN           = modelCache.kTNN          ;
+betaTNN        = modelCache.betaTNN       ;
 
 fEcmfcnHN         = modelCache.fEcmfcnHN          ;
 DfEcmfcnHN_DlceHN = modelCache.DfEcmfcnHN_DlceHN  ;
@@ -309,8 +313,12 @@ end
   flN       = calcFalDer(lamN,0);
   kxHNN     = a*flN*kAXHN;
   betaxHNN  = a*flN*betaAXHN;
-  f1HN      = scaleTitinProximal*calcF1HDer(l1HN,0);
-  f2HN      = scaleTitinDistal*calcF2HDer(l2HN,0);
+
+  f1kHN     = scaleTitinProximal * calcF1HDer(l1HN,0);
+  f2kHN     = scaleTitinDistal   * calcF2HDer(l2HN,0);
+  k1HNN     = scaleTitinProximal * calcF1HDer(l1HN,1);
+  k2HNN     = scaleTitinDistal   * calcF2HDer(l2HN,1);
+
   fEcmfcnHN = scaleECM*calcFeHDer(lceHN,0);
 
   if(flag_useElasticTendon == 1)
@@ -347,8 +355,12 @@ end
   modelCache.flN        = flN     ; 
   modelCache.kxHNN      = kxHNN    ; 
   modelCache.betaxHNN   = betaxHNN ; 
-  modelCache.f1HN       = f1HN    ; 
-  modelCache.f2HN       = f2HN    ; 
+
+  modelCache.f1kHN      = f1kHN    ; 
+  modelCache.f2kHN      = f2kHN    ; 
+  modelCache.k1HNN      = k1HNN    ; 
+  modelCache.k2HNN      = k2HNN    ; 
+
   modelCache.fEcmfcnHN  = fEcmfcnHN  ; 
   modelCache.fTfcnN     = fTfcnN  ; 
   modelCache.DfTfcnN_DltN = DfTfcnN_DltN;
@@ -418,6 +430,15 @@ fvN=calcFvDer(dlfNN*forceVelocityCalibrationFactor,0);
 %        in shortening. This might not be the case! Something interesting
 %        to test with an experiment
 
+beta1HNN = 0; 
+beta2HNN = 0;
+
+dl1HN = 0;
+dl1H  = 0;
+
+dl2H  = 0; 
+dl2HN = 0;
+
 switch titinModelType
   case 0
     %Sticky-Spring active titin model:
@@ -432,11 +453,12 @@ switch titinModelType
     beta1HNN = betaN2ApHN + betaN2AaHN*a; 
     beta2HNN = 0;
 
-    dl1HN = (f2HN-f1HN)/beta1HNN;
+    dl1HN = (f2kHN-f1kHN)/beta1HNN;
     dl1H  = dl1HN*lceN_lce;
 
     dl2H  = dlceH - dl1H; 
     dl2HN = dl2H*lce_lceN;
+
   case 1 
     %Stiff-spring model:
     %  Damping acts on the PEVK element
@@ -462,7 +484,7 @@ switch titinModelType
     beta1HNN = 0;
     beta2HNN = betaPevkPHN + betaPevkAHN*(1-exp(-aP)); 
 
-    dl2HN = (f1HN-f2HN)/beta2HNN;
+    dl2HN = (f1kHN-f2kHN)/beta2HNN;
     dl2H  = dl2HN*lceN_lce;
 
     dl1H  = dlceH - dl2H; 
@@ -473,6 +495,10 @@ switch titinModelType
 end
 
 
+f1dHN = beta1HNN*dl1HN;
+f2dHN = beta2HNN*dl2HN;
+f1HN  = f1kHN + f1dHN;    
+f2HN  = f2kHN + f2dHN;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Net forces
@@ -563,23 +589,28 @@ if(flag_updateModelCache == 1)
 
     modelCache.dl1H        = dl1H       ; 
     modelCache.dl1HN       = dl1HN      ; 
-    
-    modelCache.beta1HNN    = beta1HNN;
-    
+        
     modelCache.dl2H        = dl2H       ; 
     modelCache.dl2HN       = dl2HN      ; 
 
-    modelCache.beta2HNN    = beta2HNN   ;
-
     modelCache.dlxH        = dlxH       ; 
     modelCache.dlxHN       = dlxHN      ; 
-
             
     modelCache.dalpha      = dalpha     ; 
 
-
     
     %Force/Titin related quantities
+
+    modelCache.f1dHN    = f1dHN;    
+    modelCache.beta1HNN = beta1HNN;
+    modelCache.f1HN     = f1HN;
+    modelCache.f1H      = f1HN*fiso;
+
+    modelCache.f2dHN    = f2dHN;    
+    modelCache.beta2HNN = beta2HNN;
+    modelCache.f2HN     = f2HN;
+    modelCache.f2H      = f2HN*fiso;
+
 
     modelCache.fEcmfcnHN    = fEcmfcnHN     ;
     modelCache.betaEcmHNN   = betaEcmHNN  ;
@@ -686,15 +717,6 @@ Ddalpha_Ddlce = fibKinDer.Ddalpha_Ddlce;
 
 if(flag_updateModelCache==1 && flag_evaluateDerivatives)
 
-  %Evaluate the necessary curve derivatives
-
-  D_f1HN_D_l1HN     = scaleTitinProximal*calcF1HDer(l1HN,1);
-  D_f2HN_D_l2HN     = scaleTitinDistal*calcF2HDer( l2HN,1 );
-
-  D_f1HN_D_l1HN     = scaleTitinProximal*calcF1HDer(l1HN,1);
-  D_f2HN_D_l2HN     = scaleTitinDistal*calcF2HDer( l2HN,1 );
-
-
 
   D_fEcmfcnHN_D_lceHN = scaleECM*calcFeHDer(lceHN,1 );
 
@@ -704,14 +726,13 @@ if(flag_updateModelCache==1 && flag_evaluateDerivatives)
   else
     D_fTfcnN_D_ltN = Inf;
   end
-  modelCache.D_f2HN_D_l2HN        = D_f2HN_D_l2HN;
+
+  modelCache.D_f1HN_D_l1HN        = k1HNN;
+  modelCache.D_f2HN_D_l2HN        = k2HNN;
   modelCache.D_fEcmfcnHN_D_lceHN  = D_fEcmfcnHN_D_lceHN;
   modelCache.D_fTfcnN_D_ltN       = D_fTfcnN_D_ltN;
 
   %Evaluate the stiffness and damping coefficients of each element
-  k1HNN  = D_f1HN_D_l1HN;
-  k2HNN  = D_f2HN_D_l2HN; 
-
   DfEcmkHN_DlceHN     = D_fEcmfcnHN_D_lceHN;   
   DfEcmdHN_DlceHN     = (betafEcmHN*DfEcmkHN_DlceHN)*dlceHN;  
   DfEcmHN_DlceHN      = DfEcmkHN_DlceHN + DfEcmdHN_DlceHN;  
@@ -754,9 +775,6 @@ if(flag_updateModelCache==1 && flag_evaluateDerivatives)
   end
   modelCache.Dlt_Dlce         = Dlt_Dlce;
   modelCache.DltN_DlceN       = DltN_DlceN;
-
-  modelCache.k1HNN             = k1HNN;
-  modelCache.k2HNN             = k2HNN;
 
   modelCache.DfEcmfcnHN_DlceHN   = D_fEcmfcnHN_D_lceHN ;
   modelCache.DfEcmkHN_DlceHN     = DfEcmkHN_DlceHN   ;
@@ -816,20 +834,35 @@ if(flag_evaluateJacobian == 1)
 
 
   %%----------------------------------------------------------------------------
-  %Titin segment between the N2A epitope and the M-line
+  %Distal Titin Segment 
   %%----------------------------------------------------------------------------
+
+  %  f2kHN = calcF2HDer(l2HN,0)
   %
-  % f2HN          = scaleTitinDistal*calcF2HDer(l2HN,0)
-  % D_f2HN_D_l2HN = scaleTitinDistal*calcF2HDer(l2HN,1)
-  % 
-  % l2HN           = lceHN - l1N
-  % dl2HN          = dlceHN - dl1N
-  % D_dl2HN_D_dlce = D_dlceHN_D_dlce
+  % Stiff spring model
+  %  f2dHN = (betaPevkP + (1-exp(a/aThresh))*betaPevkA)*dl2HN 
   %
-  %D_dl2HN_D_dlce = D_dlceHN_D_dlce;
-  %D_f2HN_D_dlce  = D_f2HN_D_l2HN*D_dl2HN_D_dlce;
-  D_f2HN_D_dlce = 0; %This is a spring: there is no damping
-  
+  % Sticky spring model
+  %  f2dHN = 0 
+  %
+  %  f2HN           = scaleTitinDistal*(f2kHN + f2dHN)
+  %  D_f2HN_D_dl2HN = scaleTitinDistal*(
+  %                     D_f2kHN_D_dl2HN
+  %                    +D_f2dHN_D_dl2HN)
+  %
+  %  D_f2kHN_D_dl2HN = d/dl2HN (calcF2HDer(l2HN,0)) = 0
+  %  D_f2dHN_D_dl2HN = d/dl2HN ((betaPevkP + (1-exp(a/aThresh))*betaPevkA))*dl2HN 
+  %                  = ((betaPevkP + (1-exp(a/aThresh))*betaPevkA))
+  %                  = beta                 
+  %
+  %  l2HN           = lceHN - l1N - (LIg)
+  %  dl2HN_dt       = dlceHN - dl1N
+  %  D_dl2HN_D_dlce = D_dlceHN_D_dlce
+  %
+  %  D_f2HN_D_dlce  = D_f2HN_D_l2HN*D_dl2HN_D_dlce;
+  D_f2HN_D_dlce  = 0;  
+
+
   %%----------------------------------------------------------------------------
   % ECM Force Velocity Derivatives
   %%----------------------------------------------------------------------------

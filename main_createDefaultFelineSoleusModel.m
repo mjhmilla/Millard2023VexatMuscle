@@ -124,6 +124,7 @@ save('output/structs/defaultFelineSoleus.mat',...
 %%   a single trial of Herzog & Leonard 2002
 %%
 
+%Fit the elastic tendon model.
 if(flag_fitActiveTitinProperties== 0 )
     if(isempty(elasticTendonReferenceModel)==0)
         disp('Using reference model');        
@@ -160,7 +161,9 @@ else
     
     dataFolder = 'experiments/HerzogLeonard2002/fitting/';
     
-    felineSoleusNormMuscleCurvesDefault.useTwoSidedTitinCurves=1;
+    if(felineSoleusSarcomerePropertiesDefault.titinModelType==0)
+        felineSoleusNormMuscleCurvesDefault.useTwoSidedTitinCurves=1;
+    end
     felineSoleusNormMuscleCurvesDefault.useCalibratedCurves=1;
     flag_useElasticTendon       = 1;
     
@@ -184,7 +187,7 @@ else
                             'normMaxActiveTitinToActinDamping');
 end
 
-
+%Fit the rigid tendon model
 if(flag_fitActiveTitinProperties== 0 )
     if(isempty(rigidTendonReferenceModel)==0)
         disp('Using default model');        
@@ -200,6 +203,11 @@ if(flag_fitActiveTitinProperties== 0 )
     end
 
 else
+
+    if(felineSoleusSarcomerePropertiesDefault.titinModelType==0)
+        felineSoleusNormMuscleCurvesDefault.useTwoSidedTitinCurves=1;
+    end    
+    felineSoleusNormMuscleCurvesDefault.useCalibratedCurves=1;
     flag_useElasticTendon       = 0;
     
     [felineSoleusSarcomerePropertiesUpd_RT,...

@@ -104,13 +104,16 @@ calcFeHDer  = @(arg1,arg2)calcBezierYFcnXDerivative(arg1, ...
 
 
 
-switch sarcomereProperties.titinModelType:
+switch sarcomereProperties.titinModelType
 
   case 0
     %Stick-spring model
     %Titin proximal force-length curve: Z-line to N2A
     if(normMuscleCurves.useTitinCurvesWithRigidIgDSegment==1)
         assert(normMuscleCurves.useTwoSidedTitinCurves == 0)
+
+        l1HNZeroForce = normMuscleCurves.forceLengthProximalTitinCurve.xEnd(1,1);
+        
         calcF1HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
                               normMuscleCurves.forceLengthProximalTitinCurve, ...
                               arg2);  
@@ -119,6 +122,8 @@ switch sarcomereProperties.titinModelType:
                               arg2);          
     else
         if(normMuscleCurves.useTwoSidedTitinCurves == 1)
+            l1HNZeroForce = normMuscleCurves.forceLengthProximalTitinTwoSidedCurve.xEnd(1,1);
+            
             calcF1HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
                                   normMuscleCurves.forceLengthProximalTitinTwoSidedCurve, ...
                                   arg2);  
@@ -126,6 +131,8 @@ switch sarcomereProperties.titinModelType:
                                   normMuscleCurves.forceLengthDistalTitinTwoSidedCurve, ...
                                   arg2);  
         else
+            l1HNZeroForce = normMuscleCurves.forceLengthProximalTitinCurve.xEnd(1,1);
+
             calcF1HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
                                   normMuscleCurves.forceLengthProximalTitinCurve, ...
                                   arg2);  
@@ -135,6 +142,7 @@ switch sarcomereProperties.titinModelType:
         end
     end 
 case 1
+  l1HNZeroForce = normMuscleCurves.forceLengthLumpedIgCurve.xEnd(1,1);
   calcF1HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
                                   normMuscleCurves.forceLengthLumpedIgCurve, ...
                                   arg2);  
@@ -142,6 +150,7 @@ case 1
                         normMuscleCurves.forceLengthPEVKCurve, ...
                         arg2);  
 
+  
   otherwise
     assert(0,['sarcomereProperties.titinModelType must',...
               ' be 0 (sticky-spring) or 1 (stiff-spring)']);    
@@ -443,11 +452,15 @@ modelCachedValues = struct(...
     'fvN'           , NaN     , ...
       'f1H'           , NaN       , ...
       'f1HN'          , NaN       , ...
+      'f1kHN'         , NaN       , ...
+      'f1dHN'         , NaN       , ...      
       'k1HNN'         , NaN       , ...
       'beta1HNN'      , NaN       , ...
       'dw_1kH'         , NaN       , ...
     'f2H'           , NaN       , ...
     'f2HN'          , NaN       , ...
+    'f2kHN'         , NaN       , ...
+    'f2dHN'         , NaN       , ...      
     'k2HNN'         , NaN       , ...
     'beta2HNN'      , NaN       , ...
     'dw_2kH'         , NaN       , ...
@@ -535,8 +548,8 @@ if(modelConfig.initializeState==1)
   dlaH = 0;
 
   
-  l1HN = normMuscleCurves.forceLengthIgpCurve.xEnd(1)*lceN;
-  l1H = l1HN * liN_li;
+  l1HN = l1HNZeroForce;
+  l1H  = l1HN * liN_li;
     
   flag_updatePositionLevel                = 1;
   flag_evaluateJacobian                   = 1;
@@ -924,9 +937,9 @@ elseif(useElasticTendon ==1 && modelConfig.initializeState==0)
               eqVarsR(2,i) = tmpCache.fEcmHN;
               eqVarsR(3,i) = tmpCache.fxHN;
               eqVarsR(4,i) = tmpCache.fTN;
-            end      
-            eqVarsNumJac(:,i) = (eqVarsR(:,i)-eqVarsL(:,i))./(2*h);
+            end                  
           end
+          eqVarsNumJac(:,i) = (eqVarsR(:,i)-eqVarsL(:,i))./(2*h);
           errJacNum(:,i) = (errR-errL)./(2*h);
         end
 
@@ -935,7 +948,7 @@ elseif(useElasticTendon ==1 && modelConfig.initializeState==0)
 
         errJacErr = errFJac - errJacNum;
         errJacErrNorm = sqrt(sum(sum(errJacErr.^2)));
-        
+        here=1;
       end
 
       %Debugging

@@ -25,6 +25,9 @@ switch sarcomerePropertiesOpus31.titinModelType
         biParam = [sarcomerePropertiesOpus31Upd.normPevkToActinAttachmentPoint;...
                    sarcomerePropertiesOpus31Upd.normMaxActiveTitinToActinDamping];
     case 1
+
+        sarcomerePropertiesOpus31Upd.extraCellularMatrixPassiveForceFraction = 0.5;
+        
         biParam = [sarcomerePropertiesOpus31Upd.extraCellularMatrixPassiveForceFraction;...
                    sarcomerePropertiesOpus31Upd.normActivePevkDamping];
     otherwise
