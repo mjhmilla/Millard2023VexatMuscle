@@ -80,7 +80,7 @@ fa1 = interp1(expConfigHerzogLeonard2002.dataRamp.time,...
            
            
            
-fvec = round([f0,fp1,f1,fr0,fr1],1);
+fvec = unique(round([f0,fp1,f1,fr0,fr1],1));
            
 %%
 % Length
@@ -449,7 +449,7 @@ hold on;
 if(flag_useElasticTendon==1)
   text(tkMin, kMin+2.5, 'Negative stiffness!');
 end
-kvec = round([kMin,0,kH1,kMax],1);
+kvec = unique([kMin,0,kH1,kMax]);
 kDelta = (kMax-kMin).*0.05;
 
 if(flag_useElasticTendon==0)
@@ -554,7 +554,9 @@ dH  = max(dataDampedEq.benchRecord.musculotendonDamping(:,idxMapH(1,i))./1000);
 %      'HorizontalAlignment','left');
 % hold on;
 
-dvec = round(sort([0,d31r1,d310,dH]),2);
+
+
+dvec = unique(round([0,d31r1,d310,dH],2));
 dDelta = (dH).*0.05;
 
 box off;
