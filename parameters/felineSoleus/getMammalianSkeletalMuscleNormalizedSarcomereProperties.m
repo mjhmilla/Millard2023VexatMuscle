@@ -416,19 +416,21 @@ disp('Remove kNormIgd');
 kNormIgp = kNormPevkIGd*(deltaIgdFree+deltaPEVK)/(deltaIgp);
 
    
+%
+% For a human soleus muscle titin's geometry (at least 1 isoform) has been
+% measured by Trombitas
+%
+%   68 prox. Ig domains that can maximally extend to 25 nm (DuVall et al.)
+%   2174 PEVK residues that have a maximum length of 0.38 nm (Cantor & Schimmel)
+%   28 distal Ig domains that can maximally extend to 25 nm 
+%
 %Trombitas K, Greaser M, French G, Granzier H. PEVK extension of human soleus 
 %muscle titin revealed by immunolabeling with the anti-titin antibody 9D10.
 %Journal of structural biology. 1998 Jan 1;122(1-2):188-96.
 %
-% For a human soleus muscle titin's geometry (at least 1 isoform) has been
-% measured
-%   69 Ig domains that can maximally extend to 25 nm (DuVall et al.)
-%   2174 PEVK residues that have a maximum length of 0.38 nm (Cantor & Schimmel)
-%   28 Ig domains that can maximally extend to 25 nm 
-%
-%
 % Cantor CR, Schimmel PR. Biophysical Chemistry, Part I: The Conformation of 
 % Biological Molecules. Journal of Solid-Phase Biochemistry. 1980;5(3).
+%
 % *Note: the 0.38nm is mentioned on 254 as the sum of the bond lengths. In reality
 %        the bond lengths likely cannot be stretched into a line before the
 %        titin filament fails
@@ -441,11 +443,35 @@ lContourIGPNormHuman     = (68*(25/1000))    / optSarcomereLengthHuman;
 lContourPEVKNormHuman    = (2174*(0.38/1000))/ optSarcomereLengthHuman;
 lContourIGDFreeNormHuman = (28*(25/1000))    / optSarcomereLengthHuman;    
 
+
 % For a cat, I have no idea of the Ig domain and PEVK residue count.
-% If we assume that its the same as human soleus then we end up with
-lContourIGPNormCat     = (68*(25/1000))    / optSarcomereLengthCat;
-lContourPEVKNormCat    = (2174*(0.38/1000))/ optSarcomereLengthCat;
-lContourIGDFreeNormCat = (28*(25/1000))    / optSarcomereLengthCat;    
+% A rabbit psoas has a titin molecule with
+%
+%   50 prox. Ig domains
+%   800 PEVK residues 
+%   22 distal Ig domains 
+% 
+% But Prado makes it clear that there are some muscles in a rabbit that
+% approach titin in the 3.7 kD range, which would be consistent with human
+% soleus titin. The rabbit psoas was one of the shorter ones.
+%
+% This information is really only needed to replicate Leonard, Joumaa
+% and Herzog 2010 ... which was performed on a rabbit psoas muscle.
+%
+%Prado LG, Makarenko I, Andresen C, Krüger M, Opitz CA, Linke WA. Isoform 
+% diversity of giant proteins in relation to passive and active contractile 
+% properties of rabbit skeletal muscles. The Journal of general physiology. 
+% 2005 Nov;126(5):461-80.
+%
+%
+optSarcomereLengthRabbit = 2.3; %Leonard et al. 2.2-2.4
+%Leonard TR, Joumaa V, Herzog W. An activatable molecular spring reduces 
+% muscle tearing during extreme stretching. Journal of biomechanics. 
+% 2010 Nov 16;43(15):3063-6.
+
+lContourIGPNormRabbit     = (50*(25/1000))    / optSarcomereLengthRabbit;
+lContourPEVKNormRabbit    = (800*(0.38/1000))/ optSarcomereLengthRabbit;
+lContourIGDFreeNormRabbit = (22*(25/1000))    / optSarcomereLengthRabbit;    
 
 switch flag_Cat1_Human2
   case 1
@@ -453,9 +479,14 @@ switch flag_Cat1_Human2
     lContourPEVKNorm    = lContourPEVKNormHuman   ;
     lContourIGDFreeNorm = lContourIGDFreeNormHuman;
   case 2
-    lContourIGPNorm     = lContourIGPNormCat    ;
-    lContourPEVKNorm    = lContourPEVKNormCat   ;
-    lContourIGDFreeNorm = lContourIGDFreeNormCat;
+    %I'm going to assume that feline titin geometry in skeletal muscle
+    %is a scaled version of that of a human soleus. Probably this isn't
+    %a great solution, but I think its a better approximation than using
+    %rabbit psoas, which was one of the lightest (and thus smallest)
+    %titin isoforms measured by Prado et al.
+    lContourIGPNorm     = lContourIGPNormHuman  ;
+    lContourPEVKNorm    = lContourPEVKNormHuman   ;
+    lContourIGDFreeNorm = lContourIGDFreeNormHuman;
 end
 
 
