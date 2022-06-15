@@ -105,8 +105,8 @@ betafTN     = modelConstants.betafTN      ;
 betaCTN     = modelConstants.betaCTN; 
 betafEcmHN   = modelConstants.betafEcmHN    ;
 
-betaN2AaHN  = modelConstants.betaN2AaHN  ;
-betaN2ApHN  = modelConstants.betaN2ApHN  ;
+betaTAaHN  = modelConstants.betaTAaHN  ;
+betaTApHN  = modelConstants.betaTApHN  ;
 
 forceVelocityCalibrationFactor = modelConstants.forceVelocityCalibrationFactor;
 tau                     = modelConstants.tau       ;
@@ -116,6 +116,11 @@ lowActivationGain       = modelConstants.lowActivationGain;
 lTitinFixedHN = modelConstants.lTitinFixedHN      ;
 lmHN          = modelConstants.lmHN        ;
 lmH           = modelConstants.lmH         ;
+ZLineToT12NormLengthAtOptimalFiberLength = ...
+  modelConstants.ZLineToT12NormLengthAtOptimalFiberLength;
+
+normActinSmoothStepFunctionRadius = ... 
+  modelConstants.normActinSmoothStepFunctionRadius;  
 
 lce_lceH    = modelConstants.lce_lceH    ;
 lce_lceHN   = modelConstants.lce_lceHN   ;
@@ -138,8 +143,8 @@ scaleTitinProximal    = modelConstants.scaleTitinProximal;
 
 betaPevkPHN = modelConstants.betaPevkPHN;
 betaPevkAHN = modelConstants.betaPevkAHN; 
-activationThresholdActivePevkDamping = ...
-  modelConstants.activationThresholdActivePevkDamping;
+activationThresholdTitin = ...
+  modelConstants.activationThresholdTitin;
 
 titinModelType=modelConstants.titinModelType;
 
@@ -416,17 +421,11 @@ fvN=calcFvDer(dlfNN*forceVelocityCalibrationFactor,0);
 
 %%------------------------------------------------------------------------------
 %Titin segments 
-%   1: lumped T12+IG1                    : z-line to the N2A epitope
-%   2: PEVK section + compliance of IG2  : N2A epitope to the PEVK/IG2 border
+%   1: lumped T12+IG1+Q(PEVK)                : z-line to the titin/actin bonding location
+%   2: (1-Q)PEVK section + compliance of IG2 : N2A epitope to the PEVK/IG2 border
 %%------------------------------------------------------------------------------
 
-%Note 1: This implicitly assumes that the N2A epitope is never longer than
-%        the length of an actin filament. This is probably quite a safe assumption
-%        as the forces required to stretch the IG1 section (with a normalized  
-%        resting length of 0.064) to the full length of actin would be enormous 
-%        - greater than 10 maximum isometric forces.
-%
-%Note 2: this damping coefficient is the same in lengthening as it is
+%Note 1: this damping coefficient is the same in lengthening as it is
 %        in shortening. This might not be the case! Something interesting
 %        to test with an experiment
 
@@ -439,6 +438,17 @@ dl1H  = 0;
 dl2H  = 0; 
 dl2HN = 0;
 
+%From Fukutani and Herzog it is known that the active properties of titin
+%appear to be saturated at very low levels of calcium concentration. Here
+%we use a function that smoothly saturates to 1 as activation becomes 
+%greater than activationThresholdTitin.
+%
+% Fukutani A, Herzog W. Residual Force Enhancement Is Preserved for Conditions 
+% of Reduced Contractile Force. Medicine and Science in Sports and Exercise. 
+% 2018 Jun 1;50(6):1186-91.
+kaTi = a/activationThresholdTitin;
+aTi = 1.-exp((-kaTi*kaTi));
+
 switch titinModelType
   case 0
     %Sticky-Spring active titin model:
@@ -450,7 +460,27 @@ switch titinModelType
     %|---- l1 --->|                                        |   
     % 
 
-    beta1HNN = betaN2ApHN + betaN2AaHN*a; 
+    %uActin is a step function that is 1 provided the titin-actin attachement
+    %point is still within actin, otherwise it goes to zero. Because this is
+    %in normalized coordinates and its a step function that goes to zero when
+    %the titin-actin bond slides off of titin I'm directly putting in this
+    %
+
+    dTiA = (normActinLength-(l1HN+ZLineToT12NormLengthAtOptimalFiberLength));
+    kTiA = dTia/normActinSmoothStepFunctionRadius;
+    uTiA = 0.5+0.5*tanh(kTia);
+
+    % To break beta1HNN down:
+    %
+    %   beta1HNN = betaTApHN + betaTAaHN*aTi*uTia
+    %
+    %   beta1HNN : titin-actin damping at the bond site
+    %   betaTApHN: small passive damping coefficient that never goes to zero
+    %   betaTAaHN: maximum active titin-actin damping coefficient
+    %   aTi      : value between 0-1 that indicates if the bond is active
+    %   uTia     : a value that is 1 provided the bond overlaps with actin,
+    %              otherwise its zero.    
+    beta1HNN = betaTApHN + betaTAaHN*aTi*uTia; 
     beta2HNN = 0;
 
     dl1HN = (f2kHN-f1kHN)/beta1HNN;
@@ -470,19 +500,16 @@ switch titinModelType
     %|                b
     %|---- l1 --->|                                        |   
     %
-    %From Fukutani and Herzog it is known that the active properties of titin
-    %appear to be saturated at very low levels of calcium concentration. Here
-    %we use a function that smoothly saturates to 1 as activation becomes 
-    %greater than activationThresholdActivePevkDamping.
+    % This is a very weird model: PEVK becomes very viscous when exposed
+    % to cycling crossbriges within actin-myosin overlap, but does not lose
+    % this viscous state until Ca2+ levels drop. Even when it goes outside
+    % of the reach of actin.
     %
-    % Fukutani A, Herzog W. Residual Force Enhancement Is Preserved for Conditions 
-    % of Reduced Contractile Force. Medicine and Science in Sports and Exercise. 
-    % 2018 Jun 1;50(6):1186-91.
-    kaP = a/activationThresholdActivePevkDamping;
-    aP = 1.-exp((-kaP*kaP));
+    % This model was made in response 
+    %
 
     beta1HNN = 0;
-    beta2HNN = betaPevkPHN + betaPevkAHN*(1-exp(-aP)); 
+    beta2HNN = betaPevkPHN + betaPevkAHN*(1-exp(-aTi)); 
 
     dl2HN = (f1kHN-f2kHN)/beta2HNN;
     dl2H  = dl2HN*lceN_lce;
