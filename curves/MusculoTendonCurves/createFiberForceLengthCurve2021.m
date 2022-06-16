@@ -34,10 +34,10 @@
 %    135(2), 021005.
 %%
 function fiberForceLengthCurve = createFiberForceLengthCurve2021(...
-                                       normLengthZero, normLengthToe, normForceToe, ...
-                                       kZero, kLow, kToe, curviness,...
-                                       computeIntegral, muscleName,...
-                                       flag_usingOctave)
+               normLengthZero, normLengthToe, normForceToe, normLengthContour,...
+               kZero, kLow, kToe, curviness,...
+               computeIntegral, muscleName,...
+               flag_usingOctave)
 %%
 
 %This function will generate a C2 continuous curve that fits a fiber's 
@@ -52,7 +52,12 @@ function fiberForceLengthCurve = createFiberForceLengthCurve2021(...
 %@param normForceToe The normalized force developed at a length of 
 %                    normLengthToe
 %
-
+%@param normLengthContour: An optional parameter, which if used, will
+%                          fit the curve beyond normLengthToe to a 
+%                          WLC that develops very large (but not infinite)
+%                          forces as the length approaches
+%                          normContourLength
+%
 %@param kZero   The normalized stiffness (or slope) of the curve 
 %			  at normLengthZero
 %
@@ -124,7 +129,9 @@ assert(kLow > 0.0 && kLow < normForceToe/(normLengthToe-normLengthZero),...
 assert( (curviness>=0 && curviness <= 1),...      
     sprintf('%s: curviness must be between 0.0 and 1.0',...
             fiberForceLengthCurve.name));
-
+assert(isempty(normContourLength) || normContourLength > normLengthToe, ...
+       sprintf('%s: normContourLength must be empty, or greater than normLengthToe',...
+            fiberForceLengthCurve.name))
 
 %%
 %Translate the user parameters to quintic Bezier points
@@ -143,33 +150,46 @@ xfoot    = xZero + 0.5*(xLow-xZero);
 yfoot    = yZero;
 yLow     = yfoot + kLow*(xLow-xfoot);
 
-%Compute the Quintic Bezier control points
-p0 = calcQuinticBezierCornerControlPoints(xZero, yZero,kZero, 0, ...
-                                           xLow, yLow, kLow, 0,c);
 
-p1 =  calcQuinticBezierCornerControlPoints(xLow, yLow, kLow, 0, ...
-                                           xIso, yIso, kToe, 0, c);
+
+%Compute the Quintic Bezier control points
+%p0 = calcQuinticBezierCornerControlPoints(xZero, yZero,kZero, 0, ...
+%                                           xLow, yLow, kLow, 0,c);
+
+%p1 =  calcQuinticBezierCornerControlPoints(xLow, yLow, kLow, 0, ...
+%                                           xIso, yIso, kToe, 0, c);
 
                                          
 %xpts = [p0(:,1) p1(:,1)];
 %ypts = [p0(:,2) p1(:,2)];
 p01 = calcQuinticBezierCornerControlPoints(xZero, yZero,kZero, 0, ...
-                                           xIso, yIso, kToe, 0,c);
-
+                                            xIso, yIso, kToe, 0,c);
+ 
 xpts = [p01(:,1)];
 ypts = [p01(:,2)];
 
+xEnd = xIso;
+yEnd = yIso;
+kEnd = kToe;
+
+disp('Write the code to fit to the WLC end')
+if(isempty(normLengthContour) == 0)
+
+end
 
 %Create the curve structure
 fiberForceLengthCurve.xpts    = xpts;
 fiberForceLengthCurve.ypts    = ypts;
 
-fiberForceLengthCurve.xEnd         = [xZero, xIso];
-fiberForceLengthCurve.yEnd         = [yZero, yIso];
-fiberForceLengthCurve.dydxEnd      = [kZero, kToe];
+fiberForceLengthCurve.xEnd         = [xZero, xEnd];
+fiberForceLengthCurve.yEnd         = [yZero, yEnd];
+fiberForceLengthCurve.dydxEnd      = [kZero, kEnd];
 fiberForceLengthCurve.d2ydx2End    = [0, 0];
 
 fiberForceLengthCurve.integral = [];
+
+
+
 
 
 if(computeIntegral == 1)

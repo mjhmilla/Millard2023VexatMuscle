@@ -141,6 +141,8 @@ scaleECM    = modelConstants.scaleECM;
 scaleTitinDistal      = modelConstants.scaleTitinDistal;
 scaleTitinProximal    = modelConstants.scaleTitinProximal;
 
+lAHN = modelConstants.lAHN; %Normalized actin length
+
 betaPevkPHN = modelConstants.betaPevkPHN;
 betaPevkAHN = modelConstants.betaPevkAHN; 
 activationThresholdTitin = ...
@@ -457,7 +459,7 @@ switch titinModelType
     %|     IgP       PEVK    IgD                           |
     %|---|\/\/\|--|\/\/\/|--------|------------------------|
     %|===========[b]====================|                  |
-    %|---- l1 --->|                                        |   
+    %|---- l1 --->|                    lAHN                |   
     % 
 
     %uActin is a step function that is 1 provided the titin-actin attachement
@@ -466,9 +468,9 @@ switch titinModelType
     %the titin-actin bond slides off of titin I'm directly putting in this
     %
 
-    dTiA = (normActinLength-(l1HN+ZLineToT12NormLengthAtOptimalFiberLength));
-    kTiA = dTia/normActinSmoothStepFunctionRadius;
-    uTiA = 0.5+0.5*tanh(kTia);
+    dTiA = (lAHN-(l1HN+ZLineToT12NormLengthAtOptimalFiberLength));
+    kTiA = dTiA/normActinSmoothStepFunctionRadius;
+    uTiA = 0.5+0.5*tanh(kTiA);
 
     % To break beta1HNN down:
     %
@@ -480,7 +482,7 @@ switch titinModelType
     %   aTi      : value between 0-1 that indicates if the bond is active
     %   uTia     : a value that is 1 provided the bond overlaps with actin,
     %              otherwise its zero.    
-    beta1HNN = betaTApHN + betaTAaHN*aTi*uTia; 
+    beta1HNN = betaTApHN + betaTAaHN*aTi*uTiA; 
     beta2HNN = 0;
 
     dl1HN = (f2kHN-f1kHN)/beta1HNN;

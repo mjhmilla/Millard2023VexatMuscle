@@ -2,7 +2,7 @@ clc;
 close all;
 clear all;
 
-flag_fitActiveTitinProperties              =1; 
+flag_fitActiveTitinProperties              =0; 
 
 
 disp(['Note: flag_fitActiveTitinProperties must be set to 1 the first']);

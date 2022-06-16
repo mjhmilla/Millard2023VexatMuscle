@@ -255,6 +255,20 @@ fprintf('%e\tlce Stretch Rate\n'     , normStretchHalfLce);
 
 here=1;
 
+%Since we are assuming that the titin is a proportionate scaling of
+%a human soleus titin, we can calculate the number of prox Ig domains,
+%PEVK residues, and distal Ig domains in our model titin. This is useful
+%later when fitting to data: if the geometry of the prox. Ig and 
+%PEVK residues are unknown then the above stretch rates can be scaled
+%appropriately given a new set of prox. Ig/PEVK residues/ distal Ig
+%domains. Because this reference is being used for fitting, I will not
+%round the results even though a fraction of an Ig domain (or PEVK residue)
+%does not make physical sense.
+numberOfIGPDomains   =   68*(optSarcomereLength/optSarcomereLengthHuman);
+numberOfPEVKResidues = 2174*(optSarcomereLength/optSarcomereLengthHuman);
+numberOfIGDDomains   =   22*(optSarcomereLength/optSarcomereLengthHuman);
+
+
 
 %
 %Page 472 column 2 last paragraph of Prado et al. reports:
@@ -481,9 +495,11 @@ switch flag_Cat1_Human2
   case 2
     %I'm going to assume that feline titin geometry in skeletal muscle
     %is a scaled version of that of a human soleus. Probably this isn't
-    %a great solution, but I think its a better approximation than using
-    %rabbit psoas, which was one of the lightest (and thus smallest)
-    %titin isoforms measured by Prado et al.
+    %correct. The alternative is to use the geometry of a  rabbit psoas 
+    %titin isoforms measured by Prado et al. This was one of the lightest
+    %isoforms measured by Prado et al. (thus having shorter prox. Ig and 
+    %PEVK segments), so it would probably even be a poor predictor of
+    %the geometry of a randomly chosen muscle in a rabbit.
     lContourIGPNorm     = lContourIGPNormHuman  ;
     lContourPEVKNorm    = lContourPEVKNormHuman   ;
     lContourIGDFreeNorm = lContourIGDFreeNormHuman;
@@ -619,7 +635,13 @@ sarcomereProperties = ...
             'IGDFreeContourLengthNorm'                , lContourIGDFreeNorm,...            
             'IGPContourLengthHumanNorm'               , lContourIGPNormHuman,...
             'PEVKContourLengthHumanNorm'              , lContourPEVKNormHuman,...
-            'IGDFreeContourLengthHumanNorm'           , lContourIGDFreeNormHuman,...                        
+            'IGDFreeContourLengthHumanNorm'           , lContourIGDFreeNormHuman,...  
+            'IGPContourLengthRabbitNorm'              , lContourIGPNormRabbit,...
+            'PEVKContourLengthRabbitNorm'             , lContourPEVKNormRabbit,...
+            'IGDFreeContourLengthRabbitNorm'          , lContourIGDFreeNormRabbit,...  
+            'numberOfIGPDomains', numberOfIGPDomains,...
+            'numberOfPEVKResidues', numberOfPEVKResidues,...
+            'numberOfIGDDomains', numberOfIGDDomains, ...
             'PEVKIGDNormStiffness'                    , kNormPevkIGd,...    
             'IGPNormStiffness'                        , kNormIgp,...
             'IGPNormStretchRate'                      , normStretchRateIgP,...
