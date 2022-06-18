@@ -1,4 +1,4 @@
-function output = calcWormLikeChainModelInvDer(fstar,zguess,L,Tkb_div_A,Tkb_div_ASq,derOrder)
+function output = calcWormLikeChainModelInvDer(fstar,L,Tkb_div_A,Tkb_div_ASq,derOrder)
 %%
 %
 % @param z : end-to-end length
@@ -14,7 +14,7 @@ function output = calcWormLikeChainModelInvDer(fstar,zguess,L,Tkb_div_A,Tkb_div_
 %assert(length(derOrder)==1);
 output=0;
 
-zL = zguess/L;
+
 flag_solveRootsOfCubicPolynomial=0;
 
 
@@ -24,34 +24,66 @@ if(flag_solveRootsOfCubicPolynomial ==0)
     tol=1e-10;
     err=1;
     
+    %Use the bisection method to get a good initial guess
+    zBest = 0.5*L;
+    fBest = calcWormLikeChainModelDer(zBest,L,Tkb_div_A,Tkb_div_ASq,[0,0,0]);
+    errBest = abs(fBest-fstar);  
+
+    zRight = 0;
+    zLeft = 0;
+    zDelta = 0.25*L;
+
+    for i=1:1:8
+        zLeft=zBest-zDelta;
+        fLeft = calcWormLikeChainModelDer(zLeft,L,Tkb_div_A,Tkb_div_ASq,[0,0,0]);
+        errLeft = abs(fLeft-fstar);  
+
+        zRight=zBest+zDelta;
+        fRight = calcWormLikeChainModelDer(zRight,L,Tkb_div_A,Tkb_div_ASq,[0,0,0]);
+        errRight = abs(fRight-fstar);  
+        
+        if(errLeft < errRight && errLeft < errBest)
+            zBest=zLeft;
+            errBest=errLeft;
+        end
+        if(errRight < errLeft && errRight < errBest)
+            zBest=zRight;
+            errBest=errRight;
+        end   
+
+        zDelta=zDelta*0.5;
+    end
+
+    z = zBest;
+    %Use Newton's method to polish the root off
     while(abs(err) > tol && iter < iterMax )
-      f = calcWormLikeChainModelDer(zL,L,Tkb_div_A,Tkb_div_ASq,[0,0,0]);
+      f = calcWormLikeChainModelDer(z,L,Tkb_div_A,Tkb_div_ASq,[0,0,0]);
       err = f-fstar;  
-      derr = calcWormLikeChainModelDer(zL,L,Tkb_div_A,Tkb_div_ASq,[1,0,0]);
-      dzL = -err/derr;
-      zL = zL+dzL;
-      if(zL > 1)
-        zL = 1-tol;
+      derr = calcWormLikeChainModelDer(z,L,Tkb_div_A,Tkb_div_ASq,[1,0,0]);
+      dz = -err/derr;
+      z = z+dz;
+      if(z > 1)
+        z = 1-tol;
       end
-      if(zL < 0)
-        zL = 0;
+      if(z < 0)
+        z = 0;
       end
       
       iter=iter+1;
     end
     
-    if(abs(err) >= tol && abs(dzL) >= tol)
+    if(abs(err) >= tol)
       here=1;
     end
     
-    assert(abs(err)<= tol || abs(dzL) <= tol);
+    assert(abs(err)<= tol);
     
     derCase = derOrder(1)*1 + derOrder(2)*10 + derOrder(2)*100 ; 
     
     if(derCase == 0)
-      output=zL*L;
+      output=z;
     elseif (derCase == 1)
-      df = calcWormLikeChainModelDer(zL,L,Tkb_div_A,Tkb_div_ASq,derOrder);
+      df = calcWormLikeChainModelDer(z,L,Tkb_div_A,Tkb_div_ASq,derOrder);
       output = 1/df;
     else
       assert(0,'This derivative case has not been implemented');
