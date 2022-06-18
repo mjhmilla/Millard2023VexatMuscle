@@ -22,7 +22,7 @@
 % -------------------------------------------------------------------------- %
 %
 % Derivative work
-% Date      : March 2015
+% Date      : March 2022
 % Authors(s): Millard
 % Updates   : ported to code to Matlab
 %
@@ -33,7 +33,7 @@
 %    musculotendon dynamics. Journal of biomechanical engineering, 
 %    135(2), 021005.
 %%
-function fiberForceLengthCurve = createFiberForceLengthCurve2021(...
+function fiberForceLengthCurve = createWLCForceLengthCurve2022(...
                normLengthZero, normLengthToe, normForceToe,...
                kZero, kLow, kToe, curviness,...
                computeIntegral, muscleName,...
@@ -129,6 +129,9 @@ assert(kLow > 0.0 && kLow < normForceToe/(normLengthToe-normLengthZero),...
 assert( (curviness>=0 && curviness <= 1),...      
     sprintf('%s: curviness must be between 0.0 and 1.0',...
             fiberForceLengthCurve.name));
+assert(isempty(normContourLength) || normContourLength > normLengthToe, ...
+       sprintf('%s: normContourLength must be empty, or greater than normLengthToe',...
+            fiberForceLengthCurve.name))
 
 %%
 %Translate the user parameters to quintic Bezier points
@@ -169,7 +172,10 @@ xEnd = xIso;
 yEnd = yIso;
 kEnd = kToe;
 
+disp('Write the code to fit to the WLC end')
+if(isempty(normLengthContour) == 0)
 
+end
 
 %Create the curve structure
 fiberForceLengthCurve.xpts    = xpts;

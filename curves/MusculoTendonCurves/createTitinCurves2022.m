@@ -76,6 +76,9 @@ pevkStretchRate = 0;
 distalStretchRate=0;   % From the pevk-actin attachment point to myosin
 proximalStretchRate=0; % From the z-line to the pevk-actin attachment point
 
+proximalContourLength=0;
+distalContourLength = 0;
+
 if(flag_useElasticIgD==1)
 
   %Sticky spring: lump IgD and part of PEVK distal to attachment point 
@@ -84,11 +87,18 @@ if(flag_useElasticIgD==1)
     pevkStretchRate = sarcomereProperties.PEVKNormStretchRate ...
                         +sarcomereProperties.IGDFreeNormStretchRate;
 
-    distalStretchRate = (1-normPevkToActinAttachmentPoint)*sarcomereProperties.PEVKNormStretchRate ...
-                        +sarcomereProperties.IGDFreeNormStretchRate;  
+    distalStretchRate = ...
+        (1-normPevkToActinAttachmentPoint)*sarcomereProperties.PEVKNormStretchRate ...
+                        + sarcomereProperties.IGDFreeNormStretchRate;  
     
     proximalStretchRate = sarcomereProperties.IGPNormStretchRate ...
       + normPevkToActinAttachmentPoint*sarcomereProperties.PEVKNormStretchRate;               
+
+    proximalContourLength = sarcomereProperties.IGPContourLengthNorm ...
+      + normPevkToActinAttachmentPoint*sarcomereProperties.PEVKContourLengthNorm;
+    distalContourLength   = ...
+        (1-normPevkToActinAttachmentPoint)*sarcomereProperties.PEVKContourLengthNorm ...
+        +sarcomereProperties.IGDFreeContourLengthNorm;
 
   %Stiff spring: lump IgP and IgD together
   elseif(flag_activeTitinModel==1)
@@ -99,6 +109,9 @@ if(flag_useElasticIgD==1)
 
     distalStretchRate = sarcomereProperties.PEVKNormStretchRate;  
 
+    proximalContourLength = sarcomereProperties.IGPContourLengthNorm;
+    distalContourLength   = sarcomereProperties.PEVKContourLengthNorm ...
+                          + sarcomereProperties.IGDFreeContourLengthNorm;    
   else
     assert(0,'flag_IgDLumpingMethod must be 0 or 1');  
   end
@@ -111,13 +124,22 @@ else
 
     proximalStretchRate = sarcomereProperties.IGPNormStretchRate ...
       + normPevkToActinAttachmentPoint*sarcomereProperties.PEVKNormStretchRate;    
+
+    proximalContourLength = sarcomereProperties.IGPContourLengthNorm ...
+      + normPevkToActinAttachmentPoint*sarcomereProperties.PEVKContourLengthNorm;
+    distalContourLength   = ...
+        (1-normPevkToActinAttachmentPoint)*sarcomereProperties.PEVKContourLengthNorm;    
   else
     distalStretchRate = sarcomereProperties.PEVKNormStretchRate;  
-    proximalStretchRate = sarcomereProperties.IGPNormStretchRate;            
+    proximalStretchRate = sarcomereProperties.IGPNormStretchRate;   
+
+    proximalContourLength = sarcomereProperties.IGPContourLengthNorm;
+    distalContourLength   = sarcomereProperties.PEVKContourLengthNorm ...
+                           +sarcomereProperties.IGDFreeContourLengthNorm;    
   end
 end
 
-                                    
+
 %%
 % ka = kigp
 % kb = kpevk-igd
@@ -273,6 +295,9 @@ lDZeroHalf      = lDOneHalf  - ((1-lambdaECM)/kD) ...
 %   2. From the desired PEVK segment fraction to the distal Ig/myosin boundary.
 %%
 
+
+
+
 %%
 % Make the P curve
 %%
@@ -301,6 +326,7 @@ else
                                 muscleName,...
                                 flag_useOctave); 
 end
+
 
 forceLengthProximalTitinCurve.name = sprintf('%s.%s',...
   muscleName,'forceLengthProximalTitinCurve');
@@ -339,12 +365,18 @@ else
                                 muscleName,...
                                 flag_useOctave);    
 end
+
+
+
+
 forceLengthDistalTitinCurve.name = sprintf('%s.%s',...
   muscleName,'forceLengthDistalTitinCurve');
 %fprintf('    forceLengthDistalTitinCurve created\n');
 
 forceLengthDistalTitinInverseCurve = ...
       createInverseCurve(forceLengthDistalTitinCurve); 
+
+
 
 %fprintf('    forceLengthDistalTitinInverseCurve created\n');
 
@@ -364,8 +396,112 @@ forceLengthDistalTitinInverseCurve = ...
 %                               flag_useOctave);  
 
 
+flag_debugWLCExtension=1;
+if(flag_debugWLCExtension == 1)
 
+    %% Proximal curve
+    % Solve for proximal curve slack length
+    lPo = forceLengthProximalTitinCurve.xEnd(1,2) ...
+              -(forceLengthProximalTitinCurve.yEnd(1,2) ...
+               /forceLengthProximalTitinCurve.dydxEnd(1,2));
+    zPo = lPo/proximalContourLength;
 
+    % Solve for WLC coefficient s.t. the two curves are equal at fiso
+    cPa = 1;
+    fPaWLC=calcWormLikeChainModelDer((lPOneHalf/proximalContourLength)-zPo,...
+                                      proximalContourLength,...
+                                      cPa,cPa*cPa,[0,0]);
+    fPa = calcBezierYFcnXDerivative(lPOneHalf,...
+                    forceLengthProximalTitinCurve,0);
+    
+    cPa = fPa/fPaWLC;
+    % Solve for WLC length at 5.5*fiso, the length
+    fNfailure = 5.14; %Average failure force from Leonard, Joumaa, Herzog 2010
+
+    lPfailure = calcWormLikeChainModelInvDer(fNfailure,0.5,proximalContourLength,... 
+                                          cPa,cPa*cPa,[0,0]);
+    fNTestP=calcWormLikeChainModelDer(lPfailure/proximalContourLength,...
+        proximalContourLength,cPa,cPa*cPa,[0,0]);
+
+    %zPfailure = lPfailure/proximalContourLength;
+    %zPfailure = zPfailure+zPo;
+    %lPfailure = zPfailure*proximalContourLength;
+
+    %% Distal curve    
+    % Solve for distal curve slack length
+    fDa = calcBezierYFcnXDerivative(lDOneHalf,...
+                    forceLengthDistalTitinCurve,0);    
+    lDo = forceLengthDistalTitinCurve.xEnd(1,2) ...
+              -(forceLengthDistalTitinCurve.yEnd(1,2) ...
+               /forceLengthDistalTitinCurve.dydxEnd(1,2));
+    zDo = lDo/distalContourLength;
+    
+    cDa = 1;
+    fDaWLC=calcWormLikeChainModelDer((lDOneHalf/distalContourLength)-zDo,...
+                                      distalContourLength,...
+                                      cDa,cDa*cDa,[0,0]);
+    cDa = fDa/fDaWLC;
+
+    lDfailure = calcWormLikeChainModelInvDer(fNfailure,0.25,distalContourLength,... 
+                                          cDa,cDa*cDa,[0,0]);
+    fNTestD=calcWormLikeChainModelDer(lDfailure/distalContourLength,...
+        distalContourLength,cDa,cDa*cDa,[0,0]);    
+    %zDfailure = lDfailure/distalContourLength;    
+    %zDfailure = zDfailure+zDo;
+    %lDfailure = zDfailure*distalContourLength;
+
+    figWLCDebug = figure;
+    n=100;
+    n01 = [0:(0.9/(n)):1]';    
+    lenP = n01.*(lPfailure);
+    lenD = n01.*(lDfailure);
+    zP = lenP./proximalContourLength;
+    zD = lenD./distalContourLength;
+
+    fP = zeros(size(lenP));
+    fD = zeros(size(lenD));
+    fPwlc = zeros(size(lenP));
+    fDwlc = zeros(size(lenD));
+
+    for i=1:1:n
+        fP(i,1) = calcBezierYFcnXDerivative(lenP(i,1),...
+                    forceLengthProximalTitinCurve,0);
+        fD(i,1) = calcBezierYFcnXDerivative(lenD(i,1),...
+                    forceLengthDistalTitinCurve,0);
+
+        if(zP(i,1)>zPo)
+            fPwlc(i,1)= calcWormLikeChainModelDer(zP(i,1)-zPo,...
+                                          proximalContourLength,...
+                                          cPa,cPa*cPa,[0,0]);
+        else
+            fPwlc(i,1)=0;
+        end
+
+        if(zD(i,1)>zDo)
+            fDwlc(i,1)= calcWormLikeChainModelDer(zD(i,1)-zDo,...
+                                          distalContourLength,...
+                                          cDa,cDa*cDa,[0,0]);
+        else
+            fDwlc(i,1)=0;
+        end
+        
+    end
+
+    subplot(1,2,1);
+        plot(zP,fP,'b');
+        hold on;
+        plot(zP,fPwlc,'r');
+        xlabel('Norm. Length ($$\ell/L^{1}$$)')
+        ylabel('Norm. Force');
+
+    subplot(1,2,2);
+        plot(zD,fD,'b');
+        hold on;
+        plot(zD,fDwlc,'r');
+        xlabel('Norm. Length ($$\ell/L^{2}$$)')
+        ylabel('Norm. Force');
+    here=1;
+end    
 %%
 % For reference: PEVK-Igd curve
 %%

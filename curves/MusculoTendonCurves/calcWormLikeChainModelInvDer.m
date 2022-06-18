@@ -15,7 +15,7 @@ function output = calcWormLikeChainModelInvDer(fstar,zguess,L,Tkb_div_A,Tkb_div_
 output=0;
 
 zL = zguess/L;
-flag_solveRootsOfCubicPolynomial=1;
+flag_solveRootsOfCubicPolynomial=0;
 
 
 if(flag_solveRootsOfCubicPolynomial ==0)
@@ -25,9 +25,9 @@ if(flag_solveRootsOfCubicPolynomial ==0)
     err=1;
     
     while(abs(err) > tol && iter < iterMax )
-      f = calcWormLikeChainModelDer(zL*L,L,Tkb_div_A,Tkb_div_ASq,[0,0,0]);
+      f = calcWormLikeChainModelDer(zL,L,Tkb_div_A,Tkb_div_ASq,[0,0,0]);
       err = f-fstar;  
-      derr = calcWormLikeChainModelDer(zL*L,L,Tkb_div_A,Tkb_div_ASq,[1,0,0])*L;
+      derr = calcWormLikeChainModelDer(zL,L,Tkb_div_A,Tkb_div_ASq,[1,0,0]);
       dzL = -err/derr;
       zL = zL+dzL;
       if(zL > 1)
@@ -51,7 +51,7 @@ if(flag_solveRootsOfCubicPolynomial ==0)
     if(derCase == 0)
       output=zL*L;
     elseif (derCase == 1)
-      df = calcWormLikeChainModelDer(zL*L,L,Tkb_div_A,Tkb_div_ASq,derOrder);
+      df = calcWormLikeChainModelDer(zL,L,Tkb_div_A,Tkb_div_ASq,derOrder);
       output = 1/df;
     else
       assert(0,'This derivative case has not been implemented');
