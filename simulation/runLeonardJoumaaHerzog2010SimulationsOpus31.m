@@ -11,7 +11,6 @@ function [success] = runLeonardJoumaaHerzog2010SimulationsOpus31(...
                           normMuscleCurves,...
                           outputFileEndingOpus31, ...
                           outputFolder,...
-                          flag_fitTitin,...
                           flag_simulateActiveStretch,...
                           flag_simulatePassiveStretch,...
                           flag_useOctave)
@@ -75,20 +74,20 @@ disp('Running Opus 31 Leonard, Joumaa, and Herzog 2010 Simulations');
             fTiNRatio = passiveForceKeyPoints(2,2)/(fTiN);
             
               
-              if(flag_fitTitin==1)
-                sarcomereProperties.scaleECM = 0;
+              %if(flag_fitTitin==1)
+              %  sarcomereProperties.scaleECM = 0;
                 
                 %A simulation is required to get this scaling value 
                 %(the number below).
-                activeScaling = activeForceKeyPoints(2,2)/3.77761; 
+              %  activeScaling = 1;%activeForceKeyPoints(2,2)/3.77761; 
 
-                sarcomereProperties.scaleTitinDistal= fTiNRatio*activeScaling;
-                sarcomereProperties.scaleTitinProximal = fTiNRatio/activeScaling;
-              else
+              %  sarcomereProperties.scaleTitinDistal= fTiNRatio*activeScaling;
+              %  sarcomereProperties.scaleTitinProximal = fTiNRatio/activeScaling;
+              %else
                 sarcomereProperties.scaleECM = 0;
                 sarcomereProperties.scaleTitinProximal = fTiNRatio;
                 sarcomereProperties.scaleTitinDistal   = fTiNRatio;
-              end
+              %end
               
 
 %             else
@@ -367,9 +366,9 @@ disp('Running Opus 31 Leonard, Joumaa, and Herzog 2010 Simulations');
          end
 
          strTitinAdj = '_TiDefault';
-         if(flag_fitTitin==1)
-           strTitinAdj='_TiAdj';           
-         end
+         %if(flag_fitTitin==1)
+         %  strTitinAdj='_TiAdj';           
+         %end
          
 
          save([outputFolder,'benchRecordOpus31_',nameModification,outputFileEndingOpus31,strTitinAdj,'.mat'],...
