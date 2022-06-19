@@ -291,7 +291,7 @@ end
 
 
   l2H   = lceH  - (l1H+lTitinFixedHN*lceOpt);     % Length IG2 (PEVK/IG2) - m-line
-  l2HN  = l2H*lce_lceN;    % Norm. length IG2
+  l2HN  = l2H*li_liN;    % Norm. length IG2
 
 
   laHN  = laH*lce_lceN;

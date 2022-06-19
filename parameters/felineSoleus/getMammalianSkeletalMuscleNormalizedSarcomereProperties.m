@@ -616,7 +616,7 @@ titinModelActiveSpring        =1;
 %
 
 titinModel = titinModelStickySpring;
-normPevkToActinAttachmentPoint = 0.5;
+normPevkToActinAttachmentPoint = 0.;
 normContourLengthTitinProximal = 0;
 normContourLengthTitinDistal = 0;
 normLengthTitinFixed = 0;
@@ -624,7 +624,7 @@ normLengthTitinFixed = 0;
 if(titinModel == titinModelStickySpring)
     normContourLengthTitinProximal = lContourIGPNorm ...
         + normPevkToActinAttachmentPoint*lContourPEVKNorm;
-    normContourLengthTitinProximal = (1-normPevkToActinAttachmentPoint)*lContourPEVKNorm ...
+    normContourLengthTitinDistal = (1-normPevkToActinAttachmentPoint)*lContourPEVKNorm ...
         + lContourIGDFreeNorm; 
     normLengthTitinFixed = loptT12Norm + loptIGDFixedNorm;
 end
