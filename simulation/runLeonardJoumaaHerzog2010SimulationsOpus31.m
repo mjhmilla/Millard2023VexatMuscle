@@ -39,41 +39,55 @@ disp('Running Opus 31 Leonard, Joumaa, and Herzog 2010 Simulations');
             %       conveniently evaluate the passive force produced by 
             %       Opus 31 by evaluting the passive curve.
 
-            fpe0 = calcBezierYFcnXDerivative(...
-                    passiveForceKeyPoints(1,1),...
-                    normMuscleCurves.fiberForceLengthCurve,...
-                    0);
-            
-            fpe1 = calcBezierYFcnXDerivative(...
-                    passiveForceKeyPoints(2,1),...
-                    normMuscleCurves.fiberForceLengthCurve,...
-                    0);
+    
+            lTitinFixedHN = sarcomereProperties.ZLineToT12NormLengthAtOptimalFiberLength ...
+                          + sarcomereProperties.IGDFixedNormLengthAtOptimalFiberLength;
 
+            fTiN = 1;
+            lerr=1;
+            i=1;
 
+            while(abs(lerr) > 1e-3 && i < 100)
+
+                l1N = calcBezierYFcnXDerivative(fTiN,...
+                    normMuscleCurves.forceLengthProximalTitinInverseCurve,0);            
+                l2N = calcBezierYFcnXDerivative(fTiN,...
+                    normMuscleCurves.forceLengthDistalTitinInverseCurve,0);
+    
+                D_l1N_D_fN = calcBezierYFcnXDerivative(fTiN,...
+                    normMuscleCurves.forceLengthProximalTitinInverseCurve,1);            
+                D_l2N_D_fN = calcBezierYFcnXDerivative(fTiN,...
+                    normMuscleCurves.forceLengthDistalTitinInverseCurve,1);
+                
+                lerr = 2*(l1N+l2N+lTitinFixedHN)-passiveForceKeyPoints(2,1);
+    
+                D_lerr_D_fN = 2*(D_l1N_D_fN+D_l2N_D_fN);
+    
+                dfTiN = -lerr/D_lerr_D_fN;
+    
+                fTiN = fTiN+dfTiN;
+                i=i+1;
+            end
             
             
             lambda=sarcomereProperties.extraCellularMatrixPassiveForceFraction;
 
-            fpe1Ratio = passiveForceKeyPoints(2,2)/(fpe1*(1-lambda));
+            fTiNRatio = passiveForceKeyPoints(2,2)/(fTiN);
             
-
-%             assert(fpe1Ratio < 1,['The scaling below assumes the default',...
-%                             ' passive force length curve(s) are too stiff.']);
-
-            %if(fpe1Ratio < sarcomereProperties.extraCellularMatrixPassiveForceFraction)
-              %Remove the ECM entirely and scale titin. These are skinned
-              %fibers so removing the ECM is justified.
               
               if(flag_fitTitin==1)
                 sarcomereProperties.scaleECM = 0;
                 
-                activeScaling = activeForceKeyPoints(2,2)/3.77761;                
-                sarcomereProperties.scaleTitinDistal= fpe1Ratio*activeScaling;
-                sarcomereProperties.scaleTitinProximal = fpe1Ratio/activeScaling;
+                %A simulation is required to get this scaling value 
+                %(the number below).
+                activeScaling = activeForceKeyPoints(2,2)/3.77761; 
+
+                sarcomereProperties.scaleTitinDistal= fTiNRatio*activeScaling;
+                sarcomereProperties.scaleTitinProximal = fTiNRatio/activeScaling;
               else
                 sarcomereProperties.scaleECM = 0;
-                sarcomereProperties.scaleTitinProximal = fpe1Ratio;
-                sarcomereProperties.scaleTitinDistal   = fpe1Ratio;
+                sarcomereProperties.scaleTitinProximal = fTiNRatio;
+                sarcomereProperties.scaleTitinDistal   = fTiNRatio;
               end
               
 
@@ -122,7 +136,7 @@ disp('Running Opus 31 Leonard, Joumaa, and Herzog 2010 Simulations');
             %Evaluate the passive fiber force
             fiso   = musculotendonProperties.fiso;
             fpeN0  = calcBezierYFcnXDerivative(lceN0, ...
-                        normMuscleCurves.fiberForceLengthCurve  ,0)*fpe1Ratio;
+                        normMuscleCurves.fiberForceLengthCurve  ,0)*fTiNRatio;
 
             %Evaluate the passive path length
             ft0 = fpeN0*cos(alpha0);

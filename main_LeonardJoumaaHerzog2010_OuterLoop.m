@@ -19,7 +19,7 @@ nominalNormalizedFiberLength = 1.0;
 normActiveTitinToActinDamping   = [];% take the default. Prev. 6; 
 normPassiveTitinToActinDamping  = []; %[]: take the default. Prev. 1.5; 
 
-tunedNormActiveTitinToActinDamping = 1000;
+tunedNormActiveTitinToActinDamping = [];
 
 flag_useOctave                    = 0;
 %tunedOpus31Results = 'benchRecordOpus31_RigidTendon_K39p47D0p35Tau_LJH2010__TiAD1000p00_TiPD0p25_NomLen1p00_90Hz_TiAdj';

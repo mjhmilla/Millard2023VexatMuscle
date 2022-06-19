@@ -331,9 +331,10 @@ if(flag_plotData == 1)
     end
   end
   
-
-  dataOpus31Tuned = load([dataFolder,tunedFileName]);
-  
+  dataOpus31Tuned=[];
+  if(isempty(tunedFileName)==0)
+    dataOpus31Tuned = load([dataFolder,tunedFileName]);
+  end
 
   fileNameDampedEq = [dataFolder,'benchRecordHill_',...
                       nameModification,outputFileEndingHill,'.mat'];
@@ -413,10 +414,13 @@ if(flag_plotData == 1)
                       dataOpus31.benchRecord.normFiberForce(:,2),...
                       '-','Color',lineColorOpus31Pas,'LineWidth',1.0);
   hold on;
-  lineOpus31TunedPas =plot(dataOpus31Tuned.benchRecord.normFiberLength(:,2),...
-                           dataOpus31Tuned.benchRecord.normFiberForce(:,2),...
-                      '-','Color',lineColorOpus31TunedPas,'LineWidth',0.5);
-  hold on;  
+  
+  if(isempty(tunedFileName)==0)
+      lineOpus31TunedPas =plot(dataOpus31Tuned.benchRecord.normFiberLength(:,2),...
+                               dataOpus31Tuned.benchRecord.normFiberForce(:,2),...
+                          '-','Color',lineColorOpus31TunedPas,'LineWidth',0.5);
+      hold on;  
+  end
   lineDampedEqPas =plot(dataDampedEq.benchRecord.normFiberLength(:,2),...
                         dataDampedEq.benchRecord.normFiberForce(:,2),...
                         '-','Color',lineColorDampedEqPas,'LineWidth',0.5);
@@ -432,10 +436,12 @@ if(flag_plotData == 1)
                       dataOpus31.benchRecord.normFiberForce(:,1),...
                       'Color',lineColorOpus31Act,'LineWidth',1);
   hold on;
-  lineOpus31TunedAct =plot(dataOpus31Tuned.benchRecord.normFiberLength(:,1),...
-                      dataOpus31Tuned.benchRecord.normFiberForce(:,1),...
-                      'Color',lineColorOpus31TunedAct,'LineWidth',1);
-  hold on;
+  if(isempty(tunedFileName)==0)
+      lineOpus31TunedAct =plot(dataOpus31Tuned.benchRecord.normFiberLength(:,1),...
+                          dataOpus31Tuned.benchRecord.normFiberForce(:,1),...
+                          'Color',lineColorOpus31TunedAct,'LineWidth',1);
+      hold on;
+  end
   
 %   plot(dataDampedEq.benchRecord.normFiberLength(:,1),...
 %                         dataDampedEq.benchRecord.normFiberForce(:,1),...
@@ -450,10 +456,17 @@ if(flag_plotData == 1)
 
   
 
+  if(isempty(tunedFileName)==0)
   
-  legend([lineExpActive,lineOpus31Act,lineOpus31TunedAct,lineDampedEqAct], ...
-          'Exp.','Model','Model Adjusted','Hill-type ',...
-          'Location','NorthWest');
+      legend([lineExpActive,lineOpus31Act,lineOpus31TunedAct,lineDampedEqAct], ...
+              'Exp.','Model','Model Adjusted','Hill-type ',...
+              'Location','NorthWest');
+  else
+      legend([lineExpActive,lineOpus31Act,lineDampedEqAct], ...
+              'Exp.','Model','Hill-type ',...
+              'Location','NorthWest');
+
+  end
   legend boxoff;
   
   title({'Simulation of Leonard, Joumaa, \& Herzog 2010','(skinned fibril)'});
