@@ -296,7 +296,7 @@ lDZeroHalf      = lDOneHalf  - ((1-lambdaECM)/kD) ...
 %%
 
 
-fNfailure = 5.14; %Average failure force from Leonard, Joumaa, Herzog 2010
+fNfailure = 5.14*2; %Average failure force from Leonard, Joumaa, Herzog 2010
 
 
 %%
@@ -405,7 +405,7 @@ forceLengthDistalTitinInverseCurve = ...
 %                               flag_useOctave);  
 
 
-flag_debugWLCExtension=0;
+flag_debugWLCExtension=1;
 if(flag_debugWLCExtension == 1)
 
     %% Proximal curve

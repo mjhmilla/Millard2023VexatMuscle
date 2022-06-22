@@ -111,8 +111,8 @@ switch sarcomereProperties.titinModelType
     %Titin proximal force-length curve: Z-line to N2A
     if(normMuscleCurves.useTitinCurvesWithRigidIgDSegment==1)
         assert(normMuscleCurves.useTwoSidedTitinCurves == 0)
-
-        l1HNZeroForce = normMuscleCurves.forceLengthProximalTitinCurve.xEnd(1,1);
+       
+        f1Curve = normMuscleCurves.forceLengthProximalTitinCurve;
         
         calcF1HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
                               normMuscleCurves.forceLengthProximalTitinCurve, ...
@@ -122,8 +122,9 @@ switch sarcomereProperties.titinModelType
                               arg2);          
     else
         if(normMuscleCurves.useTwoSidedTitinCurves == 1)
-            l1HNZeroForce = normMuscleCurves.forceLengthProximalTitinTwoSidedCurve.xEnd(1,1);
             
+            f1Curve = normMuscleCurves.forceLengthProximalTitinTwoSidedCurve;
+
             calcF1HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
                                   normMuscleCurves.forceLengthProximalTitinTwoSidedCurve, ...
                                   arg2);  
@@ -131,8 +132,9 @@ switch sarcomereProperties.titinModelType
                                   normMuscleCurves.forceLengthDistalTitinTwoSidedCurve, ...
                                   arg2);  
         else
-            l1HNZeroForce = normMuscleCurves.forceLengthProximalTitinCurve.xEnd(1,1);
 
+            f1Curve = normMuscleCurves.forceLengthProximalTitinCurve;
+            
             calcF1HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
                                   normMuscleCurves.forceLengthProximalTitinCurve, ...
                                   arg2);  
@@ -142,7 +144,9 @@ switch sarcomereProperties.titinModelType
         end
     end 
 case 1
-  l1HNZeroForce = normMuscleCurves.forceLengthLumpedIgCurve.xEnd(1,1);
+
+  f1Curve = normMuscleCurves.forceLengthLumpedIgCurve;
+    
   calcF1HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
                                   normMuscleCurves.forceLengthLumpedIgCurve, ...
                                   arg2);  
@@ -155,7 +159,30 @@ case 1
     assert(0,['sarcomereProperties.titinModelType must',...
               ' be 0 (sticky-spring) or 1 (stiff-spring)']);    
 end
-                    
+          
+
+%Extract the slack length
+l1HNZeroForce = 0;
+
+if(f1Curve.ypts(1,1) > 0)
+    %Single sided curve
+    l1HNZeroForce = f1Curve.xpts(1,1);
+else
+    %Double sided curve
+    for i=1:1:size(f1Curve.ypts,2)
+        if((min(f1Curve.ypts(:,i)) <= 0) ...
+         && (max(f1Curve.ypts(:,i)) > 0))
+            if(f1Curve.ypts(1,i) > 0)
+                l1HNZeroForce = f1Curve.xpts(1,i);
+            else
+                l1HNZeroForce = f1Curve.xpts(end,i);
+            end
+        end
+    end
+end
+if(abs(l1HNZeroForce) < 0.01)
+    here=1;
+end
 
 lTitinFixedHN = sarcomereProperties.ZLineToT12NormLengthAtOptimalFiberLength ...
               + sarcomereProperties.IGDFixedNormLengthAtOptimalFiberLength;
@@ -1402,11 +1429,16 @@ else
 end
 
 
-mtInfo.extra = [modelCachedValues.l1HN,...                
+mtInfo.extra = [modelCachedValues.l1HN,...               
+                modelCachedValues.f1kHN,...
+                modelCachedValues.f1dHN,...
                 modelCachedValues.f1HN,...
                 modelCachedValues.l2HN,...
+                modelCachedValues.f2kHN,...
+                modelCachedValues.f2dHN,...
                 modelCachedValues.f2HN];
-mtInfo.extraLabels={'l1HN','f1N','l2HN','f2N'};
+mtInfo.extraLabels={'l1HN','f1kN','f1dN','f1N',...
+                    'l2HN','f2kN','f2dN','f2N'};
 
 if(sum(isnan(mtInfo.state.derivative)) > 0)
    here = 1; 

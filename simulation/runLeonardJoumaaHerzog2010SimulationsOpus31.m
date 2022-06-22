@@ -45,6 +45,16 @@ disp('Running Opus 31 Leonard, Joumaa, and Herzog 2010 Simulations');
             fTiN = 1;
             lerr=1;
             i=1;
+            
+            %Fit the titin forces to a point n between lopt and the passive
+            %breaking point
+            n = 0.75;
+            passiveForceMidKeyPoint = zeros(1,2);
+            passiveForceMidKeyPoint(1,1) = passiveForceKeyPoints(1,1) ...
+              +n*(passiveForceKeyPoints(2,1)-passiveForceKeyPoints(1,1));
+            passiveForceMidKeyPoint(1,2) = passiveForceKeyPoints(1,2) ...
+              +n*(passiveForceKeyPoints(2,2)-passiveForceKeyPoints(1,2));
+
 
             while(abs(lerr) > 1e-3 && i < 100)
 
@@ -58,7 +68,7 @@ disp('Running Opus 31 Leonard, Joumaa, and Herzog 2010 Simulations');
                 D_l2N_D_fN = calcBezierYFcnXDerivative(fTiN,...
                     normMuscleCurves.forceLengthDistalTitinInverseCurve,1);
                 
-                lerr = 2*(l1N+l2N+lTitinFixedHN)-passiveForceKeyPoints(2,1);
+                lerr = 2*(l1N+l2N+lTitinFixedHN)-passiveForceMidKeyPoint(1,1);
     
                 D_lerr_D_fN = 2*(D_l1N_D_fN+D_l2N_D_fN);
     
@@ -68,10 +78,8 @@ disp('Running Opus 31 Leonard, Joumaa, and Herzog 2010 Simulations');
                 i=i+1;
             end
             
-            
-            lambda=sarcomereProperties.extraCellularMatrixPassiveForceFraction;
-
-            fTiNRatio = passiveForceKeyPoints(2,2)/(fTiN);
+           
+            fTiNRatio = passiveForceMidKeyPoint(1,2)/(fTiN);
             
               
               %if(flag_fitTitin==1)

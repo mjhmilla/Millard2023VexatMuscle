@@ -232,12 +232,12 @@ lengthEnd   = mean(dataLJH2010Fig2Main(1).x)-nominalNormalizedFiberLength;
 timeStretch = (lengthEnd-lengthStart) / (0.1/optSarcomereLength); 
 
 lengthRampKeyPoints = [          0, lengthStart;...
-                       timeStretch, lengthEnd];
+                     (timeStretch), lengthEnd];
                
 stimulationKeyTimes = [          0, 1;...
-                       timeStretch, 1];
+                     (timeStretch), 1];
 
-timeSpan = [0,timeStretch];
+timeSpan = [0,(timeStretch+2)];
 
 passiveForceKeyPoints = [1.0,    0;...
                          2.86,1.31];  
@@ -555,64 +555,116 @@ if(flag_plotData == 1)
   lTitinActinNTuned = reshape(dataOpus31Tuned.benchRecord.extra(:,1,1),n,1) ...
       +  sarcomerePropertiesOpus31.ZLineToT12NormLengthAtOptimalFiberLength;
 
-  subplot(1,3,1);
-  plot(dataOpus31.benchRecord.time,lTitinActinN,...
-      'Color',[0,0,1],'LineWidth',1);
-  hold on;
-  plot(dataOpus31Tuned.benchRecord.time,lTitinActinNTuned,...
-      'Color',[1,0,1],'LineWidth',1);
-  hold on;
+  subplot(2,3,1);
+      plot(dataOpus31.benchRecord.time,lTitinActinN,...
+          'Color',[0,0,1],'LineWidth',1);
+      hold on;
+      plot(dataOpus31Tuned.benchRecord.time,lTitinActinNTuned,...
+          'Color',[1,0,1],'LineWidth',1);
+      hold on;
+    
+      timeMin = min(dataOpus31.benchRecord.time);
+      timeMax = max(dataOpus31.benchRecord.time);
+      plot([timeMin;timeMax],[lActN;lActN],'--','Color',[1,0,0]);
+      hold on;
+    
+      xlabel('Time (s)');
+      ylabel('Norm. Length');
+      title('Titin-Actin Attachment vs. Actin Tip');
+    
+      box off;
 
-  timeMin = min(dataOpus31.benchRecord.time);
-  timeMax = max(dataOpus31.benchRecord.time);
-  plot([timeMin;timeMax],[lActN;lActN],'--','Color',[1,0,0]);
-  hold on;
-
-  xlabel('Time (s)');
-  ylabel('Norm. Length');
-  title('Titin-Actin Attachment vs. Actin Tip');
-
-  box off;
-
-  subplot(1,3,2);
-
-  plot(dataOpus31.benchRecord.time,...
-      reshape(dataOpus31.benchRecord.extra(:,1,1),n,1),...
-      'Color',[0,0,1],'LineWidth',1);
-  hold on;
-  plot(dataOpus31Tuned.benchRecord.time,...
-       reshape(dataOpus31Tuned.benchRecord.extra(:,1,1),n,1),...
-      'Color',[1,0,1],'LineWidth',1);
-  hold on;
-  plot([timeMin;timeMax],...
-       [1;1].*sarcomerePropertiesOpus31.normContourLengthTitinProximal,...
-       '--','Color',[1,0,0]);
-  hold on;
-  box off;
-
-  xlabel('Time (s)');
-  ylabel('Norm. Length');
-  title('Prox. Titin Seg. vs Contour Length');
+  subplot(2,3,2);
+    
+      plot(dataOpus31.benchRecord.time,...
+          reshape(dataOpus31.benchRecord.extra(:,1,1),n,1),...
+          'Color',[0,0,1],'LineWidth',1,'DisplayName',...
+          [dataOpus31.benchRecord.extraLabels{1}]);
+      hold on;
+      plot(dataOpus31Tuned.benchRecord.time,...
+           reshape(dataOpus31Tuned.benchRecord.extra(:,1,1),n,1),...
+          'Color',[1,0,1],'LineWidth',1,'DisplayName',...
+          [dataOpus31Tuned.benchRecord.extraLabels{1}]);
+      hold on;
+      plot([timeMin;timeMax],...
+           [1;1].*sarcomerePropertiesOpus31.normContourLengthTitinProximal,...
+           '--','Color',[1,0,0]);
+      hold on;
+      legend;
+      legend boxoff;
+      box off;
+    
+      xlabel('Time (s)');
+      ylabel('Norm. Length');
+      title('Prox. Titin Seg. vs Contour Length');
   
 
-  subplot(1,3,3);
-  plot(dataOpus31.benchRecord.time,...
-       reshape(dataOpus31.benchRecord.extra(:,1,3),n,1),...
-      'Color',[0,0,1],'LineWidth',1);
-  hold on;
-  plot(dataOpus31Tuned.benchRecord.time,...
-       reshape(dataOpus31Tuned.benchRecord.extra(:,1,3),n,1),...
-      'Color',[1,0,1],'LineWidth',1);
-  hold on;
-  plot([timeMin;timeMax],...
-       [1;1].*sarcomerePropertiesOpus31.normContourLengthTitinDistal,...
-       '--','Color',[1,0,0]);
-  hold on;
-  box off;
+  subplot(2,3,3);
+      plot(dataOpus31.benchRecord.time,...
+           reshape(dataOpus31.benchRecord.extra(:,1,5),n,1),...
+          'Color',[0,0,1],'LineWidth',1,'DisplayName',...
+          [dataOpus31.benchRecord.extraLabels{5}]);
+      hold on;
+      plot(dataOpus31Tuned.benchRecord.time,...
+           reshape(dataOpus31Tuned.benchRecord.extra(:,1,5),n,1),...
+          'Color',[1,0,1],'LineWidth',1,'DisplayName',...
+          [dataOpus31Tuned.benchRecord.extraLabels{5}]);
+      hold on;
+      plot([timeMin;timeMax],...
+           [1;1].*sarcomerePropertiesOpus31.normContourLengthTitinDistal,...
+           '--','Color',[1,0,0]);
+      hold on;
+      box off;
 
-  xlabel('Time (s)');
-  ylabel('Norm. Length');
-  title('Distal. Titin Seg. vs Contour Length');
+      legend;
+      legend boxoff;      
+    
+      xlabel('Time (s)');
+      ylabel('Norm. Length');
+      title('Distal. Titin Seg. vs Contour Length');
+
+
+  subplot(2,3,4);
+      plot(reshape(dataOpus31.benchRecord.extra(:,1,1),n,1),...
+           reshape(dataOpus31.benchRecord.extra(:,1,2),n,1),...
+          'Color',[0,0,1],'LineWidth',1,'DisplayName',...
+          [dataOpus31.benchRecord.extraLabels{1},...
+          '-',dataOpus31.benchRecord.extraLabels{2}]);
+      hold on;
+      plot(reshape(dataOpus31Tuned.benchRecord.extra(:,1,1),n,1),...
+           reshape(dataOpus31Tuned.benchRecord.extra(:,1,2),n,1),...
+          'Color',[1,0,1],'LineWidth',1,'DisplayName',...
+          [dataOpus31Tuned.benchRecord.extraLabels{1},...
+          '-',dataOpus31Tuned.benchRecord.extraLabels{2}]);
+      hold on;  
+      box off;
+      legend;
+      legend boxoff;      
+      xlabel('Norm. Length');
+      ylabel('Norm. Force')
+      title('Proximal Titin Seg');
+  
+  subplot(2,3,5);
+      plot(reshape(dataOpus31.benchRecord.extra(:,1,5),n,1),...
+           reshape(dataOpus31.benchRecord.extra(:,1,6),n,1),...
+          'Color',[0,0,1],'LineWidth',1,'DisplayName',...
+          [dataOpus31.benchRecord.extraLabels{5},...
+          '-',dataOpus31.benchRecord.extraLabels{6}]);
+      hold on;
+      plot(reshape(dataOpus31Tuned.benchRecord.extra(:,1,5),n,1),...
+           reshape(dataOpus31Tuned.benchRecord.extra(:,1,6),n,1),...
+          'Color',[1,0,1],'LineWidth',1,'DisplayName',...
+          [dataOpus31Tuned.benchRecord.extraLabels{5},...
+          '-',dataOpus31Tuned.benchRecord.extraLabels{6}]);
+      hold on;
+      legend;
+      legend boxoff;      
+      box off;
+      xlabel('Norm. Length');
+      ylabel('Norm. Force')
+      title('Distal Titin Seg');
+
+  here=1;
 
   %dataOpus31.benchRecord.normFiberLength(:,1),...
   %dataOpus31.benchRecord.normFiberForce(:,1)
