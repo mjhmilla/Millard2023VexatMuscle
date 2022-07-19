@@ -1,12 +1,13 @@
 function [sarcomereProperties] = ...
           getMammalianSkeletalMuscleNormalizedSarcomereProperties(...
             scaleOptimalFiberLength,...
-            flag_Cat1_Human2,...
+            animalName,...
             fitCrossBridgeStiffnessDampingToKirch199490Hz)  
 %%
 % This function constructs the normalized lengths of the main components
 % of a sarcomere and titin. The data on the relative lengths of actin,
-% myosin, and the z-line come from Rassier et al. (Fig 3) and Gordon et al.
+% myosin, and the z-line come from Rassier et al. (Fig 3), Gordon et al., and
+%
 %
 % The normalized titin model comes from the values reported by Trombitas et
 % al. on human soleus sarcomeres. This titin model, being of normalized
@@ -33,6 +34,10 @@ function [sarcomereProperties] = ...
 %  isometric tension with sarcomere length in vertebrate muscle
 %  fibres. J. Physiol. (Lond.) 184: 170–192, 1966. 
 %
+%  Higuchi H, Yanagida T, Goldman YE. Compliance of thin filaments in skinned 
+%  fibers of rabbit skeletal muscle. Biophysical journal. 1995 Sep 1;
+%  69(3):1000-10.
+%
 %  Trombitas K, Greaser M, French G, Granzier H. PEVK extension of human soleus 
 %  muscle titin revealed by immunolabeling with the anti-titin antibody 9D10. 
 %  Journal of structural biology. 1998 Jan 1;122(1-2):188-96.
@@ -50,13 +55,27 @@ function [sarcomereProperties] = ...
 %%
 
 
+animalId = nan;
+
+if(strcmp(animalName,'cat')==1)
+  animalId = 1;
+else if(strcmp(animalName,'human')==1)
+  animalId = 2;
+else if(strcmp(animalName,'frog')==1)
+  animalId = 3;
+else if(strcmp(animalName,'rabbit')==1)
+  animalId = 4;
+else  
+  assert(0,'animalName must be cat, human, frog, or rabbit');
+end
+
 
 [ geo, ...
   halfMyosinBareLength, ...
   halfMyosinLength,...
   zLineLength,...
   actinLength] = ...
-    calcSarcomereFilamentLengthsFromActiveForceLengthKeyPoints(flag_Cat1_Human2);
+    calcSarcomereFilamentLengthsFromActiveForceLengthKeyPoints(animalId);
 
 
 [ geoCat, ...
@@ -487,12 +506,10 @@ lContourIGPNormRabbit     = (50*(25/1000))    / optSarcomereLengthRabbit;
 lContourPEVKNormRabbit    = (800*(0.38/1000))/ optSarcomereLengthRabbit;
 lContourIGDFreeNormRabbit = (22*(25/1000))    / optSarcomereLengthRabbit;    
 
-switch flag_Cat1_Human2
+switch animalId
   case 1
-    lContourIGPNorm     = lContourIGPNormHuman    ;
-    lContourPEVKNorm    = lContourPEVKNormHuman   ;
-    lContourIGDFreeNorm = lContourIGDFreeNormHuman;
-  case 2
+
+    %cat
     %I'm going to assume that feline titin geometry in skeletal muscle
     %is a scaled version of that of a human soleus. Probably this isn't
     %correct. The alternative is to use the geometry of a  rabbit psoas 
@@ -500,9 +517,31 @@ switch flag_Cat1_Human2
     %isoforms measured by Prado et al. (thus having shorter prox. Ig and 
     %PEVK segments), so it would probably even be a poor predictor of
     %the geometry of a randomly chosen muscle in a rabbit.
-    lContourIGPNorm     = lContourIGPNormHuman  ;
+
+    lContourIGPNorm     = lContourIGPNormHuman    ;
     lContourPEVKNorm    = lContourPEVKNormHuman   ;
     lContourIGDFreeNorm = lContourIGDFreeNormHuman;
+
+  case 2
+
+    %Human
+    lContourIGPNorm     = lContourIGPNormHuman    ;
+    lContourPEVKNorm    = lContourPEVKNormHuman   ;
+    lContourIGDFreeNorm = lContourIGDFreeNormHuman;
+
+  case 3    
+
+    %Frog
+
+
+  case 4
+
+    %rabbit
+    lContourIGPNorm     = lContourIGPNormRabbit    ;
+    lContourPEVKNorm    = lContourPEVKNormRabbit   ;
+    lContourIGDFreeNorm = lContourIGDFreeNormRabbit;
+
+
 end
 
 
