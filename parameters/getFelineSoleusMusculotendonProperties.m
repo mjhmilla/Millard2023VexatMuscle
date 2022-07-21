@@ -13,13 +13,6 @@ function [musculotendonProperties,...
 % cat soleus that is used in Figure 7 of the paper. Missing details
 % (pennation angle, tendon slack length) are filled in by Sacks et al.
 %
-% The parameters related to tendon damping have been chosen by hand to
-% be in the feasible range: the damping of the tendon must exceed the
-% damping of the tendon in series with the fiber.
-%
-%        'normTendonDampingLinear'     
-%        'normTendonDampingConstant'   
-%
 % The following parameters are numerical in nature and as such are chosen
 % to be small and non-zero.
 %
@@ -38,6 +31,9 @@ function [musculotendonProperties,...
 %
 %
 %%
+
+%Load in the passive and active force-length trials that to fit the musculotendon
+%parameters to
 fitData =csvread('experiments/HerzogLeonard2002/data/dataHerzogLeonard2002Figure6and7A.csv',1,0);
 
 %Note: 'F43', 'L43', etc are the column headings in the file.
@@ -90,13 +86,13 @@ lceOpt   = lceOptExp*scaleOptimalFiberLength;
 %
 
 %Additional parameters from Sacks et al.
-%
-%
 % From Table 1
 alphaOpt = 7.0*(pi/180); 
 
 % Taking the mean tendon length from Table 1 of Scott et al. and scaling it
-% by the ratio of the optimal fiber length and the mean fiber length.  
+% by the ratio of the optimal fiber length and the mean fiber length we can
+% get an estimate of the soleus tendon length for the cat used in Herzog 
+% and Leonard's experiment.
 % 
 % Note: here we are treating the apneurosis as rigid.              
 mtLengthSacksRoy      = 84.7/1000;
@@ -118,9 +114,22 @@ if(useElasticTendon==0)
   normTendonLength = 1;
 end
 
-% Create a tendon-force-length curve so that we can correctly
-% evaluate the active and passive fiber lengths, which of course
-% are affected by tendon elasticity:
+
+%%
+%Indentify the maximum-isometric-force of the soleus from the 
+%data of Herzog & Leonard. This has a few steps:
+%
+% 1. Create a tendon model to estimate the fiber length given the
+%    path length and the load.
+% 2. Use the passive-force-length data to estimate the passive-force-length
+%    curve of the CE
+% 3. Use the tendon and fiber passive-force-length models to get the
+%    length of the CE and the active force developed by the CE
+%
+%%
+
+% 1. Create a tendon model to estimate the fiber length given the
+%    path length and the load.
 tendonForceLengthCurve = [];
 
 if(useElasticTendon==1)
@@ -167,9 +176,10 @@ lmtOptFiso = fitData(idxFtMax, idxFitL43)*mm2m ...
 lmtOptZero = lmtOptFiso;
 
 
-%Go through the passive lengthing trial and find the recorded passive length
-%that is closest to the optimal fiber length. Make note of the passive force
-%at this length by storing it in fpBest.
+
+% 2. Use the passive-force-length data to estimate the passive force developed
+%    by the CE at its optimal fiber length
+
 fp      = 0;
 idxBest = 0;
 fpBest  = 0;
@@ -203,7 +213,9 @@ for k=idxStart:1:idxEnd
 end
 fp = fpBest;
 
-%Evaluate the maximum isometric force of the fiber
+% 3. Use the tendon and fiber passive-force-length models to get the
+%    length of the CE and the active force developed by the CE
+
 fisoExp  = (ftMax-fp)/cos(alphaOptLeft); 
 
 %Scale it as desired

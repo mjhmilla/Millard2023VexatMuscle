@@ -41,12 +41,11 @@ function [felineSoleusMusculotendonProperties, ...
 %scaleMaximumIsometricTension          = 1.0; %user-settable parameter
 
 
-%Get the default sarcomere properties for a feline soles          
-flag_Cat1_Human2 = 1;                           
+%Get the default sarcomere properties for a feline soles                               
 [felineSoleusSarcomereProperties] =...
   getMammalianSkeletalMuscleNormalizedSarcomereProperties(...
     scaleOptimalFiberLength,...
-    flag_Cat1_Human2,...
+    'cat',...
     fitCrossBridgeStiffnessDampingToKirch199490Hz);
 
 % From Scott et al. pg 211, column 2, 2nd last paragraph. Note that Scott et al.
@@ -95,10 +94,22 @@ tendonStrainAtOneNormForce      = 1.375/kisoScott; %0.049;
 %force-length curves
 useElasticTendonExp = 1;
 
-normPlateauOffset = ...
-  felineSoleusSarcomereProperties.normMyosinBareHalfLength*2 ...
-  +0.004877-0.000022;
 
+% MM 2022/07/21
+% comment on : normPlateauOffset
+% I might have added this earlier to put the optimal length to the 
+% longer side of the plateau. This was the old value
+%
+%  normPlateauOffset = ...
+%    felineSoleusSarcomereProperties.normMyosinBareHalfLength*2 ...
+%   +0.004877-0.000022;
+%
+% Since I've redefined normMyosinBareHalfLength to be 2x the size
+% I'm updating this value. Also, the small adjustments are so small
+% that I'm going to round them to zero.
+
+normPlateauOffset = ...
+  felineSoleusSarcomereProperties.normMyosinBareHalfLength;
 
 
 %Get the default musculotendon properties for the feline soleus
