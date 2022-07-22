@@ -2,6 +2,8 @@ function [sarcomereProperties] = ...
           getMammalianSkeletalMuscleNormalizedSarcomereProperties(...
             scaleOptimalFiberLength,...
             animalName,...
+            normFiberLengthAtOneNormPassiveForce,...
+            normPevkToActinAttachmentPoint,...
             fitCrossBridgeStiffnessDampingToKirch199490Hz)  
 %%
 % This function constructs the normalized lengths of the main components
@@ -83,13 +85,6 @@ end
     calcSarcomereFilamentLengthsFromActiveForceLengthKeyPoints(animalId);
 
 
-[ geoCat, ...
-  halfMyosinBareLengthCat, ...
-  halfMyosinLengthCat,...
-  zLineLengthCat,...
-  actinLengthCat] = ...
-    calcSarcomereFilamentLengthsFromActiveForceLengthKeyPoints(1);
-
 [ geoHuman, ...
   halfMyosinBareLengthHuman, ...
   halfMyosinLengthHuman,...
@@ -159,7 +154,7 @@ bb = dataTrombitas1998Figure5(2).y;
 Ab = [dataTrombitas1998Figure5(2).x, ones(size(bb))];
 xb = (Ab'*Ab)\(Ab'*bb);
 
-flag_debugTitinFit =1;
+flag_debugTitinFit =0;
 if(flag_debugTitinFit==1)
   figTitinFit =figure;
   for z=1:1:length(dataTrombitas1998Figure5)
@@ -183,7 +178,7 @@ end
                     
 %Note All IGP, IGD, PEVK, and T12 lengths come from Trombitas et al. 1997
 %     by assuming lopt is 2.725 um, and that the passive element develops
-%     1 maximum-isometric-force passively at 1.6 lopt.
+%     1 maximum-isometric-force passively at normFiberLengthAtOneNormPassiveForce lopt.
 optSarcomereLengthHuman = 0.5*(geoHuman(1,3)+geoHuman(1,4));  
 
 halfMyosinBareLengthHuman =( geoHuman(1,4) - geoHuman(1,3) )*0.25;
@@ -212,8 +207,8 @@ loptIGDTotalNorm  = 1*0.5-(loptT12Norm+loptIGPNorm+loptPEVKNorm); %0.5: applies 
 % is still free to stretch. The rest is bound to myosin and does not 
 % stretch at all.
 
-disp('Reminder: remove all lfiso variables');
-sarcomereLengthOneFpeN = 1.6*optSarcomereLengthHuman;
+sarcomereLengthOneFpeN = normFiberLengthAtOneNormPassiveForce ...
+                        *optSarcomereLengthHuman;
 lfisoIGPNormHuman = [sarcomereLengthOneFpeN, 1]*xa - lT12;
 lfisoPEVKNormHuman= [sarcomereLengthOneFpeN, 1]*xb - [sarcomereLengthOneFpeN, 1]*xa;
 
@@ -421,28 +416,16 @@ normFiberLength       = [l0N,l1N];
 %Make sure we're on the descending limb 
 assert(l0N >= 1. && l1N > l0N);
 
-%From Fig 3.
-optSarcomereLengthAnimal   = 2*zLineLengthAnimal + 2*actinLengthAnimal;
-
-normHalfMyosinBareLengthAnimal = halfMyosinBareLengthAnimal/optSarcomereLengthAnimal; 
-
-%From Fig 3: length where overlap is lost less optimal
-normHalfMyosinLengthAnimal = halfMyosinLengthAnimal/optSarcomereLengthAnimal;
-
-%From Fig 2. - taking the z-line length from the frog data reported by Gordon
-normZLineLengthAnimal = zLineLengthAnimal/optSarcomereLengthAnimal; %Rassier et al.                     
-
-normActinLengthAnimal = actinLengthAnimal/optSarcomereLengthAnimal;
 
 
 
 falAtlceOpt  = 1;
 falAtlceMax  = 0;
 lceOpt       = 1;
-lceMax       = 2*( normHalfMyosinLengthAnimal...
-                  +normHalfMyosinBareLengthAnimal...
-                  +normActinLengthAnimal...
-                  +normZLineLengthAnimal);
+lceMax       = 2*( normHalfMyosinLength...
+                  +normHalfMyosinBareLength...
+                  +normActinLength...
+                  +normZLineLength);
 
 Dfal_DlceN = (falAtlceOpt-falAtlceMax)/(lceOpt - lceMax);
 
@@ -693,7 +676,7 @@ titinModelActiveSpring        =1;
 %
 
 titinModel = titinModelStickySpring;
-normPevkToActinAttachmentPoint = 0.;
+%normPevkToActinAttachmentPoint = 0.;
 normContourLengthTitinProximal = 0;
 normContourLengthTitinDistal = 0;
 normLengthTitinFixed = 0;
@@ -720,7 +703,8 @@ sarcomereProperties = ...
             'normMyosinHalfLength'              , normHalfMyosinLength,...
             'normMyosinBareHalfLength'          , normHalfMyosinBareLength,...
             'normZLineLength'                   , normZLineLength,...   
-            'normSarcomereLengthZeroForce'      , normSarcomereLengthZeroForce,...       
+            'normSarcomereLengthZeroForce'      , normSarcomereLengthZeroForce,...  
+            'normFiberLengthAtOneNormPassiveForce',normFiberLengthAtOneNormPassiveForce,...
             'ZLineToT12NormLengthAtOptimalFiberLength', loptT12Norm,...
             'IGPNormLengthAtOptimalFiberLength'       , loptIGPNorm,...              
             'PEVKNormLengthAtOptimalFiberLength'      , loptPEVKNorm,...

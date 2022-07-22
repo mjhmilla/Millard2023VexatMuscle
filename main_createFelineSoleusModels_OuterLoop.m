@@ -21,6 +21,9 @@ disp([' time you run this script.']);
 fitCrossBridgeStiffnessDampingToKirch199490Hz = 1;
 flag_useFixedLambdaECM      = 0; %Deprecated: leave as 0
 
+normPevkToActinAttachmentPoint = 0.5;
+normFiberLengthAtOneNormPassiveForce=1.367732948060934e+00;
+
 
 rigidTendonReferenceModel = [];%...
 %    'output/structs/felineSoleusRigidTendonKBR1994Fig12.mat';

@@ -405,7 +405,7 @@ forceLengthDistalTitinInverseCurve = ...
 %                               flag_useOctave);  
 
 
-flag_debugWLCExtension=1;
+flag_debugWLCExtension=0;
 if(flag_debugWLCExtension == 1)
 
     %% Proximal curve
