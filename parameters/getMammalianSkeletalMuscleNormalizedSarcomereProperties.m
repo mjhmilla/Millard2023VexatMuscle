@@ -135,141 +135,133 @@ assert( abs(geo(1,5)-optSarcomereLength*2*(...
 % muscle titin revealed by immunolabeling with the anti-titin antibody 9D10. 
 % Journal of structural biology. 1998 Jan 1;122(1-2):188-96.
 
-fileTrombitas1998Figure5 = 'experiments/TrombitasGreaserFrenchGranzier1998/Trombitas1998_Figure5.csv';
-dataTrombitas1998Figure5 = loadDigitizedData(fileTrombitas1998Figure5,...
-                      'Sarcomere Length','PEVK Width (um)',...
-                      {'a','b'},'Trombitas 1998 Figure 5');  
+fileTrombitas1998Figure5 =...
+  ['experiments/TrombitasGreaserFrenchGranzier1998/Trombitas1998_Figure5.csv'];
 
-%Least squares fit
-%Z-to-Igp
-ba = dataTrombitas1998Figure5(1).y;
-Aa = [dataTrombitas1998Figure5(1).x, ones(size(ba))];
-xa = (Aa'*Aa)\(Aa'*ba);
+[lineHumanZToPevkP, lineHumanZToPevkD] = ...
+    fitLinearModelToTitinSegmentElongation(fileTrombitas1998Figure5);
 
-%lT12 = 0.1;
-%l
+%%
+% If the geometry of the animal's titin filament is known, scale the
+% elongation data from Trombitas et al. such that 
+% 1. The total length of titin is still a half sarcomere
+% 2. The elongation of each segment is inversely proportional to its length
+%
+%%
+optSarcomereLengthHuman     = 0.5*(geoHuman(1,3)+geoHuman(1,4));  
+ numDomainsIgPHuman  = 68;
+ numResiduesPevkHuman= 2174;
+ numDomainsIgDHuman  = 22;
 
-%Z-to-Pevk
-bb = dataTrombitas1998Figure5(2).y;
-Ab = [dataTrombitas1998Figure5(2).x, ones(size(bb))];
-xb = (Ab'*Ab)\(Ab'*bb);
+lineZToPevkP = zeros(2,1);
+lineZToPevkD = zeros(2,1);
 
-flag_debugTitinFit =0;
-if(flag_debugTitinFit==1)
-  figTitinFit =figure;
-  for z=1:1:length(dataTrombitas1998Figure5)
-    plot(dataTrombitas1998Figure5(z).x,...
-         dataTrombitas1998Figure5(z).y,'o','Color',[1,1,1].*0.5,...
-         'MarkerFaceColor',[1,1,1].*0.5);
-    hold on;
-  end
-  ls = [2.25;4.75];
-  ligp = [ls, ones(size(ls))]*xa;
-  plot(ls, ligp,'Color',[1,0,0]);
-  hold on;
-  lpevk = [ls, ones(size(ls))]*xb;
-  plot(ls, lpevk,'Color',[1,0,1]);
-  hold on;
-  xlabel('Sarcomere Length');
-  ylabel('Distance from Z-line');
-  here=1;
-  
+optSarcomereLengthRabbit = 2.3; %Leonard et al. 2.2-2.4
+%Leonard TR, Joumaa V, Herzog W. An activatable molecular spring reduces 
+% muscle tearing during extreme stretching. Journal of biomechanics. 
+% 2010 Nov 16;43(15):3063-6.
+ 
+maxIgDomainLengthNm    = 25; %nm
+maxPevkResidueLengthNm = 0.38; %nm;
+
+if(strcmp(animalName,'rabbit')==1)
+
+ numDomainsIgPRabbit     = 50;   
+ numResiduesPevkRabbit   = 800;    
+ numDomainsIgDRabbit     = 22;
+ % For the psoas muscle from a rabbit (Prado et al.). Note that there 
+ % are isoforms of titin within a rabbit that have a similar molecular
+ % weight as human titin ... which means the segment lengths are more
+ % similar.
+ %
+ %Prado LG, Makarenko I, Andresen C, Krüger M, Opitz CA, Linke WA. 
+ % Isoform diversity of giant proteins in relation to passive and active 
+ % contractile properties of rabbit skeletal muscles. The Journal of 
+ % general physiology. 2005 Nov;126(5):461-80.
+
+
+[lineZToPevkP, lineZToPevkD] = ...
+    scaleTitinElongationFunction(...
+        optSarcomereLengthRabbit, ...
+            numDomainsIgPRabbit, numResiduesPevkRabbit, numDomainsIgDRabbit, ...
+        optSarcomereLengthHuman, ...
+            numDomainsIgPHuman, numResiduesPevkHuman, numDomainsIgDHuman,...
+        lineHumanZToPevkP, lineHumanZToPevkD);
+else
+    %Scale the data we have from the human soleus by the ratio of
+    %optimal sarcomere lengths
+
+    %Since we are assuming that the titin is a proportionate scaling of
+    %a human soleus titin, we can calculate the number of prox Ig domains,
+    %PEVK residues, and distal Ig domains in our model titin. This is useful
+    %later when fitting to data: if the geometry of the prox. Ig and 
+    %PEVK residues are unknown. Because this reference is being used for 
+    % fitting, I will not round the results even though a fraction of an 
+    % Ig domain (or PEVK residue) does not make physical sense.
+    numberOfIGPDomains   =   68*(optSarcomereLength/optSarcomereLengthHuman);
+    numberOfPEVKResidues = 2174*(optSarcomereLength/optSarcomereLengthHuman);
+    numberOfIGDDomains   =   22*(optSarcomereLength/optSarcomereLengthHuman);
+
+    lineZToPevkP = lineHumanZToPevkP.*(...
+                        optSarcomereLength/optSarcomereLengthHuman);
+    lineZToPevkD = lineHumanZToPevkD.*(...
+                        optSarcomereLength/optSarcomereLengthHuman);
+
 end
-                    
-%Note All IGP, IGD, PEVK, and T12 lengths come from Trombitas et al. 1997
-%     by assuming lopt is 2.725 um, and that the passive element develops
-%     1 maximum-isometric-force passively at normFiberLengthAtOneNormPassiveForce lopt.
-optSarcomereLengthHuman = 0.5*(geoHuman(1,3)+geoHuman(1,4));  
 
-halfMyosinBareLengthHuman =( geoHuman(1,4) - geoHuman(1,3) )*0.25;
-halfMyosinLengthHuman     = 0.5*(geoHuman(1,5)-geoHuman(1,4)) ...
-                                +halfMyosinBareLengthHuman;  
+%%
+% Titin refrence model: 
+%
+%   Trombitas K, Greaser M, French G, Granzier H. PEVK extension of human soleus 
+%   muscle titin revealed by immunolabeling with the anti-titin antibody 9D10. 
+%   Journal of structural biology. 1998 Jan 1;122(1-2):188-96.
+%%
+
+halfMyosinBareLengthHuman   = (geoHuman(1,4) - geoHuman(1,3) )*0.25;
+halfMyosinLengthHuman       = 0.5*(geoHuman(1,5)-geoHuman(1,4)) ...
+                                +halfMyosinBareLengthHuman;
 
 normHalfMyosinLengthHuman = halfMyosinLengthHuman/optSarcomereLengthHuman;
+zLineToT12LengthHuman = 0.1; %From Trombitas et al.
 
-lT12          = 0.1;
-loptIGP       = [optSarcomereLengthHuman, 1]*xa - lT12;
-loptPEVK      = [optSarcomereLengthHuman, 1]*xb - [optSarcomereLengthHuman, 1]*xa;
-loptIGDTotal  = 0.5*optSarcomereLengthHuman -(lT12+loptIGP+loptPEVK);
-loptIGDFixed  = halfMyosinLengthHuman;
-loptIGDFree   = loptIGDTotal-loptIGDFixed;
+lTitinHumanOpt =  ...
+calcTitinSegmentLengths(  optSarcomereLengthHuman, ...
+                          lineHumanZToPevkP, ...
+                          lineHumanZToPevkD, ...
+                          halfMyosinLengthHuman, ...
+                          optSarcomereLengthHuman, ...
+                          zLineToT12LengthHuman);
 
-
-
-loptT12Norm  = lT12/optSarcomereLengthHuman;
-loptIGPNorm  = loptIGP/optSarcomereLengthHuman; %Should be renamed IGP: proximal Ig
-loptPEVKNorm = loptPEVK/optSarcomereLengthHuman;
-loptIGDTotalNorm  = 1*0.5-(loptT12Norm+loptIGPNorm+loptPEVKNorm); %0.5: applies to a half sarcomere
-
-
-
-%IGD: This is the small section of the distal Ig that section that
-% is still free to stretch. The rest is bound to myosin and does not 
-% stretch at all.
 
 sarcomereLengthOneFpeN = normFiberLengthAtOneNormPassiveForce ...
                         *optSarcomereLengthHuman;
-lfisoIGPNormHuman = [sarcomereLengthOneFpeN, 1]*xa - lT12;
-lfisoPEVKNormHuman= [sarcomereLengthOneFpeN, 1]*xb - [sarcomereLengthOneFpeN, 1]*xa;
+lTitinHumanFisoN =  ...
+calcTitinSegmentLengths(  sarcomereLengthOneFpeN, ...
+                          lineHumanZToPevkP, ...
+                          lineHumanZToPevkD, ...
+                          halfMyosinLengthHuman, ...
+                          optSarcomereLengthHuman, ...
+                          zLineToT12LengthHuman);
 
-lfisoIGPNorm        = lfisoIGPNormHuman/optSarcomereLengthHuman;
-%0.45812/optSarcomereLengthHuman;
-lfisoPEVKNorm       = lfisoPEVKNormHuman/optSarcomereLengthHuman;
-%0.6454/optSarcomereLengthHuman;
-
-lfisoIGDTotalNorm   = (geoHuman(1,5)*0.5/optSarcomereLengthHuman ...
-               -(loptT12Norm + lfisoIGPNorm+lfisoPEVKNorm));
                        
-%Now we have a normalized titin model. Since the relative length of myosin
-%in the cat, human, and frog are different we must update the length of
-%IGD. First we set these lengths for a human title model (soleus from
-%Trombitas et al) as a reference, and next we set the lengths for the
-%animal model.
-loptIGDFreeNormHuman   = loptIGDTotalNorm - normHalfMyosinLengthHuman; 
-loptIGDFixedNormHuman  = normHalfMyosinLengthHuman;
-
-fprintf('%e\t%e\tT12\n'     , lT12, loptT12Norm);
-fprintf('%e\t%e\tIgP\n'     , loptIGP, loptIGPNorm);
-fprintf('%e\t%e\tPEVK\n'    , loptPEVK, loptPEVKNorm);
-fprintf('%e\t%e\tIgD\n'     , loptIGDTotal, loptIGDTotalNorm);
-fprintf('%e\t%e\tIgDFixedHuman\n', loptIGDFixed, loptIGDFixedNormHuman);
-fprintf('%e\t%e\tIgDFreeHuman\n' , loptIGDFree, loptIGDFreeNormHuman);
-
-%If the entire distal Ig region overlaps with myosin then the entire
-%length of the distal Ig region is bound to myosin.
-if(loptIGDFreeNormHuman <= 0)
-  loptIGDFreeNormHuman  = 0;
-  loptIGDFixedNormHuman = loptIGDTotalNorm;
-  disp('Warning: Distal Ig length is completely bound to myosin');  
-end
-
-%Repeat for the animal model
-loptIGDFreeNorm   = loptIGDTotalNorm - normHalfMyosinLength; 
-loptIGDFixedNorm  = normHalfMyosinLength;
-
-%If the entire distal Ig region overlaps with myosin then the entire
-%length of the distal Ig region is bound to myosin.
-if(loptIGDFreeNorm <= 0)
-  loptIGDFreeNorm  = 0;
-  lfisoIGDFreeNorm = 0;
-
-  loptIGDFixedNorm = loptIGDTotalNorm;
-  disp('Warning: Distal Ig length is completely bound to myosin');  
-else
-  lfisoIGDFreeNorm  = lfisoIGDTotalNorm - loptIGDFixedNorm;
-end
+fprintf('%e\t%e\tT12\n'          , lTitinHumanOpt.lT12,      lTitinHumanOpt.T12Norm);
+fprintf('%e\t%e\tIgP\n'          , lTitinHumanOpt.lIgp,      lTitinHumanOpt.lIgpNorm);
+fprintf('%e\t%e\tPEVK\n'         , lTitinHumanOpt.lPevk,     lTitinHumanOpt.lPevkNorm);
+fprintf('%e\t%e\tIgD\n'          , lTitinHumanOpt.lIgdTotal, lTitinHumanOpt.lIgdTotalNorm);
+fprintf('%e\t%e\tIgDFixedHuman\n', lTitinHumanOpt.lIgdFixed, lTitinHumanOpt.lIgdFixedNorm);
+fprintf('%e\t%e\tIgDFreeHuman\n' , lTitinHumanOpt.lIgdFree,  lTitinHumanOpt.lIgdFreeNorm);
 
 
 
 stretchHalfLce = 0.5*(max(dataTrombitas1998Figure5(1).x)-min(dataTrombitas1998Figure5(1).x));
 
-normStretchRateIgP     = xa(1,1);
-normStretchRatePevk    = (xb(1,1)-xa(1,1));
+normStretchRateIgP     = lineHumanZToPevkP(1,1);
+normStretchRatePevk    = (lineHumanZToPevkD(1,1)-lineHumanZToPevkP(1,1));
 normStretchRateIgDFree = (0.5 -(normStretchRateIgP+normStretchRatePevk));
 normStretchHalfLce     = stretchHalfLce/optSarcomereLengthHuman;
 
 loptIGDFixedAnimal = normHalfMyosinLength*optSarcomereLength;
-loptIGDFreeAnimal =  loptIGDFreeNorm*optSarcomereLength;
+loptIGDFreeAnimal =  lTitinHumanOpt.lIgdFreeNorm*optSarcomereLength;
 
 
 fprintf('%e\t%e\tIgDFixedAnimal\n'            , loptIGDFixedAnimal, loptIGDFixedNorm);
@@ -281,18 +273,7 @@ fprintf('%e\tlce Stretch Rate\n'     , normStretchHalfLce);
 
 here=1;
 
-%Since we are assuming that the titin is a proportionate scaling of
-%a human soleus titin, we can calculate the number of prox Ig domains,
-%PEVK residues, and distal Ig domains in our model titin. This is useful
-%later when fitting to data: if the geometry of the prox. Ig and 
-%PEVK residues are unknown then the above stretch rates can be scaled
-%appropriately given a new set of prox. Ig/PEVK residues/ distal Ig
-%domains. Because this reference is being used for fitting, I will not
-%round the results even though a fraction of an Ig domain (or PEVK residue)
-%does not make physical sense.
-numberOfIGPDomains   =   68*(optSarcomereLength/optSarcomereLengthHuman);
-numberOfPEVKResidues = 2174*(optSarcomereLength/optSarcomereLengthHuman);
-numberOfIGDDomains   =   22*(optSarcomereLength/optSarcomereLengthHuman);
+
 
 
 
@@ -441,9 +422,9 @@ kNormPevkIGd = diff(normActiveFiberForce)/diff(normFiberLength) ...
 % Solve for the stiffness of the Igp region by using the ratio of the
 % relative stretches between these regions as observed by Trombitas
 
-deltaIgp     = lfisoIGPNorm      - loptIGPNorm;
-deltaIgdFree = lfisoIGDFreeNorm  - loptIGDFreeNorm;    
-deltaPEVK    = lfisoPEVKNorm     - loptPEVKNorm;
+deltaIgp     = lTitinHumanFisoN.lIgpNorm      - lTitinHumanOpt.lIgpNorm;
+deltaIgdFree = lTitinHumanFisoN.lIgdNorm      - lTitinHumanOpt.lIgdFreeNorm;    
+deltaPEVK    = lTitinHumanFisoN.lPevkNorm     - lTitinHumanOpt.lPevkNorm;
 
 kNormIgp = kNormPevkIGd*(deltaIgdFree+deltaPEVK)/(deltaIgp);
 
@@ -497,10 +478,6 @@ lContourIGDFreeNormHuman = (28*(25/1000))    / optSarcomereLengthHuman;
 % 2005 Nov;126(5):461-80.
 %
 %%
-optSarcomereLengthRabbit = 2.3; %Leonard et al. 2.2-2.4
-%Leonard TR, Joumaa V, Herzog W. An activatable molecular spring reduces 
-% muscle tearing during extreme stretching. Journal of biomechanics. 
-% 2010 Nov 16;43(15):3063-6.
 
 lContourIGPNormRabbit     = (50*(25/1000))    / optSarcomereLengthRabbit;
 lContourPEVKNormRabbit    = (800*(0.38/1000))/ optSarcomereLengthRabbit;
@@ -686,13 +663,13 @@ if(titinModel == titinModelStickySpring)
         + normPevkToActinAttachmentPoint*lContourPEVKNorm;
     normContourLengthTitinDistal = (1-normPevkToActinAttachmentPoint)*lContourPEVKNorm ...
         + lContourIGDFreeNorm; 
-    normLengthTitinFixed = loptT12Norm + loptIGDFixedNorm;
+    normLengthTitinFixed = loptT12Norm + lTitinHumanOpt.lIgdFixedNorm;
 end
 
 if(titinModel == titinModelActiveSpring)
     normContourLengthTitinProximal = lContourIGPNorm; ...
     normContourLengthTitinDistal = lContourPEVKNorm + lContourIGDFreeNorm; 
-    normLengthTitinFixed = loptT12Norm + loptIGDFixedNorm;
+    normLengthTitinFixed = loptT12Norm + lTitinHumanOpt.lIgdFixedNorm;
 end
 
 
@@ -706,13 +683,13 @@ sarcomereProperties = ...
             'normSarcomereLengthZeroForce'      , normSarcomereLengthZeroForce,...  
             'normFiberLengthAtOneNormPassiveForce',normFiberLengthAtOneNormPassiveForce,...
             'ZLineToT12NormLengthAtOptimalFiberLength', loptT12Norm,...
-            'IGPNormLengthAtOptimalFiberLength'       , loptIGPNorm,...              
-            'PEVKNormLengthAtOptimalFiberLength'      , loptPEVKNorm,...
+            'IGPNormLengthAtOptimalFiberLength'       , lTitinOpt.lIgpNorm,...              
+            'PEVKNormLengthAtOptimalFiberLength'      , lTitinOpt.lPevkNorm,...
             'IGDFreeNormLengthAtOptimalFiberLengthHuman'   , loptIGDFreeNormHuman, ...
             'IGDFixedNormLengthAtOptimalFiberLengthHuman'  , loptIGDFixedNormHuman, ...
-            'IGDFreeNormLengthAtOptimalFiberLength'        , loptIGDFreeNorm, ...
-            'IGDFixedNormLengthAtOptimalFiberLength'       , loptIGDFixedNorm, ...            
-            'IGDTotalNormLengthAtOptimalFiberLength'       , loptIGDTotalNorm, ...    
+            'IGDFreeNormLengthAtOptimalFiberLength'        , lTitinOpt.lIgdFreeNorm, ...
+            'IGDFixedNormLengthAtOptimalFiberLength'       , lTitinOpt.lIgdFixedNorm, ...            
+            'IGDTotalNormLengthAtOptimalFiberLength'       , lTitinOpt.lIgdTotalNorm, ...    
             'normContourLengthTitinProximal',   normContourLengthTitinProximal,...
             'normContourLengthTitinDistal',   normContourLengthTitinDistal,...
             'normLengthTitinFixed', normLengthTitinFixed,...
