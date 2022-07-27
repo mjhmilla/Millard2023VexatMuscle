@@ -1,5 +1,6 @@
 function [cZToPEVKp, cZToPEVKd] = fitLinearModelToTitinSegmentElongation(...
-	fileTrombitas1998Figure5)
+	fileTrombitas1998Figure5, numDomainsIgP, numResiduesPevk, numDomainsIgD,...
+  halfMyosinLength, lT12, flag_assumeUniformIgDomainLength)
 %%
 % This function fits a line to the digitized data from Trombitas et al. 1998
 % Fig.5 and returns the coefficients of the line discribing the distance 
@@ -23,13 +24,13 @@ function [cZToPEVKp, cZToPEVKd] = fitLinearModelToTitinSegmentElongation(...
 % muscle titin revealed by immunolabeling with the anti-titin antibody 9D10. 
 % Journal of structural biology. 1998 Jan 1;122(1-2):188-96.
 %
-% @param cZToPEVKp: a 2x1 vector of the offset (cZToPEVKp(2,1)) and slope 
+% @return cZToPEVKp: a 2x1 vector of the offset (cZToPEVKp(2,1)) and slope 
 %   (cZToPEVKp(1,1)) that describes how the distance between the Z-line and
 %   the proximal end of the PEVK segment varies as the sarcomere is lengthened.
 %   The offset and slope assume that the sarcomere length is given in 
 %   micrometers.
 %
-% @param cZToPEVKd: a 2x1 vector of the offset (cZToPEVKd(2,1)) and slope 
+% @return cZToPEVKd: a 2x1 vector of the offset (cZToPEVKd(2,1)) and slope 
 %   (cZToPEVKd(1,1)) that describes how the distance between the Z-line and
 %   the distal end of the PEVK segment varies as the sarcomere is lengthened.
 %   The offset and slope assume that the sarcomere length is given in 
@@ -56,6 +57,23 @@ bb = dataTrombitas1998Figure5(2).y;
 Ab = [dataTrombitas1998Figure5(2).x, ones(size(bb))];
 cZToPEVKd = (Ab'*Ab)\(Ab'*bb);
 
+cZToPEVKpAdj = cZToPEVKp;
+cZToPEVKdAdj = cZToPEVKd;  
+
+if(flag_assumeUniformIgDomainLength==1)
+  linePevk     = cZToPEVKd - cZToPEVKp;
+  lineIgTotal = [0.5;0] - linePevk ...
+                 -[0;halfMyosinLength] - [0;lT12];
+%numDomainsIgP, numResiduesPevk, numDomainsIgD
+  lineIgP = lineIgTotal.*(numDomainsIgP/(numDomainsIgP+numDomainsIgD));
+  lineIgD = lineIgTotal.*(numDomainsIgD/(numDomainsIgP+numDomainsIgD));
+
+  cZToPEVKpAdj = lineIgP + [0;lT12];
+  cZToPEVKdAdj = cZToPEVKp + linePevk;  
+
+end
+
+
 flag_debugTitinFit =0;
 if(flag_debugTitinFit==1)
   figTitinFit =figure;
@@ -67,13 +85,23 @@ if(flag_debugTitinFit==1)
   end
   ls = [2.25;4.75];
   ligp = [ls, ones(size(ls))]*cZToPEVKp;
-  plot(ls, ligp,'Color',[1,0,0]);
+  plot(ls, ligp,'--','Color',[1,0,0]);
   hold on;
   lpevk = [ls, ones(size(ls))]*cZToPEVKd;
-  plot(ls, lpevk,'Color',[1,0,1]);
+  plot(ls, lpevk,'--','Color',[1,0,1]);
   hold on;
+
+  ligp = [ls, ones(size(ls))]*cZToPEVKpAdj;
+  plot(ls, ligp,'-','Color',[1,0,0],'LineWidth',1);
+  hold on;
+  lpevk = [ls, ones(size(ls))]*cZToPEVKdAdj;
+  plot(ls, lpevk,'-','Color',[1,0,1],'LineWidth',1);
+  hold on;  
   xlabel('Sarcomere Length');
   ylabel('Distance from Z-line');
   here=1;
   
 end
+
+cZToPEVKp = cZToPEVKpAdj;
+cZToPEVKd = cZToPEVKdAdj;  
