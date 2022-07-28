@@ -4,6 +4,7 @@ function [lineZToPevkP, lineZToPevkD] = ...
                 numDomainsIgP, numResiduesPevk, numDomainsIgD, ...
             optimalSarcomereLengthRef, lT12Ref, halfMyosinLengthRef, ...
                 numDomainsIgPRef, numResiduesPevkRef, numDomainsIgDRef,...
+            maxIgDomainStrain_um,maxPevkResidueStrain_um,...
             lineZToPevkPRef, lineZToPevkDRef)
 %%
 % This function will scale the linear functions lineZToPevkPRef, lineZToPevkDRef
@@ -30,9 +31,6 @@ function [lineZToPevkP, lineZToPevkD] = ...
 % [IgP/(IgP+IgD)] / [IgPRef/(IgPRef+IgDRef)]
 %
 %%
-
-
-
 
 ratioPevkIg     = numResiduesPevk    / (numDomainsIgP+numDomainsIgD);
 ratioPevkIgRef  = numResiduesPevkRef / (numDomainsIgPRef+numDomainsIgDRef);
@@ -85,10 +83,10 @@ loptPevkRefResidueStrain= loptPevkRef/numResiduesPevkRef;
 assert(abs( (loptIgPRefDomainStrain)-(loptIgDRefDomainStrain)) < 1e-3 );
 
 %Check that the domain and residue lengths are below the contour lengths
-maxDomainStrain = 25/1000;    %25 nm
-maxResidueStrain = 0.38/1000; %0.38 nm
-assert( loptIgPRefDomainStrain < maxDomainStrain);
-assert( loptPevkRefResidueStrain < maxResidueStrain);
+%maxIgDomainStrain_um = 25/1000;    %25 nm
+%maxPevkResidueStrain_um = 0.38/1000; %0.38 nm
+assert( loptIgPRefDomainStrain < maxIgDomainStrain_um);
+assert( loptPevkRefResidueStrain < maxPevkResidueStrain_um);
 
 %Scale the reference titin model to the target
 linePevk    = linePevkRef.*(ratioPevkIg/ratioPevkIgRef);
@@ -115,8 +113,8 @@ loptPevkResidueStrain= loptPevk/numResiduesPevk;
 assert(abs( (loptIgPDomainStrain)-(loptIgDDomainStrain)) < 1e-3 );
 
 %Check that the domain and residue lengths are below the contour lengths
-assert( loptIgPDomainStrain < maxDomainStrain);
-assert( loptPevkResidueStrain < maxResidueStrain);
+assert( loptIgPDomainStrain < maxIgDomainStrain_um);
+assert( loptPevkResidueStrain < maxPevkResidueStrain_um);
 
 
 here=1;

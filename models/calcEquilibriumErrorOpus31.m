@@ -119,8 +119,8 @@ lmH           = modelConstants.lmH         ;
 ZLineToT12NormLengthAtOptimalFiberLength = ...
   modelConstants.ZLineToT12NormLengthAtOptimalFiberLength;
 
-normActinSmoothStepFunctionRadius = ... 
-  modelConstants.normActinSmoothStepFunctionRadius;  
+smoothStepFunctionRadius = ... 
+  modelConstants.smoothStepFunctionRadius;  
 
 lce_lceH    = modelConstants.lce_lceH    ;
 lce_lceHN   = modelConstants.lce_lceHN   ;
@@ -129,7 +129,6 @@ dlce_dlceNN = modelConstants.dlce_dlceNN ;
 lce_lceN    = modelConstants.lce_lceN    ;
 lceN_lce    = modelConstants.lceN_lce    ;
 lceH_lce    = modelConstants.lceH_lce    ;
-
 
 lt_ltN      = modelConstants.lt_ltN      ;
 li_liN      = modelConstants.li_liN      ;
@@ -469,7 +468,7 @@ switch titinModelType
     %
 
     dTiA = (lAHN-(l1HN+ZLineToT12NormLengthAtOptimalFiberLength));
-    kTiA = dTiA/normActinSmoothStepFunctionRadius;
+    kTiA = dTiA/smoothStepFunctionRadius;
     uTiA = 0.5+0.5*tanh(kTiA);
 
     % To break beta1HNN down:

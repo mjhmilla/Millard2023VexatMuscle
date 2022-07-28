@@ -296,7 +296,7 @@ lDZeroHalf      = lDOneHalf  - ((1-lambdaECM)/kD) ...
 %%
 
 
-fNfailure = 5.14*2; %Average failure force from Leonard, Joumaa, Herzog 2010
+fNfailure = 5.14*2; %Twice the average norm. failure force from Leonard, Joumaa, Herzog 2010
 
 
 %%
