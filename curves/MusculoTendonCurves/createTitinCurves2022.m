@@ -9,7 +9,6 @@ function [forceLengthProximalTitinCurve, forceLengthProximalTitinInverseCurve,..
                                    flag_computeCurveIntegrals,...
                                    flag_useElasticIgD,...
                                    flag_activeTitinModel,...
-                                   flag_useHumanIgDGeometry,...
                                    flag_useOctave)
                                  
 
@@ -27,18 +26,13 @@ normPevkToActinAttachmentPoint = sarcomereProperties.normPevkToActinAttachmentPo
 %%
 ZLineToT12NormLengthAtOptimalFiberLength = ...
   sarcomereProperties.ZLineToT12NormLengthAtOptimalFiberLength;
+
 IGDTotalNormLengthAtOptimalFiberLength = ...
   sarcomereProperties.IGDTotalNormLengthAtOptimalFiberLength;
 
-IGDFixedNormLengthAtOptimalFiberLength=0;
-
-if(flag_useHumanIgDGeometry==1)
-  IGDFixedNormLengthAtOptimalFiberLength=...
-    sarcomereProperties.IGDFixedNormLengthAtOptimalFiberLengthHuman;
-else
-  IGDFixedNormLengthAtOptimalFiberLength=...
+IGDFixedNormLengthAtOptimalFiberLength=...
     sarcomereProperties.IGDFixedNormLengthAtOptimalFiberLength;  
-end
+
 
 lceZero = fiberForceLengthCurve.xEnd(1,1);
 

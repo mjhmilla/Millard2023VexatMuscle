@@ -2,27 +2,25 @@ flag_outerLoopMode = 0;
 
 if(flag_outerLoopMode == 0)
   clc;
-  close all;
+  close all;  
   clear all;
+
   fitCrossBridgeStiffnessDampingToKirch199490Hz=1;
-  flag_useFixedLambdaECM    = 0;
-  flag_makeAndSavePubPlots  = 1;
+  flag_makeAndSavePubPlots                         = 1;
+  flag_fitToFig3KirchBoskovRymer1994               = 0;
+  fitCrossBridgeStiffnessDampingToKirch199490Hz    = 1;
+  flag_fitActiveTitinProperties                    = 0;
 
-  flag_fitToFig3KirchBoskovRymer1994 = 0;
-  flag_fitActiveTitinProperties=0;
-
-  rigidTendonReferenceModel = [];
-  elasticTendonReferenceModel=[];
-  normPevkToActinAttachmentPoint = 0.5;
-  normFiberLengthAtOneNormPassiveForce=1.367732948060934e+00;
+  rigidTendonReferenceModel             = [];
+  elasticTendonReferenceModel           = [];
+  normPevkToActinAttachmentPoint        = 0.5;
+  normFiberLengthAtOneNormPassiveForce  = 1.367732948060934e+00;
 
 end
 
 pubOutputFolder                 = 'output/plots/MuscleCurves/';
 postprocessingDirectoryTree     = genpath('postprocessing');
 addpath(postprocessingDirectoryTree   );
-
-
 
 flag_useOctave = 0;
 flag_enableNumericallyNonZeroGradients    = 1;
@@ -62,10 +60,7 @@ addpath(parametersDirectoryTreeModels);
 addpath(parametersDirectoryTreeCurves);
 addpath(parametersDirectoryTreeSimulation);
 
-
-
 scaleOptimalFiberLength      = 1.0; 
-
 scaleMaximumIsometricTension = 1;
 
 if(exist('fitCrossBridgeStiffnessDampingToKirch199490Hz','var')==0)
@@ -105,7 +100,6 @@ createMusculoTendonFcn = ...
       felineSoleusActiveForceLengthData,...
       felineSoleusPassiveForceLengthData,...
       shiftLengthActiveForceLengthCurveDescendingCurve,...
-      flag_useFixedLambdaECM,...
       flag_enableNumericallyNonZeroGradients,...
       smallNumericallyNonZeroNumber,...
       flag_solveForOptimalFiberLengthOfBestFit,...
@@ -182,8 +176,8 @@ else
     
     dataFolder = 'experiments/HerzogLeonard2002/fitting/';
     
-    if(felineSoleusSarcomerePropertiesDefault.titinModelType==0)
-        felineSoleusNormMuscleCurvesDefault.useTwoSidedTitinCurves=1;
+    if(felineSoleusSarcomerePropertiesDefault.titinModelType==1)
+        felineSoleusNormMuscleCurvesDefault.useTwoSidedTitinCurves=0;
     end
     felineSoleusNormMuscleCurvesDefault.useCalibratedCurves=1;
     flag_useElasticTendon       = 1;

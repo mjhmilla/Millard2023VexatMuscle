@@ -9,47 +9,55 @@ for i = 1:length(index_interpreter)
     set(groot, default_name,'latex');
 end
 
-flag_fitActiveTitinProperties              =0; 
-
-
 disp(['Note: flag_fitActiveTitinProperties must be set to 1 the first']);
 disp([' time you run this script.']);
+flag_fitActiveTitinProperties              = 0; 
+normPevkToActinAttachmentPoint             = 0.5;
 %0: Use previously computed values
 %1: Solve for the titin-actin attachment point and active damping
-%coefficent (this is time consuming ~ 30 min)
+%   coefficent (this is time consuming ~ 30 min)
 
-fitCrossBridgeStiffnessDampingToKirch199490Hz = 1;
-flag_useFixedLambdaECM      = 0; %Deprecated: leave as 0
-
-normPevkToActinAttachmentPoint = 0.5;
 normFiberLengthAtOneNormPassiveForce=1.367732948060934e+00;
 
+flag_fitToFig3KirchBoskovRymer1994            = 0;
+fitCrossBridgeStiffnessDampingToKirch199490Hz = 1;
 
 rigidTendonReferenceModel = [];%...
 %    'output/structs/felineSoleusRigidTendonKBR1994Fig12.mat';
 elasticTendonReferenceModel=[];%...
 %    'output/structs/felineSoleusElasticTendonKBR1994Fig12.mat';
-
-flag_fitToFig3KirchBoskovRymer1994 = 0;
 flag_makeAndSavePubPlots = 1;
+
+%%
+% Generate rigid-tendon and elastic-tendon cat soleus model with
+%   1. The titin-actin attachment point fitted to match Herzog & Leonard
+%      as closely as possible.
+%   2. The lumped cross-bridge stiffness and damping tuned to best match
+%      the frequency response of Figure 3 of Kirsch, Boskov, & Rymer 
+%      as closely as possible
+%%
 main_createDefaultFelineSoleusModel;
 
-% Generate the model with Kx and Bx fitted to Figure 12 of 
-% Kirsch Boskov and Rymer. Models fitted to both Figure 12 and Figure 3 of 
-% Kirsch, Boskov, and Rymer are need for later simulations in 
-% main_KirschBoskovRymer1994_OuterLoop
-%
-%0. Will generate models with Kx and Bx fitted to Figure 12 of Kirch,
-%Boskov, and Rymer
-%1. Will generate models with Kx and Bx fitted to Figure 3 of Kirsch,
-%Boskov, and Rymer
 
 close all;
 
-flag_fitToFig3KirchBoskovRymer1994 = 1;
-% Generate the model with Kx and Bx fitted to Figure 3 of 
-% Kirsch Boskov and Rymer.
+flag_fitToFig3KirchBoskovRymer1994              = 1;
+fitCrossBridgeStiffnessDampingToKirch199490Hz   = 0;
 
-flag_fitActiveTitinProperties=0; %Takes previously generated versions 
-flag_makeAndSavePubPlots    = 0; 
+flag_fitActiveTitinProperties  = 0; %Takes previously generated versions 
+flag_makeAndSavePubPlots       = 0; 
+
+%%
+% Same as before but now:
+%   1. ... same as before
+%   2. ... best match the frequency response of Figure 12 of Kirsch, 
+%      Boskov, & Rymer as closely as possible
+%
+% Generate rigid-tendon and elastic-tendon cat soleus model with
+%   1. The titin-actin attachment point fitted to match Herzog & Leonard
+%      as closely as possible.
+%   2. The lumped cross-bridge stiffness and damping tuned to best match
+%      the frequency response of Figure 12 of Kirsch, Boskov, & Rymer 
+%      as closely as possible.
+%%
 main_createDefaultFelineSoleusModel;

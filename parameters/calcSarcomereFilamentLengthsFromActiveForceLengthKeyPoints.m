@@ -55,7 +55,7 @@ switch animalId
     activeForceLengthKeyPoints = geoCat;  
 
     halfMyosinBareLength =     ( activeForceLengthKeyPoints(1,4) ...
-                               - activeForceLengthKeyPoints(1,3) )*0.5;
+                               - activeForceLengthKeyPoints(1,3) )*0.25;
     
     halfMyosinLength      = 0.5*(activeForceLengthKeyPoints(1,5) ...
                                 -activeForceLengthKeyPoints(1,3));                    
@@ -71,7 +71,7 @@ switch animalId
     activeForceLengthKeyPoints = geoHuman;    
 
     halfMyosinBareLength =     ( activeForceLengthKeyPoints(1,4) ...
-                               - activeForceLengthKeyPoints(1,3) )*0.5;
+                               - activeForceLengthKeyPoints(1,3) )*0.25;
     
     halfMyosinLength      = 0.5*(activeForceLengthKeyPoints(1,5) ...
                                 -activeForceLengthKeyPoints(1,3));                    
@@ -93,7 +93,7 @@ switch animalId
     zLineLength       = 0.05;
     myosinBareLength  = 0.2;
 
-    halfMyosinBareLength = myosinBareLength*0.5;
+    halfMyosinBareLength = myosinBareLength*0.25;
     halfMyosinLength     = myosinLength*0.5;
 
 
@@ -109,7 +109,7 @@ switch animalId
     flag_debug=0;
     if(flag_debug==1)
         halfMyosinBareLength =     ( activeForceLengthKeyPoints(1,4) ...
-                                   - activeForceLengthKeyPoints(1,3) )*0.5;
+                                   - activeForceLengthKeyPoints(1,3) )*0.25;
         
         halfMyosinLength      = 0.5*(activeForceLengthKeyPoints(1,5) ...
                                     -activeForceLengthKeyPoints(1,3));                    
@@ -127,7 +127,7 @@ switch animalId
     zLineLength       = 0.07;
     myosinBareLength  = 0.16;
 
-    halfMyosinBareLength = myosinBareLength*0.5;
+    halfMyosinBareLength = myosinBareLength*0.25;
     halfMyosinLength     = myosinLength*0.5;
 
     lasc  = max(actinLength,myosinLength)    + 2*zLineLength;    
@@ -142,7 +142,7 @@ switch animalId
     flag_debug=1;
     if(flag_debug==1)
         halfMyosinBareLength =     ( activeForceLengthKeyPoints(1,4) ...
-                                   - activeForceLengthKeyPoints(1,3) )*0.5;
+                                   - activeForceLengthKeyPoints(1,3) )*0.25;
         
         halfMyosinLength      = 0.5*(activeForceLengthKeyPoints(1,5) ...
                                     -activeForceLengthKeyPoints(1,3));                    

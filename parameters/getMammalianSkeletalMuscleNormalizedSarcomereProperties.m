@@ -88,7 +88,7 @@ end
     calcSarcomereFilamentLengthsFromActiveForceLengthKeyPoints(animalId);
 
 %From Fig 3.
-optSarcomereLength           = 2*zLineLength + 2*actinLength + halfMyosinBareLength;
+optSarcomereLength           = 2*zLineLength + 2*actinLength + 2*halfMyosinBareLength;
 normHalfMyosinBareLength     = halfMyosinBareLength/optSarcomereLength; 
 normHalfMyosinLength         = halfMyosinLength/optSarcomereLength;
 normZLineLength              = zLineLength/optSarcomereLength;                     
@@ -109,7 +109,7 @@ normSarcomereLengthZeroForce = geo(1,1)/optSarcomereLength;
 
 optSarcomereLengthHuman           = 2*zLineLengthHuman ...
                                     + 2*actinLengthHuman ...
-                                    + halfMyosinBareLengthHuman;
+                                    + 2*halfMyosinBareLengthHuman;
 
 normHalfMyosinBareLengthHuman     = halfMyosinBareLengthHuman/optSarcomereLengthHuman; 
 normHalfMyosinLengthHuman         = halfMyosinLengthHuman/optSarcomereLengthHuman;
@@ -415,63 +415,7 @@ switch animalId
 end
 
 
-% Define the contour lengths of the prox Ig, PEVK, and distal Ig segments   
-%
-% For a human soleus muscle titin's geometry (at least 1 isoform) has been
-% measured by Trombitas
-%
-%   68 prox. Ig domains that can maximally extend to 25 nm (DuVall et al.)
-%   2174 PEVK residues that have a maximum length of 0.38 nm (Cantor & Schimmel)
-%   28 distal Ig domains that can maximally extend to 25 nm 
-%
-%Trombitas K, Greaser M, French G, Granzier H. PEVK extension of human soleus 
-%muscle titin revealed by immunolabeling with the anti-titin antibody 9D10.
-%Journal of structural biology. 1998 Jan 1;122(1-2):188-96.
-%
-% Cantor CR, Schimmel PR. Biophysical Chemistry, Part I: The Conformation of 
-% Biological Molecules. Journal of Solid-Phase Biochemistry. 1980;5(3).
-%
-% *Note: the 0.38nm is mentioned on 254 as the sum of the bond lengths. In reality
-%        the bond lengths likely cannot be stretched into a line before the
-%        titin filament fails
-% 
-% DuVall MM, Gifford JL, Amrein M, Herzog W. Altered mechanical properties of 
-% titin immunoglobulin domain 27 in the presence of calcium. European Biophysics 
-% Journal. 2013 Apr;42(4):301-7.
-%
-lContourIGPNormHuman     = (68*(25/1000))    / optSarcomereLengthHuman;
-lContourPEVKNormHuman    = (2174*(0.38/1000))/ optSarcomereLengthHuman;
-lContourIGDFreeNormHuman = (28*(25/1000))    / optSarcomereLengthHuman;    
-
-%%
-% For a cat, I have no idea of the Ig domain and PEVK residue count.
-% A rabbit psoas has a titin molecule with
-%
-%   50 prox. Ig domains
-%   800 PEVK residues 
-%   22 distal Ig domains 
-% 
-% 
-% Prado makes it clear that there the range of molecular weights of titin
-% vary quite a bit within the rabbit muscles that were analyzed. Some 
-% of the muscles in a rabbit approach titin in the 3.7 kD range, which 
-% would be consistent with human soleus titin. The size of the PEVK segment
-% seems to be affected most by the range
-%
-% This information is really only needed (for the current paper) to 
-% replicate Leonard, Joumaa and Herzog 2010 ... which was performed on a 
-% rabbit psoas muscle.
-%
-%Prado LG, Makarenko I, Andresen C, Krüger M, Opitz CA, Linke WA. Isoform 
-% diversity of giant proteins in relation to passive and active contractile 
-% properties of rabbit skeletal muscles. The Journal of general physiology. 
-% 2005 Nov;126(5):461-80.
-%
-%%
-
-lContourIGPNormRabbit     = (50*(25/1000))    / optSarcomereLengthRabbit;
-lContourPEVKNormRabbit    = (800*(0.38/1000))/ optSarcomereLengthRabbit;
-lContourIGDFreeNormRabbit = (22*(25/1000))    / optSarcomereLengthRabbit;    
+    
 
 switch animalId
   case 1
@@ -482,19 +426,41 @@ switch animalId
     %correct. The alternative is to use the geometry of a  rabbit psoas 
     %titin isoforms measured by Prado et al. This was one of the lightest
     %isoforms measured by Prado et al. (thus having shorter prox. Ig and 
-    %PEVK segments), so it would probably even be a poor predictor of
-    %the geometry of a randomly chosen muscle in a rabbit.
+    %PEVK segments).
 
-    lContourIGPNorm     = lContourIGPNormHuman    ;
-    lContourPEVKNorm    = lContourPEVKNormHuman   ;
-    lContourIGDFreeNorm = lContourIGDFreeNormHuman;
+    lContourIGPNorm     = (68*(25/1000))    / optSarcomereLengthHuman;
+    lContourPEVKNorm    = (2174*(0.38/1000))/ optSarcomereLengthHuman;
+    lContourIGDFreeNorm = (28*(25/1000))    / optSarcomereLengthHuman; 
 
   case 2
 
-    %Human
-    lContourIGPNorm     = lContourIGPNormHuman    ;
-    lContourPEVKNorm    = lContourPEVKNormHuman   ;
-    lContourIGDFreeNorm = lContourIGDFreeNormHuman;
+    % Define the contour lengths of the prox Ig, PEVK, and distal Ig segments   
+    %
+    % For a human soleus muscle titin's geometry (at least 1 isoform) has been
+    % measured by Trombitas
+    %
+    %   68 prox. Ig domains that can maximally extend to 25 nm (DuVall et al.)
+    %   2174 PEVK residues that have a maximum length of 0.38 nm (Cantor & Schimmel)
+    %   28 distal Ig domains that can maximally extend to 25 nm 
+    %
+    %Trombitas K, Greaser M, French G, Granzier H. PEVK extension of human soleus 
+    %muscle titin revealed by immunolabeling with the anti-titin antibody 9D10.
+    %Journal of structural biology. 1998 Jan 1;122(1-2):188-96.
+    %
+    % Cantor CR, Schimmel PR. Biophysical Chemistry, Part I: The Conformation of 
+    % Biological Molecules. Journal of Solid-Phase Biochemistry. 1980;5(3).
+    %
+    % *Note: the 0.38nm is mentioned on 254 as the sum of the bond lengths. In reality
+    %        the bond lengths likely cannot be stretched into a line before the
+    %        titin filament fails
+    % 
+    % DuVall MM, Gifford JL, Amrein M, Herzog W. Altered mechanical properties of 
+    % titin immunoglobulin domain 27 in the presence of calcium. European Biophysics 
+    % Journal. 2013 Apr;42(4):301-7.
+    %
+    lContourIGPNorm     = (68*(25/1000))    / optSarcomereLengthHuman;
+    lContourPEVKNorm    = (2174*(0.38/1000))/ optSarcomereLengthHuman;
+    lContourIGDFreeNorm = (28*(25/1000))    / optSarcomereLengthHuman;  
 
   case 3    
 
@@ -503,11 +469,34 @@ switch animalId
                   'the titin segments from frog skeletal muscle titin']);
   case 4
 
-    %rabbit
-    lContourIGPNorm     = lContourIGPNormRabbit    ;
-    lContourPEVKNorm    = lContourPEVKNormRabbit   ;
-    lContourIGDFreeNorm = lContourIGDFreeNormRabbit;
 
+    %%
+    % A rabbit psoas has a titin molecule with
+    %
+    %   50 prox. Ig domains
+    %   800 PEVK residues 
+    %   22 distal Ig domains 
+    %
+    % Prado makes it clear that there the range of molecular weights of titin
+    % vary quite a bit within the rabbit muscles that were analyzed. Some 
+    % of the muscles in a rabbit approach titin in the 3.7 kD range, which 
+    % would be consistent with human soleus titin. The size of the PEVK segment
+    % seems to be affected most by the range
+    %
+    % This information is really only needed (for the current paper) to 
+    % replicate Leonard, Joumaa and Herzog 2010 ... which was performed on a 
+    % rabbit psoas muscle.
+    %
+    %Prado LG, Makarenko I, Andresen C, Krüger M, Opitz CA, Linke WA. Isoform 
+    % diversity of giant proteins in relation to passive and active contractile 
+    % properties of rabbit skeletal muscles. The Journal of general physiology. 
+    % 2005 Nov;126(5):461-80.
+    %
+    %%
+    
+    lContourIGPNorm     = (50*(25/1000))    / optSarcomereLength;
+    lContourPEVKNorm    = (800*(0.38/1000))/ optSarcomereLength;
+    lContourIGDFreeNorm = (22*(25/1000))    / optSarcomereLength;        
 
 end
 
@@ -653,13 +642,13 @@ if(titinModel == titinModelStickySpring)
         + normPevkToActinAttachmentPoint*lContourPEVKNorm;
     normContourLengthTitinDistal = (1-normPevkToActinAttachmentPoint)*lContourPEVKNorm ...
         + lContourIGDFreeNorm; 
-    normLengthTitinFixed = loptT12Norm + lTitinOpt.lIgdFixedNorm;
+    normLengthTitinFixed = lTitinOpt.lT12Norm + lTitinOpt.lIgdFixedNorm;
 end
 
 if(titinModel == titinModelActiveSpring)
     normContourLengthTitinProximal = lContourIGPNorm; ...
     normContourLengthTitinDistal = lContourPEVKNorm + lContourIGDFreeNorm; 
-    normLengthTitinFixed = loptT12Norm + lTitinOpt.lIgdFixedNorm;
+    normLengthTitinFixed = lTitinOpt.lT12Norm + lTitinOpt.lIgdFixedNorm;
 end
 
 
@@ -672,7 +661,7 @@ sarcomereProperties = ...
             'normZLineLength'                               , normZLineLength,...   
             'normSarcomereLengthZeroForce'                  , normSarcomereLengthZeroForce,...  
             'normFiberLengthAtOneNormPassiveForce'          , normFiberLengthAtOneNormPassiveForce,...
-            'ZLineToT12NormLengthAtOptimalFiberLength'      , loptT12Norm,...
+            'ZLineToT12NormLengthAtOptimalFiberLength'      , lTitinOpt.lT12Norm,...
             'IGPNormLengthAtOptimalFiberLength'             , lTitinOpt.lIgpNorm,...              
             'PEVKNormLengthAtOptimalFiberLength'            , lTitinOpt.lPevkNorm,...
             'IGDFreeNormLengthAtOptimalFiberLengthHuman'    , lTitinHumanOpt.lIgdFreeNorm, ...
@@ -686,9 +675,9 @@ sarcomereProperties = ...
             'IGPContourLengthNorm'                          , lContourIGPNorm,...
             'PEVKContourLengthNorm'                         , lContourPEVKNorm,...
             'IGDFreeContourLengthNorm'                      , lContourIGDFreeNorm,...            
-            'numberOfIGPDomains'                            , numberOfIGPDomains,...
-            'numberOfPEVKResidues'                          , numberOfPEVKResidues,...
-            'numberOfIGDDomains'                            , numberOfIGDDomains, ...
+            'numberOfIGPDomains'                            , numDomainsIgP,...
+            'numberOfPEVKResidues'                          , numResiduesPevk,...
+            'numberOfIGDDomains'                            , numDomainsIgD, ...
             'IGPNormStretchRate'                            , normStretchRateIgP,...
             'PEVKNormStretchRate'                           , normStretchRatePevk,...
             'IGDFreeNormStretchRate'                        , normStretchRateIgDFree,...            
