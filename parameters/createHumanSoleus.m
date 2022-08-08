@@ -6,11 +6,13 @@ function [humanSoleusMusculotendonProperties, ...
                              scaleMaximumIsometricTension,...
                              normFiberLengthAtOneNormPassiveForce,...
                              normPevkToActinAttachmentPoint,...
+                             fitCrossBridgeStiffnessDampingToKirch199490Hz,...
                              flag_useOctave)
 %%
 % This function uses data from the literature to return a series of structs that
 % contain the necessary musculotendon properties, sarcomere properties, and
-% processed data to construct Opus 31 which is a rather detailed muscle model.
+% processed data to construct Opus 31 for a human soleus muscle which is a 
+% rather detailed muscle model.
 % Please review the script for details and references to the literature.
 % Default values that have been determined by simulation have been noted
 % as such in the script
@@ -29,14 +31,22 @@ function [humanSoleusMusculotendonProperties, ...
 %   humanSoleusSarcomereProperties
 %     lengths of all of the various filaments of a human soleus along with 
 %     detailed information regarding the segment lengths of titin
+%   humanSoleusActiveForceLengthData
+%     normalized versions of data used to to fit the active-force-length 
+%     curve (presently empty).
+%   humanSoleusPassiveForceLengthData
+%     normalized versions of data used to to fit the passive-force-length 
+%     curve (presently empty).
 %%
 %scaleOptimalFiberLength               = 1.0; %user-settable parameter
 %scaleMaximumIsometricTension          = 1.0; %user-settable parameter
 
+%%
 % This is the normalized fiber length at which the extrapolated 
 % passive-force-length curve is expected to develop 1 normalized force.
 % Here this is the passive force length curve that is fitted to the data
 % of Herzog & Leonard 2002.
+%%
 
 %Get the default sarcomere properties for a human soles                               
 [humanSoleusSarcomereProperties] =...
