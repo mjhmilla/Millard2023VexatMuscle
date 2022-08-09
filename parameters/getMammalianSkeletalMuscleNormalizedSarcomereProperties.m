@@ -129,7 +129,7 @@ assert( abs(geo(1,5)-optSarcomereLength*2*(...
 % have a long PEVK segment. I haven't yet come across equivalent geometric 
 % data on the titin in a cat soleus. I've directly asked W.Herzog, M.DuVall,
 % and K.Nishikawa and none of them have seen data on cat soleus titin. So for
-% now I'm using the data of Trobitas et al. on the relative elongation of the 
+% now I'm using the data of Trombitas et al. on the relative elongation of the 
 % proximal Ig and PEVK segments for fitting purposes.
 %
 % Trombitas K, Greaser M, French G, Granzier H. PEVK extension of human soleus 
@@ -481,7 +481,7 @@ switch animalId
     % vary quite a bit within the rabbit muscles that were analyzed. Some 
     % of the muscles in a rabbit approach titin in the 3.7 kD range, which 
     % would be consistent with human soleus titin. The size of the PEVK segment
-    % seems to be affected most by the range
+    % seems to be affected most by the molecular weight.
     %
     % This information is really only needed (for the current paper) to 
     % replicate Leonard, Joumaa and Herzog 2010 ... which was performed on a 
