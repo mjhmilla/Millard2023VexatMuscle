@@ -125,13 +125,12 @@ for(i=idx49LStart:idxDelta:idxMaxF49)
   passiveForceLengthData(idx,1) = lceN;
   passiveForceLengthData(idx,2) = fceN;    
   idx = idx+1;
-end          
+end    
+      
 %
 % Extract experimental data on the active force length curves:
 %    get the point just prior to the muscle being stretched 
 %
-
-
 colFalF =[idxFitF43; idxFitF44; idxFitF45; idxFitF47];
 colFalL =[idxFitL43; idxFitL44; idxFitL45; idxFitL47];
 rowFal  =zeros(length(colFalF),1);

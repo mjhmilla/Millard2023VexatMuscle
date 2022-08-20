@@ -7,20 +7,15 @@ function defaultRabbitPsoasFibril = createRabbitPsoasFibrilModel(...
                                       flag_plotAllCurves,...
                                       flag_useOctave)
 
-%%
-% Add the directories needed to run this script
-%%
-%parametersDirectoryTreeMTParams     = genpath('parameters');
-%parametersDirectoryTreeExperiments  = genpath('experiments');
-%parametersDirectoryTreeModels       = genpath('models');
-%parametersDirectoryTreeCurves       = genpath('curves');
-%parametersDirectoryTreeSimulation   = genpath('simulation');
-%addpath(parametersDirectoryTreeMTParams);
-%addpath(parametersDirectoryTreeExperiments);
-%addpath(parametersDirectoryTreeModels);
-%addpath(parametersDirectoryTreeCurves);
-%addpath(parametersDirectoryTreeSimulation);
 
+%Potential variables to expose
+rabbitPsoasFibrilActiveForceLengthData  = [];
+rabbitPsoasFibrilPassiveForceLengthData = [];
+scaleOptimalFiberLength      = 1.0; 
+scaleMaximumIsometricTension = 1;
+
+
+% Check the arguments
 if( smallNumericallyNonZeroNumber <= 0 &&...
     flag_enableNumericallyNonZeroGradients  )
   disp('Warning: flag_enableNumericallyNonZeroGradients is set to 1 and');
@@ -45,42 +40,25 @@ end
 
 
 
-postprocessingDirectoryTree     = genpath('postprocessing');
-addpath(postprocessingDirectoryTree   );
-
-%flag_useOctave = 0;
-%flag_enableNumericallyNonZeroGradients    = 1;
-%flag_plotEveryDefaultCurve = 0;
-
-%smallNumericallyNonZeroNumber           = sqrt(sqrt(eps));
-
-
-
-scaleOptimalFiberLength      = 1.0; 
-scaleMaximumIsometricTension = 1;
-
-
-
 [rabbitPsoasFibrilMusculotendonProperties, ...
  rabbitPsoasFibrilSarcomereProperties] = ...
-    createRabbitPsoasFibril(  scaleOptimalFiberLength,...
+    createRabbitPsoasFibrilParameters(  scaleOptimalFiberLength,...
                         scaleMaximumIsometricTension,...
                         normFiberLengthAtOneNormPassiveForce,...
                         normPevkToActinAttachmentPoint,...
                         flag_useOctave);
 
 createMusculoTendonFcn = ...
-  @(argScaleFiberLength,argScaleFiso)createRabbitPsoasFibril(...
+  @(argScaleFiberLength,argScaleFiso)createRabbitPsoasFibrilParameters(...
                                         argScaleFiberLength,...
                                         argScaleFiso,...
                                         normFiberLengthAtOneNormPassiveForce,...
                                         normPevkToActinAttachmentPoint,...
                                         flag_useOctave); 
                                         
-rabbitPsoasFibrilActiveForceLengthData  = [];
-rabbitPsoasFibrilPassiveForceLengthData = [];
 
-%We have no data to fit to, and so these options are not used
+
+%We have no data to fit to, and so these options cannot be used
 flag_solveForOptimalFiberLengthOfBestFit         = 0; 
 shiftLengthActiveForceLengthCurveDescendingCurve = 0.;
 
@@ -119,7 +97,6 @@ defaultRabbitPsoasFibril = struct('musculotendon',...
 %'output/structs/defaultRabbitPsoasFibril.mat'                      
 save(outputMatFileLocation,...
      'defaultRabbitPsoasFibril');  
-
 
 if(flag_plotAllCurves==1)
   figH=figure;

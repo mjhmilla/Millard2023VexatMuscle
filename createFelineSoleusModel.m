@@ -1,27 +1,23 @@
-flag_outerLoopMode = 0;
+function [defaultFelineSoleusModel,...
+          felineSoleusPassiveForceLengthCurveSettings]...
+           = createFelineSoleusModel(normPevkToActinAttachmentPoint,...
+                                      normFiberLengthAtOneNormPassiveForce,...                                      
+                                      outputMatFileLocation,...
+                                      smallNumericallyNonZeroNumber,...
+                                      flag_enableNumericallyNonZeroGradients,...
+                                      rigidTendonReferenceModel,...
+                                      elasticTendonReferenceModel,...
+                                      flag_plotAllCurves,...
+                                      flag_useOctave)
 
-if(flag_outerLoopMode == 0)
-  clc;
-  close all;  
-  clear all;
 
-  flag_makeAndSavePubPlots                         = 1;
+
+%  flag_makeAndSavePubPlots                         = 1;
   flag_fitToFig3KirchBoskovRymer1994               = 0;
   fitCrossBridgeStiffnessDampingToKirch199490Hz    = 1;
   flag_fitActiveTitinProperties                    = 0;
 
-  rigidTendonReferenceModel             = [];
-  elasticTendonReferenceModel           = [];
-  normPevkToActinAttachmentPoint        = 0.5;
-  normFiberLengthAtOneNormPassiveForce  = 1.367732948060934e+00;
 
-end
-
-pubOutputFolder                 = 'output/plots/MuscleCurves/';
-postprocessingDirectoryTree     = genpath('postprocessing');
-addpath(postprocessingDirectoryTree   );
-
-flag_useOctave = 0;
 flag_enableNumericallyNonZeroGradients    = 1;
 flag_plotEveryDefaultCurve = 0;
 
@@ -70,7 +66,7 @@ end
  felineSoleusSarcomereProperties,...
  felineSoleusActiveForceLengthData,...
  felineSoleusPassiveForceLengthData] = ...
- createFelineSoleus(    scaleOptimalFiberLength,...
+ createFelineSoleusParameters(    scaleOptimalFiberLength,...
                         scaleMaximumIsometricTension,...
                         normFiberLengthAtOneNormPassiveForce,...
                         normPevkToActinAttachmentPoint,...
@@ -78,7 +74,7 @@ end
                         flag_useOctave);
 
 createMusculoTendonFcn = ...
-  @(argScaleFiberLength,argScaleFiso)createFelineSoleus(...
+  @(argScaleFiberLength,argScaleFiso)createFelineSoleusParameters(...
                                         argScaleFiberLength,...
                                         argScaleFiso,...
                                         normFiberLengthAtOneNormPassiveForce,...
@@ -130,7 +126,7 @@ defaultFelineSoleus = struct('musculotendon',...
                             'curves',...
                             felineSoleusNormMuscleCurvesDefault);
                       
-save('output/structs/defaultFelineSoleus.mat',...
+save(outputMatFileLocation,...
      'defaultFelineSoleus');  
 
 %%
@@ -413,7 +409,7 @@ dx = mean(xCurve-xExp);
 %felineSoleusActiveForceLengthDataDefault(:,1)=...
 %  felineSoleusActiveForceLengthDataDefault(:,1)+dx;
 
-disp('Ajusted optimal fiber length');
+disp('Adjusted optimal fiber length');
 fprintf('%1.6f lce/lopt \n',felineSoleusActiveForceLengthDataDefault(1,1));
 disp('Average error on the descending limb');
 fprintf('%1.6f lce/lopt \n',dx);
@@ -424,8 +420,10 @@ save('output/structs/normalizedFiberLengthStartHerzogLeonard2002.mat',...
      'lceNStart');
 
 
+if(flag_plotAllCurves==1)
     figH = plotStructOfBezierSplines( felineSoleusNormMuscleCurvesUpd_ET,...
                                       {'Inverse','use'});                          
+
 
 %%
 % Plot the derivative of the tendon force length curve on top of the
@@ -441,83 +439,83 @@ figure(figH.tendonStiffnessCurve);
     ymin = min(curveSample.y);
     ymax = max(curveSample.y);
 
-subplot(2,2,1);
-  plot(curveSample.x, curveSample.dydx,...
-    '--','Color',[1,1,1].*0.5,'LineWidth',2);
-  hold on;
-%%
-%Plot experimental data over top of the curves where it is available.
-%%
-figure(figH.activeForceLengthCurve);
-  subplot(2,2,1);  
-  plot(  felineSoleusActiveForceLengthDataDefault(:,1),...
-       felineSoleusActiveForceLengthDataDefault(:,2),'xb');
-  hold on;          
+    subplot(2,2,1);
+      plot(curveSample.x, curveSample.dydx,...
+        '--','Color',[1,1,1].*0.5,'LineWidth',2);
+      hold on;
+    %%
+    %Plot experimental data over top of the curves where it is available.
+    %%
+    figure(figH.activeForceLengthCurve);
+      subplot(2,2,1);  
+      plot(  felineSoleusActiveForceLengthDataDefault(:,1),...
+           felineSoleusActiveForceLengthDataDefault(:,2),'xb');
+      hold on;          
 
-figure(figH.fiberForceLengthCurve);
-  subplot(2,2,1);
-  plot(   felineSoleusPassiveForceLengthDataDefault(:,1),...
-          felineSoleusPassiveForceLengthDataDefault(:,2),'xb');
-  hold on;          
-  
-%%
-% Plot the passive force length curve of the 2 segment titin model and
-% compare it to the passive force length curve
-%%
+    figure(figH.fiberForceLengthCurve);
+      subplot(2,2,1);
+      plot(   felineSoleusPassiveForceLengthDataDefault(:,1),...
+              felineSoleusPassiveForceLengthDataDefault(:,2),'xb');
+      hold on;          
+      
+    %%
+    % Plot the passive force length curve of the 2 segment titin model and
+    % compare it to the passive force length curve
+    %%
 
-lceN0 = calcBezierFcnXGivenY(0, ...
-          felineSoleusNormMuscleCurvesUpd_ET.fiberForceLengthCurve);
-lceN1 = calcBezierFcnXGivenY(1, ...
-          felineSoleusNormMuscleCurvesUpd_ET.fiberForceLengthCurve);
-        
-npts = 100;
-lceNSeries = [lceN0:((lceN1-lceN0)/(npts-1)):lceN1]';
+    lceN0 = calcBezierFcnXGivenY(0, ...
+              felineSoleusNormMuscleCurvesUpd_ET.fiberForceLengthCurve);
+    lceN1 = calcBezierFcnXGivenY(1, ...
+              felineSoleusNormMuscleCurvesUpd_ET.fiberForceLengthCurve);
+            
+    npts = 100;
+    lceNSeries = [lceN0:((lceN1-lceN0)/(npts-1)):lceN1]';
 
-fNSeries = zeros(npts,4); % fpe, fecm, fIgp, fPevkIgd,
-lNSeries = zeros(npts,4); % lpe, lecm, lIgp, lPevkIgd,
+    fNSeries = zeros(npts,4); % fpe, fecm, fIgp, fPevkIgd,
+    lNSeries = zeros(npts,4); % lpe, lecm, lIgp, lPevkIgd,
 
-normLengthIgdFixed = ...
-  sarcomerePropertiesOpus31_ET.IGDFixedNormLengthAtOptimalFiberLength;
+    normLengthIgdFixed = ...
+      sarcomerePropertiesOpus31_ET.IGDFixedNormLengthAtOptimalFiberLength;
 
-normLengthT12ToZ = ...
-  sarcomerePropertiesOpus31_ET.ZLineToT12NormLengthAtOptimalFiberLength;
+    normLengthT12ToZ = ...
+      sarcomerePropertiesOpus31_ET.ZLineToT12NormLengthAtOptimalFiberLength;
 
 
-for i=1:1:npts
-  lceN  = lceNSeries(i,1);
-  fpeN  = calcBezierYFcnXDerivative(lceN,...
-            felineSoleusNormMuscleCurvesUpd_ET.fiberForceLengthCurve,0);
-  fecmN = calcBezierYFcnXDerivative(lceN*0.5,...
-            felineSoleusNormMuscleCurvesUpd_ET.forceLengthECMHalfCurve,0);
-          
-  lIgpPevkN = lceN*0.5 - normLengthIgdFixed - normLengthT12ToZ; 
-          
-  [lPN, lDN, fTiN] = calcSeriesSpringStretch(lIgpPevkN,...
-            felineSoleusNormMuscleCurvesUpd_ET.forceLengthProximalTitinCurve,...
-            felineSoleusNormMuscleCurvesUpd_ET.forceLengthProximalTitinInverseCurve, ...
-            felineSoleusNormMuscleCurvesUpd_ET.forceLengthDistalTitinCurve,...
-            felineSoleusNormMuscleCurvesUpd_ET.forceLengthDistalTitinInverseCurve);          
+    for i=1:1:npts
+      lceN  = lceNSeries(i,1);
+      fpeN  = calcBezierYFcnXDerivative(lceN,...
+                felineSoleusNormMuscleCurvesUpd_ET.fiberForceLengthCurve,0);
+      fecmN = calcBezierYFcnXDerivative(lceN*0.5,...
+                felineSoleusNormMuscleCurvesUpd_ET.forceLengthECMHalfCurve,0);
+              
+      lIgpPevkN = lceN*0.5 - normLengthIgdFixed - normLengthT12ToZ; 
+              
+      [lPN, lDN, fTiN] = calcSeriesSpringStretch(lIgpPevkN,...
+                felineSoleusNormMuscleCurvesUpd_ET.forceLengthProximalTitinCurve,...
+                felineSoleusNormMuscleCurvesUpd_ET.forceLengthProximalTitinInverseCurve, ...
+                felineSoleusNormMuscleCurvesUpd_ET.forceLengthDistalTitinCurve,...
+                felineSoleusNormMuscleCurvesUpd_ET.forceLengthDistalTitinInverseCurve);          
 
-  fNSeries(i,:) = [fpeN,fecmN,fTiN, fTiN];
-  lNSeries(i,:) = [lceN, lceN,lPN*2, lDN*2];
-          
+      fNSeries(i,:) = [fpeN,fecmN,fTiN, fTiN];
+      lNSeries(i,:) = [lceN, lceN,lPN*2, lDN*2];
+              
+    end
+
+
+    fig_forceLength = figure;
+      plot(lNSeries(:,1),fNSeries(:,1),'k');
+      hold on;
+      plot(lNSeries(:,1), fNSeries(:,2)+fNSeries(:,3),'b');
+      hold on;
+      plot(lNSeries(:,1), fNSeries(:,2),'r');
+      hold on;
+      plot(felineSoleusPassiveForceLengthDataDefault(:,1),...
+           felineSoleusPassiveForceLengthDataDefault(:,2),'xb');
+      legend('fpe','fecm+fti','fecm','data');
+      xlabel('Norm. Length')
+      ylabel('Norm. Force');
+      
 end
-
-
-fig_forceLength = figure;
-  plot(lNSeries(:,1),fNSeries(:,1),'k');
-  hold on;
-  plot(lNSeries(:,1), fNSeries(:,2)+fNSeries(:,3),'b');
-  hold on;
-  plot(lNSeries(:,1), fNSeries(:,2),'r');
-  hold on;
-  plot(felineSoleusPassiveForceLengthDataDefault(:,1),...
-       felineSoleusPassiveForceLengthDataDefault(:,2),'xb');
-  legend('fpe','fecm+fti','fecm','data');
-  xlabel('Norm. Length')
-  ylabel('Norm. Force');
-  
-
 
                    
 
@@ -534,10 +532,3 @@ fig_forceLength = figure;
 %                       pubOutputFolder);
 % end
    
-%%
-% Remove the directories ...
-%%
-rmpath(parametersDirectoryTreeMTParams);
-rmpath(parametersDirectoryTreeExperiments);
-rmpath(parametersDirectoryTreeModels);
-rmpath(parametersDirectoryTreeCurves);

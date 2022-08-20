@@ -49,7 +49,6 @@ case 0
     %% Create the updated f1(l1) and f2(l2) curves
     flag_useElasticIgD        = 1;
     flag_activeTitinModel     = 0;
-    flag_useHumanIgDGeometry  = 0;
     flag_createTwoSidedCurves = 0;
 
     normMuscleCurves.useCalibratedCurves =1;
@@ -69,7 +68,6 @@ case 0
                                        flag_computeCurveIntegrals,...
                                        flag_useElasticIgD,...
                                        flag_activeTitinModel,...
-                                       flag_useHumanIgDGeometry,...
                                        flag_useOctave);     
     case 1
 
@@ -98,7 +96,6 @@ case 0
         flag_activeTitinModel     = 1;
         % 0: Sticky spring model: a point on the PEVK segment bonds to actin with activation
         % 1: Stiffened spring model: the PEVK segment is prevented from lengthening upon activation
-        flag_useHumanIgDGeometry  = 0;
         flag_createTwoSidedCurves = 0;
 
         normMuscleCurves.useCalibratedCurves =1;
@@ -117,7 +114,6 @@ case 0
                                            flag_computeCurveIntegrals,...
                                            flag_useElasticIgD,...
                                            flag_activeTitinModel,...
-                                           flag_useHumanIgDGeometry,...
                                            flag_useOctave); 
 
     otherwise

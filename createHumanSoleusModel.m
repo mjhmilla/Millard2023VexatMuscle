@@ -1,23 +1,18 @@
-flag_outerLoopMode = 0;
+function defaultHumanSoleusModel = createHumanSoleusModel(...
+                                      normPevkToActinAttachmentPoint,...
+                                      normFiberLengthAtOneNormPassiveForce,...                                      
+                                      outputMatFileLocation,...
+                                      smallNumericallyNonZeroNumber,...
+                                      flag_enableNumericallyNonZeroGradients,...
+                                      flag_plotAllCurves,...
+                                      flag_useOctave)
 
-if(flag_outerLoopMode == 0)
-  clc;
-  close all;  
-  clear all;
+
+%Potential variables to expose
+rigidTendonReferenceModel             = [];
+elasticTendonReferenceModel           = [];
 
 
-  rigidTendonReferenceModel             = [];
-  elasticTendonReferenceModel           = [];
-  normPevkToActinAttachmentPoint        = 0.5;
-  normFiberLengthAtOneNormPassiveForce  = 1.367732948060934e+00;
-  
-end
-
-pubOutputFolder                 = 'output/plots/MuscleCurves/';
-postprocessingDirectoryTree     = genpath('postprocessing');
-addpath(postprocessingDirectoryTree   );
-
-flag_useOctave = 0;
 flag_enableNumericallyNonZeroGradients    = 1;
 flag_plotEveryDefaultCurve = 0;
 
@@ -65,7 +60,7 @@ createMusculoTendonFcn = ...
 humanSoleusActiveForceLengthData  = [];
 humanSoleusPassiveForceLengthData = [];
 
-%We have no data to fit to, and so these options are not used
+%We have no data to fit to, and so these options cannot be used
 flag_solveForOptimalFiberLengthOfBestFit         = 0; 
 shiftLengthActiveForceLengthCurveDescendingCurve = 0.;
 
@@ -101,48 +96,13 @@ defaultHumanSoleus = struct('musculotendon',...
                             'curves',...
                             humanSoleusNormMuscleCurvesDefault);
                       
-save('output/structs/defaultHumanSoleus.mat',...
+save(outputMatFileLocation,...
      'defaultHumanSoleus');  
 
-
-
-if(isempty(elasticTendonReferenceModel)==0)
-    disp('Using reference model');        
-    tmp=load(elasticTendonReferenceModel);
-    modelName = fields(tmp);
-    humanSoleusSarcomerePropertiesUpd_ET = tmp.(modelName{1}).sarcomere;
-    humanSoleusNormMuscleCurvesUpd_ET    = tmp.(modelName{1}).curves;
-else
-    disp('Using default model');
-    humanSoleusSarcomerePropertiesUpd_ET = humanSoleusSarcomerePropertiesDefault;
-    humanSoleusNormMuscleCurvesUpd_ET    = humanSoleusNormMuscleCurvesDefault;
+if(flag_plotAllCurves==1)
+  figH = plotStructOfBezierSplines( humanSoleusNormMuscleCurvesUpd_ET,...
+                                    {'Inverse','use'});                          
 end
-
-
-if(isempty(rigidTendonReferenceModel)==0)
-    disp('Using default model');        
-    tmp=load(rigidTendonReferenceModel);
-    modelName = fields(tmp);
-    humanSoleusSarcomerePropertiesUpd_RT = tmp.(modelName{1}).sarcomere;
-    humanSoleusNormMuscleCurvesUpd_RT    = tmp.(modelName{1}).curves;
-else
-    disp('Using reference model');
-    humanSoleusSarcomerePropertiesUpd_RT = humanSoleusSarcomerePropertiesDefault;
-    humanSoleusNormMuscleCurvesUpd_RT    = humanSoleusNormMuscleCurvesDefault;
-
-end
-
-
-
-figH = plotStructOfBezierSplines( humanSoleusNormMuscleCurvesUpd_ET,...
-                                  {'Inverse','use'});                          
-
 
    
-%%
-% Remove the directories ...
-%%
-rmpath(parametersDirectoryTreeMTParams);
-rmpath(parametersDirectoryTreeExperiments);
-rmpath(parametersDirectoryTreeModels);
-rmpath(parametersDirectoryTreeCurves);
+
