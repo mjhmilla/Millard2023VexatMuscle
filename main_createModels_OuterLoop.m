@@ -21,8 +21,14 @@ normFiberLengthAtOneNormPassiveForce=1.367732948060934e+00;
 
 useCalibratedCurves = 1;
 
-flag_fitToFig3KirchBoskovRymer1994            = 0;
-fitCrossBridgeStiffnessDampingToKirch199490Hz = 1;
+smallNumericallyNonZeroNumber =sqrt(sqrt(eps));
+flag_enableNumericallyNonZeroGradients = 1;
+rigidTendonReferenceModel   = [];
+elasticTendonReferenceModel = [];
+flag_plotAllCurves = 1;
+flag_useOctave     = 1;
+
+
 
 rigidTendonReferenceModel = [];%...
 %    'output/structs/felineSoleusRigidTendonKBR1994Fig12.mat';
@@ -56,6 +62,15 @@ felineSoleusPassiveForceLengthCurveSettings]...
 save('/output/structs/defaultFelineSoleus.mat',...
      'defaultFelineSoleus');  
 
+
+%%
+% Fit the active properties of the default feline soleus muscle
+%%
+
+
+flag_fitToFig3KirchBoskovRymer1994            = 0;
+fitCrossBridgeStiffnessDampingToKirch199490Hz = 1;
+
 close all;
 
 flag_fitToFig3KirchBoskovRymer1994              = 1;
@@ -78,3 +93,18 @@ flag_makeAndSavePubPlots       = 0;
 %      as closely as possible.
 %%
 main_createDefaultFelineSoleusModel;
+
+%%
+% Rabbit psoas model
+%%
+defaultRabbitPsoasFibril = createRabbitPsoasFibrilModel(...
+                                      normPevkToActinAttachmentPoint,...
+                                      normFiberLengthAtOneNormPassiveForce,...
+                                      useCalibratedCurves,...
+                                      outputMatFileLocation,...
+                                      smallNumericallyNonZeroNumber,...
+                                      flag_enableNumericallyNonZeroGradients,...
+                                      flag_plotAllCurves,...
+                                      flag_useOctave);
+
+
