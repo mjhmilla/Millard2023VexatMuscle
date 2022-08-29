@@ -1,6 +1,8 @@
 function fittedFelineSoleus = fitFelineSoleusPevkActinBondLocation( ...
                                 defaultFelineSoleus,...
                                 flag_useElasticTendon,...
+                                useCalibratedCurves,...
+                                useTwoSidedTitinCurves,...
                                 felineSoleusPassiveForceLengthCurveSettings)
 
 %The parameters updated are the 
@@ -28,9 +30,9 @@ dataFolder = 'experiments/HerzogLeonard2002/fitting/';
 fittedFelineSoleus=defaultFelineSoleus;
 
 if(defaultFelineSoleus.musculotendon.titinModelType==1)
-    fittedFelineSoleus.curves.useTwoSidedTitinCurves=0;
+    fittedFelineSoleus.curves.useTwoSidedTitinCurves=useTwoSidedTitinCurves;
 end
-fittedFelineSoleus.curves.useCalibratedCurves = 1;
+fittedFelineSoleus.curves.useCalibratedCurves = useCalibratedCurves;
 
     
 [sarcomerePropertiesUpd,...

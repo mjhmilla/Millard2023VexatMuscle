@@ -69,7 +69,7 @@ if(flag_assumeUniformIgDomainLength==1)
   lineIgD = lineIgTotal.*(numDomainsIgD/(numDomainsIgP+numDomainsIgD));
 
   cZToPEVKpAdj = lineIgP + [0;lT12];
-  cZToPEVKdAdj = cZToPEVKp + linePevk;  
+  cZToPEVKdAdj = cZToPEVKpAdj + linePevk;  
 
 end
 
