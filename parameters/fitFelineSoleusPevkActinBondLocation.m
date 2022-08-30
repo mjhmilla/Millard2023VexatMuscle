@@ -29,8 +29,22 @@ dataFolder = 'experiments/HerzogLeonard2002/fitting/';
 
 fittedFelineSoleus=defaultFelineSoleus;
 
-if(defaultFelineSoleus.musculotendon.titinModelType==1)
-    fittedFelineSoleus.curves.useTwoSidedTitinCurves=useTwoSidedTitinCurves;
+tendonStr = '';
+if(flag_useElasticTendon==1)
+    tendonStr = 'ET';
+else
+    tendonStr = 'RT';
+end
+
+fittingStr = sprintf('HL2002_%i%i%i_%s',...
+                    figureNumber,subFigureNumber, trialNumber,tendonStr);
+
+fittedFelineSoleus.fitting = [fittedFelineSoleus.fitting;...
+                              {fittingStr}];
+
+if(defaultFelineSoleus.sarcomere.titinModelType==1)
+    fittedFelineSoleus.curves.useTwoSidedTitinCurves=...
+        useTwoSidedTitinCurves;
 end
 fittedFelineSoleus.curves.useCalibratedCurves = useCalibratedCurves;
 

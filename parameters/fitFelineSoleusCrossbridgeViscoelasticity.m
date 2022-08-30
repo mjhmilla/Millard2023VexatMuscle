@@ -2,19 +2,28 @@ function fittedFelineSoleus = fitFelineSoleusCrossbridgeViscoelasticity( ...
                                 defaultFelineSoleus,...
                                 flag_useElasticTendon,...
                                 figNameGainPhase,...
+                                frequencyName,...
                                 felineSoleusActiveForceLengthDataDefault,...
                                 felineSoleusPassiveForceLengthCurveSettings)
 
 
 
-flag_ZeroFitToFig12_OneFitToFig3_KBR1994 = nan;
-
+flag_figureNumberToFitTo = nan;
 if(contains(figNameGainPhase,'Fig3'))
-    flag_ZeroFitToFig12_OneFitToFig3_KBR1994=1;
-else if(contains(figNameGainPhase,'Fig12'))
-    flag_ZeroFitToFig12_OneFitToFig3_KBR1994=0;
+    flag_figureNumberToFitTo=3;
+elseif(contains(figNameGainPhase,'Fig12'))
+    flag_figureNumberToFitTo=12;
 else
     assert(0,sprintf('Error: figNameGainPhase must be Fig3 or Fig12 not %s',figNameGainPhase));
+end
+
+flag_frequencyToFitTo = nan;
+if(contains(frequencyName,'90Hz'))
+    flag_frequencyToFitTo = 90;
+elseif(contains(frequencyName,'15Hz'))
+    flag_frequencyToFitTo = 15;
+else
+    assert(0,sprintf('Error: frequencyName must be 15Hz or 90Hz not %s',frequencyName));
 end
 
 %%
@@ -90,20 +99,12 @@ nominalForceKDFit              = 5; %Stiffness & damping fit done at 5N tension
 scaleSlidingTimeConstant       = 1;
 scaleCrossBridgeCyclingDamping = 1;
 
-
-musculotendonProperties             = defaultFelineSoleus.musculotendon;
-sarcomereProperties                 = defaultFelineSoleus.sarcomere;
-normMuscleCurvesDefault             = defaultFelineSoleus.curves;
-
-
 normTendonDampingConstant = ...
-    musculotendonProperties.normTendonDampingConstant;
+    defaultFelineSoleus.musculotendon.normTendonDampingConstant;
 normTendonDampingLinear = ...
-    musculotendonProperties.normTendonDampingLinear;
+    defaultFelineSoleus.musculotendon.normTendonDampingLinear;
 
 flag_updateNormFiberLengthByTendonStretch = 1;
-
-
 
 
 %Note:  is updateOpus31CrossBridgeParameters using the tendon damping model that
@@ -114,7 +115,8 @@ disp('     : and pass in kmt and dmt here.');
 [fittedMusculotendonProperties,fittedSarcomerePropertiesOpus31] = ...
   updateOpus31CrossBridgeParameters(nominalForceKDFit,...
                                     nominalNormFiberLengthAtSlack,...
-                                    flag_ZeroFitToFig12_OneFitToFig3_KBR1994,...
+                                    flag_figureNumberToFitTo,...
+                                    flag_frequencyToFitTo,...
                                     dataKBR1994Fig3Gain,...
                                     dataKBR1994Fig3Phase,...
                                     dataKBR1994Fig12K,...
@@ -124,24 +126,35 @@ disp('     : and pass in kmt and dmt here.');
                                     scaleSlidingTimeConstant,...
                                     scaleCrossBridgeCyclingDamping,...
                                     flag_useElasticTendon,...
-                                    musculotendonProperties,...
-                                    sarcomereProperties,...
+                                    defaultFelineSoleus.musculotendon,...
+                                    defaultFelineSoleus.sarcomere,...
                                     normMuscleCurves,...
                                     flag_useOctave);                                  
                                   
-
+tendonStr = '';
+if(flag_useElasticTendon==1)
+    tendonStr = 'ET';
+else
+    tendonStr = 'RT';
+end
+fittingStr = sprintf('KBR1994_%s_%s',figNameGainPhase,frequencyName);
 
 fittedFelineSoleus = defaultFelineSoleus;
-fittedFelineSoleus.curves        = normMuscleCurves_RT;
-fittedFelineSoleus.musculotendon = musculotendonPropertiesOpus31_RT;
-fittedFelineSoleus.sarcomere     = sarcomerePropertiesOpus31_RT;
+fittedFelineSoleus.curves        = defaultFelineSoleus.curves;
+fittedFelineSoleus.musculotendon = fittedMusculotendonProperties;
+fittedFelineSoleus.sarcomere     = fittedSarcomerePropertiesOpus31;
+fittedFelineSoleus.fitting = [fittedFelineSoleus.fitting,...
+                              {fittingStr}];
+
+
+
 
 
 flag_skipThisCode = 1;
 
 if(flag_skipThisCode==0)
     figNameGainPhase = 'Fig12';
-    if(flag_ZeroFitToFig12_OneFitToFig3_KBR1994==1)
+    if(flag_figureNumberToFitTo==3)
       figNameGainPhase = 'Fig3';  
     end
 

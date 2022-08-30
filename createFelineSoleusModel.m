@@ -8,21 +8,17 @@ function [defaultFelineSoleusModel,...
                                     useCalibratedCurves,...
                                     useTwoSidedTitinCurves,...
                                     smallNumericallyNonZeroNumber,...
-                                    flag_enableNumericallyNonZeroGradients,...
-                                    rigidTendonReferenceModel,...
-                                    elasticTendonReferenceModel,...
-                                    flag_plotAllCurves,...
+                                    flag_enableNumericallyNonZeroGradients,... 
+                                    scaleOptimalFiberLength,... 
+                                    scaleMaximumIsometricTension,...
                                     flag_useOctave)
 
-
+rigidTendonReferenceModel   = [];
+elasticTendonReferenceModel = [];
 
 %  flag_makeAndSavePubPlots                      = 1;
-disp('Delete these parameters once they are in the fitting functions');
-flag_fitToFig3KirchBoskovRymer1994               = 0;
-fitCrossBridgeStiffnessDampingToKirch199490Hz    = 1;
-flag_fitActiveTitinProperties                    = 0;
 
-flag_plotEveryDefaultCurve               = 0;
+
 
 % 1. Active force length curve vs. data
 % Solution: There were some initial descrepencies between the experimental force
@@ -45,24 +41,22 @@ shiftLengthActiveForceLengthCurveDescendingCurve = 0.;%...
 %%
 % Add the directories needed to run this script
 %%
-parametersDirectoryTreeMTParams     = genpath('parameters');
-parametersDirectoryTreeExperiments  = genpath('experiments');
-parametersDirectoryTreeModels       = genpath('models');
-parametersDirectoryTreeCurves       = genpath('curves');
-parametersDirectoryTreeSimulation   = genpath('simulation');
+% parametersDirectoryTreeMTParams     = genpath('parameters');
+% parametersDirectoryTreeExperiments  = genpath('experiments');
+% parametersDirectoryTreeModels       = genpath('models');
+% parametersDirectoryTreeCurves       = genpath('curves');
+% parametersDirectoryTreeSimulation   = genpath('simulation');
+% 
+% addpath(parametersDirectoryTreeMTParams);
+% addpath(parametersDirectoryTreeExperiments);
+% addpath(parametersDirectoryTreeModels);
+% addpath(parametersDirectoryTreeCurves);
+% addpath(parametersDirectoryTreeSimulation);
 
-addpath(parametersDirectoryTreeMTParams);
-addpath(parametersDirectoryTreeExperiments);
-addpath(parametersDirectoryTreeModels);
-addpath(parametersDirectoryTreeCurves);
-addpath(parametersDirectoryTreeSimulation);
 
-scaleOptimalFiberLength      = 1.0; 
-scaleMaximumIsometricTension = 1;
-
-if(exist('fitCrossBridgeStiffnessDampingToKirch199490Hz','var')==0)
-  fitCrossBridgeStiffnessDampingToKirch199490Hz = 1;
-end
+%if(exist('fitCrossBridgeStiffnessDampingToKirch199490Hz','var')==0)
+%  fitCrossBridgeStiffnessDampingToKirch199490Hz = 1;
+%end
 
 [felineSoleusMusculotendonProperties, ...
  felineSoleusSarcomereProperties,...
@@ -72,7 +66,6 @@ end
                         scaleMaximumIsometricTension,...
                         normFiberLengthAtOneNormPassiveForce,...
                         normPevkToActinAttachmentPoint,...
-                        fitCrossBridgeStiffnessDampingToKirch199490Hz,...
                         flag_useOctave);
 
 createMusculoTendonFcn = ...
@@ -81,7 +74,6 @@ createMusculoTendonFcn = ...
                                         argScaleFiso,...
                                         normFiberLengthAtOneNormPassiveForce,...
                                         normPevkToActinAttachmentPoint,...
-                                        fitCrossBridgeStiffnessDampingToKirch199490Hz,...
                                         flag_useOctave); 
                                         
 [felineSoleusNormMuscleCurvesDefault,...
@@ -115,11 +107,15 @@ createMusculoTendonFcn = ...
 fpe2 = felineSoleusNormMuscleCurvesDefault.fiberForceLengthCurve.yEnd(1,2);
 lpe2 = felineSoleusNormMuscleCurvesDefault.fiberForceLengthCurve.xEnd(1,2);
 assert(abs(fpe2-1)<1e-3);
-assert(abs(lpe2-felineSoleusSarcomerePropertiesDefault.normFiberLengthAtOneNormPassiveForce)<1e-3);
+errLp2 = 1e-3;
+if(isempty(felineSoleusPassiveForceLengthData)==0)
+    errLp2 = 0.05;
+end
+assert(abs(lpe2-felineSoleusSarcomerePropertiesDefault.normFiberLengthAtOneNormPassiveForce)<errLp2);
 
 
 
-defaultFelineSoleus = struct('musculotendon',...
+defaultFelineSoleusModel = struct('musculotendon',...
                             felineSoleusMusculotendonPropertiesDefault,...
                             'sarcomere',...
                             felineSoleusSarcomerePropertiesDefault,...
@@ -128,7 +124,9 @@ defaultFelineSoleus = struct('musculotendon',...
                             'fpeData',...
                             felineSoleusPassiveForceLengthDataDefault,...
                             'curves',...
-                            felineSoleusNormMuscleCurvesDefault);
+                            felineSoleusNormMuscleCurvesDefault,...
+                            'fitting',...
+                            []);
                       
 
 
@@ -139,6 +137,10 @@ defaultFelineSoleus = struct('musculotendon',...
 
 disp('Todo: delete this block once refactoring is done');
 flag_useActiveTitinFittingFunction = 1;
+disp('Delete these parameters once they are in the fitting functions');
+flag_fitToFig3KirchBoskovRymer1994               = 0;
+fitCrossBridgeStiffnessDampingToKirch199490Hz    = 1;
+flag_fitActiveTitinProperties                    = 0;
 
 if(flag_useActiveTitinFittingFunction==0)
 %Fit the elastic tendon model.
@@ -407,7 +409,7 @@ end
 
 
 disp('Todo: delete this block once refactoring is done');
-flag_skipThisCode = 1
+flag_skipThisCode = 1;
 if(flag_skipThisCode==0)
     %%
     % Note the average offset between the active-force-length curve and
@@ -438,6 +440,7 @@ if(flag_skipThisCode==0)
          'lceNStart');
 
 
+    flag_plotAllCurves=0;
     if(flag_plotAllCurves==1)
         figH = plotStructOfBezierSplines( felineSoleusNormMuscleCurvesUpd_ET,...
                                           {'Inverse','use'});                          

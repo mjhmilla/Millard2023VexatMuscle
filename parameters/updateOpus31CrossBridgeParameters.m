@@ -1,7 +1,8 @@
 function [muscleArchitectureUpd,sarcomerePropertiesUpd] = ...
   updateOpus31CrossBridgeParameters(nominalForceN,...
                                     nominalNormFiberLengthAtSlack,...
-                                    flag_useDataFromFig3,...
+                                    flag_figureNumberToFitTo,...
+                                    flag_frequencyToFitTo,...
                                     dataKBR1994Fig3Gain,...
                                     dataKBR1994Fig3Phase,...
                                     dataKBR1994Fig12K,...
@@ -39,7 +40,7 @@ muscleArchitectureUpd.normTendonDampingConstant = normTendonDampingConstant;
 kmt = 0;
 dmt = 0;
 
-if(flag_useDataFromFig3==1)
+if(flag_figureNumberToFitTo==3)
   %Fit stiffness and damping values to the gain and phase curves
   
   k0 = 3000;
@@ -49,12 +50,14 @@ if(flag_useDataFromFig3==1)
   idxFig3Freq=0;
   freqHz = [];
   
-  if(sarcomereProperties.fitCrossBridgeStiffnessDampingToKirch199490Hz==1)
+  if(flag_frequencyToFitTo==90)
     idxFig3Freq = idx90;
     freqHz = [4:1:90]';
-  else
+  elseif(flag_frequencyToFitTo==15)
     idxFig3Freq = idx15;
     freqHz = [4:1:20]';
+  else 
+    assert(0,'Error: flag_frequencyToFitTo must be 15 or 90');
   end
 
   
@@ -126,7 +129,9 @@ if(flag_useDataFromFig3==1)
   
   %dataKBR1994Fig3Gain
  %dataKBR1994Fig3Phase;
-else
+end
+
+if(flag_figureNumberToFitTo==12)
 
   dataF = dataKBR1994Fig12K(1:1:end).x;
   dataK = dataKBR1994Fig12K(1:1:end).y;
@@ -142,6 +147,10 @@ else
 
   %Ignore the small constant offset
   dmt = (fitD.p1*nominalForceN + fitD.p2)*1000;
+end
+
+if(flag_figureNumberToFitTo ~= 3 && flag_figureNumberToFitTo ~= 12)
+    assert(0,'Error: flag_figureNumberToFitTo must be 3 or 12');
 end
 
 %%

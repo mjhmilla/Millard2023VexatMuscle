@@ -27,27 +27,6 @@ humanSoleusPassiveForceLengthData = [];
 flag_solveForOptimalFiberLengthOfBestFit         = 0; 
 shiftLengthActiveForceLengthCurveDescendingCurve = 0.;
 
-
-%flag_enableNumericallyNonZeroGradients    = 1;
-%flag_plotEveryDefaultCurve = 0;
-%smallNumericallyNonZeroNumber           = sqrt(sqrt(eps));
-
-%%
-% Add the directories needed to run this script
-%%
-%parametersDirectoryTreeMTParams     = genpath('parameters');
-%parametersDirectoryTreeExperiments  = genpath('experiments');
-%parametersDirectoryTreeModels       = genpath('models');
-%parametersDirectoryTreeCurves       = genpath('curves');
-%parametersDirectoryTreeSimulation   = genpath('simulation');
-
-%addpath(parametersDirectoryTreeMTParams);
-%addpath(parametersDirectoryTreeExperiments);
-%addpath(parametersDirectoryTreeModels);
-%addpath(parametersDirectoryTreeCurves);
-%addpath(parametersDirectoryTreeSimulation);
-
-
 [humanSoleusMusculotendonProperties, ...
  humanSoleusSarcomereProperties,...
  humanSoleusActiveForceLengthData,...
