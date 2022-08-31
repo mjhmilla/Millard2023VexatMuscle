@@ -2,7 +2,8 @@ function [sarcomereProperties] = ...
           getMammalianSkeletalMuscleNormalizedSarcomereProperties(...
                                 animalName,...
                                 normFiberLengthAtOneNormPassiveForce,...
-                                normPevkToActinAttachmentPoint)  
+                                normPevkToActinAttachmentPoint,...
+                                ecmForceFraction)  
 %%
 % This function constructs the normalized lengths of the main components
 % of a sarcomere and titin. The data on the relative lengths of actin,
@@ -194,12 +195,12 @@ calcTitinSegmentLengths(  sarcomereLengthHumanOneFpeN, ...
                           optSarcomereLengthHuman, ...
                           zLineToT12LengthHuman);
                        
-fprintf('%e\t%e\tT12\n'          , lTitinHumanOpt.lT12,      lTitinHumanOpt.lT12Norm);
-fprintf('%e\t%e\tIgP\n'          , lTitinHumanOpt.lIgp,      lTitinHumanOpt.lIgpNorm);
-fprintf('%e\t%e\tPEVK\n'         , lTitinHumanOpt.lPevk,     lTitinHumanOpt.lPevkNorm);
-fprintf('%e\t%e\tIgD\n'          , lTitinHumanOpt.lIgdTotal, lTitinHumanOpt.lIgdTotalNorm);
-fprintf('%e\t%e\tIgDFixedHuman\n', lTitinHumanOpt.lIgdFixed, lTitinHumanOpt.lIgdFixedNorm);
-fprintf('%e\t%e\tIgDFreeHuman\n' , lTitinHumanOpt.lIgdFree,  lTitinHumanOpt.lIgdFreeNorm);
+% fprintf('%e\t%e\tT12\n'          , lTitinHumanOpt.lT12,      lTitinHumanOpt.lT12Norm);
+% fprintf('%e\t%e\tIgP\n'          , lTitinHumanOpt.lIgp,      lTitinHumanOpt.lIgpNorm);
+% fprintf('%e\t%e\tPEVK\n'         , lTitinHumanOpt.lPevk,     lTitinHumanOpt.lPevkNorm);
+% fprintf('%e\t%e\tIgD\n'          , lTitinHumanOpt.lIgdTotal, lTitinHumanOpt.lIgdTotalNorm);
+% fprintf('%e\t%e\tIgDFixedHuman\n', lTitinHumanOpt.lIgdFixed, lTitinHumanOpt.lIgdFixedNorm);
+% fprintf('%e\t%e\tIgDFreeHuman\n' , lTitinHumanOpt.lIgdFree,  lTitinHumanOpt.lIgdFreeNorm);
 
 numDomainsIgP     = nan;    
 numResiduesPevk   = nan;     
@@ -354,14 +355,14 @@ normStretchRatePevk    = (lineZToPevkD(1,1)-lineZToPevkP(1,1));
 normStretchRateIgDFree = (0.5 -(normStretchRateIgP+normStretchRatePevk));
 normStretchHalfLce     = stretchHalfLce/optSarcomereLengthHuman;
 
-fprintf('%e\t%e\tNorm. IgP Stretch Rate human vs %s \n'   , ...
-    normStretchRateHumanIgP, normStretchRateIgP, animalName);
-fprintf('%e\t%e\tNorm. Pevk Stretch Rate human vs %s \n'  , ...
-    normStretchRateHumanPevk, normStretchRatePevk, animalName);
-fprintf('%e\t%e\tNorm. IgD Stretch Rate human vs %s \n'   , ...
-    normStretchRateHumanIgDFree, normStretchRateIgDFree, animalName);
-fprintf('%e\tlce stretch (Trobitas et al.) \n'         , ...
-    normStretchHalfLce);
+% fprintf('%e\t%e\tNorm. IgP Stretch Rate human vs %s \n'   , ...
+%     normStretchRateHumanIgP, normStretchRateIgP, animalName);
+% fprintf('%e\t%e\tNorm. Pevk Stretch Rate human vs %s \n'  , ...
+%     normStretchRateHumanPevk, normStretchRatePevk, animalName);
+% fprintf('%e\t%e\tNorm. IgD Stretch Rate human vs %s \n'   , ...
+%     normStretchRateHumanIgDFree, normStretchRateIgDFree, animalName);
+% fprintf('%e\tlce stretch (Trobitas et al.) \n'         , ...
+%     normStretchHalfLce);
 
 
 %
@@ -384,33 +385,33 @@ fprintf('%e\tlce stretch (Trobitas et al.) \n'         , ...
 % 2005 Nov;126(5):461-80.
 %
 
-ecmPradoAverage = 0.56;
+
 %Lacking any better data, I'll assign the
 %ecmCellularMatrixPassiveForceFraction to be the average across 5 rabbit
 %skeletal muscles as reported by Prado et al.
 
-extraCellularMatrixPassiveForceFraction = nan; %1-0.5*(0.24+0.57);
+extraCellularMatrixPassiveForceFraction = ecmForceFraction; %1-0.5*(0.24+0.57);
 
-switch animalId
-    case 1
-        %cat-soleus
-        extraCellularMatrixPassiveForceFraction = ecmPradoAverage; 
-    case 2
-        %human
-        extraCellularMatrixPassiveForceFraction = ecmPradoAverage;         
-    case 3
-        %frog
-        assert(0, 'Error: no ECM data available on frog skeletal muscle');
-    case 4
-        %rabbit
-        titinFraction = 0.728-0.158;
-        extraCellularMatrixPassiveForceFraction = 1-titinFraction;
-        % extraCellularMatrixPassiveForceFraction should probably be 
-        % renamed to extraMyofibrillarPassiveForceFraction.
-        
-    otherwise
-        assert(0,'Error: animalId not recognized');
-end
+% switch animalId
+%     case 1
+%         %cat-soleus
+%         extraCellularMatrixPassiveForceFraction = ecmForceFraction; 
+%     case 2
+%         %human
+%         extraCellularMatrixPassiveForceFraction = ecmForceFraction;         
+%     case 3
+%         %frog
+%         assert(0, 'Error: no ECM data available on frog skeletal muscle');
+%     case 4
+%         %rabbit
+%         titinFraction = 0.728-0.158;
+%         extraCellularMatrixPassiveForceFraction = 1-titinFraction;
+%         % extraCellularMatrixPassiveForceFraction should probably be 
+%         % renamed to extraMyofibrillarPassiveForceFraction.
+%         
+%     otherwise
+%         assert(0,'Error: animalId not recognized');
+% end
 
 
     

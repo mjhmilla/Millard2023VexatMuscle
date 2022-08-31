@@ -27,10 +27,19 @@
 %            normTendonDampingConstant)
 
 
-if(fitCrossBridgeStiffnessDampingToKirch199490Hz==1)
-  strFittingBandwidth = '90Hz';
-else
-  strFittingBandwidth = '15Hz';
+strFittingBandwidth='';
+if(isempty(sarcomereProperties.fitting)==0)
+
+  for i=1:1:length(sarcomereProperties.fitting)
+      if(contains(sarcomereProperties.fitting{i},'KBR1994'))
+        if(contains(sarcomereProperties.fitting{i},'15Hz'))
+          strFittingBandwidth = '15Hz';
+        end
+        if(contains(sarcomereProperties.fitting{i},'90Hz'))
+          strFittingBandwidth = '90Hz';
+        end
+      end
+  end
 end
 
 nominalNormalizedFiberLengthStr = '';
