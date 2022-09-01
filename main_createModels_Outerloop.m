@@ -315,13 +315,27 @@ fittedFelineSoleusHL2002KBR1994Fig3_RT  = [];
 fittedFelineSoleusHL2002KBR1994Fig12_ET = [];
 fittedFelineSoleusHL2002KBR1994Fig12_RT = [];
 
+perturbationFrequencyName = '90Hz';
+% Kirsch et al. report the frequency response of muscle to 15 Hz and 90 Hz
+% stochastic perturbations in Figure 3. In Figure 9 and 10 the stiffness 
+% and damping coefficients are reported for the 15Hz, 35Hz, and 90Hz 
+% perturbations. In Figure 12 the stiffness and damping coefficients that 
+% best fit the 35 Hz
 
-gainPhaseTypeNames  = {'Fig3','Fig12'};
-gainPhaseTypeValues = [3,12];
-tendonTypeNames     = {'_RT','_ET'};
-tendonTypeValues    = [0,1];
+gainPhaseTypeNames    = {'Fig3','Fig12'};
+gainPhaseTypeValues   = [3,12];
+tendonTypeNames       = {'_RT','_ET'};
+tendonTypeValues      = [0,1];
 
 for indexTendon = 1:1:length(tendonTypeNames)
+
+    switch tendonTypeValues(1,indexTendon)
+        case 0
+            fittedFelineSoleusHL2002=fittedFelineSoleusHL2002_RT;
+        case 1
+            fittedFelineSoleusHL2002=fittedFelineSoleusHL2002_ET;            
+        otherwise assert(0,'Error: Incorrect tendon type');
+    end
 
     for indexGainPhase = 1:1:length(gainPhaseTypeNames)
         flag_useElasticTendon           = tendonTypeValues(1,indexTendon);
@@ -329,11 +343,13 @@ for indexTendon = 1:1:length(tendonTypeNames)
 
         fittedFelineSoleusHL2002KBR1994 = ...
             fitFelineSoleusCrossbridgeViscoelasticity( ...
-                                        fittedFelineSoleusHL2002_ET,...
-                                        flag_useElasticTendon,...
-                                        figNameGainPhase,...
-                                        felineSoleusActiveForceLengthDataDefault,...
-                                        felineSoleusPassiveForceLengthCurveSettings);
+                fittedFelineSoleusHL2002,...
+                flag_useElasticTendon,...
+                figNameGainPhase,...
+                perturbationFrequencyName,...
+                felineSoleusActiveForceLengthDataDefault,...
+                felineSoleusPassiveForceLengthCurveSettings,...
+                flag_useOctave);
 
 
         save(['output/structs/fittedFelineSoleusHL2002KBR1994',...
