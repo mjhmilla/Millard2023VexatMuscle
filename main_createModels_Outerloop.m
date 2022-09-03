@@ -10,7 +10,7 @@ flag_useOctave                        = 0;
 %probably no longer works.
 
 flag_makeAndSavePubPlots              = 1;
-plotOutputFolder                      = '../output/plots/MuscleCurves/';
+plotOutputFolder                      = 'output/plots/MuscleCurves/';
 
 normPevkToActinAttachmentPointDefault = 0.5;
 %The default value for the point of attachment between the PEVK segment
@@ -111,7 +111,7 @@ scaleMaximumIsometricTensionHumanSoleus = 1;
 %%
 % Cat Soleus Model Parameters
 %%
-flag_fitFelineSoleusActiveTitinProperties               = 1;
+flag_fitFelineSoleusActiveTitinProperties               = 0;
 flag_loadFittedFelineSoleusActiveTitinProperties        = 0;
 %Takes 10-20 minutes, but must be done once.
 %Numerically identifies the point of attachement between the PEVK segment
