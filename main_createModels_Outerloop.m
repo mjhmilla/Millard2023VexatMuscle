@@ -20,6 +20,8 @@ normPevkToActinAttachmentPointDefault = 0.5;
 % be the distal end of the PEVK segment (at the PEVK/distal Ig border).
 
 normFiberLengthAtOneNormPassiveForceDefault = 1.367732948060934e+00;
+normFiberLengthAtOneNormPassiveForceRabbitPsoasDefault = ...
+    1 + (normFiberLengthAtOneNormPassiveForceDefault-1)*0.5;
 % This the normalized fiber length at which the passive-force-length curve 
 % used in this work develops 1 maximum isometric force passively when fit to 
 % passive-force length data from Fig. 7 of Herzog & Leonard. This is used as 
@@ -101,22 +103,20 @@ scaleMaximumIsometricTensionRabbitPsoas = 1;
 %%
 % Human Soleus Model parameters
 %%
+flag_plotAllHumanSoleusCurves           = 0;
 scaleOptimalFiberLengthHumanSoleus      = 1.0; 
 scaleMaximumIsometricTensionHumanSoleus = 1;
-flag_plotAllHumanSoleusCurves           = 0;
 
 
 %%
 % Cat Soleus Model Parameters
 %%
-flag_fitFelineSoleusActiveTitinProperties               = 0;
+flag_fitFelineSoleusActiveTitinProperties               = 1;
+flag_loadFittedFelineSoleusActiveTitinProperties        = 0;
 %Takes 10-20 minutes, but must be done once.
 %Numerically identifies the point of attachement between the PEVK segment
 %and actin that produces simulated forces that most closely matches 
 %Herzog & Leonard 2002.
-
-flag_fitToFig3KirchBoskovRymer1994                      = 0;
-flag_fitCrossBridgeStiffnessDampingTo90HzDataKirch1994  = 1;
 
 scaleOptimalFiberLengthCatSoleus        = 1.0; 
 scaleMaximumIsometricTensionCatSoleus   = 1;
@@ -178,7 +178,6 @@ defaultRabbitPsoasFibril = createRabbitPsoasFibrilModel(...
 
 save('output/structs/defaultRabbitPsoasFibril.mat',...
      'defaultRabbitPsoasFibril');  
-
 
 if(flag_plotAllRabbitPsoasFibrilCurves==1)
     figRabbitPsoasFibrilCurves = ...
@@ -284,22 +283,21 @@ if(flag_fitFelineSoleusActiveTitinProperties==1)
     save('output/structs/fittedFelineSoleusHL2002_ET',...
             'fittedFelineSoleusHL2002_ET');
 
-
-
-
-
 else 
 
-    disp([' Loading: elastic and rigid tendon models previously fit using ']);
-    disp(['   fitFelineSoleusPevkActinBondLocation']);
-
-
-    tmp=load('output/structs/fittedFelineSoleusHL2002_ET');
-    fittedFelineSoleusHL2002_ET=tmp.fittedFelineSoleusHL2002_ET;
-
-    tmp=load('output/structs/fittedFelineSoleusHL2002_RT');
-    fittedFelineSoleusHL2002_RT=tmp.fittedFelineSoleusHL2002_RT;
-
+    if(flag_loadFittedFelineSoleusActiveTitinProperties==1)
+        disp([' Loading: elastic and rigid tendon models previously fit using ']);
+        disp(['   fitFelineSoleusPevkActinBondLocation']);
+    
+    
+        tmp=load('output/structs/fittedFelineSoleusHL2002_ET');
+        fittedFelineSoleusHL2002_ET=tmp.fittedFelineSoleusHL2002_ET;
+    
+        tmp=load('output/structs/fittedFelineSoleusHL2002_RT');
+        fittedFelineSoleusHL2002_RT=tmp.fittedFelineSoleusHL2002_RT;
+    else
+        disp([' Using default feline solues ']);        
+    end
 end
 
 
@@ -310,10 +308,10 @@ end
 % require simulation but just instead solving of a QP and completes in
 % seconds.
 %%
-fittedFelineSoleusHL2002KBR1994Fig3_ET  = [];
-fittedFelineSoleusHL2002KBR1994Fig3_RT  = [];
-fittedFelineSoleusHL2002KBR1994Fig12_ET = [];
-fittedFelineSoleusHL2002KBR1994Fig12_RT = [];
+fittedFelineSoleusKBR1994Fig3_ET  = [];
+fittedFelineSoleusKBR1994Fig3_RT  = [];
+fittedFelineSoleusKBR1994Fig12_ET = [];
+fittedFelineSoleusKBR1994Fig12_RT = [];
 
 perturbationFrequencyName = '90Hz';
 % Kirsch et al. report the frequency response of muscle to 15 Hz and 90 Hz
@@ -331,9 +329,20 @@ for indexTendon = 1:1:length(tendonTypeNames)
 
     switch tendonTypeValues(1,indexTendon)
         case 0
-            fittedFelineSoleusHL2002=fittedFelineSoleusHL2002_RT;
+            if(flag_fitFelineSoleusActiveTitinProperties || ...
+                    flag_loadFittedFelineSoleusActiveTitinProperties)
+                fittedFelineSoleus=fittedFelineSoleusHL2002_RT;
+            else
+                fittedFelineSoleus=defaultFelineSoleus;
+            end
         case 1
-            fittedFelineSoleusHL2002=fittedFelineSoleusHL2002_ET;            
+            if(flag_fitFelineSoleusActiveTitinProperties || ...
+                    flag_loadFittedFelineSoleusActiveTitinProperties)
+                fittedFelineSoleus=fittedFelineSoleusHL2002_ET;
+            else
+                fittedFelineSoleus=defaultFelineSoleus;
+            end
+
         otherwise assert(0,'Error: Incorrect tendon type');
     end
 
@@ -341,9 +350,9 @@ for indexTendon = 1:1:length(tendonTypeNames)
         flag_useElasticTendon           = tendonTypeValues(1,indexTendon);
         figNameGainPhase                = gainPhaseTypeNames{indexGainPhase};
 
-        fittedFelineSoleusHL2002KBR1994 = ...
+        fittedFelineSoleusKBR1994 = ...
             fitFelineSoleusCrossbridgeViscoelasticity( ...
-                fittedFelineSoleusHL2002,...
+                fittedFelineSoleus,...
                 flag_useElasticTendon,...
                 figNameGainPhase,...
                 perturbationFrequencyName,...
@@ -352,22 +361,22 @@ for indexTendon = 1:1:length(tendonTypeNames)
                 flag_useOctave);
 
 
-        save(['output/structs/fittedFelineSoleusHL2002KBR1994',...
+        save(['output/structs/fittedFelineSoleusKBR1994',...
             figNameGainPhase,tendonTypeNames{indexTendon},'.mat'],...
-              'fittedFelineSoleusHL2002KBR1994')
+              'fittedFelineSoleusKBR1994')
 
         typeNumber = (tendonTypeValues(1,indexTendon))*100 ...
                      + gainPhaseTypeValues(1,indexGainPhase);
 
         switch typeNumber
             case 3
-                fittedFelineSoleusHL2002KBR1994Fig3_RT      = fittedFelineSoleusHL2002KBR1994;
+                fittedFelineSoleusKBR1994Fig3_RT      = fittedFelineSoleusKBR1994;
             case 12
-                fittedFelineSoleusHL2002KBR1994Fig12_RT     = fittedFelineSoleusHL2002KBR1994;
+                fittedFelineSoleusKBR1994Fig12_RT     = fittedFelineSoleusKBR1994;
             case 103
-                fittedFelineSoleusHL2002KBR1994Fig3_ET      = fittedFelineSoleusHL2002KBR1994;
+                fittedFelineSoleusKBR1994Fig3_ET      = fittedFelineSoleusKBR1994;
             case 112
-                fittedFelineSoleusHL2002KBR1994Fig12_ET     = fittedFelineSoleusHL2002KBR1994;
+                fittedFelineSoleusKBR1994Fig12_ET     = fittedFelineSoleusKBR1994;
 
             otherwise
                 assert(0,'Error: invalid model configuration');
@@ -378,11 +387,12 @@ end
 
 
 if(flag_makeAndSavePubPlots==1)
-  [success] = plotMuscleCurves( fittedFelineSoleusHL2002KBR1994Fig12_ET,...
+  [success] = plotMuscleCurves( fittedFelineSoleusKBR1994Fig12_ET,...
                                 defaultHumanSoleus,...
                                 activeForceLengthCurveAnnotationPoints,...
                                 felineSoleusActiveForceLengthDataDefault,...
                                 felineSoleusPassiveForceLengthDataDefault,...
+                                normFiberLengthAtOneNormPassiveForceDefault,...
                                 plotOutputFolder);
 end 
 

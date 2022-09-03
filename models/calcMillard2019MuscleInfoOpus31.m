@@ -104,78 +104,37 @@ calcFeHDer  = @(arg1,arg2)calcBezierYFcnXDerivative(arg1, ...
 
 
 
-switch sarcomereProperties.titinModelType
+calcF1HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
+                      normMuscleCurves.forceLengthProximalTitinCurve, ...
+                      arg2);  
+calcF2HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
+                      normMuscleCurves.forceLengthDistalTitinCurve, ...
+                      arg2); 
 
-  case 0
-    %Stick-spring model
-    %Titin proximal force-length curve: Z-line to N2A
-    if(normMuscleCurves.useTitinCurvesWithRigidIgDSegment==1)
-        assert(normMuscleCurves.useTwoSidedTitinCurves == 0)
-       
-        f1Curve = normMuscleCurves.forceLengthProximalTitinCurve;
-        
-        calcF1HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
-                              normMuscleCurves.forceLengthProximalTitinCurve, ...
-                              arg2);  
-        calcF2HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
-                              normMuscleCurves.forceLengthDistalTitinCurve, ...
-                              arg2);          
-    else
-        if(normMuscleCurves.useTwoSidedTitinCurves == 1)
-            
-            f1Curve = normMuscleCurves.forceLengthProximalTitinTwoSidedCurve;
-
-            calcF1HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
-                                  normMuscleCurves.forceLengthProximalTitinTwoSidedCurve, ...
-                                  arg2);  
-            calcF2HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
-                                  normMuscleCurves.forceLengthDistalTitinTwoSidedCurve, ...
-                                  arg2);  
-        else
-
-            f1Curve = normMuscleCurves.forceLengthProximalTitinCurve;
-            
-            calcF1HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
-                                  normMuscleCurves.forceLengthProximalTitinCurve, ...
-                                  arg2);  
-            calcF2HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
-                                  normMuscleCurves.forceLengthDistalTitinCurve, ...
-                                  arg2);  
-        end
-    end 
-case 1
-
-  f1Curve = normMuscleCurves.forceLengthLumpedIgCurve;
-    
-  calcF1HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
-                                  normMuscleCurves.forceLengthLumpedIgCurve, ...
-                                  arg2);  
-  calcF2HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
-                        normMuscleCurves.forceLengthPEVKCurve, ...
-                        arg2);  
-
-  
-  otherwise
-    assert(0,['sarcomereProperties.titinModelType must',...
-              ' be 0 (sticky-spring) or 1 (stiff-spring)']);    
+%Just to check to make sure the curves are consistent
+if(normMuscleCurves.useTwoSidedTitinCurves==1)
+    assert(normMuscleCurves.forceLengthProximalTitinCurve.xEnd(1,1) < 0);
+else
+    assert(normMuscleCurves.forceLengthProximalTitinCurve.xEnd(1,1) >= 0);
 end
+
           
 
 %Extract the slack length
 l1HNZeroForce = 0;
 
-if(f1Curve.ypts(1,1) > 0)
+if(normMuscleCurves.forceLengthProximalTitinCurve.ypts(1,1) > 0)
     %Single sided curve
-    l1HNZeroForce = f1Curve.xpts(1,1);
+    l1HNZeroForce = normMuscleCurves.forceLengthProximalTitinCurve.xpts(1,1);
 else
     %Double sided curve
-    for i=1:1:size(f1Curve.ypts,2)
-        if((min(f1Curve.ypts(:,i)) <= 0) ...
-         && (max(f1Curve.ypts(:,i)) > 0))
-            if(f1Curve.ypts(1,i) > 0)
-                l1HNZeroForce = f1Curve.xpts(1,i);
+    for i=1:1:size(normMuscleCurves.forceLengthProximalTitinCurve.ypts,2)
+        if((min(normMuscleCurves.forceLengthProximalTitinCurve.ypts(:,i)) <= 0) ...
+         && (max(normMuscleCurves.forceLengthProximalTitinCurve.ypts(:,i)) > 0))
+            if(normMuscleCurves.forceLengthProximalTitinCurve.ypts(1,i) > 0)
+                l1HNZeroForce = normMuscleCurves.forceLengthProximalTitinCurve.xpts(1,i);
             else
-                l1HNZeroForce = f1Curve.xpts(end,i);
+                l1HNZeroForce = normMuscleCurves.forceLengthProximalTitinCurve.xpts(end,i);
             end
         end
     end
