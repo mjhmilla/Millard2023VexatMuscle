@@ -87,10 +87,15 @@ plotConfig;
 %%
 
 %Basic parameters for the Hill model
-load('output/structs/defaultFelineSoleus.mat')
-musculotendonProperties   = defaultFelineSoleus.musculotendon;
-sarcomereProperties       = defaultFelineSoleus.sarcomere;
-normMuscleCurves          = defaultFelineSoleus.curves;
+tmp=load('output/structs/defaultRabbitPsoasFibril.mat');
+musculotendonProperties   = tmp.defaultRabbitPsoasFibril.musculotendon;
+sarcomereProperties       = tmp.defaultRabbitPsoasFibril.sarcomere;
+normMuscleCurves          = tmp.defaultRabbitPsoasFibril.curves;
+fitting                   = tmp.defaultRabbitPsoasFibril.fitting;
+
+assert(flag_useTwoSidedTitinCurves==normMuscleCurves.useTwoSidedTitinCurves,...
+       'Error: curves struct does not contain the desired sided curves');
+
 
 normMuscleCurves.useCalibratedCurves    = flag_useCalibratedOpus31Curves;
 normMuscleCurves.useTwoSidedTitinCurves = flag_useTwoSidedTitinCurves;
@@ -110,10 +115,11 @@ end
 % tendon damping
 % titin's multiple segments
 
-load(['output/structs/felineSoleusRigidTendonKBR1994',figNameGainPhase,'.mat']);
-musculotendonPropertiesOpus31_RT = felineSoleusRigidTendonKBR1994.musculotendon;
-sarcomerePropertiesOpus31_RT     = felineSoleusRigidTendonKBR1994.sarcomere;
-normMuscleCurves_RT              = felineSoleusRigidTendonKBR1994.curves;
+tmp=load(['output/structs/defaultRabbitPsoasFibril.mat']);
+
+musculotendonPropertiesOpus31_RT = tmp.defaultRabbitPsoasFibril.musculotendon;
+sarcomerePropertiesOpus31_RT     = tmp.defaultRabbitPsoasFibril.sarcomere;
+normMuscleCurvesOpus31_RT              = tmp.defaultRabbitPsoasFibril.curves;
 
 
 sarcomerePropertiesOpus31_ET      = [];
@@ -128,11 +134,11 @@ if(flag_useElasticTendon==1)
 else
   sarcomerePropertiesOpus31     = sarcomerePropertiesOpus31_RT;  
   musculotendonPropertiesOpus31 = musculotendonPropertiesOpus31_RT;
-  normMuscleCurvesOpus31 = normMuscleCurves_RT;
+  normMuscleCurvesOpus31 = normMuscleCurvesOpus31_RT;
 end
 
 normMuscleCurvesOpus31.useCalibratedCurves    = flag_useCalibratedOpus31Curves;
-normMuscleCurvesOpus31.useTwoSidedTitinCurves = flag_useTwoSidedTitinCurves;
+%normMuscleCurvesOpus31.useTwoSidedTitinCurves = flag_useTwoSidedTitinCurves;
 
 if(isempty(normPassiveTitinToActinDamping)==0)
   sarcomereProperties.normPassiveTitinToActinDamping          = normPassiveTitinToActinDamping;

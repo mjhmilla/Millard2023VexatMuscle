@@ -28,14 +28,14 @@
 
 
 strFittingBandwidth='';
-if(isempty(sarcomereProperties.fitting)==0)
+if(isempty(fitting)==0)
 
-  for i=1:1:length(sarcomereProperties.fitting)
-      if(contains(sarcomereProperties.fitting{i},'KBR1994'))
-        if(contains(sarcomereProperties.fitting{i},'15Hz'))
+  for i=1:1:length(fitting)
+      if(contains(fitting{i},'KBR1994'))
+        if(contains(fitting{i},'15Hz'))
           strFittingBandwidth = '15Hz';
         end
-        if(contains(sarcomereProperties.fitting{i},'90Hz'))
+        if(contains(fitting{i},'90Hz'))
           strFittingBandwidth = '90Hz';
         end
       end

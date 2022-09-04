@@ -359,34 +359,40 @@ sarcomereProperties       = tmp.defaultFelineSoleus.sarcomere;
 normMuscleCurves          = tmp.defaultFelineSoleus.curves;
 normMuscleCurves.useCalibratedCurves=flag_useCalibratedOpus31Curves;
 
-tmp = load(['output/structs/felineSoleusElasticTendonKBR1994',...
-            figNameGainPhase,'.mat'],...
-            'felineSoleusElasticTendonKBR1994');
-musculotendonPropertiesOpus31_ET   = tmp.felineSoleusElasticTendonKBR1994.musculotendon;
-sarcomerePropertiesOpus31_ET       = tmp.felineSoleusElasticTendonKBR1994.sarcomere;
-normMuscleCurvesOpus31_ET          = tmp.felineSoleusElasticTendonKBR1994.curves;
+tmp=load(['output/structs/fittedFelineSoleusHL2002KBR1994',figNameGainPhase,'_RT.mat']);
+musculotendonPropertiesOpus31_RT = tmp.fittedFelineSoleus.musculotendon;
+sarcomerePropertiesOpus31_RT     = tmp.fittedFelineSoleus.sarcomere;
+normMuscleCurvesOpus31_RT        = tmp.fittedFelineSoleus.curves;
+fittingOpus31_RT                 = tmp.fittedFelineSoleus.fitting;
 
-tmp = load(['output/structs/felineSoleusRigidTendonKBR1994',...
-            figNameGainPhase,'.mat'],...
-            'felineSoleusRigidTendonKBR1994');    
-musculotendonPropertiesOpus31_RT   = tmp.felineSoleusRigidTendonKBR1994.musculotendon;
-sarcomerePropertiesOpus31_RT       = tmp.felineSoleusRigidTendonKBR1994.sarcomere;
-normMuscleCurvesOpus31_RT          = tmp.felineSoleusRigidTendonKBR1994.curves;
+tmp=load(['output/structs/fittedFelineSoleusHL2002KBR1994',figNameGainPhase,'_ET.mat']);
+musculotendonPropertiesOpus31_ET = tmp.fittedFelineSoleus.musculotendon;
+sarcomerePropertiesOpus31_ET     = tmp.fittedFelineSoleus.sarcomere;
+normMuscleCurvesOpus31_ET          = tmp.fittedFelineSoleus.curves;
+fittingOpus31_ET                   = tmp.fittedFelineSoleus.fitting;
 
 
 musculotendonPropertiesOpus31  = [];
 sarcomerePropertiesOpus31      = [];
 normMuscleCurvesOpus31         = [];
+fitting                        = [];
 
 if(flag_useElasticTendon==1)
     musculotendonPropertiesOpus31  = musculotendonPropertiesOpus31_ET;
     sarcomerePropertiesOpus31      = sarcomerePropertiesOpus31_ET;
     normMuscleCurvesOpus31         = normMuscleCurvesOpus31_ET;    
+    fitting =  fittingOpus31_ET;
 else
     musculotendonPropertiesOpus31  = musculotendonPropertiesOpus31_RT;
     sarcomerePropertiesOpus31      = sarcomerePropertiesOpus31_RT;
     normMuscleCurvesOpus31         = normMuscleCurvesOpus31_RT;    
+    fitting =  fittingOpus31_RT;
+    
 end
+
+assert(flag_useTwoSidedTitinCurves==normMuscleCurvesOpus31.useTwoSidedTitinCurves,...
+       'Error: curves struct does not contain the desired sided curves');
+
 
 normMuscleCurvesOpus31.useCalibratedCurves    = flag_useCalibratedOpus31Curves;
 normMuscleCurvesOpus31.useTwoSidedTitinCurves = flag_useTwoSidedTitinCurves;

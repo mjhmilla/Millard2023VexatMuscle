@@ -30,7 +30,7 @@ flag_simulateHillModel        = 1;
 flag_simulateOpus31Model      = 1;
 flag_useCalibratedOpus31Curves= 1;
 flag_useTitinCurvesWithRigidIgDSegment   = 0;
-flag_useTwoSidedTitinCurves   = 1;
+flag_useTwoSidedTitinCurves   = 0;
 flag_plotDataComparison       = 1;
 
 tmp = load('output/structs/normalizedFiberLengthStartHerzogLeonard2002.mat',...

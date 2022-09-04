@@ -146,11 +146,8 @@ fittedFelineSoleus = defaultFelineSoleus;
 fittedFelineSoleus.curves        = defaultFelineSoleus.curves;
 fittedFelineSoleus.musculotendon = fittedMusculotendonProperties;
 fittedFelineSoleus.sarcomere     = fittedSarcomerePropertiesOpus31;
-fittedFelineSoleus.fitting = [fittedFelineSoleus.fitting,...
-                              {fittingStr}];
 
-
-
+fittedFelineSoleus.fitting = [fittedFelineSoleus.fitting,{fittingStr}];
 
 
 flag_skipThisCode = 1;

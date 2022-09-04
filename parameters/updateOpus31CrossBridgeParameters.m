@@ -370,10 +370,10 @@ kT    = mtInfoBest.muscleDynamicsInfo.tendonStiffness;
 dT    = mtInfoBest.muscleDynamicsInfo.tendonDamping;
 ke    = mtInfoBest.muscleDynamicsInfo.ecmStiffness;
 de    = mtInfoBest.muscleDynamicsInfo.ecmDamping;
-kigp  = mtInfoBest.muscleDynamicsInfo.titin1Stiffness;
-kpevk = mtInfoBest.muscleDynamicsInfo.titin2Stiffness;
-digp  = mtInfoBest.muscleDynamicsInfo.titin1Damping;
-dpevk = mtInfoBest.muscleDynamicsInfo.titin2Damping;
+k1  = mtInfoBest.muscleDynamicsInfo.titin1Stiffness;
+k2  = mtInfoBest.muscleDynamicsInfo.titin2Stiffness;
+d1  = mtInfoBest.muscleDynamicsInfo.titin1Damping;
+d2  = mtInfoBest.muscleDynamicsInfo.titin2Damping;
 
 %The stiffness contribution of titin depends on the position of the
 %N2A element and how activated the muscle is. In one extreme the muscle is 
@@ -388,13 +388,13 @@ dpevk = mtInfoBest.muscleDynamicsInfo.titin2Damping;
   
 a = mtInfoBest.muscleDynamicsInfo.activation;
 
-%ktitinHigh = kpevk; 
-%ktitinLow  = 1/((1/kigp)+(1/kpevk));
+%ktitinHigh = k2; 
+%ktitinLow  = 1/((1/k1)+(1/k2));
 %ktitin     = (1-a)*ktitinLow + a*ktitinHigh;
-ktitin = kpevk;
+ktitin = k2;
 
 %PEVK section has no damping
-dtitin = 0;%1/((1/digp)+(1/dpevk));
+dtitin = 0;%1/((1/d1)+(1/d2));
 
 assert(kT > kmt || flag_useElasticTendon == 0,...
     'The tendon must be stiffer than the target MT stiffness');

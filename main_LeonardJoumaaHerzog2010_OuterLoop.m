@@ -12,7 +12,7 @@ flag_simulateActiveStretch      = 1;
 flag_simulatePassiveStretch     = 1;
 
 flag_useCalibratedOpus31Curves  = 1;
-flag_useTwoSidedTitinCurves     = 1;
+flag_useTwoSidedTitinCurves     = 0;
 
 nominalNormalizedFiberLength = 1.0;
 

@@ -92,6 +92,8 @@ lceOpt      = modelConstants.lceOpt      ;
 alphaOpt    = modelConstants.alphaOpt    ;
 ltSlk       = modelConstants.ltSlk       ;
 
+lceHNZeroFpeN= modelConstants.lceHNZeroFpeN;
+
 dlceMaxN    = modelConstants.dlceMaxN    ;
 lceMin      = modelConstants.lceMin      ;
 
@@ -471,6 +473,9 @@ switch titinModelType
     kTiA = dTiA/smoothStepFunctionRadius;
     uTiA = 0.5+0.5*tanh(kTiA);
 
+    dLce = lceHN-lceHNZeroFpeN;
+    kLce = dLce/smoothStepFunctionRadius;
+    uLce = 0.5+0.5*tanh(kLce);
     % To break beta1HNN down:
     %
     %   beta1HNN = betaTApHN + betaTAaHN*aTi*uTia
@@ -481,7 +486,7 @@ switch titinModelType
     %   aTi      : value between 0-1 that indicates if the bond is active
     %   uTia     : a value that is 1 provided the bond overlaps with actin,
     %              otherwise its zero.    
-    beta1HNN = betaTApHN + betaTAaHN*aTi*uTiA; 
+    beta1HNN = betaTApHN + betaTAaHN*aTi*uTiA*uLce; 
     beta2HNN = 0;
 
     dl1HN = (f2kHN-f1kHN)/beta1HNN;
