@@ -110,9 +110,9 @@ flag_updateNormFiberLengthByTendonStretch = 1;
 
 %Note:  is updateOpus31CrossBridgeParameters using the tendon damping model that
 %       scales with tendon stiffness?
-disp('To do: separate use of KBR1994 from updateOpus31CrossBridgeParameters');
-disp('     : put that code here in fitFelineSoleusCrossbridgeViscoelasticity');
-disp('     : and pass in kmt and dmt here.');
+%disp('To do: separate use of KBR1994 from updateOpus31CrossBridgeParameters');
+%disp('     : put that code here in fitFelineSoleusCrossbridgeViscoelasticity');
+%disp('     : and pass in kmt and dmt here.');
 [fittedMusculotendonProperties,fittedSarcomerePropertiesOpus31] = ...
   updateOpus31CrossBridgeParameters(...
     nominalForceKDFit,...

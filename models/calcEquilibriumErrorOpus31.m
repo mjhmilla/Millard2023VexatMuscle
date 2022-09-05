@@ -151,6 +151,8 @@ activationThresholdTitin = ...
 
 titinModelType=modelConstants.titinModelType;
 
+initialization = modelConstants.initialization;
+
 DftfcnN_DltN_max = modelConstants.DftfcnN_DltN_max;
 
 
@@ -486,7 +488,9 @@ switch titinModelType
     %   aTi      : value between 0-1 that indicates if the bond is active
     %   uTia     : a value that is 1 provided the bond overlaps with actin,
     %              otherwise its zero.    
-    beta1HNN = betaTApHN + betaTAaHN*aTi*uTiA*uLce; 
+    %
+    % Note: the active titin-actin bond is disabled for initialization
+    beta1HNN = betaTApHN + betaTAaHN*aTi*uTiA*uLce*(1-initialization); 
     beta2HNN = 0;
 
     dl1HN = (f2kHN-f1kHN)/beta1HNN;
