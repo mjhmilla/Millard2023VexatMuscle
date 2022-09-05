@@ -404,7 +404,7 @@ if(flag_forceVelocitySimulations==1)
           lceOpt,vceAtlceOpt,lceOpt,alphaOpt);
         dlceAT = fibKin.fiberVelocityAlongTendon;       
 
-        tRampStart    = 1.5;
+        tRampStart    = 0.1;
         tRampDuration = (lpEnd-lpStart)/dlceAT;
         tRampEnd      = tRampStart + tRampDuration;
         tRampMid      = tRampStart + tRampDuration*0.5;
@@ -427,7 +427,7 @@ if(flag_forceVelocitySimulations==1)
       %Update benchConfig       
       benchConfig.npts                  = round(100*tmaxLongest); 
       benchConfig.initialActivation     = 1.0;
-      benchConfig.excitationFcn         = excitationMaxWithStartDelayFcn;%excitationMaxFcn;
+      benchConfig.excitationFcn         = excitationMaxFcn;
       benchConfig.activationFcn         = activationFcn; 
       benchConfig.tspan                 = [0, tmax]; 
 
