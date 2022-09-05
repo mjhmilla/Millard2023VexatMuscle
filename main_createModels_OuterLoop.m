@@ -12,7 +12,7 @@ flag_useOctave                        = 0;
 flag_makeAndSavePubPlots              = 1;
 plotOutputFolder                      = 'output/plots/MuscleCurves/';
 
-normPevkToActinAttachmentPointRabbitPsoasDefault=0.;
+normPevkToActinAttachmentPointRabbitPsoasDefault=0.5;
 normPevkToActinAttachmentPointDefault = 0.5;
 %The default value for the point of attachment between the PEVK segment
 %and actin. This point of attachment is expressed as a normalized length
