@@ -279,28 +279,30 @@ gainPhaseTypeValues   = [3,12];
 tendonTypeNames       = {'_RT','_ET'};
 tendonTypeValues      = [0,1];
 
-for indexTendon = 1:1:length(tendonTypeNames)
+for indexGainPhase = 1:1:length(gainPhaseTypeNames)
 
-    switch tendonTypeValues(1,indexTendon)
-        case 0
-            if(flag_fitFelineSoleusActiveTitinProperties || ...
-                    flag_loadFittedFelineSoleusActiveTitinProperties)
-                fittedFelineSoleusStarting=fittedFelineSoleusHL2002_RT;
-            else
-                fittedFelineSoleusStarting=defaultFelineSoleus;
-            end
-        case 1
-            if(flag_fitFelineSoleusActiveTitinProperties || ...
-                    flag_loadFittedFelineSoleusActiveTitinProperties)
-                fittedFelineSoleusStarting=fittedFelineSoleusHL2002_ET;
-            else
-                fittedFelineSoleusStarting=defaultFelineSoleus;
-            end
 
-        otherwise assert(0,'Error: Incorrect tendon type');
-    end
+    for indexTendon = 1:1:length(tendonTypeNames)
 
-    for indexGainPhase = 1:1:length(gainPhaseTypeNames)
+        switch tendonTypeValues(1,indexTendon)
+            case 0
+                if(flag_fitFelineSoleusActiveTitinProperties || ...
+                        flag_loadFittedFelineSoleusActiveTitinProperties)
+                    fittedFelineSoleusStarting=fittedFelineSoleusHL2002_RT;
+                else
+                    fittedFelineSoleusStarting=defaultFelineSoleus;
+                end
+            case 1
+                if(flag_fitFelineSoleusActiveTitinProperties || ...
+                        flag_loadFittedFelineSoleusActiveTitinProperties)
+                    fittedFelineSoleusStarting=fittedFelineSoleusHL2002_ET;
+                else
+                    fittedFelineSoleusStarting=defaultFelineSoleus;
+                end
+    
+            otherwise assert(0,'Error: Incorrect tendon type');
+        end
+
         flag_useElasticTendon           = tendonTypeValues(1,indexTendon);
         figNameGainPhase                = gainPhaseTypeNames{indexGainPhase};
 

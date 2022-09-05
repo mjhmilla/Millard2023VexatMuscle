@@ -968,10 +968,10 @@ if(flag_evaluateInitializationFunctions==1)
 
     errI(1,1) = -(fxHN + f2HN + fEcmHN)*cosAlpha + fTN; 
     %When f1HN=f2HN the passive force developed by fEcm + f2 = fpe;  
-    errI(2,1) = f1HN-f2HN; %This error term works for titin models 0 and 1
+    errI(2,1) = f1kHN-f2kHN; %This error term works for titin models 0 and 1
     errI(3,1) = ddlaHN;
   else
-    errI(1,1) = f1HN-f2HN; %This error term works for titin models 0 and 1
+    errI(1,1) = f1kHN-f2kHN; %This error term works for titin models 0 and 1
     errI(2,1) = ddlaHN;    
   end
 
