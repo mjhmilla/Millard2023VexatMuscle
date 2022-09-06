@@ -93,8 +93,8 @@ disp('Running Opus 31 Leonard, Joumaa, and Herzog 2010 Simulations');
               %  sarcomereProperties.scaleTitinProximal = fTiNRatio/activeScaling;
               %else
                 sarcomereProperties.scaleECM = 0;
-                sarcomereProperties.scaleTitinProximal = fTiNRatio;
-                sarcomereProperties.scaleTitinDistal   = fTiNRatio;
+                sarcomereProperties.scaleTitinProximal = 1;%fTiNRatio;
+                sarcomereProperties.scaleTitinDistal   = 1;%fTiNRatio;
               %end
               
 
@@ -379,7 +379,7 @@ disp('Running Opus 31 Leonard, Joumaa, and Herzog 2010 Simulations');
          %end
          
 
-         save([outputFolder,'benchRecordOpus31_',nameModification,outputFileEndingOpus31,strTitinAdj,'.mat'],...
+         save([outputFolder,'benchRecordOpus31_',outputFileEndingOpus31,'.mat'],...
             'benchRecord',...
             'nominalNormalizedFiberLength',...
             'timeSpan',...

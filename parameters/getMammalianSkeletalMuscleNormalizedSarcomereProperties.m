@@ -3,7 +3,8 @@ function [sarcomereProperties] = ...
                                 animalName,...
                                 normFiberLengthAtOneNormPassiveForce,...
                                 normPevkToActinAttachmentPoint,...
-                                ecmForceFraction)  
+                                ecmForceFraction,...
+                                titinMolecularWeightInkD)  
 %%
 % This function constructs the normalized lengths of the main components
 % of a sarcomere and titin. The data on the relative lengths of actin,
@@ -206,68 +207,107 @@ numDomainsIgP     = nan;
 numResiduesPevk   = nan;     
 numDomainsIgD     = nan; 
 
-switch animalId
-  case 1
-    %Cat
+
+if(isempty(titinMolecularWeightInkD) == 0)
+
+    if(titinMolecularWeightInkD >= 3300 && titinMolecularWeightInkD <= 3700)
+
+    normTitinMolecularWeightInkD = (titinMolecularWeightInkD-3300)/(3700-3300);
+
+    % Prado LG, Makarenko I, Andresen C, Krüger M, Opitz CA, Linke WA. 
+    % Isoform diversity of giant proteins in relation to passive and 
+    % active contractile properties of rabbit skeletal muscles. The 
+    % Journal of general physiology. 2005 Nov;126(5):461-80.
     %
-    %Scale the data we have from the human soleus by the ratio of
-    %optimal sarcomere lengths
+    % Row 1: 3300 kD titin
+    % Row 2: 3700 kD titin
+    %pg 465, column 2, paragraph 1/2
+    %               proximal Ig, Pevk, distal Ig
+    titinDomains = [         43,  800,        22;...
+                             68, 2174,        22];
 
-    %Since we are assuming that the titin is a proportionate scaling of
-    %a human soleus titin, we can calculate the number of prox Ig domains,
-    %PEVK residues, and distal Ig domains in our model titin. This is useful
-    %later when fitting to data: if the geometry of the prox. Ig and 
-    %PEVK residues are unknown. Because this reference is being used for 
-    % fitting, I will not round the results even though a fraction of an 
-    % Ig domain (or PEVK residue) does not make physical sense.
+    numDomainsIgP = titinDomains(1,1) ...
+                    + normTitinMolecularWeightInkD*(...
+                        titinDomains(2,1)-titinDomains(1,1));
+    numResiduesPevk = titinDomains(1,2) ...
+                    + normTitinMolecularWeightInkD*(...
+                        titinDomains(2,2)-titinDomains(1,2));
+    numDomainsIgD = titinDomains(1,3) ...
+                    + normTitinMolecularWeightInkD*(...
+                        titinDomains(2,3)-titinDomains(1,3));
+    end
+    if(titinMolecularWeightInkD < 0)
+        numDomainsIgP   = 43;
+        numResiduesPevk = 800;
+        numDomainsIgD   = 44; %An additional 22 domains attached to myosin unwind
+    end
 
-    numDomainsIgP   =   68*(optSarcomereLength/optSarcomereLengthHuman);    
-    numResiduesPevk = 2174*(optSarcomereLength/optSarcomereLengthHuman);     
-    numDomainsIgD   =   22*(optSarcomereLength/optSarcomereLengthHuman);     
+else
 
-  case 2
-    %Human (soleus titin).
-    %
-    % Note: soleus titin has a particularly long compliant PEVK segment. 
-    %
-    %Trombitas K, Greaser M, French G, Granzier H. PEVK extension of human soleus 
-    %muscle titin revealed by immunolabeling with the anti-titin antibody 9D10.
-    %Journal of structural biology. 1998 Jan 1;122(1-2):188-96.
-    numDomainsIgP     = numDomainsIgPHuman  ;    
-    numResiduesPevk   = numResiduesPevkHuman;     
-    numDomainsIgD     = numDomainsIgDHuman  ;   
+    
+    switch animalId
+      case 1
+        %Cat
+        %
+        %Scale the data we have from the human soleus by the ratio of
+        %optimal sarcomere lengths
+    
+        %Since we are assuming that the titin is a proportionate scaling of
+        %a human soleus titin, we can calculate the number of prox Ig domains,
+        %PEVK residues, and distal Ig domains in our model titin. This is useful
+        %later when fitting to data: if the geometry of the prox. Ig and 
+        %PEVK residues are unknown. Because this reference is being used for 
+        % fitting, I will not round the results even though a fraction of an 
+        % Ig domain (or PEVK residue) does not make physical sense.
+    
+        numDomainsIgP   =   numDomainsIgPHuman*(optSarcomereLength/optSarcomereLengthHuman);    
+        numResiduesPevk = numResiduesPevkHuman*(optSarcomereLength/optSarcomereLengthHuman);     
+        numDomainsIgD   =   numDomainsIgDHuman*(optSarcomereLength/optSarcomereLengthHuman);     
+    
+      case 2
+        %Human (soleus titin).
+        %
+        % Note: soleus titin has a particularly long compliant PEVK segment. 
+        %
+        %Trombitas K, Greaser M, French G, Granzier H. PEVK extension of human soleus 
+        %muscle titin revealed by immunolabeling with the anti-titin antibody 9D10.
+        %Journal of structural biology. 1998 Jan 1;122(1-2):188-96.
+        numDomainsIgP     = numDomainsIgPHuman  ;    
+        numResiduesPevk   = numResiduesPevkHuman;     
+        numDomainsIgD     = numDomainsIgDHuman  ;   
+    
+      case 3
+        %Frog
+        %Scale the data we have from the human soleus by the ratio of
+        %optimal sarcomere lengths
+    
+        assert(0,['Error: no frog, nor amphibian titin, has had its segment',...
+                  ' dimensions measured. As a result, here we will not extrapolate',...
+                  ' results from a mammal to a frog']);
+    
+        numDomainsIgP     = nan;    
+        numResiduesPevk   = nan;     
+        numDomainsIgD     = nan;   
+    
+      case 4
+         %Rabbit: psoas default - 3400 kD version.
+         %
+         numDomainsIgP   = 50;   
+         numResiduesPevk = 800;    
+         numDomainsIgD   = 22;
+         % For the psoas muscle from a rabbit (Prado et al.). Note that there 
+         % are isoforms of titin within a rabbit that have a similar molecular
+         % weight as human titin. 
+         %
+         %Prado LG, Makarenko I, Andresen C, Krüger M, Opitz CA, Linke WA. 
+         % Isoform diversity of giant proteins in relation to passive and active 
+         % contractile properties of rabbit skeletal muscles. The Journal of 
+         % general physiology. 2005 Nov;126(5):461-80.    
+      otherwise
+        assert(0,['Error: animalId ',num2str(animalId),' not recognized']);
+    end
 
-  case 3
-    %Frog
-    %Scale the data we have from the human soleus by the ratio of
-    %optimal sarcomere lengths
-
-    assert(0,['Error: no frog, nor amphibian titin, has had its segment',...
-              ' dimensions measured. As a result, here we will not extrapolate',...
-              ' results from a mammal to a frog']);
-
-    numDomainsIgP     = nan;    
-    numResiduesPevk   = nan;     
-    numDomainsIgD     = nan;   
-
-  case 4
-     %Rabbit: psoas
-     %
-     numDomainsIgP   = 50;   
-     numResiduesPevk = 800;    
-     numDomainsIgD   = 22;
-     % For the psoas muscle from a rabbit (Prado et al.). Note that there 
-     % are isoforms of titin within a rabbit that have a similar molecular
-     % weight as human titin. 
-     %
-     %Prado LG, Makarenko I, Andresen C, Krüger M, Opitz CA, Linke WA. 
-     % Isoform diversity of giant proteins in relation to passive and active 
-     % contractile properties of rabbit skeletal muscles. The Journal of 
-     % general physiology. 2005 Nov;126(5):461-80.    
-  otherwise
-    assert(0,['Error: animalId ',num2str(animalId),' not recognized']);
 end
-
 
 [lineZToPevkP, lineZToPevkD] = ...
     scaleTitinElongationFunction(...
@@ -414,92 +454,37 @@ extraCellularMatrixPassiveForceFraction = ecmForceFraction; %1-0.5*(0.24+0.57);
 % end
 
 
-    
 
-switch animalId
-  case 1
+% Define the contour lengths of the prox Ig, PEVK, and distal Ig segments   
+%
+% For a human soleus muscle titin's geometry (at least 1 isoform) has been
+% measured by Trombitas
+%
+%   68 prox. Ig domains that can maximally extend to 25 nm (DuVall et al.)
+%   2174 PEVK residues that have a maximum length of 0.38 nm (Cantor & Schimmel)
+%   28 distal Ig domains that can maximally extend to 25 nm 
+%
+%Trombitas K, Greaser M, French G, Granzier H. PEVK extension of human soleus 
+%muscle titin revealed by immunolabeling with the anti-titin antibody 9D10.
+%Journal of structural biology. 1998 Jan 1;122(1-2):188-96.
+%
+% Cantor CR, Schimmel PR. Biophysical Chemistry, Part I: The Conformation of 
+% Biological Molecules. Journal of Solid-Phase Biochemistry. 1980;5(3).
+%
+% *Note: the 0.38nm is mentioned on pg 254 as the sum of the bond lengths. In reality
+%        the bond lengths likely cannot be stretched into a line before the
+%        titin filament fails.
+% 
+% DuVall MM, Gifford JL, Amrein M, Herzog W. Altered mechanical properties of 
+% titin immunoglobulin domain 27 in the presence of calcium. European Biophysics 
+% Journal. 2013 Apr;42(4):301-7.    
+lContourIGPNorm     = (numDomainsIgP*(maxIgDomainStrain_um))    / optSarcomereLength;
+lContourPEVKNorm    = (numResiduesPevk*(maxPevkResidueStrain_um))/ optSarcomereLength;
+lContourIGDFreeNorm = (numDomainsIgD*(maxIgDomainStrain_um))    / optSarcomereLength; 
 
-    %cat
-    %I'm going to assume that feline titin geometry in skeletal muscle
-    %is a scaled version of that of a human soleus. Probably this isn't
-    %correct. The alternative is to use the geometry of a  rabbit psoas 
-    %titin isoforms measured by Prado et al. This was one of the lightest
-    %isoforms measured by Prado et al. (thus having shorter prox. Ig and 
-    %PEVK segments).
-
-    lContourIGPNorm     = (68*(25/1000))    / optSarcomereLengthHuman;
-    lContourPEVKNorm    = (2174*(0.38/1000))/ optSarcomereLengthHuman;
-    lContourIGDFreeNorm = (28*(25/1000))    / optSarcomereLengthHuman; 
-
-  case 2
-
-    % Define the contour lengths of the prox Ig, PEVK, and distal Ig segments   
-    %
-    % For a human soleus muscle titin's geometry (at least 1 isoform) has been
-    % measured by Trombitas
-    %
-    %   68 prox. Ig domains that can maximally extend to 25 nm (DuVall et al.)
-    %   2174 PEVK residues that have a maximum length of 0.38 nm (Cantor & Schimmel)
-    %   28 distal Ig domains that can maximally extend to 25 nm 
-    %
-    %Trombitas K, Greaser M, French G, Granzier H. PEVK extension of human soleus 
-    %muscle titin revealed by immunolabeling with the anti-titin antibody 9D10.
-    %Journal of structural biology. 1998 Jan 1;122(1-2):188-96.
-    %
-    % Cantor CR, Schimmel PR. Biophysical Chemistry, Part I: The Conformation of 
-    % Biological Molecules. Journal of Solid-Phase Biochemistry. 1980;5(3).
-    %
-    % *Note: the 0.38nm is mentioned on 254 as the sum of the bond lengths. In reality
-    %        the bond lengths likely cannot be stretched into a line before the
-    %        titin filament fails
-    % 
-    % DuVall MM, Gifford JL, Amrein M, Herzog W. Altered mechanical properties of 
-    % titin immunoglobulin domain 27 in the presence of calcium. European Biophysics 
-    % Journal. 2013 Apr;42(4):301-7.
-    %
-    lContourIGPNorm     = (68*(25/1000))    / optSarcomereLengthHuman;
-    lContourPEVKNorm    = (2174*(0.38/1000))/ optSarcomereLengthHuman;
-    lContourIGDFreeNorm = (28*(25/1000))    / optSarcomereLengthHuman;  
-
-  case 3    
-
-    %Frog
-    assert(0,['Error: lacking any estimate of the contour lengths of ',...
-                  'the titin segments from frog skeletal muscle titin']);
-  case 4
-
-
-    %%
-    % A rabbit psoas has a titin molecule with
-    %
-    %   50 prox. Ig domains
-    %   800 PEVK residues 
-    %   22 distal Ig domains 
-    %
-    % Prado makes it clear that there the range of molecular weights of titin
-    % vary quite a bit within the rabbit muscles that were analyzed. Some 
-    % of the muscles in a rabbit approach titin in the 3.7 kD range, which 
-    % would be consistent with human soleus titin. The size of the PEVK segment
-    % seems to be affected most by the molecular weight.
-    %
-    % This information is really only needed (for the current paper) to 
-    % replicate Leonard, Joumaa and Herzog 2010 ... which was performed on a 
-    % rabbit psoas muscle.
-    %
-    %Prado LG, Makarenko I, Andresen C, Krüger M, Opitz CA, Linke WA. Isoform 
-    % diversity of giant proteins in relation to passive and active contractile 
-    % properties of rabbit skeletal muscles. The Journal of general physiology. 
-    % 2005 Nov;126(5):461-80.
-    %
-    %%
-    
-    lContourIGPNorm     = (50*(25/1000))    / optSarcomereLength;
-    lContourPEVKNorm    = (800*(0.38/1000))/ optSarcomereLength;
-    lContourIGDFreeNorm = (22*(25/1000))    / optSarcomereLength;        
-
-end
-
-
+lContourTitinNorm = ...
+    (lContourIGPNorm+lContourPEVKNorm+lContourIGDFreeNorm...
+     +lTitinOpt.lT12+lTitinOpt.lIgdFixedNorm)*2;
 
 % 2022/06/11
 % M.Millard
@@ -660,7 +645,6 @@ end
 %segments of titin (IgP, PEVK, and IgD).
 normTitinFailureForce = 5.14;
 
-disp('  Note: set normECMDamping to 0, from 1e-4');
 sarcomereProperties = ...
     struct( 'normActinLength'                   , normActinLength,...  
             'smoothStepFunctionRadius' ,0.01,...

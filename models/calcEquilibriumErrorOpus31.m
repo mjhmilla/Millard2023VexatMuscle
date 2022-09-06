@@ -475,6 +475,10 @@ switch titinModelType
     kTiA = dTiA/smoothStepFunctionRadius;
     uTiA = 0.5+0.5*tanh(kTiA);
 
+    if(uTiA <= 0.1)
+        here=1;
+    end
+
     dLce = lceHN-lceHNZeroFpeN;
     kLce = dLce/smoothStepFunctionRadius;
     uLce = 0.5+0.5*tanh(kLce);

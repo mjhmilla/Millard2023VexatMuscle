@@ -86,12 +86,35 @@ plotConfig;
 %                               main_KirschBoskovRymer1994.m
 %%
 
+musculotendonProperties = [];
+sarcomereProperties     = [];
+normMuscleCurves        = [];
+fitting                 = [];
+
+
+
+outputFileEndingHill = '_Default';
+
+
 %Basic parameters for the Hill model
-tmp=load('output/structs/defaultRabbitPsoasFibril.mat');
-musculotendonProperties   = tmp.defaultRabbitPsoasFibril.musculotendon;
-sarcomereProperties       = tmp.defaultRabbitPsoasFibril.sarcomere;
-normMuscleCurves          = tmp.defaultRabbitPsoasFibril.curves;
-fitting                   = tmp.defaultRabbitPsoasFibril.fitting;
+if(flag_useTunedRabbitPsoasModel==0)
+    tmp=load('output/structs/defaultRabbitPsoasFibril.mat');
+    musculotendonProperties   = tmp.defaultRabbitPsoasFibril.musculotendon;
+    sarcomereProperties      = tmp.defaultRabbitPsoasFibril.sarcomere;
+    normMuscleCurves          = tmp.defaultRabbitPsoasFibril.curves;
+    fitting                   = tmp.defaultRabbitPsoasFibril.fitting;    
+    outputFileEndingOpus31 = '_Default';
+
+else
+    tmp=load('output/structs/tunedRabbitPsoasFibril.mat');
+    musculotendonProperties   = tmp.tunedRabbitPsoasFibril.musculotendon;
+    sarcomereProperties       = tmp.tunedRabbitPsoasFibril.sarcomere;
+    normMuscleCurves          = tmp.tunedRabbitPsoasFibril.curves;
+    fitting                   = tmp.tunedRabbitPsoasFibril.fitting;    
+    outputFileEndingOpus31 = '_Fitted';
+    
+end
+
 
 assert(flag_useTwoSidedTitinCurves==normMuscleCurves.useTwoSidedTitinCurves,...
        'Error: curves struct does not contain the desired sided curves');
@@ -110,48 +133,15 @@ if(flag_useFig3KirchBoskovRymer1994==1)
   figNameGainPhase = 'Fig3';  
 end
 
-%Basic parameters + extra parameters needed for Opus 31: 
-% cross-bridge stiffness and damping 
-% tendon damping
-% titin's multiple segments
-
-tmp=load(['output/structs/defaultRabbitPsoasFibril.mat']);
-
-musculotendonPropertiesOpus31_RT = tmp.defaultRabbitPsoasFibril.musculotendon;
-sarcomerePropertiesOpus31_RT     = tmp.defaultRabbitPsoasFibril.sarcomere;
-normMuscleCurvesOpus31_RT              = tmp.defaultRabbitPsoasFibril.curves;
-
-
-sarcomerePropertiesOpus31_ET      = [];
-musculotendonPropertiesOpus31_ET  = [];
-
-
-if(flag_useElasticTendon==1)
-  assert(flag_useElasticTendon ==0,...
-         'This is a skinned fibril experiment: there is no tendon!');  
-  %sarcomerePropertiesOpus31     = sarcomerePropertiesOpus31_ET;
-  %musculotendonPropertiesOpus31 = musculotendonPropertiesOpus31_ET;
-else
-  sarcomerePropertiesOpus31     = sarcomerePropertiesOpus31_RT;  
-  musculotendonPropertiesOpus31 = musculotendonPropertiesOpus31_RT;
-  normMuscleCurvesOpus31 = normMuscleCurvesOpus31_RT;
-end
-
-normMuscleCurvesOpus31.useCalibratedCurves    = flag_useCalibratedOpus31Curves;
-%normMuscleCurvesOpus31.useTwoSidedTitinCurves = flag_useTwoSidedTitinCurves;
 
 if(isempty(normPassiveTitinToActinDamping)==0)
   sarcomereProperties.normPassiveTitinToActinDamping          = normPassiveTitinToActinDamping;
-  sarcomerePropertiesOpus31.normPassiveTitinToActinDamping    = normPassiveTitinToActinDamping;
-  sarcomerePropertiesOpus31_RT.normPassiveTitinToActinDamping = normPassiveTitinToActinDamping;
 else
   normPassiveTitinToActinDamping = sarcomereProperties.normPassiveTitinToActinDamping;
 end
 
 if(isempty(normActiveTitinToActinDamping)==0)
   sarcomereProperties.normMaxActiveTitinToActinDamping          = normActiveTitinToActinDamping;
-  sarcomerePropertiesOpus31.normMaxActiveTitinToActinDamping    = normActiveTitinToActinDamping;
-  sarcomerePropertiesOpus31_RT.normMaxActiveTitinToActinDamping = normActiveTitinToActinDamping;
 else
   normActiveTitinToActinDamping = sarcomereProperties.normMaxActiveTitinToActinDamping;
 end
@@ -171,32 +161,39 @@ plotFolder = 'output/plots/LeonardJoumaaHerzog2010/';
 %
 %%
 
-generateModelSpecificKeyWords;    
+%These variables are made just so generateModelSpecificKeyWords will run
+%To do: change generateModelSpecificKeyWords to a function that
+%       accepts an argument.
 
-tendonTag = '_ElasticTendon';
-if(flag_useElasticTendon==0)
-  tendonTag = '_RigidTendon';
-end
+%sarcomerePropertiesOpus31= sarcomereProperties;
+%sarcomerePropertiesOpus31_RT=[];
+%sarcomerePropertiesOpus31_ET=[];
+
+%generateModelSpecificKeyWords;    
+
+%tendonTag = '_ElasticTendon';
+%if(flag_useElasticTendon==0)
+%  tendonTag = '_RigidTendon';
+%end
 
 
 
-outputFileEndingOpus31    = '';
-outputFileEndingOpus31_RT = '';
+% outputFileEndingOpus31    = '';
+% outputFileEndingOpus31_RT = '';
+% 
+% 
+% outputFileEndingOpus31_RT = sprintf('_K%sD%sTau%s_LJH2010_%s_%s_%s_%s',...
+%   kScaleStr_RT, dScaleStr_RT, tScaleStr,...
+%   ['_TiAD',titinActiveDampingStr],...
+%   ['TiPD',titinPassiveDampingStr],...    
+%   ['NomLen',nominalNormalizedFiberLengthStr],...
+%   strFittingBandwidth);
+
+%outputFileEndingOpus31 = outputFileEndingOpus31_RT;
 
 
-outputFileEndingOpus31_RT = sprintf('_K%sD%sTau%s_LJH2010_%s_%s_%s_%s',...
-  kScaleStr_RT, dScaleStr_RT, tScaleStr,...
-  ['_TiAD',titinActiveDampingStr],...
-  ['TiPD',titinPassiveDampingStr],...    
-  ['NomLen',nominalNormalizedFiberLengthStr],...
-  strFittingBandwidth);
-
-outputFileEndingOpus31 = outputFileEndingOpus31_RT;
-
-outputFileEndingHill = sprintf('_D%i_LJH2010_%s',flag_useFiberDamping);
-
-outputFileEndingHill_RT = ...
-  sprintf('_D%i_LJH2010',0);
+%outputFileEndingHill_RT = ...
+%  sprintf('_D%i_LJH2010',0);
   
 %%
 % Retreive the experiment information
@@ -263,9 +260,9 @@ if(flag_simulateOpus31Model==1)
                   lengthRampKeyPoints,...
                   stimulationKeyTimes,...
                   flag_useElasticTendon,...
-                  musculotendonPropertiesOpus31,...
-                  sarcomerePropertiesOpus31,...
-                  normMuscleCurvesOpus31,...
+                  musculotendonProperties,...
+                  sarcomereProperties,...
+                  normMuscleCurves,...
                   outputFileEndingOpus31, ...
                   dataFolder,...
                   flag_simulateActiveStretch,...
@@ -311,43 +308,43 @@ if(flag_plotData == 1)
 
   figure(figLeonardJoumaaHerzog2010Fig2Comparision);
 
-  nameModification = '';
-  if(flag_useElasticTendon == 1)
-    nameModification = 'ElasticTendon';
-  else
-    nameModification = 'RigidTendon';          
-  end
+%   nameModification = '';
+%   if(flag_useElasticTendon == 1)
+%     nameModification = 'ElasticTendon';
+%   else
+%     nameModification = 'RigidTendon';          
+%   end
   
   
-  fileNameOpus31 = [dataFolder,'benchRecordOpus31_',...
-                    nameModification,outputFileEndingOpus31,'_TiDefault.mat'];
-  dataOpus31 = load(fileNameOpus31);
-  
-  dataFolderContents = dir(dataFolder);
+  dataOpus31 = load([dataFolder,'benchRecordOpus31_Default.mat']);  
+  dataOpus31Tuned = load([dataFolder,'benchRecordOpus31_Fitted.mat']);
+  dataDampedEq = load([dataFolder,'benchRecordHill_Default.mat']);
 
-  strA = sprintf('_TiAD%1.2f',tunedNormActiveTitinToActinDamping);
-  strA(strfind(strA,'.'))='p';
-  tunedFileDateNum = 0;
-  tunedFileName = '';
+%   dataFolderContents = dir(dataFolder);
+% 
+%   strA = sprintf('_TiAD%1.2f',tunedNormActiveTitinToActinDamping);
+%   strA(strfind(strA,'.'))='p';
+%   tunedFileDateNum = 0;
+%   tunedFileName = '';
+% 
+%   for idxFile=1:1:length(dataFolderContents)
+%     if(contains(dataFolderContents(idxFile).name,strA))
+%         if (dataFolderContents(idxFile).datenum > tunedFileDateNum)
+%             tunedFileName = dataFolderContents(idxFile).name;
+%             tunedFileDateNum = dataFolderContents(idxFile).datenum;
+%         end
+%     end
+%   end
+%   
+%   dataOpus31Tuned=[];
+%   if(isempty(tunedFileName)==0)
+%     dataOpus31Tuned = load([dataFolder,tunedFileName]);
+%   end
 
-  for idxFile=1:1:length(dataFolderContents)
-    if(contains(dataFolderContents(idxFile).name,strA))
-        if (dataFolderContents(idxFile).datenum > tunedFileDateNum)
-            tunedFileName = dataFolderContents(idxFile).name;
-            tunedFileDateNum = dataFolderContents(idxFile).datenum;
-        end
-    end
-  end
-  
-  dataOpus31Tuned=[];
-  if(isempty(tunedFileName)==0)
-    dataOpus31Tuned = load([dataFolder,tunedFileName]);
-  end
+  %fileNameDampedEq = [dataFolder,'benchRecordHill_',...
+  %                    nameModification,outputFileEndingHill,'.mat'];
+  %dataDampedEq = load(fileNameDampedEq);
 
-  fileNameDampedEq = [dataFolder,'benchRecordHill_',...
-                      nameModification,outputFileEndingHill,'.mat'];
-  dataDampedEq = load(fileNameDampedEq);
-  
   
   
 
@@ -423,7 +420,7 @@ if(flag_plotData == 1)
                       '-','Color',lineColorOpus31Pas,'LineWidth',1.0);
   hold on;
   
-  if(isempty(tunedFileName)==0)
+  if(isempty(dataOpus31Tuned)==0)
       lineOpus31TunedPas =plot(dataOpus31Tuned.benchRecord.normFiberLength(:,2),...
                                dataOpus31Tuned.benchRecord.normFiberForce(:,2),...
                           '-','Color',lineColorOpus31TunedPas,'LineWidth',0.5);
@@ -444,7 +441,7 @@ if(flag_plotData == 1)
                       dataOpus31.benchRecord.normFiberForce(:,1),...
                       'Color',lineColorOpus31Act,'LineWidth',1);
   hold on;
-  if(isempty(tunedFileName)==0)
+  if(isempty(dataOpus31Tuned)==0)
       lineOpus31TunedAct =plot(dataOpus31Tuned.benchRecord.normFiberLength(:,1),...
                           dataOpus31Tuned.benchRecord.normFiberForce(:,1),...
                           'Color',lineColorOpus31TunedAct,'LineWidth',1);
@@ -464,7 +461,7 @@ if(flag_plotData == 1)
 
   
 
-  if(isempty(tunedFileName)==0)
+  if(isempty(dataOpus31Tuned)==0)
   
       legend([lineExpActive,lineOpus31Act,lineOpus31TunedAct,lineDampedEqAct], ...
               'Exp.','Model','Model Adjusted','Hill-type ',...
@@ -555,11 +552,11 @@ if(flag_plotData == 1)
 
   n = length(dataOpus31.benchRecord.time);
 
-  lActN = sarcomerePropertiesOpus31.normActinLength;
+  lActN = sarcomereProperties.normActinLength;
   lTitinActinN = reshape(dataOpus31.benchRecord.extra(:,1,1),n,1) ...
-      +  sarcomerePropertiesOpus31.ZLineToT12NormLengthAtOptimalFiberLength;
+      +  sarcomereProperties.ZLineToT12NormLengthAtOptimalFiberLength;
   lTitinActinNTuned = reshape(dataOpus31Tuned.benchRecord.extra(:,1,1),n,1) ...
-      +  sarcomerePropertiesOpus31.ZLineToT12NormLengthAtOptimalFiberLength;
+      +  sarcomereProperties.ZLineToT12NormLengthAtOptimalFiberLength;
 
   subplot(2,3,1);
       plot(dataOpus31.benchRecord.time,lTitinActinN,...
@@ -593,7 +590,7 @@ if(flag_plotData == 1)
           [dataOpus31Tuned.benchRecord.extraLabels{1}]);
       hold on;
       plot([timeMin;timeMax],...
-           [1;1].*sarcomerePropertiesOpus31.normContourLengthTitinProximal,...
+           [1;1].*sarcomereProperties.normContourLengthTitinProximal,...
            '--','Color',[1,0,0]);
       hold on;
       legend;
@@ -617,7 +614,7 @@ if(flag_plotData == 1)
           [dataOpus31Tuned.benchRecord.extraLabels{5}]);
       hold on;
       plot([timeMin;timeMax],...
-           [1;1].*sarcomerePropertiesOpus31.normContourLengthTitinDistal,...
+           [1;1].*sarcomereProperties.normContourLengthTitinDistal,...
            '--','Color',[1,0,0]);
       hold on;
       box off;

@@ -4,8 +4,9 @@ clear all;
 
 
 
-flag_defaultSimulation   =1;
-flag_calibratedSimulation=1;
+flag_defaultSimulation   =0;
+flag_tunedSimulation     =0;
+
 
 %Generic config.
 flag_simulateActiveStretch      = 1;
@@ -29,35 +30,39 @@ flag_useElasticTendon             = 0;
 flag_useFiberDamping              = 1;
 fiberDampingCoefficient           = 0.01;
 
+%Simulation specific config: adj. models
+if(flag_tunedSimulation==1)
+    flag_simulateHillModel          = 0; 
+    flag_simulateOpus31Model        = 1;
+    flag_plotData                   = 0;  
+    flag_savePlotsToFile            = 0;    
+    flag_useTunedRabbitPsoasModel   = 1;
+    main_LeonardJoumaaHerzog2010;
+end
+
 %Simulation specific config: default models
 if(flag_defaultSimulation==1)
     flag_simulateHillModel      = 1; 
     flag_simulateOpus31Model    = 1;
     flag_plotData               = 0;  
     flag_savePlotsToFile        = 0;
-%    flag_fitTitin               = 0;  
+    flag_useTunedRabbitPsoasModel = 0;
     
-    main_LeonardJoumaaHerzog2010;
-end
-
-%Simulation specific config: adj. models
-if(flag_calibratedSimulation==1)
-    flag_simulateHillModel          = 0; 
-    flag_simulateOpus31Model        = 1;
-    flag_plotData                   = 0;  
-    flag_savePlotsToFile            = 0;    
-%    flag_fitTitin                   = 1;
-    normActiveTitinToActinDamping   = tunedNormActiveTitinToActinDamping;
 
     main_LeonardJoumaaHerzog2010;
 end
+
+
+
+
+
+
 %Plot.
 flag_simulateHillModel          = 0; 
 flag_simulateOpus31Model        = 0;
 flag_plotData                   = 1;  
 flag_savePlotsToFile            = 1;
-%flag_fitTitin                   = 0;  
-normActiveTitinToActinDamping   = [];
+flag_useTunedRabbitPsoasModel   = 0;
 
 figLeonardJoumaaHerzog2010Fig2Comparision = figure;
 main_LeonardJoumaaHerzog2010;
