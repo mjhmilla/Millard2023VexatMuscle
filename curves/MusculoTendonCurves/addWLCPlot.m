@@ -8,11 +8,11 @@ y    = calcBezierYFcnXDerivative(x,forceLengthTitinCurve,0);
 dydx = calcBezierYFcnXDerivative(x,forceLengthTitinCurve,1);
 
 lo = x-(y/dydx);
-
+lengthContourUpd=lengthContour-lo;
 % Solve for WLC coefficient s.t. the two curves are equal at fiso
 ca = 1;
 fPaWLC=calcWormLikeChainModelDer(lengthAtOneFpeHalf-lo,...
-                                  lengthContour,...
+                                  lengthContourUpd,...
                                   ca,ca*ca,[0,0]);
 fPa = calcBezierYFcnXDerivative(lengthAtOneFpeHalf,...
                 forceLengthTitinCurve,0);
@@ -20,7 +20,7 @@ fPa = calcBezierYFcnXDerivative(lengthAtOneFpeHalf,...
 ca = fPa/fPaWLC;
 % Solve for WLC length at 5.5*fiso, the length
 
-lengthFailure = calcWormLikeChainModelInvDer(normForceFailure,lengthContour,... 
+lengthFailure = calcWormLikeChainModelInvDer(normForceFailure,lengthContourUpd,... 
                                       ca,ca*ca,[0,0]);
 lengthFailure = lengthFailure + lo;
 
@@ -40,14 +40,14 @@ for i=1:1:n
 
     if(lengthV(i,1)>lo)
         forceWLCV(i,1)= calcWormLikeChainModelDer(lengthV(i,1)-lo,...
-                                      lengthContour,...
+                                      lengthContourUpd,...
                                       ca,ca*ca,[0,0]);
     else
         forceWLCV(i,1)=0;
     end
 end
 
-zLength = lengthV./lengthContour;
+zLength = lengthV./lengthContourUpd;
 
 xTxt = lengthV(end);
 yTxt = forceV(end);

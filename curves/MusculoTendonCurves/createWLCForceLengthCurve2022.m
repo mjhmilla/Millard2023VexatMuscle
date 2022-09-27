@@ -177,21 +177,21 @@ else
     
     d = 1;
     dSq = d*d;
-    
-    yWlc = calcWormLikeChainModelDer(xIso-xo,normLengthContour, d,dSq,[0,0]);
+    normLengthContourUpd=normLengthContour-xo;
+    yWlc = calcWormLikeChainModelDer(xIso-xo,normLengthContourUpd, d,dSq,[0,0]);
     
     d = yIso/yWlc;
     dSq=d*d;
     
-    xFailure = calcWormLikeChainModelInvDer(normForceFailure,normLengthContour,...
+    xFailure = calcWormLikeChainModelInvDer(normForceFailure,normLengthContourUpd,...
                     d,dSq,[0,0]);
     xFailure = xFailure + xo;
     
     yFailure = calcWormLikeChainModelDer(xFailure-xo, ...
-                    normLengthContour,d,dSq,[0,0]);
+                    normLengthContourUpd,d,dSq,[0,0]);
     
     kFailure = calcWormLikeChainModelDer(xFailure-xo, ...
-                    normLengthContour,d,dSq,[1,0]);
+                    normLengthContourUpd,d,dSq,[1,0]);
 
     cWlc = 0.5;
     p12 = calcQuinticBezierCornerControlPoints(xIso, yIso,kToe, 0, ...
@@ -223,7 +223,7 @@ else
     xWlc = xIso + 0.5*(xFailure-xIso);
     delta = 0.25;
     fWlc = calcWormLikeChainModelDer(xWlc-xo, ...
-                    normLengthContour,d,dSq,[0,0]);
+                    normLengthContourUpd,d,dSq,[0,0]);
     errBest = abs(calcBezierYFcnXDerivative(xWlc,fiberForceLengthCurve,0)...
                    -fWlc);
     

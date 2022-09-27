@@ -100,7 +100,7 @@ outputFileEndingHill = 'Default';
 if(flag_useTunedRabbitPsoasModel==0)
     tmp=load('output/structs/defaultRabbitPsoasFibril.mat');
     musculotendonProperties   = tmp.defaultRabbitPsoasFibril.musculotendon;
-    sarcomereProperties      = tmp.defaultRabbitPsoasFibril.sarcomere;
+    sarcomereProperties       = tmp.defaultRabbitPsoasFibril.sarcomere;
     normMuscleCurves          = tmp.defaultRabbitPsoasFibril.curves;
     fitting                   = tmp.defaultRabbitPsoasFibril.fitting;    
     outputFileEndingOpus31 = 'Default';
@@ -134,17 +134,21 @@ if(flag_useFig3KirchBoskovRymer1994==1)
 end
 
 
-if(isempty(normPassiveTitinToActinDamping)==0)
-  sarcomereProperties.normPassiveTitinToActinDamping          = normPassiveTitinToActinDamping;
-else
-  normPassiveTitinToActinDamping = sarcomereProperties.normPassiveTitinToActinDamping;
-end
-
-if(isempty(normActiveTitinToActinDamping)==0)
-  sarcomereProperties.normMaxActiveTitinToActinDamping          = normActiveTitinToActinDamping;
-else
-  normActiveTitinToActinDamping = sarcomereProperties.normMaxActiveTitinToActinDamping;
-end
+% if(isempty(normPassiveTitinToActinDamping)==0)
+%   assert(0,'On the delete list');
+%   sarcomereProperties.normPassiveTitinToActinDamping          = normPassiveTitinToActinDamping;
+% else
+%   assert(0,'On the delete list');    
+%   normPassiveTitinToActinDamping = sarcomereProperties.normPassiveTitinToActinDamping;
+% end
+% 
+% if(isempty(normActiveTitinToActinDamping)==0)
+%   assert(0,'On the delete list');
+%   sarcomereProperties.normMaxActiveTitinToActinDamping          = normActiveTitinToActinDamping;
+% else
+%   assert(0,'On the delete list');
+%   normActiveTitinToActinDamping = sarcomereProperties.normMaxActiveTitinToActinDamping;
+% end
 
 %%
 % Meta configuration properties: Do not touch.  
@@ -424,7 +428,7 @@ if(flag_plotData == 1)
       lineOpus31TunedPas =plot(dataOpus31Tuned.benchRecord.normFiberLength(:,2),...
                                dataOpus31Tuned.benchRecord.normFiberForce(:,2),...
                           '-','Color',lineColorOpus31TunedPas,'LineWidth',0.5);
-      hold on;  
+      hold on;        
   end
   lineDampedEqPas =plot(dataDampedEq.benchRecord.normFiberLength(:,2),...
                         dataDampedEq.benchRecord.normFiberForce(:,2),...
@@ -447,7 +451,75 @@ if(flag_plotData == 1)
                           'Color',lineColorOpus31TunedAct,'LineWidth',1);
       hold on;
   end
-  
+
+  n = length(dataOpus31.benchRecord.time);
+
+  if(isempty(dataOpus31Tuned)==0)
+      assert(n==length(dataOpus31Tuned.benchRecord.time));
+      %Annotate the length at which the titin tip passes over the end
+      %of actin
+      lActN = sarcomereProperties.normActinLength;
+      lTitinActinN = reshape(dataOpus31.benchRecord.extra(:,1,1),n,1) ...
+          +  sarcomereProperties.ZLineToT12NormLengthAtOptimalFiberLength;
+      lTitinActinTunedN = reshape(dataOpus31Tuned.benchRecord.extra(:,1,1),n,1) ...
+          +  sarcomereProperties.ZLineToT12NormLengthAtOptimalFiberLength;
+
+      idxSO = find( lActN-lTitinActinN <= 0, 1 );
+      idxSO=idxSO-10; 
+      %The slip off is smoothed - I'm going back to get an index before 
+      %the slip off starts to reduce titin's force
+
+      idxSOTuned = find( lActN-lTitinActinTunedN <= 0, 1 );
+      idxSOTuned=idxSOTuned-10;
+
+      lceNSO = dataOpus31.benchRecord.normFiberLength(idxSO,1);
+      fceNSO = dataOpus31.benchRecord.normFiberForce(idxSO,1);
+
+      lceNSOTuned = dataOpus31Tuned.benchRecord.normFiberLength(idxSOTuned,1);
+      fceNSOTuned = dataOpus31Tuned.benchRecord.normFiberForce(idxSOTuned,1);
+
+      plot(lceNSO,fceNSO,'*','MarkerSize',5,'Color',[0,0,0]);
+      hold on;
+      plot(lceNSOTuned,fceNSOTuned,'*','MarkerSize',5,'Color',[0,0,0]);
+      hold on;
+
+      text(lceNSO*0.8,fceNSO,'Titin attachment',...
+          'HorizontalAlignment','right','FontSize',8);
+      hold on;
+      text(lceNSO*0.8,fceNSO*0.9,'slips off of actin',...
+          'HorizontalAlignment','right','FontSize',8);
+      hold on;
+
+      xArrow = [0.8,1].*lceNSO;
+      yArrow = [1,1].*fceNSO;
+      plot(xArrow,yArrow,'Color',[0,0,0]);
+      hold on;
+
+      xArrow(1,2) = lceNSOTuned;
+      yArrow(1,2) = fceNSOTuned;
+      %plot(xArrow,yArrow,'Color',[0,0,0]);
+      %hold on;
+
+      %Annotate the length at which titin fails
+      normLengthCEAtTitinContour = ...
+         2*(sarcomereProperties.normContourLengthTitinProximal ...
+         +sarcomereProperties.normContourLengthTitinDistal ...
+         +sarcomereProperties.normLengthTitinFixed);
+
+      plot([1;1].*normLengthCEAtTitinContour,...
+           [0;1].*max(dataOpus31.benchRecord.normFiberForce(:,1)),...
+           '--','Color',lineColorOpus31Act.*0.5+[1,1,1].*0.5,'LineWidth',1);
+      hold on;
+      th= text( normLengthCEAtTitinContour-0.1,...
+            round(mean(dataLJH2010Fig2Main(2).y),2)*0.7,...
+            'Contour Length Reached',...
+            'FontSize',8,...
+            'HorizontalAlignment','left',...
+            'Color',lineColorOpus31Act.*0.5+[1,1,1].*0.5);
+      set(th,'Rotation',90);
+      hold on;
+  end
+
 %   plot(dataDampedEq.benchRecord.normFiberLength(:,1),...
 %                         dataDampedEq.benchRecord.normFiberForce(:,1),...
 %                         'Color',[1,1,1],'LineWidth',1);
@@ -550,13 +622,14 @@ if(flag_plotData == 1)
   end
   figure(figTitinSegments);
 
-  n = length(dataOpus31.benchRecord.time);
+
 
   lActN = sarcomereProperties.normActinLength;
   lTitinActinN = reshape(dataOpus31.benchRecord.extra(:,1,1),n,1) ...
       +  sarcomereProperties.ZLineToT12NormLengthAtOptimalFiberLength;
   lTitinActinNTuned = reshape(dataOpus31Tuned.benchRecord.extra(:,1,1),n,1) ...
       +  sarcomereProperties.ZLineToT12NormLengthAtOptimalFiberLength;
+
 
   subplot(2,3,1);
       plot(dataOpus31.benchRecord.time,lTitinActinN,...
