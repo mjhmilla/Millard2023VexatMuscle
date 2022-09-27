@@ -5,7 +5,7 @@ clear all;
 
 
 flag_defaultSimulation   =0;
-flag_tunedSimulation     =0;
+flag_tunedSimulation     =1;
 
 
 %Generic config.

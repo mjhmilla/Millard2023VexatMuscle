@@ -93,7 +93,7 @@ fitting                 = [];
 
 
 
-outputFileEndingHill = '_Default';
+outputFileEndingHill = 'Default';
 
 
 %Basic parameters for the Hill model
@@ -103,7 +103,7 @@ if(flag_useTunedRabbitPsoasModel==0)
     sarcomereProperties      = tmp.defaultRabbitPsoasFibril.sarcomere;
     normMuscleCurves          = tmp.defaultRabbitPsoasFibril.curves;
     fitting                   = tmp.defaultRabbitPsoasFibril.fitting;    
-    outputFileEndingOpus31 = '_Default';
+    outputFileEndingOpus31 = 'Default';
 
 else
     tmp=load('output/structs/tunedRabbitPsoasFibril.mat');
@@ -111,7 +111,7 @@ else
     sarcomereProperties       = tmp.tunedRabbitPsoasFibril.sarcomere;
     normMuscleCurves          = tmp.tunedRabbitPsoasFibril.curves;
     fitting                   = tmp.tunedRabbitPsoasFibril.fitting;    
-    outputFileEndingOpus31 = '_Fitted';
+    outputFileEndingOpus31 = 'Fitted';
     
 end
 

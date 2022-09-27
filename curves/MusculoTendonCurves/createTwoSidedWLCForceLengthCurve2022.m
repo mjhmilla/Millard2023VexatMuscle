@@ -37,7 +37,7 @@ function fiberForceLengthCurve = createTwoSidedWLCForceLengthCurve2022(...
                                        normLengthZero, normLengthToe, normForceToe, ...
                                        normLengthContour,normForceFailure,...
                                        kZero, kLow, kToe, curviness,...
-                                       computeIntegral, muscleName,...
+                                       computeIntegral, flag_useWLCTitinModel, muscleName,...
                                        flag_usingOctave)
 %%
 
@@ -146,153 +146,183 @@ xfoot    = xZero + 0.5*(xLow-xZero);
 yfoot    = yZero;
 yLow     = yfoot + kLow*(xLow-xfoot);
 
-%Compute the Quintic Bezier control points
-
-
-xo = xIso-(yIso/kToe);
-
-d = 1;
-dSq = d*d;
-
-yWlc = calcWormLikeChainModelDer(xIso-xo,normLengthContour, d,dSq,[0,0]);
-
-d = yIso/yWlc;
-dSq=d*d;
-
-xFailure = calcWormLikeChainModelInvDer(normForceFailure,normLengthContour,...
-                d,dSq,[0,0]);
-xFailure = xFailure + xo;
-
-yFailure = calcWormLikeChainModelDer(xFailure-xo, ...
-                normLengthContour,d,dSq,[0,0]);
-
-kFailure = calcWormLikeChainModelDer(xFailure-xo, ...
-                normLengthContour,d,dSq,[1,0]);
-
-
 
 %% Fit the curviness of between xIso and xFailure to best fit the WLC model
 
 p01 = calcQuinticBezierCornerControlPoints(xZero, yZero,kZero, 0, ...
                                             xIso, yIso, kToe, 0,c);
  
-cWlc = 0.5;
-p12 = calcQuinticBezierCornerControlPoints(xIso, yIso,kToe, 0, ...
-                           xFailure, yFailure, kFailure, 0,cWlc);
+if(flag_useWLCTitinModel==0)
 
-xpts = [p01(:,1),p12(:,1)];
-ypts = [p01(:,2),p12(:,2)];
-
-xEnd = xFailure;
-yEnd = yFailure;
-kEnd = kFailure;
-
-
-%Create the curve structure
-curve.xpts    = xpts;
-curve.ypts    = ypts;
-
-curve.xEnd         = [xZero, xEnd];
-curve.yEnd         = [yZero, yEnd];
-curve.dydxEnd      = [kZero, kEnd];
-curve.d2ydx2End    = [0, 0];
-
-curve.integral = [];
-
-curveL=curve;
-curveR=curve;
-%Iterate over the second curviness parameter to get a better fit with the 
-%WLC model
-xWlc = xIso + 0.5*(xFailure-xIso);
-delta = 0.25;
-fWlc = calcWormLikeChainModelDer(xWlc-xo, ...
-                normLengthContour,d,dSq,[0,0]);
-errBest = abs(calcBezierYFcnXDerivative(xWlc,curve,0)...
-               -fWlc);
-
-for i=1:1:10
-    cL = cWlc-delta;
-    p12 = calcQuinticBezierCornerControlPoints(xIso, yIso,kToe, 0, ...
-                           xFailure, yFailure, kFailure, 0,cL);
-    curveL.xpts = [p01(:,1),p12(:,1)];
-    curveL.ypts = [p01(:,2),p12(:,2)];
-
-    errL = abs(calcBezierYFcnXDerivative(xWlc,curveL,0)...
-               -fWlc);
+    p01L = calcQuinticBezierCornerControlPoints(...
+                    -xIso, -yIso,   kToe, 0, ...
+                    -xZero, -yZero, kZero, 0, c);
     
-    cR = cWlc+delta;
+    p01M = calcQuinticBezierCornerControlPoints(...
+                    -xZero, -yZero, kZero, 0, ...
+                     xZero,  yZero, kZero, 0, c);
+    
+    p01R = calcQuinticBezierCornerControlPoints(xZero, yZero, kZero, 0, ...
+                                                 xIso,  yIso,  kToe, 0, c);
+    
+    
+    xpts = [p01L(:,1) p01M(:,1) p01R(:,1)];
+    ypts = [p01L(:,2) p01M(:,2) p01R(:,2)];
+    
+       
+    %Create the curve structure
+    fiberForceLengthCurve.xpts    = xpts;
+    fiberForceLengthCurve.ypts    = ypts;
+    
+    
+    fiberForceLengthCurve.xEnd         = [-xIso, xIso];
+    fiberForceLengthCurve.yEnd         = [-yIso, yIso];
+    fiberForceLengthCurve.dydxEnd      = [ kToe, kToe];
+    fiberForceLengthCurve.d2ydx2End    = [0, 0];
+    fiberForceLengthCurve.integral     = [];        
+    %Create the curve structure
+    fiberForceLengthCurve.xpts    = xpts;
+    fiberForceLengthCurve.ypts    = ypts;
+    fiberForceLengthCurve.integral = [];
+
+else
+    xo = xIso-(yIso/kToe);
+    
+    d = 1;
+    dSq = d*d;
+    
+    yWlc = calcWormLikeChainModelDer(xIso-xo,normLengthContour, d,dSq,[0,0]);
+    
+    d = yIso/yWlc;
+    dSq=d*d;
+    
+    xFailure = calcWormLikeChainModelInvDer(normForceFailure,normLengthContour,...
+                    d,dSq,[0,0]);
+    xFailure = xFailure + xo;
+    
+    yFailure = calcWormLikeChainModelDer(xFailure-xo, ...
+                    normLengthContour,d,dSq,[0,0]);
+    
+    kFailure = calcWormLikeChainModelDer(xFailure-xo, ...
+                    normLengthContour,d,dSq,[1,0]);
+
+    cWlc = 0.5;
     p12 = calcQuinticBezierCornerControlPoints(xIso, yIso,kToe, 0, ...
-                           xFailure, yFailure, kFailure, 0,cR);
-    curveR.xpts = [p01(:,1),p12(:,1)];
-    curveR.ypts = [p01(:,2),p12(:,2)];
-
-    errR = abs(calcBezierYFcnXDerivative(xWlc,curveR,0)...
-               -fWlc);
-
-    if(errL < errR && errL < errBest)
-        cWlc = cL;
-        errBest=errL;
+                               xFailure, yFailure, kFailure, 0,cWlc);
+    
+    xpts = [p01(:,1),p12(:,1)];
+    ypts = [p01(:,2),p12(:,2)];
+    
+    xEnd = xFailure;
+    yEnd = yFailure;
+    kEnd = kFailure;
+    
+    
+    %Create the curve structure
+    curve.xpts    = xpts;
+    curve.ypts    = ypts;
+    
+    curve.xEnd         = [xZero, xEnd];
+    curve.yEnd         = [yZero, yEnd];
+    curve.dydxEnd      = [kZero, kEnd];
+    curve.d2ydx2End    = [0, 0];
+    
+    curve.integral = [];
+    
+    curveL=curve;
+    curveR=curve;
+    %Iterate over the second curviness parameter to get a better fit with the 
+    %WLC model
+    xWlc = xIso + 0.5*(xFailure-xIso);
+    delta = 0.25;
+    fWlc = calcWormLikeChainModelDer(xWlc-xo, ...
+                    normLengthContour,d,dSq,[0,0]);
+    errBest = abs(calcBezierYFcnXDerivative(xWlc,curve,0)...
+                   -fWlc);
+    
+    for i=1:1:10
+        cL = cWlc-delta;
+        p12 = calcQuinticBezierCornerControlPoints(xIso, yIso,kToe, 0, ...
+                               xFailure, yFailure, kFailure, 0,cL);
+        curveL.xpts = [p01(:,1),p12(:,1)];
+        curveL.ypts = [p01(:,2),p12(:,2)];
+    
+        errL = abs(calcBezierYFcnXDerivative(xWlc,curveL,0)...
+                   -fWlc);
+        
+        cR = cWlc+delta;
+        p12 = calcQuinticBezierCornerControlPoints(xIso, yIso,kToe, 0, ...
+                               xFailure, yFailure, kFailure, 0,cR);
+        curveR.xpts = [p01(:,1),p12(:,1)];
+        curveR.ypts = [p01(:,2),p12(:,2)];
+    
+        errR = abs(calcBezierYFcnXDerivative(xWlc,curveR,0)...
+                   -fWlc);
+    
+        if(errL < errR && errL < errBest)
+            cWlc = cL;
+            errBest=errL;
+        end
+        if(errR < errL && errR < errBest)
+            cWlc = cR;
+            errBest=errR;
+        end
+    
+        delta=delta*0.5;
+    
     end
-    if(errR < errL && errR < errBest)
-        cWlc = cR;
-        errBest=errR;
-    end
-
-    delta=delta*0.5;
+    
+    %p12 = calcQuinticBezierCornerControlPoints(xIso, yIso,kToe, 0, ...
+    %                       xFailure, yFailure, kFailure, 0,cWlc);
+    %fiberForceLengthCurve.xpts = [p01(:,1),p12(:,1)];
+    %fiberForceLengthCurve.ypts = [p01(:,2),p12(:,2)];
+    
+    
+    %p0 = calcQuinticBezierCornerControlPoints(xZero, yZero,kZero, 0, ...
+    %                                           xLow, yLow, kLow, 0,c);
+    
+    %p1 =  calcQuinticBezierCornerControlPoints(xLow, yLow, kLow, 0, ...
+    %                                           xIso, yIso, kToe, 0, c);
+    
+                                             
+    %xpts = [p0(:,1) p1(:,1)];
+    %ypts = [p0(:,2) p1(:,2)];
+    
+    p01LF = calcQuinticBezierCornerControlPoints(...
+                    -xFailure, -yFailure,  kFailure, 0, ...
+                        -xIso,     -yIso,     kToe, 0, cWlc);
+    
+    p01L = calcQuinticBezierCornerControlPoints(...
+                    -xIso, -yIso,   kToe, 0, ...
+                    -xZero, -yZero, kZero, 0, c);
+    
+    p01M = calcQuinticBezierCornerControlPoints(...
+                    -xZero, -yZero, kZero, 0, ...
+                     xZero,  yZero, kZero, 0, c);
+    
+    p01R = calcQuinticBezierCornerControlPoints(xZero, yZero, kZero, 0, ...
+                                                 xIso,  yIso,  kToe, 0, c);
+    
+    p01RF = calcQuinticBezierCornerControlPoints(xIso, yIso,kToe, 0, ...
+                               xFailure, yFailure, kFailure, 0,cWlc);
+    
+    xpts = [p01LF(:,1)  p01L(:,1) p01M(:,1) p01R(:,1) p01RF(:,1)];
+    ypts = [p01LF(:,2)  p01L(:,2) p01M(:,2) p01R(:,2) p01RF(:,2)];
+    
+    
+    
+    %Create the curve structure
+    fiberForceLengthCurve.xpts    = xpts;
+    fiberForceLengthCurve.ypts    = ypts;
+    
+    
+    fiberForceLengthCurve.xEnd         = [-xFailure, xFailure];
+    fiberForceLengthCurve.yEnd         = [-yFailure, yFailure];
+    fiberForceLengthCurve.dydxEnd      = [ kFailure, kFailure];
+    fiberForceLengthCurve.d2ydx2End    = [0, 0];
+    fiberForceLengthCurve.integral     = [];
 
 end
-
-%p12 = calcQuinticBezierCornerControlPoints(xIso, yIso,kToe, 0, ...
-%                       xFailure, yFailure, kFailure, 0,cWlc);
-%fiberForceLengthCurve.xpts = [p01(:,1),p12(:,1)];
-%fiberForceLengthCurve.ypts = [p01(:,2),p12(:,2)];
-
-
-%p0 = calcQuinticBezierCornerControlPoints(xZero, yZero,kZero, 0, ...
-%                                           xLow, yLow, kLow, 0,c);
-
-%p1 =  calcQuinticBezierCornerControlPoints(xLow, yLow, kLow, 0, ...
-%                                           xIso, yIso, kToe, 0, c);
-
-                                         
-%xpts = [p0(:,1) p1(:,1)];
-%ypts = [p0(:,2) p1(:,2)];
-
-p01LF = calcQuinticBezierCornerControlPoints(...
-                -xFailure, -yFailure,  kFailure, 0, ...
-                    -xIso,     -yIso,     kToe, 0, cWlc);
-
-p01L = calcQuinticBezierCornerControlPoints(...
-                -xIso, -yIso,   kToe, 0, ...
-                -xZero, -yZero, kZero, 0, c);
-
-p01M = calcQuinticBezierCornerControlPoints(...
-                -xZero, -yZero, kZero, 0, ...
-                 xZero,  yZero, kZero, 0, c);
-
-p01R = calcQuinticBezierCornerControlPoints(xZero, yZero, kZero, 0, ...
-                                             xIso,  yIso,  kToe, 0, c);
-
-p01RF = calcQuinticBezierCornerControlPoints(xIso, yIso,kToe, 0, ...
-                           xFailure, yFailure, kFailure, 0,cWlc);
-
-xpts = [p01LF(:,1)  p01L(:,1) p01M(:,1) p01R(:,1) p01RF(:,1)];
-ypts = [p01LF(:,2)  p01L(:,2) p01M(:,2) p01R(:,2) p01RF(:,2)];
-
-
-
-%Create the curve structure
-fiberForceLengthCurve.xpts    = xpts;
-fiberForceLengthCurve.ypts    = ypts;
-
-
-fiberForceLengthCurve.xEnd         = [-xFailure, xFailure];
-fiberForceLengthCurve.yEnd         = [-yFailure, yFailure];
-fiberForceLengthCurve.dydxEnd      = [ kFailure, kFailure];
-fiberForceLengthCurve.d2ydx2End    = [0, 0];
-fiberForceLengthCurve.integral     = [];
-
-
 
 % if(computeIntegral == 1)
 %     xScaling = normLengthToe;
