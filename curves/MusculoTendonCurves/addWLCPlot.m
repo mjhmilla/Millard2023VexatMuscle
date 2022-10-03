@@ -1,7 +1,8 @@
 function [figH,lengthV,forceV,forceWLCV] ...
         = addWLCPlot(figH, forceLengthTitinCurve,...
             lengthAtOneFpeHalf,lengthContour,normForceFailure,...
-            curveColor,curveName)
+            curveColor,curveName,...
+            flag_addAnnotation, flag_addWLCCurve)
 
 x    = lengthAtOneFpeHalf;
 y    = calcBezierYFcnXDerivative(x,forceLengthTitinCurve,0);
@@ -54,15 +55,39 @@ yTxt = forceV(end);
 text(xTxt,yTxt,curveName,'Color',curveColor,...
     'VerticalAlignment','bottom','HorizontalAlignment','left');
 hold on;
-xTxt = lengthV(end);
-yTxt = forceV(end);
-text(xTxt,yTxt,'WLC','Color',[1,1,1].*0.5,...
-    'VerticalAlignment','top','HorizontalAlignment','left');
+
+
+if(flag_addWLCCurve==1)
+    xTxt = lengthV(end);
+    yTxt = forceV(end);
+    text(xTxt,yTxt,'WLC','Color',[1,1,1].*0.75,...
+        'VerticalAlignment','top','HorizontalAlignment','left');
+    hold on;
+
+    plot(lengthV,forceWLCV,'-','Color',[1,1,1].*0.75,'LineWidth',2);
+    hold on;
+end
+
+plot(lengthV,forceV,'-','Color',curveColor,'LineWidth',1);
 hold on;
 
-plot(lengthV,forceWLCV,'--','Color',[1,1,1].*0.5,'LineWidth',2);
-hold on;
-plot(lengthV,forceV,'-','Color',curveColor);
+if(flag_addAnnotation==1)
+    text(lo,normForceFailure*0.15,sprintf('%1.3f',lo),...
+        'VerticalAlignment','bottom',...
+        'HorizontalAlignment','center',...
+        'Color',curveColor);
+    hold on;
+    
+    plot([lo;lo],[0;1].*(normForceFailure*0.15),...
+        '-','Color',curveColor);
+    hold on;
+    
+    plot([1;1].*lengthContour,...
+        [0;1].*normForceFailure,...
+        '--','Color',curveColor,'LineWidth',0.5);
+    hold on;
+end
+
 xlabel('Norm. Length ($$\ell/\ell_{o}^{M}$$)')
-ylabel('Norm. Force');
+ylabel('Norm. Force ($$f/f_{o}^{M}$$)');
 %title(curveName);
