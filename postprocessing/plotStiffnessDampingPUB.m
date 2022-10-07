@@ -50,9 +50,9 @@ fig_fig12 = figure;
   xSpace = 0.075;
   
   kMin = -0.01;
-  kMax = 8.51;
+  kMax = 12.01;
   dMin = -0.001;
-  dMax = 0.11;
+  dMax = 0.1201;
   
   fMin = -0.01;
   fMax = 12.51;

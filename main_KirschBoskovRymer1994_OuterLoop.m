@@ -6,8 +6,8 @@ clear all;
 %Run all of the simulations
 %%
 
-flag_runSimulations     = 1;
-flag_frequencyAnalysis  = 1;
+flag_runSimulations     = 0;
+flag_frequencyAnalysis  = 0;
 flag_generatePlots      = 1;
 
 
@@ -186,7 +186,9 @@ end
 %%
 
 if(flag_generatePlots==1)
-  
+  flag_generateRandomInput    = 0;
+  flag_processInputFunctions  = 0;
+
   %Elastic tendon
   flag_simulateHillModel      = 0; 
   flag_simulateOpus31Model    = 0;
