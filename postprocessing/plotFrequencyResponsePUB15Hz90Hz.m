@@ -98,9 +98,9 @@ switch flag_Mode15Hz90HzBoth
     expMarkType  = {'-','-'};
     expLegendEntry = {'Kirsch: 1.6mm 90Hz', 'Kirsch: 1.6mm 15Hz'};    
     expModelPlotColor = [0.25,  0.25, 1;...
-                         0.25,   0.25,  1];
+                         0.5,   0.5,  1];
     expPlotColor      = [0.25,  0.25, 0.25;...
-                         0.25,   0.25, 0.25];
+                         0.5,   0.5, 0.5];
     expMarkFaceColor = expPlotColor;
     xTicksVector = [4,15,90];
     
@@ -341,6 +341,24 @@ for z=1:1:length(freqSeriesFiles)
       lineLabel = [ freqSeriesName{z}];
 
 
+      kdLineColor = lineColorFull(k,:);
+    
+      switch expBWPlot(1,k)
+          case 15
+                idxGain      = idxGain15;
+                idxPhase     = idxPhase15;
+                xTicksVector = xTicksVector15;
+                kdLineColor = (kdLineColor).*0.75 ...
+                              +[1,1,1].*0.25;
+          case 90
+                idxGain      = idxGain90;
+                idxPhase     = idxPhase90;
+                xTicksVector = xTicksVector90;
+                
+          otherwise
+              assert(0,'Invalid frequency selection');
+      end
+
 
       pidKD = plot( inputFunctions.time(idxChunk,1),...
              freqSimData.forceKD(idxChunk,idxSim)+yo,...
@@ -494,11 +512,15 @@ for z=1:1:length(freqSeriesFiles)
     idxPhase90 = 5*(z-1)+5;
     
 
+    kdLineColor = freqSeriesColor(z,:);
+
     switch expBWPlot(1,k)
         case 15
             idxGain      = idxGain15;
             idxPhase     = idxPhase15;
             xTicksVector = xTicksVector15;
+            kdLineColor = (kdLineColor).*0.75 ...
+                          +[1,1,1].*0.25;
         case 90
             idxGain      = idxGain90;
             idxPhase     = idxPhase90;
@@ -517,7 +539,7 @@ for z=1:1:length(freqSeriesFiles)
     kdMarkType = '-';
     kdLineWidth= 1;
     kdWhiteLineWidth = 2;
-    kdLineColor = freqSeriesColor(z,:);
+    
 %     if(k==2)        
 %       markType = 'o';
 %       markFaceColor = [1,1,1];
