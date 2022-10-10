@@ -17,6 +17,7 @@ success=0;
                
 freqTable = [15,35,90];
 ampTable = [0.4,0.8,1.6];
+forceTable = 5;
 noDataCode = -42;
 
 kbr1994Data(9) = struct('amplitude',      0,...
@@ -81,6 +82,7 @@ opus31Table = struct('stiffness',[],'damping',[],'vaf',[],'vafData',[]);
                       
 freq = [ 15,  15,  15,  35,  35,  35,  90,  90,  90];
 amp  = [0.4, 0.8, 1.6, 0.4, 0.8, 1.6, 0.4, 0.8, 1.6];
+force =[  1,   1,   1,   1,   1,   1,   1,   1,   1].*forceTable;
                       
 for i=1:1:length(freq)
   kbr1994(i).amplitude = amp(i);
@@ -109,10 +111,49 @@ for z=1:1:length(freqSeriesFiles)
   currDamping   = modelDamping;
   currVaf       = modelVaf;
 
-  for i = 1:1:length(freqSimData.amplitudeMM)
-    idx = getIndexIntoVectors(freqSimData.amplitudeMM(1,i),...
-                              freqSimData.bandwidthHz(1,i),amp,freq);
-                            
+  for idx=1:1:length(currData)
+    currData(idx).amplitude= [];
+    currData(idx).frequency= [];
+    currData(idx).stiffness_x= [];
+    currData(idx).stiffness_y= [];
+    currData(idx).damping_x= [];
+    currData(idx).damping_y= [];
+    currData(idx).vaf_x= [];
+    currData(idx).vaf_y= [];
+  end
+
+  for idx = 1:1:length(amp)
+
+%    idx = getIndexIntoVectors(freqSimData.amplitudeMM(1,i),...
+%                              freqSimData.bandwidthHz(1,i),amp,freq);
+       
+    i=0;
+    for idxSeries=1:1:length(freqSimData.amplitudeMM)
+        errA = abs(freqSimData.amplitudeMM(1,idxSeries)-amp(1,idx));
+        errB = abs(freqSimData.bandwidthHz(1,idxSeries)-freq(1,idx));
+        errC = abs(freqSimData.nominalForce(1,idxSeries)-force(1,idx));
+        if(errA < 5e-2 && errB < 5e-2 && errC < 5e-2)
+            assert(i==0);
+            i=idxSeries;
+        end
+    end
+    if(i==0)
+        here=1;
+    end
+    assert(i>0);
+
+
+    assert(isempty(currData(idx).amplitude));
+    assert(isempty(currData(idx).frequency));
+    assert(isempty(currData(idx).stiffness_x));
+    assert(isempty(currData(idx).stiffness_y));
+    assert(isempty(currData(idx).damping_x));
+    assert(isempty(currData(idx).damping_y));
+    assert(isempty(currData(idx).vaf_x));
+    assert(isempty(currData(idx).vaf_y));
+
+
+
     %If data is being concatenated make sure it is to the correct trial
     if( currData(idx).amplitude ~= 0)
       assert(currData(idx).amplitude == freqSimData.amplitudeMM(1,i));
@@ -149,12 +190,15 @@ for z=1:1:length(freqSeriesFiles)
     
     currData(idx).stiffness_x = k_x;
     currData(idx).stiffness_y = k_y;
-    
-    [fo, g] = fit(k_x,k_y,'poly1');
-    
-    currStiffness(idx).fo = fo;
-    currStiffness(idx).g = g;
-    
+
+    if(length(k_x) > 1)
+        [fo, g] = fit(k_x,k_y,'poly1');    
+        currStiffness(idx).fo = fo;
+        currStiffness(idx).g = g;
+    else
+        currStiffness(idx).fo = k_y;
+        currStiffness(idx).g = 0;
+    end
     % Damping    
     data_x = currData(idx).damping_x;
     data_y = currData(idx).damping_y;
@@ -165,10 +209,14 @@ for z=1:1:length(freqSeriesFiles)
     currData(idx).damping_x = d_x;
     currData(idx).damping_y = d_y;    
     
-    [fo, g] = fit(d_x,d_y,'poly1');
-    currDamping(idx).fo = fo;
-    currDamping(idx).g = g;
-    
+    if(length(d_x) > 1)
+        [fo, g] = fit(d_x,d_y,'poly1');
+        currDamping(idx).fo = d_y;
+        currDamping(idx).g = 0;
+    else
+        currDamping(idx).damping_x = d_x;
+        currDamping(idx).damping_y = d_y;    
+    end
     %VAF
     data_x = currData(idx).vaf_x;
     data_y = currData(idx).vaf_y;
@@ -176,12 +224,18 @@ for z=1:1:length(freqSeriesFiles)
     [vaf_x,map] = sort(data_x);
     vaf_y       = data_y(map);    
     
+    
     currData(idx).vaf_x = vaf_x;
     currData(idx).vaf_y = vaf_y;    
     
-    [fo, g] = fit(vaf_x,vaf_y,'poly1');
-    currVaf(idx).fo = fo;
-    currVaf(idx).g = g;
+    if(length(vaf_x) > 1)
+        [fo, g] = fit(vaf_x,vaf_y,'poly1');
+        currVaf(idx).fo = fo;
+        currVaf(idx).g = g;
+    else
+        currVaf(idx).fo = vaf_y;
+        currVaf(idx).g = 0;
+    end
     currVaf(idx).mean = mean(vaf_y);
     currVaf(idx).std = std(vaf_y);
     currVaf(idx).min = min(vaf_y);
@@ -228,10 +282,21 @@ end
 
 amp9A = [0.4,0.8,1.6];
 freq9A = [15,15,15];
+force9A = [5,5,5];
 assert(length(dataKBR1994Fig9A)==3);
 
 for i=1:1:length(freq9A)
   idx = getIndexIntoVectors(amp9A(1,i),freq9A(1,i),amp,freq);
+%     idx=0;
+%     for z=1:1:length(freqSimData.amplitudeMM)
+%         errA = abs(freqSimData.amplitudeMM(1,z)-amp9A(1,i));
+%         errB = abs(freqSimData.bandwidthHz(1,i)-freq9A(1,i));
+%         errC = abs(freqSimData.nominalForce(1,i)-force9A(1,i));
+%         if(errA < 1e-6 && errB < 1e-6 && errC < 1e-6)
+%             assert(idx==0);
+%             idx=z;
+%         end
+%     end
 
   data_x = [dataKBR1994Fig9A(i).x];
   data_y = [dataKBR1994Fig9A(i).y];
@@ -241,9 +306,14 @@ for i=1:1:length(freq9A)
   kbr1994(idx).stiffness_x = k_x;
   kbr1994(idx).stiffness_y = k_y;
 
-  [fo, g] = fit(k_x,k_y,'poly1');
-  kbr1994Stiffness(idx).fo = fo;
-  kbr1994Stiffness(idx).g  = g;
+  if(length(k_x) > 1)
+      [fo, g] = fit(k_x,k_y,'poly1');
+      kbr1994Stiffness(idx).fo = fo;
+      kbr1994Stiffness(idx).g  = g;
+  else
+      kbr1994Stiffness(idx).fo = k_y;
+      kbr1994Stiffness(idx).g  = 0;
+  end
 end
 
 %%
@@ -251,10 +321,21 @@ end
 %%
 amp9B =  [0.4,0.4,0.4,1.6,1.6,1.6];
 freq9B = [ 15, 35, 90, 15, 35, 90];
+force9B= [  5,  5,  5,  5,  5,  5];
 assert(length(dataKBR1994Fig9B)==6);
 
 for i=1:1:length(freq9B)
   idx = getIndexIntoVectors(amp9B(1,i),freq9B(1,i),amp,freq);
+%     idx=0;
+%     for z=1:1:length(freqSimData.amplitudeMM)
+%         errA = abs(freqSimData.amplitudeMM(1,z)-amp9B(1,i));
+%         errB = abs(freqSimData.bandwidthHz(1,i)-freq9B(1,i));
+%         errC = abs(freqSimData.nominalForce(1,i)-force9B(1,i));
+%         if(errA < 1e-6 && errB < 1e-6 && errC < 1e-6)
+%             assert(idx==0);
+%             idx=z;
+%         end
+%     end
 
   data_x = [dataKBR1994Fig9B(i).x];
   data_y = [dataKBR1994Fig9B(i).y];
@@ -264,9 +345,14 @@ for i=1:1:length(freq9B)
   kbr1994(idx).stiffness_x = k_x;
   kbr1994(idx).stiffness_y = k_y;
 
-  [fo, g] = fit(k_x,k_y,'poly1');
-  kbr1994Stiffness(idx).fo = fo;
-  kbr1994Stiffness(idx).g  = g;
+  if(length(k_x) > 1)
+      [fo, g] = fit(k_x,k_y,'poly1');
+      kbr1994Stiffness(idx).fo = fo;
+      kbr1994Stiffness(idx).g  = g;
+  else
+      kbr1994Stiffness(idx).fo = k_y;
+      kbr1994Stiffness(idx).g  = 0;      
+  end
 end
 
 
@@ -275,7 +361,7 @@ end
 %%
 amp10 =  [0.4,0.4,0.4, 0.8,0.8,0.8, 1.6,1.6,1.6];
 freq10 = [ 15, 35, 90,  15, 35, 90,  15, 35, 90];
-
+force10= [ 5, 5, 5, 5, 5, 5, 5, 5, 5];
 % This figure is a bit of a special case: data from the different
 % perturbations are identically labelled. Kirsch et al. did this to make
 % a point that damping varies with purturbation frequency. However this 
@@ -299,7 +385,17 @@ for i=1:1:length(amp10)
   end
   
   idx = getIndexIntoVectors(amp10(1,i),freq10(1,i),amp,freq);
-
+%     idx=0;
+%     for z=1:1:length(freqSimData.amplitudeMM)
+%         errA = abs(freqSimData.amplitudeMM(1,z)-amp10(1,i));
+%         errB = abs(freqSimData.bandwidthHz(1,i)-freq10(1,i));
+%         errC = abs(freqSimData.nominalForce(1,i)-force10(1,i));
+%         if(errA < 1e-6 && errB < 1e-6 && errC < 1e-6)
+%             assert(idx==0);
+%             idx=z;
+%         end
+%     end
+    
   data_x    = [dataKBR1994Fig10(j).x];
   data_y    = [dataKBR1994Fig10(j).y];
   [d_x,map] = sort(data_x);
@@ -308,9 +404,15 @@ for i=1:1:length(amp10)
   kbr1994(idx).damping_x = d_x;
   kbr1994(idx).damping_y = d_y;
 
-  [fo, g] = fit(d_x,d_y,'poly1');
-  kbr1994Damping(idx).fo = fo;
-  kbr1994Damping(idx).g  = g;
+  if(length(d_x)>1)
+      [fo, g] = fit(d_x,d_y,'poly1');
+      kbr1994Damping(idx).fo = fo;
+      kbr1994Damping(idx).g  = g;
+  else
+      kbr1994Damping(idx).fo = d_y;
+      kbr1994Damping(idx).g  = 0;
+  end
+
   kbr1994(idx).warning = 1;
   kbr1994(idx).warningMessage = 'Grouped data from Fig. 10';
 end
@@ -322,7 +424,16 @@ flag_addInFig12 = 1;
 
 if(flag_addInFig12 == 1)
   idx = getIndexIntoVectors(0.8,35,amp,freq);
-
+%     idx=0;
+%     for z=1:1:length(freqSimData.amplitudeMM)
+%         errA = abs(freqSimData.amplitudeMM(1,z)-0.8);
+%         errB = abs(freqSimData.bandwidthHz(1,i)-35);
+%         errC = abs(freqSimData.nominalForce(1,i)-5);
+%         if(errA < 1e-6 && errB < 1e-6 && errC < 1e-6)
+%             assert(idx==0);
+%             idx=z;
+%         end
+%     end
   assert(length(dataKBR1994Fig12K)==2);
 
   data_x = [dataKBR1994Fig12K(1).x;dataKBR1994Fig12K(2).x];
@@ -333,10 +444,14 @@ if(flag_addInFig12 == 1)
   kbr1994(idx).stiffness_x = k_x;
   kbr1994(idx).stiffness_y = k_y;
 
-  [fo, g] = fit(k_x,k_y,'poly1');
-  kbr1994Stiffness(idx).fo = fo;
-  kbr1994Stiffness(idx).g  = g;
-
+  if(length(k_x)>1)
+      [fo, g] = fit(k_x,k_y,'poly1');
+      kbr1994Stiffness(idx).fo = fo;
+      kbr1994Stiffness(idx).g  = g;
+  else
+      kbr1994Stiffness(idx).fo = k_y;
+      kbr1994Stiffness(idx).g  = 0;
+  end
   data_x = [dataKBR1994Fig12D(1).x;dataKBR1994Fig12D(2).x];
   data_y = [dataKBR1994Fig12D(1).y;dataKBR1994Fig12D(2).y];
   [d_x,map] = sort(data_x);
@@ -345,9 +460,14 @@ if(flag_addInFig12 == 1)
   kbr1994(idx).damping_x = d_x;
   kbr1994(idx).damping_y = d_y;
 
-  [fo, g] = fit(d_x,d_y,'poly1');
-  kbr1994Damping(idx).fo = fo;
-  kbr1994Damping(idx).g  = g;
+  if(length(d_x)>1)
+      [fo, g] = fit(d_x,d_y,'poly1');
+      kbr1994Damping(idx).fo = fo;
+      kbr1994Damping(idx).g  = g;
+  else
+      kbr1994Damping(idx).fo = nan;
+      kbr1994Damping(idx).g  = nan;
+  end
 end
 
 
