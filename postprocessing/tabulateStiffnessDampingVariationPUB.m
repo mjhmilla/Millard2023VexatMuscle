@@ -55,6 +55,26 @@ modelVaf(9)   = struct(  'fo', [],...
                          'std', 0,...
                          'min', 0,...
                          'max', 0);
+
+strCaption = '';
+strLabel = '';
+switch flag_useElasticTendon
+    case 0
+        strCaption  = ['Normalized stiffness coefficients (A.), damping coefficients (B.) and VAF (C.) for models with rigid tendons.',...
+                       'As with the elastic tendon models, here the VAF is evalauted between each of the models and the spring-damper',...
+                       'of best fit.'];
+        strLabel    = '\label{tbl:KBR1994Sim_RT}';
+
+    case 1
+        strCaption  = ['Normalized stiffness coefficients (A.), damping coefficients (B.) and VAF (C.) for models',...
+        ' with elastic tendons. Note that the VAF is evaluated between the model and the spring-damper ',...
+        'of best fit to the response of the model, rather than to the response of biological muscle: ',...
+        'Kirsch et al. \cite{Kirsch1994MuscleImpedance} did not publish the time series data from their experiments.'];        
+        strLabel    = '\label{tbl:KBR1994Sim_ET}';
+        
+    otherwise
+        assert(0,'flag_useElasticTendon must be 0 or 1');
+end
                                         
 hillTable   = struct('stiffness',[],'damping',[],'vaf',[],'vafData',[]);
 opus31Table = struct('stiffness',[],'damping',[],'vaf',[],'vafData',[]);
@@ -373,14 +393,18 @@ end
 
 fid = fopen([outputFolder,'tableStiffnessDampingVaf',tendonTag,'_',tableNameEnding,'.tex'],'w');
 
-fprintf(fid,'\\begin{table}\n');
+fprintf(fid,'\\begin{table}[!h]\n');
+fprintf(fid,'\\caption{%s %s}\n',...
+    strCaption, ...
+    strLabel);
+fprintf(fid,'\\begin{center}\n');
 fprintf(fid,'\\begin{tabular}{r | r r r || r r r || r r r}\n');
 %            A    15   35   90   15   35   90   15   35   90  
 
-fprintf(fid,['%s & \\multicol{3}{c}{Kirsch et al.} & ',...
-            '\\multicol{3}{c}{Model} & \\multicol{3}{c}{Hill} \\\\ \n'],'');
-fprintf(fid,'%s & %d & %d & %d & %d & %d & %d & %d & %d & %d \\\\ \n',...
-            '$\frac{K}{F}$', 15, 35, 90, 15, 35, 90, 15, 35, 90 );
+fprintf(fid,['%s & \\multicolumn{3}{c}{Kirsch et al.} & ',...
+            '\\multicolumn{3}{c}{Model} & \\multicolumn{3}{c}{Hill} \\\\ \n'],'');
+fprintf(fid,'%s & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz \\\\ \n',...
+            'A. \hfill Norm. Stiffness ($\frac{K}{F})$', 15, 35, 90, 15, 35, 90, 15, 35, 90 );
 
 firstLineExtra = '\hline ';          
 for i=1:1:length(ampTable)
@@ -418,7 +442,7 @@ for i=1:1:length(ampTable)
   
 
 
-  fprintf(fid,['%s %1.1f & %s & %s & %s ',...
+  fprintf(fid,['%s %1.1f mm & %s & %s & %s ',...
                         '& %s & %s & %s ',...
                         '& %s & %s & %s \\\\ \n'],...
               firstLineExtra, ampTable(i), ...
@@ -429,17 +453,24 @@ for i=1:1:length(ampTable)
   
 end
 
-fprintf(fid,'\\end{tabular}\n');
-fprintf(fid,'\\end{table}\n');
+%fprintf(fid,'\\end{tabular}\n');
+%fprintf(fid,'\\end{center}\n');
+%fprintf(fid,'\\end{table}\n');
 
-fprintf(fid,'\\begin{table}\n');
-fprintf(fid,'\\begin{tabular}{r | r r r || r r r || r r r}\n');
+%fprintf(fid,'\\begin{table}[!h]\n');
+%fprintf(fid,'\\caption{%s %s %s}\n',...
+%    'Normalized damping coefficients of', ...
+%    strCaption,...
+%    ['\label{',strLabel,'D}']);
+%fprintf(fid,'\\begin{center}\n');
+%fprintf(fid,'\\begin{tabular}{r | r r r || r r r || r r r}\n');
 %            A    15   35   90   15   35   90   15   35   90  
 
-fprintf(fid,['%s & \\multicol{3}{c}{Kirsch et al.} & ',...
-            '\\multicol{3}{c}{Model} & \\multicol{3}{c}{Hill} \\\\ \n'],'');
-fprintf(fid,'%s & %d & %d & %d & %d & %d & %d & %d & %d & %d \\\\ \n',...
-            '$\frac{\beta}{F}$', 15, 35, 90, 15, 35, 90, 15, 35, 90 );
+fprintf(fid,'\\multicolumn{10}{c}{} \\\\ \n');
+%fprintf(fid,['%s & \\multicolumn{3}{c}{Kirsch et al.} & ',...
+%            '\\multicolumn{3}{c}{Model} & \\multicolumn{3}{c}{Hill} \\\\ \n'],'');
+fprintf(fid,'%s & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz \\\\ \n',...
+            'B. \hfill Norm. damping $\frac{\beta}{F}$', 15, 35, 90, 15, 35, 90, 15, 35, 90 );
 
 
 firstLineExtra = '\hline ';          
@@ -476,7 +507,7 @@ for i=1:1:length(ampTable)
   end
 
 
-  fprintf(fid,['%s %1.1f & %s & %s & %s ',...
+  fprintf(fid,['%s %1.1fmm & %s & %s & %s ',...
                         '& %s & %s & %s ',...
                         '& %s & %s & %s \\\\ \n'],...
               firstLineExtra, ampTable(i), ...
@@ -487,18 +518,26 @@ for i=1:1:length(ampTable)
   
 end
 
-fprintf(fid,'\\end{tabular}\n');
-fprintf(fid,'\\end{table}\n');
+%fprintf(fid,'\\end{tabular}\n');
+%fprintf(fid,'\\end{center}\n');
+%fprintf(fid,'\\end{table}\n');
 
 
-fprintf(fid,'\\begin{table}\n');
-fprintf(fid,'\\begin{tabular}{r | r r r || r r r || r r r}\n');
+%fprintf(fid,'\\begin{table}[!h]\n');
+%fprintf(fid,'\\caption{%s %s %s}\n','VAF of', ...
+%    strCaption,...
+%    ['\label{',strLabel,'VAF}']);
+%fprintf(fid,'\\begin{center}\n');
+%fprintf(fid,'\\begin{tabular}{r | r r r || r r r || r r r}\n');
 %            A    15   35   90   15   35   90   15   35   90  
 
-fprintf(fid,['%s & \\multicol{3}{c}{Kirsch et al.} & ',...
-            '\\multicol{3}{c}{Model} & \\multicol{3}{c}{Hill} \\\\ \n'],'');
-fprintf(fid,'%s & %d & %d & %d & %d & %d & %d & %d & %d & %d \\\\ \n',...
-            'avg. VAF', 15, 35, 90, 15, 35, 90, 15, 35, 90 );
+%fprintf(fid,['%s & \\multicolumn{3}{c}{Kirsch et al.} & ',...
+%            '\\multicolumn{3}{c}{Model} & \\multicolumn{3}{c}{Hill} \\\\ \n'],'');
+
+fprintf(fid,'\\multicolumn{10}{c}{} \\\\ \n');
+
+fprintf(fid,'%s & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz \\\\ \n',...
+            'C. VAF (\%) \hfill', 15, 35, 90, 15, 35, 90, 15, 35, 90 );
 firstLineExtra = '\hline ';          
 for i=1:1:length(ampTable)
 
@@ -539,7 +578,7 @@ for i=1:1:length(ampTable)
   end
 
 
-  fprintf(fid,['%s %1.1f & %s & %s & %s ',...
+  fprintf(fid,['%s %1.1fmm & %s & %s & %s ',...
                         '& %s & %s & %s ',...
                         '& %s & %s & %s \\\\ \n'],...
               firstLineExtra, ampTable(i), ...
@@ -551,6 +590,7 @@ end
           
 
 fprintf(fid,'\\end{tabular}\n');
+fprintf(fid,'\\end{center}\n');
 fprintf(fid,'\\end{table}\n');
 
 fclose(fid);
