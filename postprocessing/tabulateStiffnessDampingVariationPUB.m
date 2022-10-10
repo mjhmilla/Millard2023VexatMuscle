@@ -37,12 +37,12 @@ kbr1994Damping(9)   = struct(  'fo', [],...
                       
 modelData(9) = struct(  'amplitude',      0,...
                         'frequency',      0,...
-                        'stiffness_x',    zeros(1,1),...
-                        'stiffness_y',    zeros(1,1),...                        
-                        'damping_x',      zeros(1,1),...
-                        'damping_y',      zeros(1,1),...
-                        'vaf_x',          zeros(1,1),...
-                        'vaf_y',          zeros(1,1));
+                        'stiffness_x',    [],...
+                        'stiffness_y',    [],...                        
+                        'damping_x',      [],...
+                        'damping_y',      [],...
+                        'vaf_x',          [],...
+                        'vaf_y',          []);
                       
 modelStiffness(9) = struct(  'fo', [],...
                               'g', []);    
@@ -111,48 +111,10 @@ for z=1:1:length(freqSeriesFiles)
   currDamping   = modelDamping;
   currVaf       = modelVaf;
 
-  for idx=1:1:length(currData)
-    currData(idx).amplitude= [];
-    currData(idx).frequency= [];
-    currData(idx).stiffness_x= [];
-    currData(idx).stiffness_y= [];
-    currData(idx).damping_x= [];
-    currData(idx).damping_y= [];
-    currData(idx).vaf_x= [];
-    currData(idx).vaf_y= [];
-  end
 
-  for idx = 1:1:length(amp)
-
-%    idx = getIndexIntoVectors(freqSimData.amplitudeMM(1,i),...
-%                              freqSimData.bandwidthHz(1,i),amp,freq);
-       
-    i=0;
-    for idxSeries=1:1:length(freqSimData.amplitudeMM)
-        errA = abs(freqSimData.amplitudeMM(1,idxSeries)-amp(1,idx));
-        errB = abs(freqSimData.bandwidthHz(1,idxSeries)-freq(1,idx));
-        errC = abs(freqSimData.nominalForce(1,idxSeries)-force(1,idx));
-        if(errA < 5e-2 && errB < 5e-2 && errC < 5e-2)
-            assert(i==0);
-            i=idxSeries;
-        end
-    end
-    if(i==0)
-        here=1;
-    end
-    assert(i>0);
-
-
-    assert(isempty(currData(idx).amplitude));
-    assert(isempty(currData(idx).frequency));
-    assert(isempty(currData(idx).stiffness_x));
-    assert(isempty(currData(idx).stiffness_y));
-    assert(isempty(currData(idx).damping_x));
-    assert(isempty(currData(idx).damping_y));
-    assert(isempty(currData(idx).vaf_x));
-    assert(isempty(currData(idx).vaf_y));
-
-
+  for i = 1:1:length(freqSimData.amplitudeMM)
+    idx = getIndexIntoVectors(freqSimData.amplitudeMM(1,i),...
+                              freqSimData.bandwidthHz(1,i),amp,freq);                            
 
     %If data is being concatenated make sure it is to the correct trial
     if( currData(idx).amplitude ~= 0)
@@ -513,6 +475,18 @@ end
 
 fid = fopen([outputFolder,'tableStiffnessDampingVaf',tendonTag,'_',tableNameEnding,'.tex'],'w');
 
+
+switch flag_useElasticTendon
+    case 0
+        strCaption = 'Mean normalized stiffness coefficients (A.), damping coefficients (B.) and VAF (C.) for models with rigid tendons. All additional details are identical to those of Table \label{tbl:KBR1994Sim_ET} except the tendon of the model is rigid.';
+        strLabel = '\label{tbl:KBR1994Sim_RT}';
+    case 1
+        strCaption = 'Mean normalized stiffness coefficients (A.), damping coefficients (B.) and VAF (C.) for models with elastic tendons. Here the model has been fitted to Figure 12 of Kirsch et al. \cite{Kirsch1994MuscleImpedance}. The impedance experiments at each combination of perturbation amplitude and frequncy have been evaluated at 3 different nominal forces: 2.5N, 5N, and 11.5N. The normalized results presented in the table are the mean values of the 2.5N, 5.0N, and 11.5N simulations. Finally, note that the VAF is evaluated between the model and the spring-damper of best fit to the response of the model, rather than to the response of biological muscle (which was not published by Kirsch et al. \cite{Kirsch1994MuscleImpedance}).';
+        strLabel = '\label{tbl:KBR1994Sim_ET}';
+    otherwise
+        assert(0,'flag_useElasticTendon must be 0 or 1');
+end
+
 fprintf(fid,'\\begin{table}[!h]\n');
 fprintf(fid,'\\caption{%s %s}\n',...
     strCaption, ...
@@ -715,5 +689,4 @@ fprintf(fid,'\\end{table}\n');
 
 fclose(fid);
 success=1;
-
 
