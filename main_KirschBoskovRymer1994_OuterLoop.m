@@ -6,7 +6,7 @@ clear all;
 %Run all of the simulations
 %%
 
-flag_runSimulations     = 0;
+flag_runSimulations     = 1;
 flag_frequencyAnalysis  = 0;
 flag_generatePlots      = 1;
 
@@ -17,7 +17,7 @@ flag_useTwoSidedTitinCurves   = 0;
 if(flag_runSimulations == 1)
   %Hill and the proposed model
   %Elastic tendon
-  flag_simulateHillModel      = 1; 
+  flag_simulateHillModel      = 0; 
   flag_simulateOpus31Model    = 1;
   flag_fitToFig3KirchBoskovRymer1994            = 0;
   flag_useElasticTendon       = 1;

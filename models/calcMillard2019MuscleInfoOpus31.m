@@ -851,6 +851,10 @@ elseif(useElasticTendon ==1 && modelConfig.initializeState==0)
       flag_evaluateDerivatives                = 0;
       flag_updateModelCache                   = 1;
       
+      if(a > 0.01 && abs(dlp) > 0.01 && useElasticTendon==1)
+        here=1;
+      end
+
       [errF,errFJac,errI,errIJac,modelCachedValuesUpd] = ...
         calcEquilibriumErrorOpus31(...
                                     vars,...

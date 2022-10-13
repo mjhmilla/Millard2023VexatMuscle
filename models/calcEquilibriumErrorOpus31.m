@@ -612,6 +612,53 @@ end
 errF    = -(fxHN + f2HN + fEcmHN)*cosAlpha + fTN;
 errFJac = NaN;
 
+% Small testing area to explicitly solve for the CE velocity that
+% satisfies the CE-tendon force equilibrium
+dlceAT0     = dlce/cosAlpha; 
+assert(abs(dlceAT0-dlceAT) < eps*100);
+
+dltN0       = (dlp-dlce/cosAlpha)/ltSlk;
+assert(abs(dltN0-dltN) < eps*100);
+
+dlxHN0      = (dlce*0.5-dlaH)/lceOpt;
+assert(abs(dlxHN0-dlxHN) < eps*100);
+
+fce0 = (fxHN + f2HN + fEcmHN)*cosAlpha;
+fce1 = (kxHNN*lxHN + betaxHNN*dlxHN0 + f2HN + (fEcmfcnHN + (betaNum + betafEcmHN*fEcmfcnHN)*dlceHN))*cosAlpha;
+assert( abs(fce0-fce1) < eps*100 );
+
+ft0  = fTkN + betaTNN*(dlp - dlce/cosAlpha)/ltSlk;
+assert( abs(ft0-fTN) < eps*100 );
+
+errF0 = -(kxHNN*lxHN ...
+            - (betaxHNN*dlaH/lceOpt) ...
+            + f2HN ...
+            + fEcmfcnHN ...
+         )*cosAlpha ...  
+         - dlce*( (betaxHNN*0.5/lceOpt) + (betaNum + betafEcmHN*fEcmfcnHN)*(0.5/lceOpt))*cosAlpha ...
+         + (fTkN + betaTNN*(dlp/ltSlk)) ...
+         - dlce*(betaTNN/(cosAlpha*ltSlk));
+
+%A+B+C*dlce
+%dlce = -(A+B)/C
+A = -(kxHNN*lxHN ...
+        - (betaxHNN*dlaH/lceOpt) ...
+        + f2HN ...
+        + fEcmfcnHN ...
+     )*cosAlpha;
+
+B = (fTkN + betaTNN*(dlp/ltSlk));
+
+C = - ((betaxHNN*0.5/lceOpt) + (betaNum + betafEcmHN*fEcmfcnHN)*(0.5/lceOpt))*cosAlpha ...
+    - (betaTNN/(cosAlpha*ltSlk));
+
+dlce0 = -(A+B)/C;
+
+if(fce0>0.01 && abs(dlce) > 0.01 && flag_useElasticTendon==1 )
+    here=1;
+end
+
+
 
 if(flag_updateModelCache == 1)
 
