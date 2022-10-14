@@ -397,6 +397,9 @@ ktitin = k2;
 %PEVK section has no damping
 dtitin = 0;%1/((1/d1)+(1/d2));
 
+if(~(kT > kmt || flag_useElasticTendon == 0))
+    here=1;
+end
 assert(kT > kmt || flag_useElasticTendon == 0,...
     'The tendon must be stiffer than the target MT stiffness');
 assert(dT > dmt || flag_useElasticTendon == 0,...

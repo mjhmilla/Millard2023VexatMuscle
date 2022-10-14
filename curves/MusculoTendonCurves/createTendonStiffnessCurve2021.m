@@ -92,6 +92,6 @@ tendonStiffnessCurve.d2ydx2End    = [0, 0];
 
 tendonStiffnessCurve.integral = [];
 
-
+tendonStiffnessCurve.name = sprintf('%s.%s',muscleName,'tendonStiffnessCurve');
 
 

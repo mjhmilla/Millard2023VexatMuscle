@@ -64,6 +64,8 @@ ecmForceFractionFelineSoleus    = ecmForceFractionDefault;
 
 smallNumericallyNonZeroNumber           = sqrt(sqrt(eps));
 flag_enableNumericallyNonZeroGradients  = 1;
+
+%
 %0: Parts of curves that go to zero in reality will go to zero in the curves.
 %   For example, when the tendon is slack the force-length curve in this segment
 %   will be a perfectly horizonal time.
@@ -127,15 +129,15 @@ scaleMaximumIsometricTensionHumanSoleus = 1;
 %%
 % Cat Soleus Model Parameters
 %%
-flag_fitFelineSoleusActiveTitinProperties               = 0;
-flag_loadFittedFelineSoleusActiveTitinProperties        = 1;
+flag_fitFelineSoleusActiveTitinProperties               = 1;
+flag_loadFittedFelineSoleusActiveTitinProperties        = 0;
 %Takes 10-20 minutes, but must be done once.
 %Numerically identifies the point of attachement between the PEVK segment
 %and actin that produces simulated forces that most closely matches 
 %Herzog & Leonard 2002.
 
-flag_fitFelineCrossbridgeProperties               = 0;
-flag_loadFittedFelineCrossbridgeProperties        = 1;
+flag_fitFelineCrossbridgeProperties               = 1;
+flag_loadFittedFelineCrossbridgeProperties        = 0;
 
 
 scaleOptimalFiberLengthCatSoleus        = 1.0; 

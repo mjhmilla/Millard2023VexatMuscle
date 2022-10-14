@@ -138,7 +138,7 @@ x0 = 1.0;
 y0 = 0;
 dydx0 = 0;
 if(flag_enableNumericallyNonZeroGradients == 1)
-  y0    = smallNumericallyNonZeroNumber;
+  y0    = smallNumericallyNonZeroNumber*10;
   dydx0 = smallNumericallyNonZeroNumber;
 end
 

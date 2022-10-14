@@ -71,13 +71,13 @@ c4y    = 0;
 p0DyDx = 0;
 p5DyDx = 0;
 
-if(flag_enableNumericallyNonZeroGradient == 1)
-  c0y    =  10*smallNumericallyNonZeroNumber;
-  c4y    =  10*smallNumericallyNonZeroNumber;
-
-  p0DyDx =  smallNumericallyNonZeroNumber;  
-  p5DyDx = -smallNumericallyNonZeroNumber;
-end
+% if(flag_enableNumericallyNonZeroGradient == 1)
+%   c0y    =  10*smallNumericallyNonZeroNumber;
+%   c4y    =  10*smallNumericallyNonZeroNumber;
+% 
+%   p0DyDx =  smallNumericallyNonZeroNumber;  
+%   p5DyDx = -smallNumericallyNonZeroNumber;
+% end
 
 
 % Corner 0: zero force happens ... for some (largely) unknown reason.
@@ -218,7 +218,7 @@ c2c3y = (c3y-c2y);
 c3c4y = (c4y-c3y);
 
 
-shoulder = 0.5*(c0c1x + c3c4x);
+shoulder = (c3x-c0x)*20;%0.5*(c0c1x + c3c4x);
 
 p0x   = c0x        - 0.5*shoulder;
 p0y   = c0y - p0DyDx*(0.5*shoulder);

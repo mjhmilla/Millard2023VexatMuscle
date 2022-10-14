@@ -85,7 +85,7 @@ calcF1HDer  = modelCurves.calcF1HDer ;
 calcF2HDer  = modelCurves.calcF2HDer ;
 calcFtDer   = modelCurves.calcFtDer  ;
 calcDtDer   = modelCurves.calcDtDer  ;
-
+calcCpDer   = modelCurves.calcCpDer  ;
 %Constants
 
 fiso        = modelConstants.fiso        ;
@@ -256,6 +256,10 @@ fEcmHN            = modelCache.fEcmHN             ;
 kEcmHNN           = modelCache.kEcmHNN            ;
 betaEcmHNN        = modelCache.betaEcmHNN         ;
 
+fCpN              = modelCache.fCpN;
+kCpN              = modelCache.kCpN;
+
+
 D_f2HN_D_dlce      = modelCache.D_f2HN_D_dlce       ;
 D_fxHN_D_dlce      = modelCache.D_fxHN_D_dlce       ;
 D_fEcmHN_D_dlce    = modelCache.D_fEcmHN_D_dlce       ;
@@ -338,7 +342,15 @@ if(flag_updatePositionLevel == 1)
   else
     fTfcnN    = NaN;
   end
-                                
+      
+  lceATN=lceAT*lce_lceN;
+  fCpN      = calcCpDer(lceATN,0);
+  kCpN      = calcCpDer(lceATN,1);   
+
+  if(fCpN > 1e-6)
+      here=1;
+  end
+
   modelCache.lceN     = lceN ;
   modelCache.lceH     = lceH ;
   modelCache.lceHN    = lceHN; 
@@ -446,10 +458,11 @@ if(flag_useElasticTendon == 1)
   %
   %   dlxHN      = (dlce*0.5-dlaH)/lceOpt;
   %
-  %   fce0      = (fxHN + f2HN + fEcmHN)*cosAlpha;
+  %   fce0      = (fxHN + f2HN + fEcmHN)*cosAlpha - fCpN;
   %   fce1      = (kxHNN*lxHN + betaxHNN*dlxHN0 
   %                + f2HN 
-  %                + (fEcmfcnHN + (betaNum + betafEcmHN*fEcmfcnHN)*dlceHN))*cosAlpha;
+  %                + (fEcmfcnHN + (betaNum + betafEcmHN*fEcmfcnHN)*dlceHN))*cosAlpha
+  %                - fCpN
   %
   % Where fce1 is the expanded version of fce0
   %
@@ -464,6 +477,7 @@ if(flag_useElasticTendon == 1)
   %            + f2HN ...
   %            + fEcmfcnHN ...
   %         )*cosAlpha ...  
+  %         + fCpN
   %         + (fTkN + betaTNN*(dlp/ltSlk)) ...
   %         - dlce*( (betaxHNN*0.5/lceOpt) + (betaNum + betafEcmHN*fEcmfcnHN)*(0.5/lceOpt))*cosAlpha ...  
   %         - dlce*(betaTNN/(cosAlpha*ltSlk))
@@ -480,7 +494,8 @@ if(flag_useElasticTendon == 1)
           - (betaxHNN*dlaH/lceOpt) ...
           + f2kHN ...
           + fEcmfcnHN ...
-       )*cosAlpha;
+       )*cosAlpha ...
+       + fCpN;
 
   B = (fTkN + betaTNN*(dlp/ltSlk));
 
@@ -542,18 +557,6 @@ dlxHN = dlxH*lce_lceN;
 % Update forces dependent on the CE velocity
 %%------------------------------------------------------------------------------
 
-%ECM
-fEcmdHN     = betaEcmHNN*dlceHN;
-fEcmHN      = fEcmkHN + fEcmdHN;
-
-%Tendon force
-if(flag_useElasticTendon == 1)
-  fTdN         = betaTNN*dltN;
-  fTN          = fTkN + fTdN;
-else
-  fTdN    = 0; %It's rigid: its not stretching.
-  fTN     = fTkN + fTdN; 
-end
 
 
 %%------------------------------------------------------------------------------
@@ -714,10 +717,25 @@ switch titinModelType
     assert(0,'titinModelType must be 0 (sticky-spring) or 1 (stiff spring');
 end
 
+%ECM
+fEcmdHN     = betaEcmHNN*dlceHN;
+fEcmHN      = fEcmkHN + fEcmdHN;
 
 %N.B. This function assumes that the duty cycle does not change with 
 %     velocity. There is a good chance that it does.
 fxHN  = kxHNN*lxHN + betaxHNN*dlxHN;
+
+%Tendon force
+if(flag_useElasticTendon == 1)
+  fTdN         = betaTNN*dltN;
+  fTN          = fTkN + fTdN;
+else
+  fTdN    = 0; %It's rigid: its not stretching.
+  fTN     = (fxHN + f2HN + fEcmHN)*cosAlpha -fCpN; 
+end
+
+
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -726,7 +744,7 @@ fxHN  = kxHNN*lxHN + betaxHNN*dlxHN;
 
 
 lambda              =   0;
-ddlaHN_HillError    =   ((fxHN  - a*flN*(fvN))/(tau));
+ddlaHN_HillError    =   ((fxHN + fCpN/cosAlpha - a*flN*(fvN))/(tau));
 ddlaHN_Damping      = - betaCXHN*dlaNN;
 
 ka                  = (a/lowActivationThreshold);
@@ -758,7 +776,7 @@ ddlaH  = ddlaHN*lceN_lce;
 % - forces that pull to the left
 %Equlilbrium Eqn 1: applied to fiber-tendon junction
 %                   assuming both sarcomere halves are in equilibrium
-errF    = -(fxHN + f2HN + fEcmHN)*cosAlpha + fTN;
+errF    = -(fxHN + f2HN + fEcmHN)*cosAlpha + fCpN + fTN;
 errFJac = NaN;
 
 
@@ -828,7 +846,7 @@ if(flag_updateModelCache == 1)
     modelCache.fvN      = fvN;
     modelCache.dlfNN    = dlfNN;
     
-    modelCache.fceN     = (fxHN + f2HN + fEcmHN);
+    modelCache.fceN     = (fxHN + f2HN + fEcmHN) - (fCpN/cosAlpha);
 
     %Power quantities
 
@@ -859,6 +877,7 @@ if(flag_updateModelCache == 1)
     modelCache.dw_Td    = -(fiso*fTdN)*dlt;             % W: work
     modelCache.dw_EcmkH =  (fiso*fEcmkHN)*dlceH;        % V: potential
     modelCache.dw_EcmdH = -(fiso*fEcmdHN)*dlceH;        % W: work
+    modelCache.dw_Cp    =  (fiso*fCpN)*dlce;            % V: potential
 
     modelCache.dT = 0;
     modelCache.dV = 2*modelCache.dw_xkH ...
@@ -983,7 +1002,7 @@ if(flag_updateModelCache==1 && flag_evaluateDerivatives)
   modelCache.kTNN             = kTNN;
   modelCache.betaTNN          = betaTNN;  
 
-
+  modelCache.DfCpN_DlceN = kCpN;
 end
 
 
@@ -1140,7 +1159,7 @@ if(flag_evaluateInitializationFunctions==1)
 
   if(flag_useElasticTendon == 1)
 
-    errI(1,1) = -(fxHN + f2HN + fEcmHN)*cosAlpha + fTN; 
+    errI(1,1) = -(fxHN + f2HN + fEcmHN)*cosAlpha + fTN + fCpN; 
     %When f1HN=f2HN the passive force developed by fEcm + f2 = fpe;  
     errI(2,1) = f1kHN-f2kHN; %This error term works for titin models 0 and 1
     errI(3,1) = ddlaHN;
