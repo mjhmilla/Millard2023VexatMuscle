@@ -785,9 +785,9 @@ elseif(useElasticTendon ==1 && modelConfig.initializeState==0)
                                     flag_updateModelCache, ...
                                     flag_evaluateInitializationFunctions,...
                                     flag_useArgs);
-    
+
     errNorm = sqrt(errF'*errF);
-    assert(errNorm <= tol,'Error tolerance not met');
+    assert(errNorm <= modelConfig.tol,'Error tolerance not met');
 
     modelCachedValues = modelCachedValuesUpd;
 

@@ -5,7 +5,7 @@ clear all;
 %Parameters that do not change
 flag_simulateHillModel            = 0;  
 flag_simulateOpus31Model          = 1;
-flag_useSimulatePlotRigidTendon   = 1;
+flag_useSimulatePlotRigidTendon   = 0;
 flag_useSimulatePlotElasticTendon = 1;
 
 flag_removeActiveTitinForces      = 0;
@@ -22,8 +22,8 @@ flag_useOctave                    = 0;
 
 
 flag_activeForceLengthSimulations  = 1;
-flag_passiveForceLengthSimulations = 1;  
-flag_forceVelocitySimulations      = 1;
+flag_passiveForceLengthSimulations = 0;  
+flag_forceVelocitySimulations      = 0;
 
 normFiberLengthAtForceVelocitySample  = 1.;
 
