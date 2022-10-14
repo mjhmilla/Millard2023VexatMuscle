@@ -552,7 +552,8 @@ if(modelConfig.initializeState==1)
   flag_evaluateDerivatives                = 1;
   flag_updateModelCache                   = 1;
   flag_evaluateInitializationFunctions    = 1;
-  
+  flag_useArgs                            = 0;
+
   vars = [];
   if(useElasticTendon==1)
     vars = 0.;
@@ -575,7 +576,8 @@ if(modelConfig.initializeState==1)
                                 flag_evaluateJacobian, ...
                                 flag_evaluateDerivatives, ...
                                 flag_updateModelCache,...
-                                flag_evaluateInitializationFunctions);  
+                                flag_evaluateInitializationFunctions,...
+                                flag_useArgs);  
   
                               
   iter=1;
@@ -602,7 +604,8 @@ if(modelConfig.initializeState==1)
                                   flag_evaluateJacobian, ...
                                   flag_evaluateDerivatives, ...
                                   flag_updateModelCache,...
-                                  flag_evaluateInitializationFunctions);      
+                                  flag_evaluateInitializationFunctions,...
+                                  flag_useArgs);      
 
     %Numerically build the jacobian
     errL = errI;
@@ -653,7 +656,8 @@ if(modelConfig.initializeState==1)
                                       flag_evaluateJacobian, ...
                                       flag_evaluateDerivatives, ...
                                       flag_updateModelCache,...
-                                      flag_evaluateInitializationFunctions);      
+                                      flag_evaluateInitializationFunctions,...
+                                      flag_useArgs);      
 
         modelCachedValues.lce  = lce - delta_lce;
         modelCachedValues.laH  = laH - delta_laH;
@@ -671,7 +675,8 @@ if(modelConfig.initializeState==1)
                                       flag_evaluateJacobian, ...
                                       flag_evaluateDerivatives, ...
                                       flag_updateModelCache,...
-                                      flag_evaluateInitializationFunctions); 
+                                      flag_evaluateInitializationFunctions,...
+                                      flag_useArgs); 
         errIJac(:,i) = (errIR-errIL)./(2*delta);
       end
        
@@ -721,7 +726,8 @@ if(modelConfig.initializeState==1)
                                 flag_evaluateJacobian, ...
                                 flag_evaluateDerivatives, ...
                                 flag_updateModelCache,...
-                                flag_evaluateInitializationFunctions); 
+                                flag_evaluateInitializationFunctions,...
+                                flag_useArgs); 
 
   modelCachedValues = modelCachedValuesUpd;  
   
@@ -732,6 +738,7 @@ elseif(useElasticTendon ==0 && modelConfig.initializeState==0)
   flag_evaluateDerivatives                = 1;
   flag_updateModelCache                   = 1;
   flag_evaluateInitializationFunctions    = 0;
+  flag_useArgs                            = 0;
   vars = [];
   
   [errF,errFJac,errI,errIJac,modelCachedValuesUpd] = ...
@@ -745,31 +752,26 @@ elseif(useElasticTendon ==0 && modelConfig.initializeState==0)
                                 flag_evaluateJacobian, ...
                                 flag_evaluateDerivatives, ...
                                 flag_updateModelCache,...
-                                flag_evaluateInitializationFunctions);
+                                flag_evaluateInitializationFunctions,...
+                                flag_useArgs);
 
   modelCachedValues = modelCachedValuesUpd;
   
 elseif(useElasticTendon ==1 && modelConfig.initializeState==0) 
-    
-    
-    iterMax = modelConfig.iterMax;
-    tol     = modelConfig.tol;
-    iter    = 0;
-    err     = 0;
-    errNorm = tol*100;
-  
+      
     vars  = 0;
 
     flag_updatePositionLevel              = 1;
-    flag_evaluateJacobian                 = 0;
-    flag_evaluateDerivatives              = 0;
-    flag_updateModelCache                 = 0;
+    flag_evaluateJacobian                 = 1;
+    flag_evaluateDerivatives              = 1;
+    flag_updateModelCache                 = 1;
     flag_evaluateInitializationFunctions  = 0;
+    flag_useArgs                          = 0;
     
     errF    = 0;
     errFJac = 0;
     errI = zeros(3,1);
-    errIJac = zeros(3,3);
+    errIJac = zeros(3,3);    
     
     [errF,errFJac,errI,errIJac,modelCachedValuesUpd] = ...
         calcEquilibriumErrorOpus31( vars,modelCachedValues,...
@@ -781,225 +783,223 @@ elseif(useElasticTendon ==1 && modelConfig.initializeState==0)
                                     flag_evaluateJacobian, ...
                                     flag_evaluateDerivatives, ...
                                     flag_updateModelCache, ...
-                                    flag_evaluateInitializationFunctions);
-    flag_updatePositionLevel = 0;
-    modelCachedValues = modelCachedValuesUpd;
+                                    flag_evaluateInitializationFunctions,...
+                                    flag_useArgs);
     
-% 
-%     stepSize = 0.5*lceOpt*dlceMaxN;
-%     stepSign = [1 0 1 -1 0 -1 ; ...
-%                 0 1 1 0 -1 -1];
-%          
-%     errNormBest = sqrt(errF'*errF);
-%     errNorm     = errNormBest;
-%     varsBest    = vars;
-%     
-%     for i=1:1:10
-%         for j=1:1:size(stepSign,2)
-%             vars = varsBest + stepSign(:,j).*stepSize;
-%             [err,errJac,modelCachedValuesUpd] = ...
-%                 calcEquilibriumErrorOpus31(...
-%                                     vars,modelCachedValues,...
-%                                     modelCurves,...
-%                                     modelConstants,...
-%                                     useElasticTendon,...
-%                                     sarcomereProperties,...
-%                                     flag_updatePositionLevel,...
-%                                     flag_evaluateJacobian, ...
-%                                     flag_evaluateDerivatives, ...
-%                                     flag_updateModelCache); 
-%             errNorm = sqrt(err'*err);
-%             if(errNorm < errNormBest)
-%                varsBest = vars; 
-%                errNormBest=errNorm;
-%             end
-%         end
-%         stepSize = stepSize*0.5;
-%     end
-%     
-%     
-%     vars = varsBest;
-
-
-    errJac        = zeros(length(vars),length(vars));
-    errJacNum     = zeros(length(vars),length(vars));
-
-    h = sqrt(eps); %purturbation for building the error
-                   %Jacobian using finite differences.
-
-    tmpCache              = modelCachedValues;
-
-    eqVars       = zeros(4,1);
-    eqVarsL      = zeros(4,1);
-    eqVarsR      = zeros(4,1);
-    eqVarsJac    = zeros(4,1);
-    eqVarsNumJac = zeros(4,1);
-
-    errL = zeros(1,1);
-    errR = zeros(1,1);
-
-    flag_calcNumJac = 0;    
-    
-    if(a > 0.01)
-      here=1;
-    end
-    delta=1;
-    
-    while( (errNorm > tol) && iter < iterMax)
-      flag_updatePositionLevel                = 0;
-      flag_evaluateJacobian                   = 1;
-      flag_evaluateDerivatives                = 0;
-      flag_updateModelCache                   = 1;
-      
-      if(a > 0.01 && abs(dlp) > 0.01 && useElasticTendon==1)
-        here=1;
-      end
-
-      [errF,errFJac,errI,errIJac,modelCachedValuesUpd] = ...
-        calcEquilibriumErrorOpus31(...
-                                    vars,...
-                                    modelCachedValues,...
-                                    modelCurves,...
-                                    modelConstants,...
-                                    sarcomereProperties,...
-                                    useElasticTendon,...
-                                    flag_updatePositionLevel,...
-                                    flag_evaluateJacobian, ...
-                                    flag_evaluateDerivatives, ...
-                                    flag_updateModelCache, ...
-                                    flag_evaluateInitializationFunctions);
-
-      errNorm = sqrt(errF'*errF);
-
-        eqVars(1,1) = modelCachedValuesUpd.f2HN;
-        eqVars(2,1) = modelCachedValuesUpd.fEcmHN;
-        eqVars(3,1) = modelCachedValuesUpd.fxHN;
-        eqVars(4,1) = modelCachedValuesUpd.fTN;      
-      
-      if(flag_calcNumJac==1)
-        eqVars(1,1) = modelCachedValuesUpd.f2HN;
-        eqVars(2,1) = modelCachedValuesUpd.fEcmHN;
-        eqVars(3,1) = modelCachedValuesUpd.fxHN;
-        eqVars(4,1) = modelCachedValuesUpd.fTN;      
-
-        eqVarsJac(1,1) = modelCachedValuesUpd.D_f2HN_D_dlce;
-        eqVarsJac(2,1) = modelCachedValuesUpd.D_fEcmHN_D_dlce;
-        eqVarsJac(3,1) = modelCachedValuesUpd.D_fxHN_D_dlce;
-        eqVarsJac(4,1) = modelCachedValuesUpd.D_fTN_D_dlce;      
-
-        eqVarsL = zeros(4,1);
-        eqVarsR = zeros(4,1);
-                
-        flag_updatePositionLevel                = 0;
-        flag_evaluateJacobian                   = 1;
-        flag_evaluateDerivatives                = 0;
-        flag_updateModelCache                   = 1;
-        for i=1:1:length(vars)
-          for(j=1:1:2)
-            if(j==1)
-              varsL     = vars;
-              varsL(i)  = varsL(i)-h;            
-              tmpCache = modelCachedValues;
-              [errL,errJacTmp,errI,errIJac,tmpCache] = ...
-                calcEquilibriumErrorOpus31(...
-                                    varsL,...
-                                    modelCachedValues,...
-                                    modelCurves,...
-                                    modelConstants,...
-                                    sarcomereProperties,...
-                                    useElasticTendon,...
-                                    flag_updatePositionLevel,...
-                                    flag_evaluateJacobian, ...
-                                    flag_evaluateDerivatives, ...
-                                    flag_updateModelCache,...
-                                    flag_evaluateInitializationFunctions);
-
-              eqVarsL(1,i) = tmpCache.f2HN;
-              eqVarsL(2,i) = tmpCache.fEcmHN;
-              eqVarsL(3,i) = tmpCache.fxHN;
-              eqVarsL(4,i) = tmpCache.fTN;
-            else
-              varsR     = vars;
-              varsR(i)  = varsR(i)+h;
-              tmpCache = modelCachedValues;
-              [errR,errJacTmp,errI, errIJac,tmpCache] = ...
-                calcEquilibriumErrorOpus31(...
-                                    varsR,...
-                                    modelCachedValues,...
-                                    modelCurves,...
-                                    modelConstants,...
-                                    sarcomereProperties,...
-                                    useElasticTendon,...
-                                    flag_updatePositionLevel,...
-                                    flag_evaluateJacobian, ...
-                                    flag_evaluateDerivatives, ...
-                                    flag_updateModelCache, ...
-                                    flag_evaluateInitializationFunctions);
-
-              eqVarsR(1,i) = tmpCache.f2HN;
-              eqVarsR(2,i) = tmpCache.fEcmHN;
-              eqVarsR(3,i) = tmpCache.fxHN;
-              eqVarsR(4,i) = tmpCache.fTN;
-            end                  
-          end
-          eqVarsNumJac(:,i) = (eqVarsR(:,i)-eqVarsL(:,i))./(2*h);
-          errJacNum(:,i) = (errR-errL)./(2*h);
-        end
-
-        eqVarsJacErr = eqVarsJac - eqVarsNumJac;
-        eqVarsJacErrNorm = sqrt(sum(sum(eqVarsJacErr.^2)));
-
-        errJacErr = errFJac - errJacNum;
-        errJacErrNorm = sqrt(sum(sum(errJacErr.^2)));
-        here=1;
-      end
-
-      %Debugging
-      delta = -errFJac\errF;                    
-      vars  = vars+delta;
-      iter=iter+1;
-      
-      flag_debugging=0;
-      if(iter > 30)
-        here=1; 
-        flag_debugging=1;
-      end
-      
-      
-      if(flag_debugging==1)
-        fprintf('%1.2e\t%1.2e\n',...
-                errF,errFJac);
-        here=1;
-      end
-      %if(errJacErrNorm > 0.1)
-      %  here=1;
-      %end
-        
-      
-    end
-
-    
-    
+    errNorm = sqrt(errF'*errF);
     assert(errNorm <= tol,'Error tolerance not met');
 
-      flag_updatePositionLevel                = 0;
-      flag_evaluateJacobian                   = 1;
-      flag_evaluateDerivatives                = 1;
-      flag_updateModelCache                   = 1;
-      [errF,errFJac,errI,errIJac,modelCachedValuesUpd] = ...
-        calcEquilibriumErrorOpus31( vars,...
-                                    modelCachedValues,...
-                                    modelCurves,...
-                                    modelConstants,...
-                                    sarcomereProperties,...
-                                    useElasticTendon,...
-                                    flag_updatePositionLevel,...
-                                    flag_evaluateJacobian, ...
-                                    flag_evaluateDerivatives, ...
-                                    flag_updateModelCache,...
-                                    flag_evaluateInitializationFunctions);
+    modelCachedValues = modelCachedValuesUpd;
 
-      modelCachedValues = modelCachedValuesUpd;
+    %
+    % Now that dlce is being analytically evaluated the iterative code
+    % below is no longer needed. For now I'm keeping it in place just
+    % incase I update the model later ... and need to once again double
+    % check if I have made a dumb mistake.
+    %
+    flag_iterativelySolveForCEVelocity = 0;
+    if(flag_iterativelySolveForCEVelocity == 1)    
+
+        flag_updatePositionLevel = 0;
+        iterMax = modelConfig.iterMax;
+        tol     = modelConfig.tol;
+        iter    = 0;
+        err     = 0;
+        errNorm = tol*100;
+    
+        errJac        = zeros(length(vars),length(vars));
+        errJacNum     = zeros(length(vars),length(vars));
+    
+        h = sqrt(eps); %purturbation for building the error
+                       %Jacobian using finite differences.
+    
+        tmpCache              = modelCachedValues;
+    
+        eqVars       = zeros(4,1);
+        eqVarsL      = zeros(4,1);
+        eqVarsR      = zeros(4,1);
+        eqVarsJac    = zeros(4,1);
+        eqVarsNumJac = zeros(4,1);
+    
+        errL = zeros(1,1);
+        errR = zeros(1,1);
+    
+        flag_calcNumJac = 0;
+        %This flag, and the while loop below, is only in place to 
+        %numerically check that the analytic Jacobians that I'm 
+        %evaluating are equal to a numerical derivative (within tolerance)
+        
+        if(a > 0.01)
+          here=1;
+        end
+        delta=1;
+        
+        while( (errNorm > tol) && iter < iterMax)
+          flag_updatePositionLevel                = 0;
+          flag_evaluateJacobian                   = 1;
+          flag_evaluateDerivatives                = 0;
+          flag_updateModelCache                   = 1;
+          flag_useArgs                            = 0;
+          
+          if(a > 0.01 && abs(dlp) > 0.01 && useElasticTendon==1)
+            here=1;
+          end
+    
+          [errF,errFJac,errI,errIJac,modelCachedValuesUpd] = ...
+            calcEquilibriumErrorOpus31(...
+                                        vars,...
+                                        modelCachedValues,...
+                                        modelCurves,...
+                                        modelConstants,...
+                                        sarcomereProperties,...
+                                        useElasticTendon,...
+                                        flag_updatePositionLevel,...
+                                        flag_evaluateJacobian, ...
+                                        flag_evaluateDerivatives, ...
+                                        flag_updateModelCache, ...
+                                        flag_evaluateInitializationFunctions,...
+                                        flag_useArgs);
+    
+          vars = modelCachedValuesUpd.dlce;
+          errNorm = sqrt(errF'*errF);
+    
+            eqVars(1,1) = modelCachedValuesUpd.f2HN;
+            eqVars(2,1) = modelCachedValuesUpd.fEcmHN;
+            eqVars(3,1) = modelCachedValuesUpd.fxHN;
+            eqVars(4,1) = modelCachedValuesUpd.fTN;      
+          
+          if(flag_calcNumJac==1)
+            eqVars(1,1) = modelCachedValuesUpd.f2HN;
+            eqVars(2,1) = modelCachedValuesUpd.fEcmHN;
+            eqVars(3,1) = modelCachedValuesUpd.fxHN;
+            eqVars(4,1) = modelCachedValuesUpd.fTN;      
+    
+            eqVarsJac(1,1) = modelCachedValuesUpd.D_f2HN_D_dlce;
+            eqVarsJac(2,1) = modelCachedValuesUpd.D_fEcmHN_D_dlce;
+            eqVarsJac(3,1) = modelCachedValuesUpd.D_fxHN_D_dlce;
+            eqVarsJac(4,1) = modelCachedValuesUpd.D_fTN_D_dlce;      
+    
+            eqVarsL = zeros(4,1);
+            eqVarsR = zeros(4,1);
+                    
+            flag_updatePositionLevel                = 0;
+            flag_evaluateJacobian                   = 1;
+            flag_evaluateDerivatives                = 0;
+            flag_updateModelCache                   = 1;
+            flag_useArgs                            = 1;
+            for i=1:1:length(vars)
+              for(j=1:1:2)
+                if(j==1)
+                  varsL     = vars;
+                  varsL(i)  = varsL(i)-h;            
+                  tmpCache = modelCachedValues;
+                  [errL,errJacTmp,errI,errIJac,tmpCache] = ...
+                    calcEquilibriumErrorOpus31(...
+                                        varsL,...
+                                        modelCachedValues,...
+                                        modelCurves,...
+                                        modelConstants,...
+                                        sarcomereProperties,...
+                                        useElasticTendon,...
+                                        flag_updatePositionLevel,...
+                                        flag_evaluateJacobian, ...
+                                        flag_evaluateDerivatives, ...
+                                        flag_updateModelCache,...
+                                        flag_evaluateInitializationFunctions,...
+                                        flag_useArgs);
+    
+                  eqVarsL(1,i) = tmpCache.f2HN;
+                  eqVarsL(2,i) = tmpCache.fEcmHN;
+                  eqVarsL(3,i) = tmpCache.fxHN;
+                  eqVarsL(4,i) = tmpCache.fTN;
+                else
+                  varsR     = vars;
+                  varsR(i)  = varsR(i)+h;
+                  tmpCache = modelCachedValues;
+                  [errR,errJacTmp,errI, errIJac,tmpCache] = ...
+                    calcEquilibriumErrorOpus31(...
+                                        varsR,...
+                                        modelCachedValues,...
+                                        modelCurves,...
+                                        modelConstants,...
+                                        sarcomereProperties,...
+                                        useElasticTendon,...
+                                        flag_updatePositionLevel,...
+                                        flag_evaluateJacobian, ...
+                                        flag_evaluateDerivatives, ...
+                                        flag_updateModelCache, ...
+                                        flag_evaluateInitializationFunctions,...
+                                        flag_useArgs);
+    
+                  eqVarsR(1,i) = tmpCache.f2HN;
+                  eqVarsR(2,i) = tmpCache.fEcmHN;
+                  eqVarsR(3,i) = tmpCache.fxHN;
+                  eqVarsR(4,i) = tmpCache.fTN;
+                end                  
+              end
+              eqVarsNumJac(:,i) = (eqVarsR(:,i)-eqVarsL(:,i))./(2*h);
+              errJacNum(:,i) = (errR-errL)./(2*h);
+            end
+    
+            eqVarsJacErr = eqVarsJac - eqVarsNumJac;
+            eqVarsJacErrNorm = sqrt(sum(sum(eqVarsJacErr.^2)));
+    
+            errJacErr = errFJac - errJacNum;
+            errJacErrNorm = sqrt(sum(sum(errJacErr.^2)));
+            here=1;
+          end
+    
+          %Debugging
+          delta = -errFJac\errF;                    
+          vars  = vars+delta;
+          iter=iter+1;
+          
+          flag_debugging=0;
+          if(iter > 30)
+            here=1; 
+            flag_debugging=1;
+          end
+          
+          
+          if(flag_debugging==1)
+            fprintf('%1.2e\t%1.2e\n',...
+                    errF,errFJac);
+            here=1;
+          end
+          %if(errJacErrNorm > 0.1)
+          %  here=1;
+          %end
+            
+          
+        end
+    
+        
+        
+        
+        assert(errNorm <= tol,'Error tolerance not met');
+    
+          flag_updatePositionLevel                = 0;
+          flag_evaluateJacobian                   = 1;
+          flag_evaluateDerivatives                = 1;
+          flag_updateModelCache                   = 1;
+          flag_useArgs                            = 0;
+          [errF,errFJac,errI,errIJac,modelCachedValuesUpd] = ...
+            calcEquilibriumErrorOpus31( vars,...
+                                        modelCachedValues,...
+                                        modelCurves,...
+                                        modelConstants,...
+                                        sarcomereProperties,...
+                                        useElasticTendon,...
+                                        flag_updatePositionLevel,...
+                                        flag_evaluateJacobian, ...
+                                        flag_evaluateDerivatives, ...
+                                        flag_updateModelCache,...
+                                        flag_evaluateInitializationFunctions,...
+                                        flag_useArgs);
+    
+          modelCachedValues = modelCachedValuesUpd;
+
+    end
 else
     assert(0, 'Error: somehow an impossible(!) case has been reached');
 end

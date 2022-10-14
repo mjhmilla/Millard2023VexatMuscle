@@ -39,6 +39,12 @@ if(pennationAngleAtOptimalFiberLength > eps^0.5)
 
     Ddalpha_Ddlce = -(1/lce)*tan(alpha); 
     
+    % sin(alpha) = h/lce
+    %  x = h/lce
+    %  dx/dlce = -h/(lce*lce)
+    % alpha = asin(x)
+    % dalpha/dx = 1/(1-x^2)
+    % (dalpha/dx)(dx/dlce) = dalpha/dlce = (1/(1-(h/lce)^2)*(-h/(lce*lce))
     y = h/lce;
     dy = -h/(lce*lce);
     Dalpha_Dlce = dy/sqrt(1-y*y);

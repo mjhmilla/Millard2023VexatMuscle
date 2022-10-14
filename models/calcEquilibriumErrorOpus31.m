@@ -10,7 +10,8 @@ function [errF, errFJac, errI, errIJac, modelCache] ...
                                 flag_evaluateJacobian                   ,... 
                                 flag_evaluateDerivatives                ,... 
                                 flag_updateModelCache                   ,...
-                                flag_evaluateInitializationFunctions)
+                                flag_evaluateInitializationFunctions    ,...
+                                flag_useArgs)
 
 %%              
 %                                 
@@ -261,6 +262,10 @@ D_fEcmHN_D_dlce    = modelCache.D_fEcmHN_D_dlce       ;
 D_fTN_D_dlce       = modelCache.D_fTN_D_dlce       ;
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Position-level quantities
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 %This gets a flag because these quantities only need to be updated
 %once, and some of the quantities involve evaluating a Bezier curve
@@ -282,15 +287,11 @@ if(flag_updatePositionLevel == 1)
   lceH   = lce*lce_lceH;  % Half fiber length
   lceHN  = lce*lce_lceHN; % Half norm. fiber length
 
-if(lceN > 2.0)
-    here=1;
-end
 
   lxH   = lceH - (lmH+laH);
   lxHN  = lxH*lce_lceN;
 
   l1HN  = l1H*li_liN;    % Norm. length titin segment: z_line-PEVK/IG2 border
-
 
 
   l2H   = lceH  - (l1H+lTitinFixedHN*lceOpt);     % Length IG2 (PEVK/IG2) - m-line
@@ -378,51 +379,182 @@ end
 
 
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%Kinematics
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Velocities
+%
+%   If the tendon is rigid, all element positions and velocities can be
+%   evaluated
+%
+%   If the tendon is elastic, the CE velocity has to be solved for by
+%   evaluating the force inbalance between the CE and the tendon
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%
-%Fiber
-%
+
 
 %%------------------------------------------------------------------------------
-%Pennated fiber and tendon
+% Sliding velocity between XE and actin 
+%   Important:  Due to the viscoelasticity of the XE this is not the same as 
+%               the velocity between actin and myosin.
 %%------------------------------------------------------------------------------
+
+dlaHN  = dlaH*dlce_dlceN;
+dlaNN  = dlaH*dlce_dlceNN*lceH_lce;
+dlfNN  = dlaNN;
+
+fvN=calcFvDer(dlfNN*forceVelocityCalibrationFactor,0);
+
+
+%%------------------------------------------------------------------------------
+% Velocities: CE and CE dependent 
+%%------------------------------------------------------------------------------
+
+%ECM - position level forces
+fEcmkHN     = fEcmfcnHN;
+betaEcmHNN  = betafEcmHN*fEcmkHN + betaNum;
+
+%Tendon force - position level forces
 if(flag_useElasticTendon == 1)
-  dlce    = args(1);
-  fibKin  = calcFixedWidthPennatedFiberKinematicsAlongTendon(...
-                  lce,dlce,lceOpt,alphaOpt);
-  dlceAT = fibKin.fiberVelocityAlongTendon ;
-  dalpha = fibKin.pennationAngularVelocity ;  
-  dlt   = dlp - dlceAT;    
+  fTkN         = fTfcnN;
+  betaTNN      = calcDtDer(ltN,0)*betafTN + DftfcnN_DltN_max*betaCTN + betaNum;
+  fTdN         = nan; %Depends on the CE velocity: cannot yet solve for this
+  fTN          = nan; %Depends on the CE velocity: cannot yet solve for this
 
 else
+  fTfcnN  = nan; %Depends on the CE velocity: cannot yet solve for this
+  fTkN    = nan; %Depends on the CE velocity: cannot yet solve for this
+  betaTNN = 0;
+  fTdN    = nan; %Depends on the CE velocity: cannot yet solve for this
+  fTN     = nan; %Depends on the CE velocity: cannot yet solve for this
+end
+
+%Solve for dlce
+if(flag_useElasticTendon == 1)
+
+  assert(titinModelType==0,['Error: the method that explicitly solves ',...
+                'for the CE velocity has not been generalized: the ',...
+                'current formulation only works with the titin-actin',...
+                'interaction.']);  
+
+  %Contractile element - tendon force balance
+  %  dlce is the only unknown in the equation fce*cosAlpha-ft = 0
+
+  %%
+  % Assumed system equations
+  %   dlceAT     = dlce/cosAlpha; 
+  %
+  %   dltN       = (dlp-dlce/cosAlpha)/ltSlk;
+  %
+  %   dlxHN      = (dlce*0.5-dlaH)/lceOpt;
+  %
+  %   fce0      = (fxHN + f2HN + fEcmHN)*cosAlpha;
+  %   fce1      = (kxHNN*lxHN + betaxHNN*dlxHN0 
+  %                + f2HN 
+  %                + (fEcmfcnHN + (betaNum + betafEcmHN*fEcmfcnHN)*dlceHN))*cosAlpha;
+  %
+  % Where fce1 is the expanded version of fce0
+  %
+  %   ft0  = fTkN + betaTNN*(dlp - dlce/cosAlpha)/ltSlk;
+  %
+  % and ft0 is the expanded version of ftN
+  %
+  % This results in an equilibrum equation of
+  %
+  % errF0 = -(kxHNN*lxHN ...
+  %            - (betaxHNN*dlaH/lceOpt) ...
+  %            + f2HN ...
+  %            + fEcmfcnHN ...
+  %         )*cosAlpha ...  
+  %         + (fTkN + betaTNN*(dlp/ltSlk)) ...
+  %         - dlce*( (betaxHNN*0.5/lceOpt) + (betaNum + betafEcmHN*fEcmfcnHN)*(0.5/lceOpt))*cosAlpha ...  
+  %         - dlce*(betaTNN/(cosAlpha*ltSlk))
+  %         = 0
+  %
+  % which can be solved for dlce since it is the only unknown. 
+  % 
+  % Since the damping model for the ECM and the tendo both include betaNum, which is a small
+  % value above zero, there is guaranteed to be a finite solution for dlce.
+  %%
+
+
+  A = -(kxHNN*lxHN ...
+          - (betaxHNN*dlaH/lceOpt) ...
+          + f2kHN ...
+          + fEcmfcnHN ...
+       )*cosAlpha;
+
+  B = (fTkN + betaTNN*(dlp/ltSlk));
+
+  C = - ((betaxHNN*0.5/lceOpt) + (betaNum + betafEcmHN*fEcmkHN)*(0.5/lceOpt))*cosAlpha ...
+      - (betaTNN/(cosAlpha*ltSlk));
+
+  dlce = -(A+B)/C;
+
+  %This is here only so I can numerically check the 
+  %Jacobian of errF w.r.t dlce
+  if(flag_useArgs==1)
+    dlce = args(1,1);
+  end
+
+else
+
+  %Rigid tendon kinematic model
+
   dlceAT= dlp;
   fibKin = calcFixedWidthPennatedFiberKinematics(lceAT,...
                                       dlceAT,...
                                       lceOpt,...
                                       alphaOpt);
   dlce   = fibKin.fiberVelocity;
-  dalpha = fibKin.pennationAngularVelocity;    
-  dlt = 0;
+  
 end
 
+
+
+%%------------------------------------------------------------------------------
+% Update velocities dependent on the CE velocity
+%%------------------------------------------------------------------------------
+
+%Pennation angle and tendon
+fibKin  = calcFixedWidthPennatedFiberKinematicsAlongTendon(...
+                lce,dlce,lceOpt,alphaOpt);
+
+dlceAT = fibKin.fiberVelocityAlongTendon ;
+dalpha = fibKin.pennationAngularVelocity ;  
+dlt   = dlp - dlceAT;    
+
+%Normalized velocities
 dlceH   = dlce*lce_lceH;
 dlceHN  = dlceH*dlce_dlceN;  
 dltN    = dlt*lt_ltN;                  
+dlceNN  = dlce*dlce_dlceNN;
+
+%Cross bridge strain rates
+dlxH  = dlceH - (dlaH);
+dlxHN = dlxH*lce_lceN;
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Forces
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 %%------------------------------------------------------------------------------
-% Sliding velocity
+% Update forces dependent on the CE velocity
 %%------------------------------------------------------------------------------
 
-dlaHN  = dlaH*dlce_dlceN;
-dlaNN  = dlaH*dlce_dlceNN*lceH_lce;
-dlfNN  = dlaNN;
-dlceNN = dlce*dlce_dlceNN;
-%fvN    = calcFvDer(dlceNN,0);
+%ECM
+fEcmdHN     = betaEcmHNN*dlceHN;
+fEcmHN      = fEcmkHN + fEcmdHN;
 
-fvN=calcFvDer(dlfNN*forceVelocityCalibrationFactor,0);
+%Tendon force
+if(flag_useElasticTendon == 1)
+  fTdN         = betaTNN*dltN;
+  fTN          = fTkN + fTdN;
+else
+  fTdN    = 0; %It's rigid: its not stretching.
+  fTN     = fTkN + fTdN; 
+end
+
 
 %%------------------------------------------------------------------------------
 %Titin segments 
@@ -443,6 +575,8 @@ dl1H  = 0;
 dl2H  = 0; 
 dl2HN = 0;
 
+%
+%
 %From Fukutani and Herzog it is known that the active properties of titin
 %appear to be saturated at very low levels of calcium concentration. Here
 %we use a function that smoothly saturates to 1 as activation becomes 
@@ -451,6 +585,8 @@ dl2HN = 0;
 % Fukutani A, Herzog W. Residual Force Enhancement Is Preserved for Conditions 
 % of Reduced Contractile Force. Medicine and Science in Sports and Exercise. 
 % 2018 Jun 1;50(6):1186-91.
+%
+
 kaTi = a/activationThresholdTitin;
 aTi = 1.-exp((-kaTi*kaTi));
 
@@ -479,9 +615,22 @@ switch titinModelType
         here=1;
     end
 
-    dLce = lceHN-lceHNZeroFpeN;
-    kLce = dLce/smoothStepFunctionRadius;
-    uLce = 0.5+0.5*tanh(kLce);
+    %
+    % From Hisey et al. it is known that force enhancement does not
+    % take place for act streches that remain less than ~ 1 optimal
+    % fiber length. I'm going to assume here that this has nothing
+    % to do with the optimal fiber length per se, but that this 
+    % minimal length is due to the prox. Ig segment having a minimum
+    % slack length beyond which it does not shorten.
+    %
+    % Hisey B, Leonard TR, Herzog W. Does residual force enhancement increase 
+    % with increasing stretch magnitudes?. Journal of biomechanics. 
+    % 2009 Jul 22;42(10):1488-92.
+    %
+
+    dTiLMin = lceHN-lceHNZeroFpeN;
+    kTiLMin = dTiLMin/smoothStepFunctionRadius;
+    uTiLMin = 0.5+0.5*tanh(kTiLMin);
     % To break beta1HNN down:
     %
     %   beta1HNN = betaTApHN + betaTAaHN*aTi*uTia
@@ -494,7 +643,7 @@ switch titinModelType
     %              otherwise its zero.    
     %
     % Note: the active titin-actin bond is disabled for initialization
-    beta1HNN = betaTApHN + betaTAaHN*aTi*uTiA*uLce*(1-initialization); 
+    beta1HNN = betaTApHN + betaTAaHN*aTi*uTiA*uTiLMin*(1-initialization); 
     beta2HNN = 0;
 
     dl1HN = (f2kHN-f1kHN)/beta1HNN;
@@ -503,7 +652,18 @@ switch titinModelType
     dl2H  = dlceH - dl1H; 
     dl2HN = dl2H*lce_lceN;
 
+    f1dHN = beta1HNN*dl1HN;
+    f2dHN = 0;   
+
+    f1HN  = f1kHN + f1dHN;    
+    f2HN  = f2kHN;   
+
+    assert(abs(f2dHN) < eps && abs(beta2HNN) < eps && abs(f2HN-f2kHN) < eps*10,...
+      ['Error: Method used to directly solve dlce',...
+        ' for an elastic tendon is no longer valid']);       
+
   case 1 
+
     %Stiff-spring model:
     %  Damping acts on the PEVK element
     %
@@ -519,7 +679,22 @@ switch titinModelType
     % this viscous state until Ca2+ levels drop. Even when it goes outside
     % of the reach of actin.
     %
-    % This model was made in response 
+    % This model was made after simulating Leonard, Joumaa, and Herzog
+    % and finding that a titin-actin bond would slip off well before
+    % the lengths that Leonard, Joumaa, and Herzog measured. If one assumes
+    % that there is no experimental error, and all assumptions are correct,
+    % then a titin-actin bond couldn't support enhanced forces at these
+    % long lengths. And so I made a model that could.
+    %
+    % However, reality is not so simple. There is ample indirect 
+    % and direct evidence that actin and titin interact. The experiments
+    % are also challenging to undertake and some room for error should be
+    % given - especially now that I've worked with the Aurora machines
+    % myself. Finally, there are a number of plausible options within
+    % the sarcomere that could explain the long lengths: it's possible
+    % according to Herzog that some of the distal Ig segment becomes 
+    % separated from myosin. This would free up a lot of extra titin
+    % to stretch.
     %
 
     beta1HNN = 0;
@@ -531,33 +706,23 @@ switch titinModelType
     dl1H  = dlceH - dl2H; 
     dl1HN = dl1H*lce_lceN;
 
+    f1dHN = 0;              %beta1HNN*dl1HN;
+    f2dHN = beta2HNN*dl2HN;
+    f1HN  = f1kHN;          % + f1dHN;    
+    f2HN  = f2kHN + f2dHN;
   otherwise
     assert(0,'titinModelType must be 0 (sticky-spring) or 1 (stiff spring');
 end
 
 
-f1dHN = beta1HNN*dl1HN;
-f2dHN = beta2HNN*dl2HN;
-f1HN  = f1kHN + f1dHN;    
-f2HN  = f2kHN + f2dHN;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Net forces
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%ECM
-fEcmkHN     = fEcmfcnHN;
-betaEcmHNN  = betaNum + betafEcmHN*fEcmkHN;
-fEcmdHN     = betaEcmHNN*dlceHN;
-fEcmHN      = fEcmkHN + fEcmdHN;
-
-%Cross bridges
-dlxH  = dlceH - (dlaH);
-dlxHN = dlxH*lce_lceN;
-
 %N.B. This function assumes that the duty cycle does not change with 
 %     velocity. There is a good chance that it does.
 fxHN  = kxHNN*lxHN + betaxHNN*dlxHN;
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Acceleration
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 lambda              =   0;
@@ -588,22 +753,6 @@ ddlaHN = ddlaHN_HillError + ddlaHN_Damping + ddlaHN_Tracking;
 ddlaH  = ddlaHN*lceN_lce;
 
 
-
-%Tendon force
-if(flag_useElasticTendon == 1)
-  fTkN         = fTfcnN;
-  betaTNN      = calcDtDer(ltN,0)*betafTN + DftfcnN_DltN_max*betaCTN;
-  fTdN         = betaTNN*dltN;
-  fTN          = fTkN + fTdN;
-else
-  fTfcnN =   (fxHN + f2HN + fEcmHN)*cosAlpha;
-  fTkN    = fTfcnN;
-  betaTNN = 0;
-  fTdN    = 0; %It's rigid: its not stretching.
-  fTN     = fTkN + fTdN; 
-end
-
-
 %Sign convention
 % + forces that pull to the right
 % - forces that pull to the left
@@ -611,53 +760,6 @@ end
 %                   assuming both sarcomere halves are in equilibrium
 errF    = -(fxHN + f2HN + fEcmHN)*cosAlpha + fTN;
 errFJac = NaN;
-
-% Small testing area to explicitly solve for the CE velocity that
-% satisfies the CE-tendon force equilibrium
-dlceAT0     = dlce/cosAlpha; 
-assert(abs(dlceAT0-dlceAT) < eps*100);
-
-dltN0       = (dlp-dlce/cosAlpha)/ltSlk;
-assert(abs(dltN0-dltN) < eps*100);
-
-dlxHN0      = (dlce*0.5-dlaH)/lceOpt;
-assert(abs(dlxHN0-dlxHN) < eps*100);
-
-fce0 = (fxHN + f2HN + fEcmHN)*cosAlpha;
-fce1 = (kxHNN*lxHN + betaxHNN*dlxHN0 + f2HN + (fEcmfcnHN + (betaNum + betafEcmHN*fEcmfcnHN)*dlceHN))*cosAlpha;
-assert( abs(fce0-fce1) < eps*100 );
-
-ft0  = fTkN + betaTNN*(dlp - dlce/cosAlpha)/ltSlk;
-assert( abs(ft0-fTN) < eps*100 );
-
-errF0 = -(kxHNN*lxHN ...
-            - (betaxHNN*dlaH/lceOpt) ...
-            + f2HN ...
-            + fEcmfcnHN ...
-         )*cosAlpha ...  
-         - dlce*( (betaxHNN*0.5/lceOpt) + (betaNum + betafEcmHN*fEcmfcnHN)*(0.5/lceOpt))*cosAlpha ...
-         + (fTkN + betaTNN*(dlp/ltSlk)) ...
-         - dlce*(betaTNN/(cosAlpha*ltSlk));
-
-%A+B+C*dlce
-%dlce = -(A+B)/C
-A = -(kxHNN*lxHN ...
-        - (betaxHNN*dlaH/lceOpt) ...
-        + f2HN ...
-        + fEcmfcnHN ...
-     )*cosAlpha;
-
-B = (fTkN + betaTNN*(dlp/ltSlk));
-
-C = - ((betaxHNN*0.5/lceOpt) + (betaNum + betafEcmHN*fEcmfcnHN)*(0.5/lceOpt))*cosAlpha ...
-    - (betaTNN/(cosAlpha*ltSlk));
-
-dlce0 = -(A+B)/C;
-
-if(fce0>0.01 && abs(dlce) > 0.01 && flag_useElasticTendon==1 )
-    here=1;
-end
-
 
 
 if(flag_updateModelCache == 1)
@@ -850,7 +952,7 @@ if(flag_updateModelCache==1 && flag_evaluateDerivatives)
   modelCache.Dalpha_Dlce        = Dalpha_Dlce   ;
   modelCache.Ddalpha_Ddlce      = Ddalpha_Ddlce ;
 
-  %lt = lp - lce*cos(alpha)
+  %lt = lp - lce*cos(alpha)  
   %Dlt_Dlce = -cos(alpha) + lce*sin(alpha)*Dalpha_Dlce  
   Dlt_Dlce    = 0;
   DltN_DlceN  = 0;  
@@ -890,9 +992,31 @@ if(flag_evaluateJacobian == 1)
   %d/dt lt          = d/dt lp - d/dt lceAt
   %     vt          = vp - dlceAT
   %   Ddlt_DdlceAT  = -1
+  %
+  %Deriving dlceAT
+  %
   %     lceAT       = lce*cos(alpha)
   %    dlceAT       = dlce*cos(alpha) - lce*sin(alpha)*dalpha
-  %  DdlceAT_Ddlce  =    1*cos(alpha) - lce*sin(alpha)*Ddalpha_Ddlce
+  %
+  %Deriving dalpha (as in d/dt alpha)
+  %
+  %    lce*sin(alpha) = h
+  %   dlce*sin(alpha) + lce*cos(alpha)*dalpha = 0
+  %   dalpha = -dlce*sin(alpha)/( lce*cos(alpha))
+  %
+  %Substituting into dlceAT
+  %dlceAT       = dlce*cos(alpha) 
+  %             - lce*sin(alpha)*( -dlce*sin(alpha)/( lce*cos(alpha)) )
+  %
+  %dlceAT       =  dlce*cos^2(alpha)/( cos(alpha)) )
+  %              + dlce*sin^2(alpha)/( cos(alpha)) )
+  %
+  %dlceAT       =  dlce*(cos^2(alpha)+ sin^2(alpha))/( cos(alpha)) )
+  %
+  %dlceAT       = dlce/cos(alpha)
+  %
+  %  DdlceAT_Ddlce  =    1/cos(alpha)
+  %
   Ddlt_DdlceAT  = 0;
   DdlceAT_Ddlce = 0;
   if(flag_useElasticTendon == 1)
@@ -900,7 +1024,7 @@ if(flag_evaluateJacobian == 1)
   else
     Ddlt_DdlceAT  = 0;
   end
-  DdlceAT_Ddlce =  1*cosAlpha - lce*sinAlpha*Ddalpha_Ddlce;
+  DdlceAT_Ddlce =  1/cosAlpha;
 
   D_dltN_D_dlce = lt_ltN*(Ddlt_DdlceAT*DdlceAT_Ddlce);
 
@@ -996,7 +1120,6 @@ if(flag_evaluateJacobian == 1)
               + D_fTN_D_dlce;
 
       
-
   if(flag_updateModelCache==1)
 
     modelCache.D_fxHN_D_dlce    = D_fxHN_D_dlce ; 
