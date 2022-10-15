@@ -316,10 +316,10 @@ calcFtDer = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
 %0. Check the model inputs
 %%
 assert( a >= 0       && a <= 1     ,   'Check activation model should be [0, 1]');
-assert( lp < 1       && lp >= 0    ,   'Check Units: path length in m!');
+assert( lp >= 0                    ,   'Check Units: path negative!');
 assert( alphaOpt < pi/2            ,   'Check Units: Pennation angle must be in radians!');
-assert( lceOpt < 0.5 && lceOpt > 0 ,   'Check Units: fiber length in m!');
-assert( ltSlk < 0.5  && ltSlk >= 0 ,   'Check Units: tendon slack length in m!');
+assert( lceOpt > 0                 ,   'Check Units: fiber length negative!');
+assert( ltSlk >= 0                 , 'Check Units: tendon slack negative!');
 
 
 

@@ -141,7 +141,9 @@ if(flag_activeForceLengthSimulations==1)
     fpeN    = calcBezierYFcnXDerivative(lceN, normMuscleCurves.fiberForceLengthCurve,0);
     fceATN  = (falN + fpeN)*cos(fibKin.pennationAngle);
     ltN     = calcBezierYFcnXDerivative(fceATN, tendonForceLengthCurveInverse,0);
-    
+    if(ltN<1)
+        ltN=1;
+    end
     if(flag_useElasticTendon==0)
       ltN=1;
     end
@@ -319,7 +321,9 @@ if(flag_forceVelocitySimulations==1)
   if(flag_useElasticTendon==0)
       ltN=1;
   end
-
+  if(ltN < 1)
+      ltN=1;
+  end
   lpLong  = lceAT + ltSlk*ltN;    
 
   lceN  = (lceNCenter);        
@@ -331,6 +335,9 @@ if(flag_forceVelocitySimulations==1)
   fpeN    = calcBezierYFcnXDerivative(lceN, normMuscleCurves.fiberForceLengthCurve,0);
   fceATN  = (falN + fpeN)*cos(fibKin.pennationAngle);
   ltN     = calcBezierYFcnXDerivative(fceATN, tendonForceLengthCurveInverse,0);
+  if(ltN < 1)
+      ltN=1;
+  end  
   if(flag_useElasticTendon==0)
       ltN=1;
   end
@@ -346,6 +353,9 @@ if(flag_forceVelocitySimulations==1)
   fpeN    = calcBezierYFcnXDerivative(lceN, normMuscleCurves.fiberForceLengthCurve,0);
   fceATN  = (falN + fpeN)*cos(fibKin.pennationAngle);
   ltN     = calcBezierYFcnXDerivative(fceATN, tendonForceLengthCurveInverse,0);
+  if(ltN < 1)
+      ltN=1;
+  end  
   if(flag_useElasticTendon==0)
       ltN=1;
   end
