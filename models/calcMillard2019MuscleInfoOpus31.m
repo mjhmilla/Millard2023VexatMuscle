@@ -544,9 +544,9 @@ if(modelConfig.initializeState==1)
   
 
 
-  lceAT  = max(lp-ltSlk,lceATMin);
+  lceAT  = max(lp-ltSlk*1.01,lceATMin+lceOpt*0.01);
   fibKin = calcFixedWidthPennatedFiberKinematics(lceAT,0,lceOpt,alphaOpt);
-  lce    = max(fibKin.fiberLength,lceMin);  
+  lce    = fibKin.fiberLength;%,lceMin+lceOpt*0.01);  
   lceN = lce*lce_lceN;
   laHN = 0.5*lceN - lmHN;  
   laH  = laHN*lceN_lce;

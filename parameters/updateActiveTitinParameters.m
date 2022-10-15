@@ -104,7 +104,7 @@ for idxParam=1:1:2
 
     %Will get us within 1% of the best parameter value, as these parameters
     %are relatively independent
-    for idxBisection=1:1:12
+    for idxBisection=1:1:4
         biParamL = biParam;
         biParamL(idxParam,1) = biParamL(idxParam,1) - biDelta(idxParam,1); 
         errL = errorFcn(biParamL);

@@ -4,8 +4,8 @@ clear all;
 
 
 disp('Set these three flags to 1 if running from scratch.');
-flag_defaultSimulation       =1;
-flag_tunedSimulation         =1;
+flag_defaultSimulation       =0;
+flag_tunedSimulation         =0;
 
 flag_defaultHillSimulation   =0;
 

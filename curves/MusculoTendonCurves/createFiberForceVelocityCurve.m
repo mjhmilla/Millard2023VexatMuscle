@@ -192,10 +192,10 @@ xC    = vMaxC;
 yC    = 0;
 dydxC = 0;
                                         
-% if(flag_enableNumericallyNonZeroGradients==1)
-%   yC    = smallNumericallyNonZeroNumber*10;
-%   dydxC = smallNumericallyNonZeroNumber;
-% end
+if(flag_enableNumericallyNonZeroGradients==1)
+   yC    = smallNumericallyNonZeroNumber;
+   dydxC = smallNumericallyNonZeroNumber/10.0;
+end
 
 
 concPts1 =...

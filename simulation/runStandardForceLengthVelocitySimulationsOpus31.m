@@ -416,7 +416,7 @@ if(flag_forceVelocitySimulations==1)
         tmax = tRampEnd+0.1;
       else
         pathFcn = @(argT)calcConstantFunction(argT,lpMid);
-        tmax = 0.2;
+        tmax = 2;
         tRampMid = tmax/2;
       end
 

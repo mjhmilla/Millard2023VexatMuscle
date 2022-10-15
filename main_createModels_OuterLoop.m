@@ -112,6 +112,12 @@ useTwoSidedTitinCurves  = 0;
 % due to this effect.
 
 %%
+% Feline Soleus (additional flags)
+%%
+
+flag_plotAllDefaultFelineSoleusCurves = 0;
+
+%%
 % Rabbit Psoas Model parameters
 %%
 flag_plotAllRabbitPsoasFibrilCurves     = 0;
@@ -129,8 +135,8 @@ scaleMaximumIsometricTensionHumanSoleus = 1;
 %%
 % Cat Soleus Model Parameters
 %%
-flag_fitFelineSoleusActiveTitinProperties               = 1;
-flag_loadFittedFelineSoleusActiveTitinProperties        = 0;
+flag_fitFelineSoleusActiveTitinProperties               = 0;
+flag_loadFittedFelineSoleusActiveTitinProperties        = 1;
 %Takes 10-20 minutes, but must be done once.
 %Numerically identifies the point of attachement between the PEVK segment
 %and actin that produces simulated forces that most closely matches 
@@ -209,7 +215,11 @@ fprintf('\n\nCreating: default feline soleus model\n\n');
 save('output/structs/defaultFelineSoleus.mat',...
      'defaultFelineSoleus');  
 
-
+if(flag_plotAllDefaultFelineSoleusCurves==1)
+    figHumanSoleusCurves = ...
+    plotStructOfBezierSplines( defaultFelineSoleus.curves,...
+                                      {'Inverse','use'});       
+end
 
 fittedFelineSoleus = [];
 fittingTag = '';
@@ -265,8 +275,23 @@ if(flag_loadFittedFelineSoleusActiveTitinProperties==1)
     tmp=load(['output/structs/fittedFelineSoleus',fittingTag,'_ET']);
     fittedFelineSoleusHL2002_ET=tmp.fittedFelineSoleus;
 
+    
     tmp=load(['output/structs/fittedFelineSoleus',fittingTag,'_RT']);
     fittedFelineSoleusHL2002_RT=tmp.fittedFelineSoleus;
+
+    disp('Lines added for debugging: later remove these 4 assignments');
+    fittedFelineSoleusHL2002_ET.curves.activeForceLengthCalibratedCurve= ...
+        defaultFelineSoleus.curves.activeForceLengthCalibratedCurve;
+
+    fittedFelineSoleusHL2002_ET.curves.activeForceLengthCurve= ...
+        defaultFelineSoleus.curves.activeForceLengthCurve;    
+    
+    fittedFelineSoleusHL2002_RT.curves.activeForceLengthCalibratedCurve= ...
+        defaultFelineSoleus.curves.activeForceLengthCalibratedCurve;
+
+    fittedFelineSoleusHL2002_RT.curves.activeForceLengthCurve= ...
+        defaultFelineSoleus.curves.activeForceLengthCurve;    
+    here=1;
 else
     disp([' Using default feline solues ']);        
 end

@@ -347,7 +347,7 @@ if(flag_updatePositionLevel == 1)
   fCpN      = calcCpDer(lceATN,0);
   kCpN      = calcCpDer(lceATN,1);   
 
-  if(fCpN > 1e-6)
+  if(fCpN > 1e-6 && flag_evaluateInitializationFunctions==0)
       here=1;
   end
 
@@ -506,7 +506,7 @@ if(flag_useElasticTendon == 1)
 
   %This is here only so I can numerically check the 
   %Jacobian of errF w.r.t dlce
-  if(flag_useArgs==1)
+  if(flag_useArgs==1 || flag_evaluateInitializationFunctions)
     dlce = args(1,1);
   end
 
@@ -744,7 +744,7 @@ end
 
 
 lambda              =   0;
-ddlaHN_HillError    =   ((fxHN + fCpN/cosAlpha - a*flN*(fvN))/(tau));
+ddlaHN_HillError    =   ((fxHN - a*flN*(fvN))/(tau));
 ddlaHN_Damping      = - betaCXHN*dlaNN;
 
 ka                  = (a/lowActivationThreshold);

@@ -455,6 +455,10 @@ if(isempty(benchConfig.eventFcn)==0)
     benchRecord.eventNormFiberVelocity(j,idxSim) = ...
       mtInfo.fiberVelocityInfo.normFiberVelocity;  
     
+    if(mtInfo.fiberVelocityInfo.normFiberVelocity > 0)
+        here=1;
+    end
+
     benchRecord.eventTendonForce(j,idxSim) = ...
       mtInfo.muscleDynamicsInfo.tendonForce;
     

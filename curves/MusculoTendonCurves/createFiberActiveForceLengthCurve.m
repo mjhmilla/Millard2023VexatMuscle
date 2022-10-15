@@ -218,14 +218,14 @@ c2c3y = (c3y-c2y);
 c3c4y = (c4y-c3y);
 
 
-shoulder = (c3x-c0x)*20;%0.5*(c0c1x + c3c4x);
+shoulder = 0.125*(c4x - c0x);
 
-p0x   = c0x        - 0.5*shoulder;
-p0y   = c0y - p0DyDx*(0.5*shoulder);
+p0x   = c0x        - 0.5*shoulder + dx45;
+p0y   = 0;%c0y - p0DyDx*(0.5*shoulder);
 
 if(flag_enableNumericallyNonZeroGradient==0)
-  p0y    = 0;
-  p0DyDx = 0;    
+  p0y    = smallNumericallyNonZeroNumber;
+  p0DyDx = smallNumericallyNonZeroNumber/10.;    
 end    
 
 p1x     = c0x + 0.5*c0c1x;  
@@ -258,8 +258,8 @@ p4DyDx  = (c3c4y)/(c3c4x);
 p5x     = c4x + 0.5*shoulder + dx45;
 p5y     = c4y + p5DyDx*(0.5*shoulder);
 if(flag_enableNumericallyNonZeroGradient==0)
-  p5y    = 0;
-  p5DyDx = 0;    
+  p5y    = smallNumericallyNonZeroNumber;
+  p5DyDx =-smallNumericallyNonZeroNumber/10.;    
 end    
 
 activeForceLengthCurveAnnotationPoints = struct('x',[],'y',[]);
