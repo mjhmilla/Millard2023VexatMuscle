@@ -93,14 +93,14 @@ switch flag_Mode15Hz90HzBoth
     xTicksVector = [4,15,90];                       
   case 2
     expAmpPlot   = [1.6,1.6];
-    expBWPlot    = [90 ,15];    
+    expBWPlot    = [15, 90];    
     expLineWidth = [1,1];
     expMarkType  = {'-','-'};
-    expLegendEntry = {'Kirsch: 1.6mm 90Hz', 'Kirsch: 1.6mm 15Hz'};    
-    expModelPlotColor = [0.25,  0.25, 1;...
-                         0.5,   0.5,  1];
-    expPlotColor      = [0.25,  0.25, 0.25;...
-                         0.5,   0.5, 0.5];
+    expLegendEntry = {'Kirsch: 1.6mm 15Hz','Kirsch: 1.6mm 90Hz'};    
+    expModelPlotColor = [0.5,  0.5, 1;...
+                         0.25,   0.25,  1];
+    expPlotColor      = [0.5,  0.5,  0.5;...
+                         0.25, 0.25, 0.25];
     expMarkFaceColor = expPlotColor;
     xTicksVector = [4,15,90];
     
@@ -119,10 +119,10 @@ idxChunk       = [round((paddingPoints)*0.5):1: ...
 timeTicks = [round(paddingPoints/sampleFrequency,2),...
              round(timeChunkEnd,2)];
 
-subPlotList = zeros(5*4,4);
+subPlotList = zeros(6*4,4);
 
 ySpace = 0.05;
-xSpace = 0.04;
+xSpace = 0.05;
 
 %%
 % Plot Layout
@@ -136,6 +136,7 @@ figure(fig_freqResponse43);
   subPlotOffsetY  = subPlotHeight+ySpace;
   subPlotOffsetX  = subPlotWidth+xSpace;
 
+  subPlotWidth = subPlotWidth*0.6;
   subPlotWidthSkinny = subPlotWidth*((15-4)/(90-4));
   subPlotOffsetXSkinny = subPlotWidthSkinny+xSpace*0.25;
 
@@ -152,48 +153,56 @@ for i=1:1:length(freqSeriesFiles)
     deltaY = -subPlotOffsetY*0.5;
   end
     
-  
-  %Timeseries 
-  j = (i-1)*5 + 1;  
+  %Timeseries 15
+  j = (i-1)*6 + 1;  
   subPlotList(j,:)    = [xSpace*2,0,subPlotWidth,subPlotHeight];
   subPlotList(j,2)    = currentSubPlot(1,2) - subPlotOffsetY*(row) +deltaY; 
-
+  
   %Gain  15
-  j = (i-1)*5 + 2;  
+  j = (i-1)*6 + 2;  
   col = col+1;  
   subPlotList(j,3:4)  = [subPlotWidthSkinny, subPlotHeight];  
-  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotOffsetX; 
-  subPlotList(j,2)    = currentSubPlot(1,2) - subPlotOffsetY*(row) +deltaY;  
-    
-  %Gain  90
-  j = (i-1)*5 + 3;  
-  col = col+1;  
-  subPlotList(j,3:4)  = [subPlotWidth, subPlotHeight];    
-  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotOffsetXSkinny; 
+  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotList(j-1,3) + xSpace; 
   subPlotList(j,2)    = currentSubPlot(1,2) - subPlotOffsetY*(row) +deltaY;  
 
   %Phase 15
-  j = (i-1)*5 + 4;  
+  j = (i-1)*6 + 3;  
   col = col+1;  
   subPlotList(j,3:4)  = [subPlotWidthSkinny, subPlotHeight];    
-  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotOffsetX; 
+  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotList(j-1,3) + xSpace;
+  subPlotList(j,2)    = currentSubPlot(1,2) - subPlotOffsetY*(row) +deltaY;  
+
+
+  %Timeseries 90
+  j = (i-1)*6 + 4;  
+  subPlotList(j,3:4)  = [subPlotWidth, subPlotHeight];    
+  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotList(j-1,3) + xSpace;
+  subPlotList(j,2)    = currentSubPlot(1,2) - subPlotOffsetY*(row) +deltaY;  
+
+
+
+  %Gain  90
+  j = (i-1)*6 + 5;  
+  col = col+1;  
+  subPlotList(j,3:4)  = [subPlotWidth, subPlotHeight];    
+  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotList(j-1,3) + xSpace;
   subPlotList(j,2)    = currentSubPlot(1,2) - subPlotOffsetY*(row) +deltaY;  
 
   %Phase 90
-  j = (i-1)*5 + 5;  
+  j = (i-1)*6 + 6;  
   col = col+1;  
-  subPlotList(j,3:4)  = [subPlotWidth, subPlotHeight];      
-  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotOffsetXSkinny; 
+  subPlotList(j,3:4)  = [subPlotWidth, subPlotHeight];    
+  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotList(j-1,3) + xSpace;
   subPlotList(j,2)    = currentSubPlot(1,2) - subPlotOffsetY*(row) +deltaY;  
   
   row = row+1;
 
 end
 
-subPlotLabel = {'A. Model (viscoelastic tendon)','B. 15Hz','C. 90Hz','D. 15Hz','E. 90Hz',... 
-                'F. Model (rigid tendon)','G. 15Hz','H. 90Hz','I. 15Hz','J. 90Hz',...
-                'A. Hill model (elastic tendon)','B. 15Hz','C. 90Hz','D. 15Hz','E. 90Hz',...
-                'F. Hill model (rigid tendon)','G. 15Hz','H. 90Hz','I. 15Hz','J. 90Hz',...
+subPlotLabel = {'A. Model (elastic tendon)','B.15Hz','C.15Hz','D.90Hz','E.90Hz','F.90Hz',... 
+                'G. Model (rigid tendon)','H.15Hz','I.15Hz','J.90Hz','K.90Hz','L.90Hz',... 
+                'A. Hill Model (elastic tendon)','B.15Hz','C.15Hz','D.90Hz','E.90Hz','F.90Hz',... 
+                'G. Hill Model (rigid tendon)','H.15Hz','I.15Hz','J.90Hz','K.90Hz','L.90Hz',... 
                 'X.','Y.','Z.'};
 
 %%
@@ -301,11 +310,12 @@ for z=1:1:length(freqSeriesFiles)
                              modelBWPlot(1,k),...
                              inputFunctions);                            
 
-    idxForce   = 5*(z-1)+1;
-    idxGain15  = 5*(z-1)+2;
-    idxGain90  = 5*(z-1)+3;
-    idxPhase15 = 5*(z-1)+4;    
-    idxPhase90 = 5*(z-1)+5;
+    idxForce15 = 6*(z-1)+1;
+    idxGain15  = 6*(z-1)+2;
+    idxPhase15 = 6*(z-1)+3;    
+    idxForce90 = 6*(z-1)+4;    
+    idxGain90  = 6*(z-1)+5;    
+    idxPhase90 = 6*(z-1)+6;
     
     %if(flag_Hill)
     %  idxForce = 2;
@@ -313,14 +323,36 @@ for z=1:1:length(freqSeriesFiles)
     %  idxPhase = 6;
     %end
 
+    kdLineColor = lineColorFull(k,:);    
+
+    switch expBWPlot(1,k)
+          case 15
+                idxForce     = idxForce15;
+                idxGain      = idxGain15;
+                idxPhase     = idxPhase15;
+                xTicksVector = xTicksVector15;
+
+                kdLineColor = (kdLineColor).*0.5 ...
+                          +[1,1,1].*0.5;
+                
+
+          case 90
+                idxForce     = idxForce90;             
+                idxGain      = idxGain90;
+                idxPhase     = idxPhase90;
+                xTicksVector = xTicksVector90;
+                
+          otherwise
+              assert(0,'Invalid frequency selection');
+     end
+   
+                  
     subplot('Position', [ subPlotList(idxForce,1),...
                           subPlotList(idxForce,2),...
                           subPlotList(idxForce,3),...
-                          subPlotList(idxForce,4)]);    
-   
-                      
+                          subPlotList(idxForce,4)]);        
                         
-    if(flagPlotEmpty(z,1)==1 && k==length(modelAmpPlot))
+%    if(flagPlotEmpty(z,1)==1 && k==length(modelAmpPlot))
 
       yo = freqSimData.nominalForce(1,idxSim);
 
@@ -341,24 +373,9 @@ for z=1:1:length(freqSeriesFiles)
       lineLabel = [ freqSeriesName{z}];
 
 
-      kdLineColor = lineColorFull(k,:);
-    
-      switch expBWPlot(1,k)
-          case 15
-                idxGain      = idxGain15;
-                idxPhase     = idxPhase15;
-                xTicksVector = xTicksVector15;
-                kdLineColor = (kdLineColor).*0.75 ...
-                              +[1,1,1].*0.25;
-          case 90
-                idxGain      = idxGain90;
-                idxPhase     = idxPhase90;
-                xTicksVector = xTicksVector90;
-                
-          otherwise
-              assert(0,'Invalid frequency selection');
-      end
 
+    
+     
 
       pidKD = plot( inputFunctions.time(idxChunk,1),...
              freqSimData.forceKD(idxChunk,idxSim)+yo,...
@@ -369,7 +386,7 @@ for z=1:1:length(freqSeriesFiles)
 
       pidMdl = plot( inputFunctions.time(idxChunk,1),...
             freqSimData.force(idxChunk,idxSim),...
-            'Color',lineColorFull(k,:),...
+            'Color',kdLineColor,...
             'LineWidth',lineWidthFull(k,1));
       hold on;  
 
@@ -438,11 +455,12 @@ for z=1:1:length(freqSeriesFiles)
       ylabel('Force (N)');
       xlabel('Time (s)');
       
-      if(z==1)
-        x0 = subPlotList(idxForce,1);
-        y0 = subPlotList(idxForce,2);
-        dx = subPlotList(idxForce,3);
-        dy = subPlotList(idxForce,4);
+      if( (idxForce==idxForce15 && z==1) || ...
+          (idxForce==idxForce15 && z==3)    )
+        x0 = subPlotList(idxForce15,1);
+        y0 = subPlotList(idxForce15,2);
+        dx = subPlotList(idxForce15,3);
+        dy = subPlotList(idxForce15,4);
 
         text(tmin,plotForceMax*1.2,'Simulation of Kirsch, Boskov, \& Rymer 1994',...
         'FontSize',8*1.2,...
@@ -452,23 +470,23 @@ for z=1:1:length(freqSeriesFiles)
 
       end
 
-      if(z==3)
-        x0 = subPlotList(idxForce,1);
-        y0 = subPlotList(idxForce,2);
-        dx = subPlotList(idxForce,3);
-        dy = subPlotList(idxForce,4);
+%       if(z==3 )
+%         x0 = subPlotList(idxForce90,1);
+%         y0 = subPlotList(idxForce,2);
+%         dx = subPlotList(idxForce,3);
+%         dy = subPlotList(idxForce,4);
+% 
+%         text(tmin,plotForceMax*1.2,'Simulation of Kirsch, Boskov, \& Rymer 1994',...
+%         'FontSize',8*1.2,...
+%         'HorizontalAlignment','left',...
+%         'VerticalAlignment','bottom');
+%         hold on;     
 
-        text(tmin,plotForceMax*1.2,'Simulation of Kirsch, Boskov, \& Rymer 1994',...
-        'FontSize',8*1.2,...
-        'HorizontalAlignment','left',...
-        'VerticalAlignment','bottom');
-        hold on;     
-
-      end        
-    end
+  end        
+%    end
     
 
-  end
+ 
 
 
 
@@ -505,23 +523,28 @@ for z=1:1:length(freqSeriesFiles)
     idxCutoff = freqSimData.idxFreqRange(1,idxSim);
 
     
-    idxForce   = 5*(z-1)+1;
-    idxGain15  = 5*(z-1)+2;
-    idxGain90  = 5*(z-1)+3;
-    idxPhase15 = 5*(z-1)+4;    
-    idxPhase90 = 5*(z-1)+5;
+
+    idxForce15 = 6*(z-1)+1;
+    idxGain15  = 6*(z-1)+2;
+    idxPhase15 = 6*(z-1)+3;    
+    idxForce90 = 6*(z-1)+4;    
+    idxGain90  = 6*(z-1)+5;    
+    idxPhase90 = 6*(z-1)+6;
     
 
-    kdLineColor = freqSeriesColor(z,:);
+
+    kdLineColor = lineColorFull(k,:);
 
     switch expBWPlot(1,k)
         case 15
+            idxForce     = idxForce15;
             idxGain      = idxGain15;
             idxPhase     = idxPhase15;
             xTicksVector = xTicksVector15;
-            kdLineColor = (kdLineColor).*0.75 ...
-                          +[1,1,1].*0.25;
+            kdLineColor = (kdLineColor).*0.5 ...
+                          +[1,1,1].*0.5;
         case 90
+            idxForce     = idxForce90;            
             idxGain      = idxGain90;
             idxPhase     = idxPhase90;
             xTicksVector = xTicksVector90;
@@ -717,19 +740,23 @@ for z=1:1:length(freqSeriesFiles)
       end
     end      
 
-    idxForce   = 5*(z-1)+1;
-    idxGain15  = 5*(z-1)+2;
-    idxGain90  = 5*(z-1)+3;
-    idxPhase15 = 5*(z-1)+4;    
-    idxPhase90 = 5*(z-1)+5;
+
+    idxForce15 = 6*(z-1)+1;
+    idxGain15  = 6*(z-1)+2;
+    idxPhase15 = 6*(z-1)+3;    
+    idxForce90 = 6*(z-1)+4;    
+    idxGain90  = 6*(z-1)+5;    
+    idxPhase90 = 6*(z-1)+6;
        
     
     switch expBWPlot(1,k)
         case 15
+            idxForce     = idxForce15;
             idxGain      = idxGain15;
             idxPhase     = idxPhase15;
             xTicksVector = xTicksVector15;
         case 90
+            idxForce     = idxForce90;            
             idxGain      = idxGain90;
             idxPhase     = idxPhase90;
             xTicksVector = xTicksVector90;
@@ -758,13 +785,21 @@ for z=1:1:length(freqSeriesFiles)
           'DisplayName', expLegendEntry{k});
 
     hold on;
-      if(expBWPlot(1,k)==90)
-        set(gca,'YTickLabel',[]);
+%       if(expBWPlot(1,k)==90)
+%         set(gca,'YTickLabel',[]);
+%         xlabel(dataKBR1994Fig3Gain(idxExp).xName);    
+%       else
+%         ylabel('Gain (N/mm)');
+%       end    
+
+    if(expBWPlot(1,k)~=15)
         xlabel(dataKBR1994Fig3Gain(idxExp).xName);    
-      else
-        ylabel('Gain (N/mm)');
-      end    
+    end
+    ylabel('Gain (N/mm)');
   end
+
+  %xlabel(dataKBR1994Fig3Gain(idxExp).xName);    
+  %ylabel('Gain (N/mm)');
 
   box off;
   set(gca,'color','none')  
@@ -805,20 +840,23 @@ for z=1:1:length(freqSeriesFiles)
       end
     end       
 
-    idxForce   = 5*(z-1)+1;
-    idxGain15  = 5*(z-1)+2;
-    idxGain90  = 5*(z-1)+3;
-    idxPhase15 = 5*(z-1)+4;    
-    idxPhase90 = 5*(z-1)+5;
-    
 
+    idxForce15 = 6*(z-1)+1;
+    idxGain15  = 6*(z-1)+2;
+    idxPhase15 = 6*(z-1)+3;    
+    idxForce90 = 6*(z-1)+4;    
+    idxGain90  = 6*(z-1)+5;    
+    idxPhase90 = 6*(z-1)+6;
+   
     
     switch expBWPlot(1,k)
         case 15
+            idxForce     = idxForce15;
             idxGain      = idxGain15;
             idxPhase     = idxPhase15;
             xTicksVector = xTicksVector15;
         case 90
+            idxForce     = idxForce90;
             idxGain      = idxGain90;
             idxPhase     = idxPhase90;
             xTicksVector = xTicksVector90;
@@ -851,12 +889,23 @@ for z=1:1:length(freqSeriesFiles)
           'DisplayName', expLegendEntry{k}); 
     hold on;   
 
-      if(expBWPlot(1,k)==90)
-        set(gca,'YTickLabel',[]);
-        xlabel(dataKBR1994Fig3Gain(idxExp).xName);    
-      else
-        ylabel('Phase (deg)');
-      end    
+%       if(expBWPlot(1,k)==90)
+%         set(gca,'YTickLabel',[]);
+%         xlabel(dataKBR1994Fig3Gain(idxExp).xName);    
+%       else
+%         ylabel('Phase (deg)');
+%       end    
+
+      xlabel(dataKBR1994Fig3Gain(idxExp).xName);          
+      ylabel('Phase (deg)');      
+
+      if(contains(freqSeriesFiles{z},'Rigid')==1)
+        lh = legend('Location','South');    
+        lh.Position(1,1) = lh.Position(1,1);% -0.15625;        
+        lh.Position(1,2) = lh.Position(1,2) -0.1;%40625;   
+        lh.NumColumns=1;
+        legend boxoff;        
+      end      
   end
 
 
@@ -870,27 +919,19 @@ for z=1:1:length(freqSeriesFiles)
 
 
   %if(flag_useElasticTendon==1 )
-  if(z == 2)
-    lh = legend('Location','South');    
-    lh.Position(1,1) = lh.Position(1,1) -0.15625;        
-    lh.Position(1,2) = lh.Position(1,2) -0.140625;   
-    lh.NumColumns=3;
-    legend boxoff;        
-  end
-  if(z == 4)%length(freqSeriesFiles))
-    lh = legend('Location','South');    
-    lh.Position(1,1) = lh.Position(1,1) -0.15625;            
-    lh.Position(1,2) = lh.Position(1,2) -0.140625;    
-    lh.NumColumns=3;    
-    legend boxoff;    
-  end
+
+%  if(z == 4)%length(freqSeriesFiles))
+%    lh = legend('Location','South');    
+%    lh.Position(1,1) = lh.Position(1,1) -0.15625;            
+%    lh.Position(1,2) = lh.Position(1,2) -0.140625;    
+%    lh.NumColumns=3;    
+%    legend boxoff;    
+%  end
   
 
 
 
 
-  
-  % end
 %     if(flag_useElasticTendon==1)
 %       lh = legend('Location','NorthEast');  
 %       lh.Position(1,1) = lh.Position(1,1)+0.035;    
@@ -898,6 +939,7 @@ for z=1:1:length(freqSeriesFiles)
 %       lh.EdgeColor = lh.Color;
 % 
 %     end
+
 end
 
 %for i=1:1:length(lineHandlesModelPhase)
