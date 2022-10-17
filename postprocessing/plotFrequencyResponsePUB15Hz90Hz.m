@@ -161,22 +161,22 @@ for i=1:1:length(freqSeriesFiles)
   %Gain  15
   j = (i-1)*6 + 2;  
   col = col+1;  
-  subPlotList(j,3:4)  = [subPlotWidthSkinny, subPlotHeight];  
-  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotList(j-1,3) + xSpace; 
+  subPlotList(j,3:4)  = [subPlotWidthSkinny+xSpace*0.6, subPlotHeight];  
+  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotList(j-1,3) + xSpace*0.6; 
   subPlotList(j,2)    = currentSubPlot(1,2) - subPlotOffsetY*(row) +deltaY;  
 
   %Phase 15
   j = (i-1)*6 + 3;  
   col = col+1;  
-  subPlotList(j,3:4)  = [subPlotWidthSkinny, subPlotHeight];    
-  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotList(j-1,3) + xSpace;
+  subPlotList(j,3:4)  = [subPlotWidthSkinny+xSpace*0.6, subPlotHeight];    
+  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotList(j-1,3) + xSpace*0.8;
   subPlotList(j,2)    = currentSubPlot(1,2) - subPlotOffsetY*(row) +deltaY;  
 
 
   %Timeseries 90
   j = (i-1)*6 + 4;  
   subPlotList(j,3:4)  = [subPlotWidth, subPlotHeight];    
-  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotList(j-1,3) + xSpace*1.2;
+  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotList(j-1,3) + xSpace*1.1;
   subPlotList(j,2)    = currentSubPlot(1,2) - subPlotOffsetY*(row) +deltaY;  
 
 
@@ -185,14 +185,14 @@ for i=1:1:length(freqSeriesFiles)
   j = (i-1)*6 + 5;  
   col = col+1;  
   subPlotList(j,3:4)  = [subPlotWidth, subPlotHeight];    
-  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotList(j-1,3) + xSpace;
+  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotList(j-1,3) + xSpace*0.7;
   subPlotList(j,2)    = currentSubPlot(1,2) - subPlotOffsetY*(row) +deltaY;  
 
   %Phase 90
   j = (i-1)*6 + 6;  
   col = col+1;  
   subPlotList(j,3:4)  = [subPlotWidth, subPlotHeight];    
-  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotList(j-1,3) + xSpace;
+  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotList(j-1,3) + xSpace*0.8;
   subPlotList(j,2)    = currentSubPlot(1,2) - subPlotOffsetY*(row) +deltaY;  
   
   row = row+1;
@@ -332,8 +332,8 @@ for z=1:1:length(freqSeriesFiles)
                 idxPhase     = idxPhase15;
                 xTicksVector = xTicksVector15;
 
-                kdLineColor = (kdLineColor).*0.5 ...
-                          +[1,1,1].*0.5;
+                kdLineColor = (kdLineColor).*0.75 ...
+                          +[1,1,1].*0.25;
                 
 
           case 90
@@ -550,8 +550,8 @@ for z=1:1:length(freqSeriesFiles)
             idxGain      = idxGain15;
             idxPhase     = idxPhase15;
             xTicksVector = xTicksVector15;
-            kdLineColor = (kdLineColor).*0.5 ...
-                          +[1,1,1].*0.5;
+            kdLineColor = (kdLineColor).*0.75 ...
+                          +[1,1,1].*0.25;
         case 90
             idxForce     = idxForce90;            
             idxGain      = idxGain90;
@@ -669,10 +669,27 @@ for z=1:1:length(freqSeriesFiles)
     gainRMSE = sqrt(gainSumErrSq / length(idxRange));
     gainRMSEStr = sprintf('RMSE:\n %1.2fN/mm',gainRMSE);
 
-    text('Units','normalized','Position',[0.05,0.95],...
+    xPos = 0;
+    yPos = 0;
+    vAlign = 'bottom';
+    hAlign = 'right';
+
+    if(expBWPlot(1,k) == 90)
+        hAlign = 'right';
+        vAlign = 'bottom';
+        xPos = 0.95;
+        yPos = 0.05;
+    else
+        hAlign = 'left';
+        vAlign = 'top';
+        xPos = 0.05;
+        yPos = 0.95;
+    end
+
+    text('Units','normalized','Position',[xPos,yPos],...
          'String',gainRMSEStr,'FontSize',6,...
-         'HorizontalAlignment','left',...
-         'VerticalAlignment','top',...
+         'HorizontalAlignment',hAlign,...
+         'VerticalAlignment',vAlign,...
          'BackgroundColor',[1,1,1],...
          'Margin',0.1);
     hold on;

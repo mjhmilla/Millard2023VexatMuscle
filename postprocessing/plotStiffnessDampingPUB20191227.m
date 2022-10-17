@@ -79,9 +79,9 @@ fig_fig12 = figure;
   xSpace = 0.075;
   
   kMin = -0.01;
-  kMax = 12.01;
+  kMax = 15.01;
   dMin = -0.001;
-  dMax = 0.1201;
+  dMax = 0.1501;
   
   fMin = -0.01;
   fMax = 12.51;
@@ -266,7 +266,9 @@ fig_fig12 = figure;
                 freqSimData.stiffness(1,idxSim)/1000];
       vafText = sprintf('%1.0f',freqSimData.vafTime(1,idxSim)*100); 
       if(i==3)
-        vafText = ['VAF:',vafText];
+        vafText = ['VAF:',vafText,'\%'];
+      else
+        vafText=[vafText,'\%'];
       end
 
       
@@ -294,9 +296,18 @@ fig_fig12 = figure;
         
       end
       text(posTextK(1,1)+textDeltaX,...
-           posTextK(1,2)+textDeltaY,[vafText,'\%'],...
+           posTextK(1,2)+textDeltaY,vafText,...
             'HorizontalAlignment',textAlign);
       hold on;
+      if(i==3)
+         xyText =[sprintf('(%1.2f,%1.2f)',...
+                freqSimData.nominalForce(1,idxSim),...
+                freqSimData.stiffness(1,idxSim)/1000)];
+          text(posTextK(1,1)+textDeltaX,...
+               posTextK(1,2)+textDeltaY - 0.05*(kMax-kMin),xyText,...
+                'HorizontalAlignment',textAlign);
+         
+      end
       xlim([fMin,fMax]);
       ylim([kMin,kMax]);      
 
@@ -343,9 +354,19 @@ fig_fig12 = figure;
               
               
       text(posTextD(1,1)+textDeltaX,...
-           posTextD(1,2)+textDeltaY,[vafText,'\%'],...
+           posTextD(1,2)+textDeltaY,[vafText],...
             'HorizontalAlignment',textAlign);
       hold on;
+      if(i==3)
+         xyText =[sprintf('(%1.2f,%1.2f)',...
+                freqSimData.nominalForce(1,idxSim),...
+                freqSimData.damping(1,idxSim)/1000)];
+          text(posTextD(1,1)+textDeltaX,...
+               posTextD(1,2)+textDeltaY - 0.05*(dMax-dMin),xyText,...
+                'HorizontalAlignment',textAlign);
+         
+      end
+
       
       if( i > 1)
         set(get(get(pid,'Annotation'),...
