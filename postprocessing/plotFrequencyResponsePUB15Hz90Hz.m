@@ -176,7 +176,7 @@ for i=1:1:length(freqSeriesFiles)
   %Timeseries 90
   j = (i-1)*6 + 4;  
   subPlotList(j,3:4)  = [subPlotWidth, subPlotHeight];    
-  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotList(j-1,3) + xSpace;
+  subPlotList(j,1)    = subPlotList(j-1,1) + subPlotList(j-1,3) + xSpace*1.2;
   subPlotList(j,2)    = currentSubPlot(1,2) - subPlotOffsetY*(row) +deltaY;  
 
 
@@ -445,11 +445,20 @@ for z=1:1:length(freqSeriesFiles)
 
       %if(k == 1)
         idxSubPlot = idxForce;
-        tc = text(tmin+0.5*(tmax-tmin), 1.1*plotForceMax,...
-               subPlotLabel{1,idxSubPlot},...
-               'FontSize',figLabelFontSize,...
-               'HorizontalAlignment','center');   
-        hold on;
+        if(idxForce==idxForce15)
+            tc = text(tmin-0.35*(tmax-tmin), 1.1*plotForceMax,...
+                   subPlotLabel{1,idxSubPlot},...
+                   'FontSize',figLabelFontSize,...
+                   'HorizontalAlignment','left');   
+            hold on;
+
+        else
+            tc = text(tmin+0.5*(tmax-tmin), 1.1*plotForceMax,...
+                   subPlotLabel{1,idxSubPlot},...
+                   'FontSize',figLabelFontSize,...
+                   'HorizontalAlignment','center');   
+            hold on;
+        end
       %end      
       
       ylabel('Force (N)');
@@ -601,38 +610,79 @@ for z=1:1:length(freqSeriesFiles)
          'LineWidth',kdLineWidth,'DisplayName', ['K-$$\beta$$',trialName]);
     hold on;
 
+    
+
     lineHandlesModelGain = [lineHandlesModelGain,...
                             pidW,...
                             pidL];
 
 
 
-    fmin = 0.;
-    fmax = max(xTicksVector);
+    x0 = min(xTicksVector)-0.01;
+    x1 = max(xTicksVector)+0.01;
+    xlim([x0,x1]);
+    xticks(xTicksVector);
+    xtickangle(0);
+
     gmin = 0.;%min(freqSimData.gain(idxRange,idxSim)./1000);
     gmax = 8.01;
+    ylim([gmin,gmax]);
+    yticks([0,2,4,6,8]);
 
     %if(k == 1)
       idxSubPlot = idxGain;
-      text(fmin+0.5*(fmax-fmin), 1.1*gmax,...
+      text(x0+0.5*(x1-x0), 1.1*gmax,...
              subPlotLabel{1,idxSubPlot},...
              'FontSize',figLabelFontSize,...
              'HorizontalAlignment','center');   
       hold on;
     %end
 
+    %Evaluate the mean squared error between the response of the model
+    %and Kirch et al.'s measurements
+    strAmp = num2str(expAmpPlot(1,k));
+    strFreq= num2str(expBWPlot(1,k));
+    
+    idxExpGain = 0;
+    tol = 1e-6;
+    for m=1:1:length(dataKBR1994Fig3Gain)           
+      if( contains(dataKBR1994Fig3Gain(m).seriesName,strFreq) && ...
+          contains(dataKBR1994Fig3Gain(m).seriesName,strAmp))        
+        if(idxExpGain == 0)
+          idxExpGain = m;
+        else
+          assert(0); %Error condition: there should not be 2 simulations with 
+                     %the same configuration
+        end
+      end
+    end     
+
+    gainSumErrSq = 0;
+    for idxPoint = 1:1:length(idxRange)
+        wPt = freqSimData.freqHz(idxRange(1,idxPoint),1);
+        gPt = interp1(dataKBR1994Fig3Gain(idxExpGain).x,...
+                      dataKBR1994Fig3Gain(idxExpGain).y,...
+                      wPt);
+        err = gPt - freqSimData.gain(idxRange(1,idxPoint),idxSim)/1000;
+        gainSumErrSq = gainSumErrSq + err*err;
+    end
+    gainRMSE = sqrt(gainSumErrSq / length(idxRange));
+    gainRMSEStr = sprintf('RMSE:\n %1.2fN/mm',gainRMSE);
+
+    text('Units','normalized','Position',[0.05,0.95],...
+         'String',gainRMSEStr,'FontSize',6,...
+         'HorizontalAlignment','left',...
+         'VerticalAlignment','top',...
+         'BackgroundColor',[1,1,1],...
+         'Margin',0.1);
+    hold on;
+    
     box off;
     set(gca,'color','none')        
-
 
     hold on;
 
 
-    ylim([gmin,gmax]);
-    xlim([fmin,fmax+0.01]);
-    xticks(xTicksVector);
-    xtickangle(0);
-    yticks([0,2,4,6,8]);
 
 
     %tc0 = text(fmin-0.15*(fmax-fmin), 1.45*(gmax),...
@@ -663,6 +713,69 @@ for z=1:1:length(freqSeriesFiles)
          'LineWidth',kdLineWidth,'DisplayName',['K-$$\beta$$',trialName]);  
     hold on;      
 
+    strAmp = num2str(expAmpPlot(1,k));
+    strFreq= num2str(expBWPlot(1,k));
+    
+    idxExpPhase = 0;
+    tol = 1e-6;
+    for m=1:1:length(dataKBR1994Fig3Phase)           
+      if( contains(dataKBR1994Fig3Phase(m).seriesName,strFreq) && ...
+          contains(dataKBR1994Fig3Phase(m).seriesName,strAmp))        
+        if(idxExpPhase == 0)
+          idxExpPhase = m;
+        else
+          assert(0); %Error condition: there should not be 2 simulations with 
+                     %the same configuration
+        end
+      end
+    end     
+
+    phaseSumErrSq = 0;
+    for idxPoint = 1:1:length(idxRange)
+        wPt = freqSimData.freqHz(idxRange(1,idxPoint),1);
+        pPt = interp1(dataKBR1994Fig3Phase(idxExpPhase).x,...
+                      dataKBR1994Fig3Phase(idxExpPhase).y,...
+                      wPt);
+        err = pPt - freqSimData.phase(idxRange(1,idxPoint),idxSim).*(180/pi);
+        phaseSumErrSq = phaseSumErrSq + err*err;
+    end
+
+
+    phaseRMSE = sqrt(phaseSumErrSq / length(idxRange));
+    phaseRMSEStr = sprintf('RMSE:\n %1.1f%s',phaseRMSE,'$^\circ$');
+
+    xPos = 0;
+    yPos = 0;
+    vAlign = 'bottom';
+    hAlign = 'right';
+    if(flag_Hill==1)
+        if(expBWPlot(1,k) == 90)
+            hAlign = 'right';
+            vAlign = 'bottom';
+            xPos = 0.95;
+            yPos = 0.05;
+        else
+            hAlign = 'left';
+            vAlign = 'bottom';
+            xPos = 0.05;
+            yPos = 0.05;
+        end
+    else
+        hAlign = 'left';
+        vAlign = 'top';
+        xPos = 0.05;
+        yPos = 0.95;
+    end
+
+    text('Units','normalized','Position',[xPos,yPos],...
+         'String',phaseRMSEStr,'FontSize',6,...
+         'HorizontalAlignment',hAlign,...
+         'VerticalAlignment',vAlign,...
+         'BackgroundColor',[1,1,1],...
+         'Margin',0.1);
+    hold on;
+
+
     lineHandlesModelPhase = [lineHandlesModelPhase,...
                             pidW,...
                             pidL];
@@ -684,7 +797,7 @@ for z=1:1:length(freqSeriesFiles)
 
     %if(k == 1)
       idxSubPlot = idxPhase;      
-      text(fmin+0.5*(fmax-fmin), 1.1*pmax,...
+      text(x0+0.5*(x1-x0), 1.1*pmax,...
              subPlotLabel{1,idxSubPlot},...
              'FontSize',figLabelFontSize, ...
              'HorizontalAlignment','center');   
