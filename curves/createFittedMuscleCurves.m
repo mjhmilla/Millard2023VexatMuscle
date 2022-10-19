@@ -551,5 +551,5 @@ normMuscleCurves.compressiveForceLengthCurve = ...
                     flag_useOctave);
 
   
-
+fprintf('  compressiveForceLengthCurve created\n');
 
