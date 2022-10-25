@@ -535,7 +535,7 @@ modelCachedValues = struct(...
 
 if(modelConfig.initializeState==1)
 
-  assert(abs(dlp) < sqrt(eps)); %General case is not yet handled.
+  %assert(abs(dlp) < sqrt(eps)); %General case is not yet handled.
 
   errF    = 0;
   errFJac = 0;
