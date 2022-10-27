@@ -183,16 +183,107 @@ if(flag_evaluateInitializationFunctions > 0)
             fiberKinematics = calcFixedWidthPennatedFiberKinematics(lceAT,0,lceOpt,alphaOpt);
         
             lce   = fiberKinematics.fiberLength;
+            lceH  = lce*lce_lceH;
             lceN  = lce*lce_lceN;
             alpha = fiberKinematics.pennationAngle;
-        
+      
+
             cosAlpha  = cos(alpha);
             lceATN    = lce*cosAlpha*lce_lceN;
-            lt        = modelCache.lp-lce*cosAlpha;
+            lp        = modelCache.lp;            
+            lt        = lp-lce*cosAlpha;
             ltN       = lt*lt_ltN;
         
-            errI(1,1) = (modelCache.a*calcFalDer(lceN,0)+calcFpeDer(lceN,0))*cosAlpha ...
-                        - calcFtDer(ltN,0) - calcCpDer(lceATN,0);
+
+            %errI(1,1) = (modelCache.a*calcFalDer(lceN,0)+calcFpeDer(lceN,0))*cosAlpha ...
+            %            - calcFtDer(ltN,0) - calcCpDer(lceATN,0);
+            %-(fxHN + f2HN + fEcmHN)*cosAlpha + fCpN + fTN;
+            %
+            % fxHN  = kxHNN*lxHN + betaxHNN*dlxHN;
+
+            %Approximate for now: lx=0, dlx=0;
+            a     = modelCache.a;
+
+            lxH=0;
+            dlxH=0;
+
+            laH = lceH-lmH-lxH;
+            lamH= (lmH+laH);
+            lamN= (2*lamH)*lce_lceN;   
+
+            flN       = calcFalDer(lamN,0);
+            kxHNN     = a*flN*kAXHN;
+            betaxHNN  = a*flN*betaAXHN;
+                      
+            %lxHN   = (lceH - (lmH+laH))*lce_lceN;  
+            %lxHN   = lceHN - (lmHN+laHN);                
+            D_lxHN_D_lceHN  =  1;
+            D_fxHN_D_lceHN  = kxHNN*D_lxHN_D_lceHN;
+            D_fxN_D_lceN   = kxHN*lceH_lce;
+
+            D_fpeN_D_lceN = calcFpeDer(lceN,1);
+            D_fCpN_D_lceATN=calcCpDer(lceATN,1);
+
+            %Approximating
+            fceN = modelCache.a*calcFalDer(lceN,0)+calcFpeDer(lceN,0);
+
+            fibKinDer = calcFixedWidthPennationPartialDerivatives(alpha,...
+                                                                  lce,...
+                                                                  lceOpt,...
+                                                                  alphaOpt);
+            Dalpha_Dlce   = fibKinDer.Dalpha_Dlce;            
+
+            Dlce_DlceAT = 1/cosAlpha;
+
+            %Evaluating kceAT by linearizing about lce
+            D_fceN_D_lceAT = ((D_fxN_D_lceN + D_fpeN_D_lceN)*cosAlpha ...
+                           -(fceN)*sinAlpha*Dalpha_Dlce)*Dlce_DlceAT ...
+                         - D_fCpN_D_lceATN*lceN_lce;
+
+            D_ftN_D_lt = calcFtDer(ltN,1)*ltN_lt;
+
+
+            %Assuming that the path velocity is distributed such that
+            %   d/dt (fce) - d/dt (ft) = 0
+            % And approximating
+            %   d/dt (fce) ~= kce * dlce
+            %   d/dt (ft)  ~= kt * dlt
+            % Which is probably reasonble because the CE and the tendon are 
+            % lightly damped
+
+            D_fmtN_D_lp = (D_ftN_D_lt+D_fceN_D_lceAT)/(D_ftN_D_lt*D_fceN_D_lceAT);
+
+            dlp  = modelCache.dlp;
+            dlce = (D_ftN_D_lt/D_fmtN_D_lp)*dlp;
+            dlceHN = dlce*lce_lceHN;
+
+            dlt  = (D_fceN_D_lt/D_fmtN_D_lp)*dlp
+            dltN = dlt*lt_ltN;
+
+            disp('You are here');
+            %Assume dlx = 0.
+            %lxHN  = lceHN - (lmHN + laHN)
+            dlxHN = 0;
+            dlaHN = dlceHN - dlxHN;
+
+
+
+            %Evaluate dlce
+              A = -(kxHNN*lxHN ...
+                      - (betaxHNN*dlaH/lceOpt) ...
+                      + fpeN
+                   )*cosAlpha ...
+                   + fCpN;
+
+              B = (fTkN + betaTNN*(dlp/ltSlk));
+
+              C = - ((betaxHNN*0.5/lceOpt) + (betaNum + betafEcmHN*fEcmkHN)*(0.5/lceOpt))*cosAlpha ...
+                  - (betaTNN/(cosAlpha*ltSlk));
+
+              dlce = -(A+B)/C;            
+
+            %Evaluate ddlaHN
+
             return;
         case 2
             % l1H:  Static elastic solution between the two titin segments
