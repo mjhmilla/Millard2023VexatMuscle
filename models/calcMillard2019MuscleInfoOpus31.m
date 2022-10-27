@@ -166,6 +166,12 @@ calcCpDer = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
 
 DftfcnN_DltN_max = normMuscleCurves.tendonForceLengthCurve.dydxEnd(1,2);
 
+calcFpeDer = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
+                  normMuscleCurves.fiberForceLengthCurve, ...
+                  arg2);
+
+
+
 
 %%
 %Muscle Architectural Properties
@@ -340,7 +346,8 @@ modelCurves = struct( ...
         'calcF2HDer' , calcF2HDer  ,...
         'calcFtDer'  , calcFtDer   ,...
         'calcDtDer'  , calcDtDer   ,...
-        'calcCpDer'  , calcCpDer);
+        'calcCpDer'  , calcCpDer   ,...
+        'calcFpeDer' , calcFpeDer);
 
 
 
@@ -542,65 +549,139 @@ if(modelConfig.initializeState==1)
   errI    = zeros(2+useElasticTendon,1);
   errIJac = zeros(2+useElasticTendon,2+useElasticTendon);
   
+  flag_initializeAtRest     = 0;
 
-
-  lceAT  = max(lp-ltSlk*1.01,lceATMin+lceOpt*0.01);
-  fibKin = calcFixedWidthPennatedFiberKinematics(lceAT,0,lceOpt,alphaOpt);
-  lce    = fibKin.fiberLength;%,lceMin+lceOpt*0.01);  
-  lceN = lce*lce_lceN;
-  laHN = 0.5*lceN - lmHN;  
-  laH  = laHN*lceN_lce;
-  dlaH = 0;
-
-  
-  l1HN = l1HNZeroForce;
-  l1H  = l1HN * liN_li;
+  if(  flag_initializeAtRest == 0)
+      flag_updatePositionLevel                =0;
+      flag_evaluateJacobian                   =0; 
+      flag_evaluateDerivatives                =0; 
+      flag_updateModelCache                   =0;
+      flag_evaluateInitializationFunctions    =1;
+      flag_useArgs                            =1;
     
-  flag_updatePositionLevel                = 1;
-  flag_evaluateJacobian                   = 1;
-  flag_evaluateDerivatives                = 1;
-  flag_updateModelCache                   = 1;
-  flag_evaluateInitializationFunctions    = 1;
-  flag_useArgs                            = 0;
-
-  vars = [];
-  if(useElasticTendon==1)
-    vars = 0.;
-  end
     
-  modelCachedValues.lce  = lce;
-  modelCachedValues.laH  = laH;
-  modelCachedValues.dlaH = dlaH;
-  modelCachedValues.l1H  = l1H;
-  modelCachedValues.lambda= 0;
+      vars=zeros(2,1);
 
-  [errF,errFJac,errI,errIJac,modelCachedValuesUpd] = ...
-    calcEquilibriumErrorOpus31( vars,...
-                                modelCachedValues,...
-                                modelCurves,...
-                                modelConstants,...
-                                sarcomereProperties,...
-                                useElasticTendon,...
-                                flag_updatePositionLevel,...
-                                flag_evaluateJacobian, ...
-                                flag_evaluateDerivatives, ...
-                                flag_updateModelCache,...
-                                flag_evaluateInitializationFunctions,...
-                                flag_useArgs);  
-  
-                              
-  iter=1;
-  iterMax = 100;
-  tolInit = 1e-8;
-  
-  while(iter < iterMax && errI'*errI > tolInit)
+    
+      %Solve for lce that satisfies static equibrium equations
+      for i=1:1:2
+    
+          delta=0;
+          switch i
+              case 1
+                  vars(1,1)=lp*0.5;
+                  delta=vars(1,1)*0.5;
+              case 2
+                  x = vars(1,1);
+                  y = lceOpt*sin(alphaOpt);
+                  vars(2,1)=0.5*sqrt(x*x + y*y);
+                  delta=vars(2,1)*0.5;                  
+              otherwise
+                  assert(0);
+          end
+          
+          flag_evaluateInitializationFunctions=i;
+          [errF, errFJac, errI, errIJac, modelCache] ...
+                = calcEquilibriumErrorOpus31(...
+                                      vars                                     ,... 
+                                      modelCachedValues                        ,...
+                                      modelCurves                             ,...
+                                      modelConstants                          ,...
+                                      sarcomereProperties                     ,...
+                                      useElasticTendon                        ,...
+                                      flag_updatePositionLevel                ,...
+                                      flag_evaluateJacobian                   ,... 
+                                      flag_evaluateDerivatives                ,... 
+                                      flag_updateModelCache                   ,...
+                                      flag_evaluateInitializationFunctions    ,...
+                                      flag_useArgs);
+          switch i 
+              case 1
+                errBest = abs(errI(1,1));
+                varsBest=vars;
+              case 2
+                errBest = abs(errI(2,1));
+                varsBest=vars;                  
+              otherwise
+                  assert(0);
+          end
+          
 
-    modelCachedValues.lce  = lce;
+        for j=1:1:8
+    
+          stepSign = 0;
+    
+          errL=0;
+          errR=0;
+          varsL=0;
+          varsR=0;
+          for k=1:1:2
+            switch k 
+              case 1 
+                stepSign=-1;
+              case 2
+                stepSign= 1;
+              otherwise
+                assert(0);
+            end
+            vars = varsBest;
+            vars(i,1)=vars(i,1)+stepSign*delta; 
+      
+            if(vars(1,1) < lceATMin)
+              vars(1,1) = lceATMin;
+            end
+            
+            flag_evaluateInitializationFunctions=i;
+
+            [errF, errFJac, errI, errIJac, modelCache] ...
+              = calcEquilibriumErrorOpus31(...
+                                    vars                                   ,... 
+                                    modelCachedValues                       ,...
+                                    modelCurves                             ,...
+                                    modelConstants                          ,...
+                                    sarcomereProperties                     ,...
+                                    useElasticTendon                        ,...
+                                    flag_updatePositionLevel                ,...
+                                    flag_evaluateJacobian                   ,... 
+                                    flag_evaluateDerivatives                ,... 
+                                    flag_updateModelCache                   ,...
+                                    flag_evaluateInitializationFunctions    ,...
+                                    flag_useArgs);
+            switch k
+              case 1
+                varsL = vars;
+                errL  = abs(errI(i,1));
+              case 2
+                varsR = vars;
+                errR  = abs(errI(i,1));          
+              otherwise 
+                assert(0)
+            end
+          end
+
+          if(errL < errBest && errL <= errR )                                       
+            errBest   = errL;
+            varsBest  = varsL;
+          end
+          if(errR < errBest && errR < errL )                                       
+            errBest   = errR;
+            varsBest  = varsR;
+          end
+          delta = delta*0.5;
+        end  
+      end
+
+    flag_updatePositionLevel                = 1;
+    flag_evaluateJacobian                   = 1;
+    flag_evaluateDerivatives                = 1;
+    flag_updateModelCache                   = 1;
+    
+    modelCachedValues.lce  = varsBest(1,1);
     modelCachedValues.laH  = laH;
     modelCachedValues.dlaH = 0;
-    modelCachedValues.l1H  = l1H;
-    modelCachedValues.lambda= 0;
+    modelCachedValues.l1H  = varsBest(2,1);
 
+    flag_evaluateInitializationFunctions=0;
 
     [errF,errFJac,errI,errIJac,modelCachedValuesUpd] = ...
       calcEquilibriumErrorOpus31( vars,...
@@ -614,131 +695,210 @@ if(modelConfig.initializeState==1)
                                   flag_evaluateDerivatives, ...
                                   flag_updateModelCache,...
                                   flag_evaluateInitializationFunctions,...
-                                  flag_useArgs);      
+                                  flag_useArgs); 
 
-    %Numerically build the jacobian
-    errL = errI;
-    errR = errI;
-    errJacNum = errIJac;
-    delta = sqrt(eps);
-    delta_lce = 0;
-    delta_laH = 0;
-    delta_l1H = 0;
-
-      for i=1:1:length(errI)
-        
-        delta_lce = 0;
-        delta_laH = 0;
-        delta_l1H = 0;
-
-        if(useElasticTendon==1)
-          switch(i)
-            case 1
-              delta_lce = delta;
-            case 2
-              delta_laH = delta;        
-            case 3
-              delta_l1H = delta;
-          end
-        else
-          switch(i)
-            case 1
-              delta_laH = delta;        
-            case 2
-              delta_l1H = delta;
-          end
-        end
-
-        modelCachedValues.lce  = lce + delta_lce;
-        modelCachedValues.laH  = laH + delta_laH;
-        modelCachedValues.dlaH = 0;
-        modelCachedValues.l1H  = l1H + delta_l1H;
-
-        [errF,errFJac,errIR,errJacEmpty,modelCachedValuesUpd] = ...
-          calcEquilibriumErrorOpus31( vars,...
-                                      modelCachedValues,...
-                                      modelCurves,...
-                                      modelConstants,...
-                                      sarcomereProperties,...
-                                      useElasticTendon,...
-                                      flag_updatePositionLevel,...
-                                      flag_evaluateJacobian, ...
-                                      flag_evaluateDerivatives, ...
-                                      flag_updateModelCache,...
-                                      flag_evaluateInitializationFunctions,...
-                                      flag_useArgs);      
-
-        modelCachedValues.lce  = lce - delta_lce;
-        modelCachedValues.laH  = laH - delta_laH;
-        modelCachedValues.dlaH = 0;
-        modelCachedValues.l1H  = l1H - delta_l1H;
-
-        [errF,errFJac,errIL,errJacEmpty,modelCachedValuesUpd] = ...
-          calcEquilibriumErrorOpus31( vars,...
-                                      modelCachedValues,...
-                                      modelCurves,...
-                                      modelConstants,...
-                                      sarcomereProperties,...
-                                      useElasticTendon,...
-                                      flag_updatePositionLevel,...
-                                      flag_evaluateJacobian, ...
-                                      flag_evaluateDerivatives, ...
-                                      flag_updateModelCache,...
-                                      flag_evaluateInitializationFunctions,...
-                                      flag_useArgs); 
-        errIJac(:,i) = (errIR-errIL)./(2*delta);
-      end
-       
-      deltaVar = -pinv(errIJac)*errI;
-       
-      if(useElasticTendon == 1)
-        if(lce + deltaVar(1) < lceMin)
-          stepLength = (lceMin-lce)/deltaVar(1);
-          stepLength = stepLength*0.5;
-          deltaVar = deltaVar.*stepLength;
-        end
-        lce = lce + deltaVar(1);
-        laH = laH + deltaVar(2);
-        l1H = l1H + deltaVar(3);   
-      else
-        laH = laH + deltaVar(1);
-        l1H = l1H + deltaVar(2);           
-      end
-             
-      iter=iter+1;
+    modelCachedValues = modelCachedValuesUpd;  
   end
 
-  assert(iter <= iterMax);
-  assert(errI'*errI <= tolInit,...
-      ['Error: calcMillard2019MuscleInfoOpus31: initialization error ',...
-        sprintf('%1.2e',errI'*errI),' exceeds tolerance ', ...
-        sprintf('%1.2e',tolInit)]);
-  
-  flag_updatePositionLevel                = 1;
-  flag_evaluateJacobian                   = 1;
-  flag_evaluateDerivatives                = 1;
-  flag_updateModelCache                   = 1;
-  
-  modelCachedValues.lce  = lce;
-  modelCachedValues.laH  = laH;
-  modelCachedValues.dlaH = 0;
-  modelCachedValues.l1H  = l1H;
 
-  [errF,errFJac,errI,errIJac,modelCachedValuesUpd] = ...
-    calcEquilibriumErrorOpus31( vars,...
-                                modelCachedValues,...
-                                modelCurves,...
-                                modelConstants,...
-                                sarcomereProperties,...
-                                useElasticTendon,...
-                                flag_updatePositionLevel,...
-                                flag_evaluateJacobian, ...
-                                flag_evaluateDerivatives, ...
-                                flag_updateModelCache,...
-                                flag_evaluateInitializationFunctions,...
-                                flag_useArgs); 
 
-  modelCachedValues = modelCachedValuesUpd;  
+  if(flag_initializeAtRest == 1)
+    lceAT  = max(lp-ltSlk*1.01,lceATMin+lceOpt*0.01);
+    fibKin = calcFixedWidthPennatedFiberKinematics(lceAT,0,lceOpt,alphaOpt);
+    lce    = fibKin.fiberLength;%,lceMin+lceOpt*0.01);  
+    lceN = lce*lce_lceN;
+    laHN = 0.5*lceN - lmHN;  
+    laH  = laHN*lceN_lce;
+    dlaH = 0;
+
+    
+    l1HN = l1HNZeroForce;
+    l1H  = l1HN * liN_li;
+      
+    flag_updatePositionLevel                = 1;
+    flag_evaluateJacobian                   = 1;
+    flag_evaluateDerivatives                = 1;
+    flag_updateModelCache                   = 1;
+    flag_evaluateInitializationFunctions    = 1;
+    flag_useArgs                            = 0;
+
+    vars = [];
+    if(useElasticTendon==1)
+      vars = 0.;
+    end
+      
+    modelCachedValues.lce  = lce;
+    modelCachedValues.laH  = laH;
+    modelCachedValues.dlaH = dlaH;
+    modelCachedValues.l1H  = l1H;
+    modelCachedValues.lambda= 0;
+
+    [errF,errFJac,errI,errIJac,modelCachedValuesUpd] = ...
+      calcEquilibriumErrorOpus31( vars,...
+                                  modelCachedValues,...
+                                  modelCurves,...
+                                  modelConstants,...
+                                  sarcomereProperties,...
+                                  useElasticTendon,...
+                                  flag_updatePositionLevel,...
+                                  flag_evaluateJacobian, ...
+                                  flag_evaluateDerivatives, ...
+                                  flag_updateModelCache,...
+                                  flag_evaluateInitializationFunctions,...
+                                  flag_useArgs);  
+    
+                                
+    iter=1;
+    iterMax = 100;
+    tolInit = 1e-8;
+    
+    while(iter < iterMax && errI'*errI > tolInit)
+
+      modelCachedValues.lce  = lce;
+      modelCachedValues.laH  = laH;
+      modelCachedValues.dlaH = 0;
+      modelCachedValues.l1H  = l1H;
+      modelCachedValues.lambda= 0;
+
+
+      [errF,errFJac,errI,errIJac,modelCachedValuesUpd] = ...
+        calcEquilibriumErrorOpus31( vars,...
+                                    modelCachedValues,...
+                                    modelCurves,...
+                                    modelConstants,...
+                                    sarcomereProperties,...
+                                    useElasticTendon,...
+                                    flag_updatePositionLevel,...
+                                    flag_evaluateJacobian, ...
+                                    flag_evaluateDerivatives, ...
+                                    flag_updateModelCache,...
+                                    flag_evaluateInitializationFunctions,...
+                                    flag_useArgs);      
+
+      %Numerically build the jacobian
+      errL = errI;
+      errR = errI;
+      errJacNum = errIJac;
+      delta = sqrt(eps);
+      delta_lce = 0;
+      delta_laH = 0;
+      delta_l1H = 0;
+
+        for i=1:1:length(errI)
+          
+          delta_lce = 0;
+          delta_laH = 0;
+          delta_l1H = 0;
+
+          if(useElasticTendon==1)
+            switch(i)
+              case 1
+                delta_lce = delta;
+              case 2
+                delta_laH = delta;        
+              case 3
+                delta_l1H = delta;
+            end
+          else
+            switch(i)
+              case 1
+                delta_laH = delta;        
+              case 2
+                delta_l1H = delta;
+            end
+          end
+
+          modelCachedValues.lce  = lce + delta_lce;
+          modelCachedValues.laH  = laH + delta_laH;
+          modelCachedValues.dlaH = 0;
+          modelCachedValues.l1H  = l1H + delta_l1H;
+
+          [errF,errFJac,errIR,errJacEmpty,modelCachedValuesUpd] = ...
+            calcEquilibriumErrorOpus31( vars,...
+                                        modelCachedValues,...
+                                        modelCurves,...
+                                        modelConstants,...
+                                        sarcomereProperties,...
+                                        useElasticTendon,...
+                                        flag_updatePositionLevel,...
+                                        flag_evaluateJacobian, ...
+                                        flag_evaluateDerivatives, ...
+                                        flag_updateModelCache,...
+                                        flag_evaluateInitializationFunctions,...
+                                        flag_useArgs);      
+
+          modelCachedValues.lce  = lce - delta_lce;
+          modelCachedValues.laH  = laH - delta_laH;
+          modelCachedValues.dlaH = 0;
+          modelCachedValues.l1H  = l1H - delta_l1H;
+
+          [errF,errFJac,errIL,errJacEmpty,modelCachedValuesUpd] = ...
+            calcEquilibriumErrorOpus31( vars,...
+                                        modelCachedValues,...
+                                        modelCurves,...
+                                        modelConstants,...
+                                        sarcomereProperties,...
+                                        useElasticTendon,...
+                                        flag_updatePositionLevel,...
+                                        flag_evaluateJacobian, ...
+                                        flag_evaluateDerivatives, ...
+                                        flag_updateModelCache,...
+                                        flag_evaluateInitializationFunctions,...
+                                        flag_useArgs); 
+          errIJac(:,i) = (errIR-errIL)./(2*delta);
+        end
+         
+        deltaVar = -pinv(errIJac)*errI;
+         
+        if(useElasticTendon == 1)
+          if(lce + deltaVar(1) < lceMin)
+            stepLength = (lceMin-lce)/deltaVar(1);
+            stepLength = stepLength*0.5;
+            deltaVar = deltaVar.*stepLength;
+          end
+          lce = lce + deltaVar(1);
+          laH = laH + deltaVar(2);
+          l1H = l1H + deltaVar(3);   
+        else
+          laH = laH + deltaVar(1);
+          l1H = l1H + deltaVar(2);           
+        end
+               
+        iter=iter+1;
+    end
+
+    assert(iter <= iterMax);
+    assert(errI'*errI <= tolInit,...
+        ['Error: calcMillard2019MuscleInfoOpus31: initialization error ',...
+          sprintf('%1.2e',errI'*errI),' exceeds tolerance ', ...
+          sprintf('%1.2e',tolInit)]);
+    
+    flag_updatePositionLevel                = 1;
+    flag_evaluateJacobian                   = 1;
+    flag_evaluateDerivatives                = 1;
+    flag_updateModelCache                   = 1;
+    
+    modelCachedValues.lce  = lce;
+    modelCachedValues.laH  = laH;
+    modelCachedValues.dlaH = 0;
+    modelCachedValues.l1H  = l1H;
+
+    [errF,errFJac,errI,errIJac,modelCachedValuesUpd] = ...
+      calcEquilibriumErrorOpus31( vars,...
+                                  modelCachedValues,...
+                                  modelCurves,...
+                                  modelConstants,...
+                                  sarcomereProperties,...
+                                  useElasticTendon,...
+                                  flag_updatePositionLevel,...
+                                  flag_evaluateJacobian, ...
+                                  flag_evaluateDerivatives, ...
+                                  flag_updateModelCache,...
+                                  flag_evaluateInitializationFunctions,...
+                                  flag_useArgs); 
+
+    modelCachedValues = modelCachedValuesUpd;  
+  end
   
 elseif(useElasticTendon ==0 && modelConfig.initializeState==0) 
 

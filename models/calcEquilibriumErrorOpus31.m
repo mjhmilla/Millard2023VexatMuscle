@@ -61,11 +61,7 @@ function [errF, errFJac, errI, errIJac, modelCache] ...
 %
 
 
-if(flag_useElasticTendon == 1)
-  assert(length(args)==1);
-else
-  assert(length(args)==0);
-end
+
 
 errF        = 0;
 errFJac     = 0;
@@ -86,6 +82,7 @@ calcF2HDer  = modelCurves.calcF2HDer ;
 calcFtDer   = modelCurves.calcFtDer  ;
 calcDtDer   = modelCurves.calcDtDer  ;
 calcCpDer   = modelCurves.calcCpDer  ;
+calcFpeDer  = modelCurves.calcFpeDer ;
 %Constants
 
 fiso        = modelConstants.fiso        ;
@@ -156,6 +153,112 @@ initialization = modelConstants.initialization;
 
 DftfcnN_DltN_max = modelConstants.DftfcnN_DltN_max;
 
+
+%%
+% Initialization Routines
+%%
+
+if(flag_evaluateInitializationFunctions > 0)
+  %fpeN = calcFpeDer(lceN,0);
+  
+  %errI    = zeros(2+flag_useElasticTendon,1);
+  %errIJac = zeros(2+flag_useElasticTendon,2+flag_useElasticTendon); %Numerical for now
+  errI = zeros(flag_useElasticTendon+1,1).*nan;
+
+  if(flag_useElasticTendon == 1)
+
+    %Unknowns: lce, dlaH, laH, l1H
+    
+    % lce: Static elastic solution between CE and the tendon 
+    %
+    %1. Assuming that the X-bridge forces are equal to the Hill model
+    %2. By using the fact that the fpe curve is the sum of the ecm and titin
+    %   curves when the titin curve is unbound from actin.
+    assert(length(args)==2);
+
+    switch flag_evaluateInitializationFunctions
+        case 1
+
+            lceAT     = args(1,1);
+            fiberKinematics = calcFixedWidthPennatedFiberKinematics(lceAT,0,lceOpt,alphaOpt);
+        
+            lce   = fiberKinematics.fiberLength;
+            lceN  = lce*lce_lceN;
+            alpha = fiberKinematics.pennationAngle;
+        
+            cosAlpha  = cos(alpha);
+            lceATN    = lce*cosAlpha*lce_lceN;
+            lt        = modelCache.lp-lce*cosAlpha;
+            ltN       = lt*lt_ltN;
+        
+            errI(1,1) = (modelCache.a*calcFalDer(lceN,0)+calcFpeDer(lceN,0))*cosAlpha ...
+                        - calcFtDer(ltN,0) - calcCpDer(lceATN,0);
+            return;
+        case 2
+            % l1H:  Static elastic solution between the two titin segments
+            lceAT           = args(1,1);
+            fiberKinematics = calcFixedWidthPennatedFiberKinematics(lceAT,0,lceOpt,alphaOpt);        
+            lce             = fiberKinematics.fiberLength;
+
+            l1H       = args(2,1);
+            l2H       = lce*lce_lceH - (l1H+lTitinFixedHN*lceOpt);
+            l1HN      = l1H*li_liN;
+            l2HN      = l2H*li_liN;
+            f1kHN     = calcF1HDer(l1HN,0);
+            f2kHN     = calcF2HDer(l2HN,0);    
+        
+            errI(2,1) = f2kHN-f1kHN;
+            return;
+        otherwise
+            assert(0);
+    end
+
+    lceAT     = args(1,1);
+    fiberKinematics = calcFixedWidthPennatedFiberKinematics(lceAT,0,lceOpt,alphaOpt);
+    lce   = fiberKinematics.fiberLength;
+    l1H       = args(2,1);
+
+    modelCache.lce = lce;
+    modelCache.l1H = l1H;
+    
+    %With the lce and l1 established, the state derivative equations
+    %can be evaluated given values for laH and dlaH. This will
+    %yield values for the rest of the state. By iterating over laH and
+    %dlaH we can search for a solution which minimizes
+    % 
+    % 1. d/dt(fce*cos(alpha)-ft-fcp)
+    % 2. ddlaHN 
+
+    %feqDot= d/dt( (fxHN + f2HN + fEcmHN)*cosAlpha -fCpN -ftN)
+    %fxHN  = kxHNN*lxHN + betaxHNN*dlxHN;
+
+
+
+    %errI(1,1) = -(fxHN + f2HN + fEcmHN)*cosAlpha + fTN + fCpN; 
+    %errI(2,1) = f1kHN-f2kHN; %This error term works for titin models 0 and 1
+    %errI(3,1) = ddlaHN;
+  else
+    
+    assert(length(args)==1);
+
+    if(flag_evaluateInitializationFunctions==2)
+        l1H       = args(1,1);
+        l2H       = lceH - (l1H+lTitinFixedHN*lceOpt);
+        l1HN      = l1H*li_liN;
+        l2HN      = l2H*li_liN;
+        f1kHN     = calcF1HDer(l1HN,0);
+        f2kHN     = calcF2HDer(l2HN,0);    
+    
+        errI(1,1) = f2kHN-f1kHN;
+        return;
+    end
+
+    %errI(1,1) = f1kHN-f2kHN; %This error term works for titin models 0 and 1
+    %errI(2,1) = ddlaHN;    
+  end
+
+  
+end
 
 %%
 %Cached Quantities 
@@ -503,12 +606,6 @@ if(flag_useElasticTendon == 1)
       - (betaTNN/(cosAlpha*ltSlk));
 
   dlce = -(A+B)/C;
-
-  %This is here only so I can numerically check the 
-  %Jacobian of errF w.r.t dlce
-  if(flag_useArgs==1 || flag_evaluateInitializationFunctions)
-    dlce = args(1,1);
-  end
 
 else
 
@@ -908,7 +1005,7 @@ Dalpha_Dlce   = fibKinDer.Dalpha_Dlce;
 Ddalpha_Ddlce = fibKinDer.Ddalpha_Ddlce;
 
 
-%err: -(fxHN + f2HN + feHN)*cosAlpha + ftN
+%err: -(fxHN + f2HN + feHN)*cosAlpha + ftN + fCp
 %
 % To evaluate the Jacobian we need
 %
@@ -1151,22 +1248,4 @@ if(flag_evaluateJacobian == 1)
 
 end
 
-if(flag_evaluateInitializationFunctions==1)
-  %fpeN = calcFpeDer(lceN,0);
-  
-  errI    = zeros(2+flag_useElasticTendon,1);
-  errIJac = zeros(2+flag_useElasticTendon,2+flag_useElasticTendon); %Numerical for now
 
-  if(flag_useElasticTendon == 1)
-
-    errI(1,1) = -(fxHN + f2HN + fEcmHN)*cosAlpha + fTN + fCpN; 
-    %When f1HN=f2HN the passive force developed by fEcm + f2 = fpe;  
-    errI(2,1) = f1kHN-f2kHN; %This error term works for titin models 0 and 1
-    errI(3,1) = ddlaHN;
-  else
-    errI(1,1) = f1kHN-f2kHN; %This error term works for titin models 0 and 1
-    errI(2,1) = ddlaHN;    
-  end
-
-
-end
