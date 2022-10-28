@@ -548,7 +548,7 @@ if(modelConfig.initializeState==1)
   errFJac = 0;
   errI    = zeros(2+useElasticTendon,1);
   errIJac = zeros(2+useElasticTendon,2+useElasticTendon);
-  
+  stateBest = zeros(4,1);
   flag_initializeAtRest     = 0;
 
   if(  flag_initializeAtRest == 0)

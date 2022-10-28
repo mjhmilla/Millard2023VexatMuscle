@@ -180,14 +180,16 @@ if(flag_evaluateInitializationFunctions > 0)
         case 1
 
             lceAT     = args(1,1);
+            %lxNormForce=args(2,1);
             fiberKinematics = calcFixedWidthPennatedFiberKinematics(lceAT,0,lceOpt,alphaOpt);
         
             lce   = fiberKinematics.fiberLength;
             lceH  = lce*lce_lceH;
             lceN  = lce*lce_lceN;
+            lceHN = lceH*lce_lceN;
             alpha = fiberKinematics.pennationAngle;
       
-
+            sinAlpha  = sin(alpha);
             cosAlpha  = cos(alpha);
             lceATN    = lce*cosAlpha*lce_lceN;
             lp        = modelCache.lp;            
@@ -204,8 +206,8 @@ if(flag_evaluateInitializationFunctions > 0)
             %Approximate for now: lx=0, dlx=0;
             a     = modelCache.a;
 
+            %An approximation to solve for laH
             lxH=0;
-            dlxH=0;
 
             laH = lceH-lmH-lxH;
             lamH= (lmH+laH);
@@ -219,7 +221,7 @@ if(flag_evaluateInitializationFunctions > 0)
             %lxHN   = lceHN - (lmHN+laHN);                
             D_lxHN_D_lceHN  =  1;
             D_fxHN_D_lceHN  = kxHNN*D_lxHN_D_lceHN;
-            D_fxN_D_lceN   = kxHN*lceH_lce;
+            D_fxN_D_lceN    = kxHNN*lceH_lce;
 
             D_fpeN_D_lceN = calcFpeDer(lceN,1);
             D_fCpN_D_lceATN=calcCpDer(lceATN,1);
@@ -238,7 +240,7 @@ if(flag_evaluateInitializationFunctions > 0)
             %Evaluating kceAT by linearizing about lce
             D_fceN_D_lceAT = ((D_fxN_D_lceN + D_fpeN_D_lceN)*cosAlpha ...
                            -(fceN)*sinAlpha*Dalpha_Dlce)*Dlce_DlceAT ...
-                         - D_fCpN_D_lceATN*lceN_lce;
+                           -D_fCpN_D_lceATN*lceN_lce;
 
             D_ftN_D_lt = calcFtDer(ltN,1)*ltN_lt;
 
@@ -254,35 +256,106 @@ if(flag_evaluateInitializationFunctions > 0)
             D_fmtN_D_lp = (D_ftN_D_lt+D_fceN_D_lceAT)/(D_ftN_D_lt*D_fceN_D_lceAT);
 
             dlp  = modelCache.dlp;
-            dlce = (D_ftN_D_lt/D_fmtN_D_lp)*dlp;
+            dlceAT = (1/D_fceN_D_lceAT)/((1/D_fceN_D_lceAT)+(1/D_ftN_D_lt))*dlp;
+
+            fiberKinematics =...
+                calcFixedWidthPennatedFiberKinematics(...
+                    lceAT,...
+                    dlceAT,...
+                    lceOpt,...
+                    alphaOpt);
+
+            dlce=fiberKinematics.fiberVelocity;
             dlceHN = dlce*lce_lceHN;
 
-            dlt  = (D_fceN_D_lt/D_fmtN_D_lp)*dlp
+            dlt  = (1/D_ftN_D_lt)/((1/D_fceN_D_lceAT)+(1/D_ftN_D_lt))*dlp;
             dltN = dlt*lt_ltN;
 
-            disp('You are here');
+            assert(abs(dlceAT+dlt-dlp)<1e-3);
+
+            %Another option is to assume that the strain rate of both
+            %the tendon and the CE (along the tendon) is the same.
+            %This will produce ridiculous results in some cases (if the
+            %CE is not activated + a long tendon)
+            %
+            %dlceATN = dlp/lp;
+            %dlceAT  = dlceATN*lceN_lce;
+            %dltN    = dlp/lp;
+            %dlt     = dltN*ltN_lt;
+
             %Assume dlx = 0.
             %lxHN  = lceHN - (lmHN + laHN)
             dlxHN = 0;
             dlaHN = dlceHN - dlxHN;
+            dlaH  = dlaHN*lceN_lce;
 
+            dlaHN  = dlaH*dlce_dlceN;
+            dlaNN  = dlaH*dlce_dlceNN*lceH_lce;
+            dlfNN  = dlaNN;
+            
+            fvN=calcFvDer(dlfNN*forceVelocityCalibrationFactor,0);
 
+            %Assume the Hill forces are completely balanced by 
+            %the spring forces developed by fxHN
+            %
+            %    fxHN  = kxHNN*lxHN + betaxHNN*dlxHN;
+            %
+            %  we've set dlx=0 and so
+            %
+            %    ddlaHN_HillError    =   ((fxHN - a*flN*(fvN))/(tau));
+            %
+            %  becomes
+            %
+            %    a*flN*kAXHN*lxHN - a*flN*fvN = 0
+            %
+            %  and so
+            %
+            %    lxHN = fvN/kAXHN
+            %
+            lxHN = fvN/kAXHN;
+            
+            %Evaluate the other quantities required to evaluate dlce
+            fpeN=calcFpeDer(lceN,0);
+            fCpN=calcCpDer(lceATN,0);
+
+            fTfcnN      = calcFtDer(ltN,0);
+            fTkN        = fTfcnN;
+            betaTNN     = calcDtDer(ltN,0)*betafTN + DftfcnN_DltN_max*betaCTN + betaNum;
+            fEcmfcnHN   = scaleECM*calcFeHDer(lceHN,0);
+            fEcmkHN     = fEcmfcnHN;            
 
             %Evaluate dlce
-              A = -(kxHNN*lxHN ...
+            A = -(kxHNN*lxHN ...
                       - (betaxHNN*dlaH/lceOpt) ...
-                      + fpeN
+                      + fpeN ...
                    )*cosAlpha ...
                    + fCpN;
 
-              B = (fTkN + betaTNN*(dlp/ltSlk));
+            B = (fTkN + betaTNN*(dlp/ltSlk));
 
-              C = - ((betaxHNN*0.5/lceOpt) + (betaNum + betafEcmHN*fEcmkHN)*(0.5/lceOpt))*cosAlpha ...
+            C = - ((betaxHNN*0.5/lceOpt) ...
+                       + (betaNum + betafEcmHN*fEcmkHN)*(0.5/lceOpt))*cosAlpha ...
                   - (betaTNN/(cosAlpha*ltSlk));
 
-              dlce = -(A+B)/C;            
+            dlce = -(A+B)/C;            
 
             %Evaluate ddlaHN
+            dlxH  = 0;
+            dlxHN = dlxH*lce_lceN;
+            fxHN  = kxHNN*lxHN + betaxHNN*dlxHN;           
+            
+            ddlaHN_HillError    =   ((fxHN - a*flN*(fvN))/(tau));
+            ddlaHN_Damping      = - betaCXHN*dlaNN;
+            
+            ka                  = (a/lowActivationThreshold);
+            ddlaHN_Tracking     = lowActivationGain*exp(-ka*ka)*(lxHN + dlxHN);
+            ddlaHN = ddlaHN_HillError + ddlaHN_Damping + ddlaHN_Tracking;
+
+            errI(1,1) = (dlceHN-dlaHN);%ddlaHN;
+
+            modelCache.lce=lce;
+            modelCache.laH=laH;
+            modelCache.dlaH=dlaH;
 
             return;
         case 2
@@ -299,6 +372,7 @@ if(flag_evaluateInitializationFunctions > 0)
             f2kHN     = calcF2HDer(l2HN,0);    
         
             errI(2,1) = f2kHN-f1kHN;
+            modelCache.l1H=l1H;
             return;
         otherwise
             assert(0);
