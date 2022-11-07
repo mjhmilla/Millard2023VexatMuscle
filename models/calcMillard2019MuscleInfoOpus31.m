@@ -546,9 +546,9 @@ if(modelConfig.initializeState==1)
 
   errF    = 0;
   errFJac = 0;
-  errI    = zeros(2+useElasticTendon,1);
-  errIJac = zeros(2+useElasticTendon,2+useElasticTendon);
-  stateBest = zeros(4,1);
+  errI    = zeros(1+useElasticTendon,1);
+  errIJac = zeros(1+useElasticTendon,1+useElasticTendon);
+  argsBest = zeros(1+useElasticTendon,1);
   flag_initializeAtRest     = 0;
 
   if(  flag_initializeAtRest == 0)
@@ -563,7 +563,8 @@ if(modelConfig.initializeState==1)
       vars=zeros(2,1);
 
     
-      %Solve for lce that satisfies static equibrium equations
+      %Solve for an initial state that leads to dlx->0 and an acceleration
+      %of zero.
       for i=1:1:2
     
           delta=0;
@@ -599,9 +600,12 @@ if(modelConfig.initializeState==1)
               case 1
                 errBest = abs(errI(1,1));
                 varsBest=vars;
+                argsBest(i,1)=vars(i,1);
               case 2
                 errBest = abs(errI(2,1));
                 varsBest=vars;                  
+                argsBest(i,1)=vars(i,1);
+                
               otherwise
                   assert(0);
           end
@@ -662,26 +666,55 @@ if(modelConfig.initializeState==1)
           if(errL < errBest && errL <= errR )                                       
             errBest   = errL;
             varsBest  = varsL;
+            argsBest(i,1)=varsL(i,1);
+
           end
           if(errR < errBest && errR < errL )                                       
             errBest   = errR;
             varsBest  = varsR;
+            argsBest(i,1)=varsR(i,1);
           end
           delta = delta*0.5;
-        end  
+        end 
+        here=1;
       end
 
-    flag_updatePositionLevel                = 1;
-    flag_evaluateJacobian                   = 1;
-    flag_evaluateDerivatives                = 1;
-    flag_updateModelCache                   = 1;
+    %Update the output of the initialization values in the cache
+    flag_updatePositionLevel                =0;
+    flag_evaluateJacobian                   =0; 
+    flag_evaluateDerivatives                =0; 
+    flag_updateModelCache                   =0;
+    flag_evaluateInitializationFunctions    =1;
+    flag_useArgs                            =1;
+    errRecord = zeros(useElasticTendon+1,1);
+    for i=1:1:2
+        flag_evaluateInitializationFunctions=i;
     
-    modelCachedValues.lce  = varsBest(1,1);
-    modelCachedValues.laH  = laH;
-    modelCachedValues.dlaH = 0;
-    modelCachedValues.l1H  = varsBest(2,1);
+        [errF, errFJac, errI, errIJac, modelCache] ...
+          = calcEquilibriumErrorOpus31(...
+                                argsBest                                ,... 
+                                modelCachedValues                       ,...
+                                modelCurves                             ,...
+                                modelConstants                          ,...
+                                sarcomereProperties                     ,...
+                                useElasticTendon                        ,...
+                                flag_updatePositionLevel                ,...
+                                flag_evaluateJacobian                   ,... 
+                                flag_evaluateDerivatives                ,... 
+                                flag_updateModelCache                   ,...
+                                flag_evaluateInitializationFunctions    ,...
+                                flag_useArgs);
+        errRecord(i,1)=errI(i,1);
+        modelCachedValues=modelCache;
+    end
 
-    flag_evaluateInitializationFunctions=0;
+    flag_updatePositionLevel                =1;
+    flag_evaluateJacobian                   =1; 
+    flag_evaluateDerivatives                =1; 
+    flag_updateModelCache                   =1;
+    flag_evaluateInitializationFunctions    =0;
+    flag_useArgs                            =0;
+
 
     [errF,errFJac,errI,errIJac,modelCachedValuesUpd] = ...
       calcEquilibriumErrorOpus31( vars,...
@@ -1232,6 +1265,12 @@ deH  = fiso*deHN;
 deN  = deHN*0.5;
 de   = deH*0.5;
 
+%%
+% Compressive element stiffness & damping
+%%
+kCpN = modelCachedValues.DfCpN_DlceN*(1/lceN_lce);
+kCp  = fiso*kCpN;
+
 %Philosophy point:
 %  The bond between titin and actin is not really a physical damper. Its 
 %  probably electrostatic and has a high stiffness and zero damping. However
@@ -1273,18 +1312,24 @@ zEcm = complex(ke,de);
 
 zx = complex(kx,dx);
 
-zf = z12+zEcm+zx;
+zCp = complex(kCp,0);
+zfCp= complex(modelCachedValues.fCpN*fiso,0);
+
+Dalpha_Dlce = modelCachedValues.Dalpha_Dlce;
+cosAlpha    = modelCachedValues.cosAlpha;
+sinAlpha    = modelCachedValues.sinAlpha;
+
+%Resolve the compressive element into the direction of the fiber
+zf = z12+zEcm+zx ...
+    - zCp/cosAlpha ...
+    - ( (-zfCp/(cosAlpha*cosAlpha)) * (-sinAlpha*Dalpha_Dlce) );
 
 kf = real(zf);
 df = imag(zf);
 
 %%
-% Resolve it along the fiber
+% Resolve it along the direction of hte tendon
 %%
-
-Dalpha_Dlce = modelCachedValues.Dalpha_Dlce;
-cosAlpha    = modelCachedValues.cosAlpha;
-sinAlpha    = modelCachedValues.sinAlpha;
 
 fceN  = modelCachedValues.fceN;
 
@@ -1292,7 +1337,7 @@ kfAT = kf*cosAlpha - fiso*fceN*sinAlpha*Dalpha_Dlce;
 dfAT = df*cosAlpha;      
 
 %%
-% Calculate the impedance of the whole muscle
+% Calculate the impedance of the whole musculotendon
 %%
 
 km = 0;
