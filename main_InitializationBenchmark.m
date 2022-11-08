@@ -15,7 +15,11 @@ initTol = sqrt(eps);
 loopTol = min(absTol,relTol)/100.;
 iterMax = 100;
 
-transientWindow = 0.250;
+nCycle      = 1;
+omega       = 2*pi; %0 is allowed for a static path
+pathStrain  = 0.05;
+
+transientWindowMax = 0.025;
 
 
 pubOutputFolder = 'output/plots/InitializationBenchmark/';
@@ -88,12 +92,17 @@ end
 
 nStates = 0;
 labelStates = {''};
+labelStateDerivatives = {''};
+
 if(flag_useElasticTendon==1)
   nStates = 4;
-  labelStates= {'$$\ell_{CE}$$','$$\dot{\ell}_{a}$$','$$\ell_{a}$$','$$\ell_1$$'};%,'$$\lambda$$'};
+  labelStates           = {'$$\ell_{CE}$$','$$\dot{\ell}_{a}$$','$$\ell_{a}$$','$$\ell_1$$'};
+  labelStateDerivatives = {'$$\dot{\ell}_{CE}$$','$$\ddot{\ell}_{a}$$','$$\dot{\ell}_{a}$$','$$\dot{\ell}_1$$'};
+  
 else
   nStates = 3;
-  labelStates= {'$$\dot{\ell}_{a}$$','$$\ell_{a}$$','$$\ell_1$$'};%,'$$\lambda$$'};        
+  labelStates           = {'$$\dot{\ell}_{a}$$','$$\ell_{a}$$','$$\ell_1$$'};
+  labelStateDerivatives = {'$$\ddot{\ell}_{a}$$','$$\dot{\ell}_{a}$$','$$\dot{\ell}_1$$'};
 end
 
 
@@ -111,10 +120,17 @@ alphaOpt= musculotendonProperties.pennationAngle;
 ltSlk   = musculotendonProperties.tendonSlackLength;
 
 lp0         = lceOpt*cos(alphaOpt)+ltSlk;
-omega       = 10;
-amp         = 0.1*lp0;
+amp         = pathStrain*lp0;
 tStart      = 0;
-tEnd        = (2*pi)/omega;
+
+if(omega == 0)
+    tEnd        = nCycle*(2*pi);
+else
+    tEnd        = nCycle*(2*pi)/omega;
+end
+
+transientWindow = min((tEnd-tStart)/20, transientWindowMax);
+
 
 pathFcn = @(argT)calcSinusoidState(argT, 0, tEnd, ...
                 lp0, omega, amp);
@@ -191,8 +207,8 @@ mtInfo = calcMillard2019MuscleInfoOpus31(activationState0,...
     activation = ye(:,1);
     state  = ye(:,2:1:(nStates+1));
     dstate = zeros(length(tV),nStates);
-
-
+    forces = zeros(length(tV),1);
+    forcesLabels = {'$$f^{\mathrm{T}}$$'};
 
     for indexTime=1:1:length(tV)
         dactivation = activationFcn(excitationFcn(tV(indexTime,1)),...
@@ -210,12 +226,14 @@ mtInfo = calcMillard2019MuscleInfoOpus31(activationState0,...
                                    state(indexTime,:));
 
         dstate(indexTime,:) = mtInfo.state.derivative;
+        forces(indexTime,1) = mtInfo.muscleDynamicsInfo.tendonForce;
     end
 
     figure(fig_StateRecord);
     for indexState=1:1:nStates
         row = floor((indexState-1)/size(subPlotPanel,2)) + 1;
         col = indexState-(row-1)*size(subPlotPanel,2);
+        
         subplot('Position',reshape(subPlotPanel(row,col,:),1,4));
         plot(tV,state(:,indexState),'Color',[0,0,1]);
         hold on;
@@ -231,15 +249,16 @@ mtInfo = calcMillard2019MuscleInfoOpus31(activationState0,...
 
 
         plot([0;1].*tV(end),...
-             [dstate(1,indexState);dstate(end,indexState)],...
+             [state(1,indexState);state(end,indexState)],...
              'Color',[0,0,0]);
         hold on;
 
         xTxt  = mean([0;1].*tV(end));
-        yTxt  = dstate(1,indexState); 
-        yErr  = dstate(end,indexState)-dstate(1,indexState);
+        yTxt  = state(1,indexState); 
+        yErr  = (state(end,indexState)-state(1,indexState))...
+                /( mean(state(:,indexState)) );
         text(xTxt,yTxt,...
-                ['dy ',sprintf('%1.2e',yErr)],...
+                ['$$y^{C}_{rel}$$',sprintf('%1.2e',yErr)],...
                 'HorizontalAlignment','center',...
                 'VerticalAlignment','bottom');        
         hold on;
@@ -249,42 +268,106 @@ mtInfo = calcMillard2019MuscleInfoOpus31(activationState0,...
 
         xTxt = 0;
         [maxAbsVal, idxStartTransient]= ...
-            max(abs(dstate(idxStartWindow,indexState)));
+            max(abs(state(idxStartWindow,indexState)));
         [maxAbsVal, idxEndTransient]= ...
-            max(abs(dstate(idxEndWindow,indexState)));
+            max(abs(state(idxEndWindow,indexState)));
 
         x0=tV(1,1);
         x1=tV(max(idxStartWindow),1);
-        y0=min(dstate(idxStartWindow,indexState));
-        y1=max(dstate(idxStartWindow,indexState));
+        y0=min(state(idxStartWindow,indexState));
+        y1=max(state(idxStartWindow,indexState));
+        yMean=mean(state(:,indexState));
         fill([x0,x1,x1,x0,x0],[y0,y0,y1,y1,y0],...
             [1,1,1].*0.5,'FaceAlpha',0.5);
         hold on;
 
-        text(x1,y0,sprintf('dy: %1.2e',y1-y0),...
+        text(x1,y0,sprintf('$$y^{T}_{rel}$$: %1.2e',(y1-y0)/yMean),...
              'HorizontalAlignment','left',...
              'VerticalAlignment','top');
         hold on;
 
         x0=tV(min(idxEndWindow),1);
         x1=tV(end,1);
-        y0=min(dstate(idxEndWindow,indexState));
-        y1=max(dstate(idxEndWindow,indexState));
+        y0=min(state(idxEndWindow,indexState));
+        y1=max(state(idxEndWindow,indexState));
+        yMean=mean(state(:,indexState));        
         fill([x0,x1,x1,x0,x0],[y0,y0,y1,y1,y0],...
             [1,1,1].*0.5,'FaceAlpha',0.5);
         hold on;
 
-        text(x1,y0,sprintf('dy: %1.2e',y1-y0),...
+        text(x1,y0,sprintf('$$y^{T}_{rel}$$: %1.2e',(y1-y0)/yMean),...
              'HorizontalAlignment','right',...
              'VerticalAlignment','top');
         hold on;
 
 
         xlabel('Time (s)');
-        title(['Init + Sim: ',labelStates{indexState}]);
-
+        title(['State: ',labelStates{indexState},' and ', labelStateDerivatives{indexState}]);
         box off;
     end
+
+    for indexForce= 1:1:size(forces,2)
+
+        indexPlot   = nStates+indexForce;
+        row         = floor((indexPlot-1)/size(subPlotPanel,2)) + 1;
+        col         = indexPlot-(row-1)*size(subPlotPanel,2);
+
+        subplot('Position',reshape(subPlotPanel(row,col,:),1,4));
+        plot(tV,forces(:,indexForce),'b');
+        hold on;
+
+        plot([tV(1,1);tV(end,1)],... 
+             [forces(1,indexForce);forces(end,indexForce)],...
+             'Color',[0,0,0]);
+        hold on;
+
+        xTxt  = mean([0;1].*tV(end));
+        yTxt  = forces(1,indexForce); 
+        yErr  = (forces(end,indexForce)-forces(1,indexForce))...
+               /( mean(forces(:,indexForce)));
+        text(xTxt,yTxt,...
+                ['$$y^{C}_{rel}$$',sprintf('%1.2e',yErr)],...
+                'HorizontalAlignment','center',...
+                'VerticalAlignment','bottom');        
+        hold on;
+
+        idxStartWindow  = find(tV < transientWindow);
+        idxEndWindow    = find(tV > (max(tV)-transientWindow) );
+
+        x0=tV(1,1);
+        x1=tV(max(idxStartWindow),1);
+        y0=min(forces(idxStartWindow,indexForce));
+        y1=max(forces(idxStartWindow,indexForce));
+        yMean = mean(forces(:,indexForce));
+        fill([x0,x1,x1,x0,x0],[y0,y0,y1,y1,y0],...
+            [1,1,1].*0.5,'FaceAlpha',0.5);
+        hold on;
+
+        text(x1,y0,sprintf('dy: %1.2e',(y1-y0)/yMean),...
+             'HorizontalAlignment','left',...
+             'VerticalAlignment','top');
+        hold on;
+
+        x0=tV(min(idxEndWindow),1);
+        x1=tV(end,1);
+        y0=min(forces(idxEndWindow,indexForce));
+        y1=max(forces(idxEndWindow,indexForce));
+        fill([x0,x1,x1,x0,x0],[y0,y0,y1,y1,y0],...
+            [1,1,1].*0.5,'FaceAlpha',0.5);
+        hold on;
+
+        text(x1,y0,sprintf('dy: %1.2e',(y1-y0)/yMean),...
+             'HorizontalAlignment','left',...
+             'VerticalAlignment','top');
+        hold on;
+
+        xlabel('Time (s)');
+        title(['Forces: ',forcesLabels{indexForce}]);
+        box off;
+
+    end
+
+    
         
     set(fig_StateRecord,'Units','centimeters',...
     'PaperUnits','centimeters',...

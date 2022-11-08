@@ -325,9 +325,13 @@ if(flag_evaluateInitializationFunctions > 0)
               
                 C = - ((betaxHNN*0.5/lceOpt) + (betaNum + betafEcmHN*fEcmkHN)*(0.5/lceOpt))*cosAlpha ...
                     - (betaTNN/(cosAlpha*ltSlk));
-              
+                              
                 errSoln =  abs(-C*dlce-(A+B));
-
+                %MM 2022/11/8
+                % I've also tried an error that is the absolute value
+                % of ddlaHN, and the sum of the equilibrium error (above)
+                % and the absolute value of ddlaHN: these lead to worse
+                % solutions
 
                 if(solnBest.err < 0)
                   solnBest.err    = errSoln;
