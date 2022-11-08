@@ -223,17 +223,9 @@ if(flag_evaluateInitializationFunctions > 0)
             a     = modelCache.a;
 
             %Iterate over dlfNN until a value is found s.t. dlx=0
-            errBest   =-1;
-            dlceBest  = 0;
-            dlfNNBest = 0;
-
-            errBestL   = inf;
-            dlceBestL  = 0;            
-            dlfNNBestL = 0;
-
-            errBestR   = inf;
-            dlceBestR  = 0;            
-            dlfNNBestR = 0;
+            solnBest = struct('dlceAT',dlp*0.5,'lce',0,'laH',0,'dlaH',0,'err',-1);
+            solnL    = struct('dlceAT',0,'lce',0,'laH',0,'dlaH',0,'err',-1);
+            solnR    = struct('dlceAT',0,'lce',0,'laH',0,'dlaH',0,'err',-1);
 
 
             %This loop iterates over dlfNN in an effort to find a 
@@ -248,11 +240,11 @@ if(flag_evaluateInitializationFunctions > 0)
                 stepDir=1;
               end 
               if(i==2)
-                delta=0.5;                
+                delta=dlp*0.25;                
               end
 
-              errBestL=inf;
-              errBestR=inf;
+              solnL.err=inf;
+              solnR.err=inf;
 
               for j=1:1:stepDir
                 stepSign=0;
@@ -264,17 +256,36 @@ if(flag_evaluateInitializationFunctions > 0)
                   otherwise
                     assert(0);
                 end
-                disp('Here: update to iterate over dlceAT, bound it from 0 to dlp');
-                dlfNN=dlfNNBest+stepSign*delta;
+
+                dlceAT = solnBest.dlceAT + stepSign*delta;
+
+                fibKin = calcFixedWidthPennatedFiberKinematics(...
+                            lceAT,dlceAT,lceOpt,alphaOpt);
+
+                dlce = fibKin.fiberVelocity;
+                dlt  = dlp-dlceAT;
+
+                %Normalized velocities
+                dlceH   = dlce*lce_lceH;
+                dlceHN  = dlceH*dlce_dlceN;  
+                dltN    = dlt*lt_ltN;                  
+                dlceNN  = dlce*dlce_dlceNN;
+                
+                %Cross bridge strain rates
+                %I want a solution in which the cross-bridge strain rate is zero
+                dlaH  = dlceH;                
+                dlxH  = dlceH - (dlaH);
+                dlxHN = dlxH*lce_lceN;
 
                 %Related velocities
-                dlaNN  = dlfNN;
-                dlaH   = dlaNN/(dlce_dlceNN*lceH_lce);
                 dlaHN  = dlaH*dlce_dlceN;
-            
+                dlaNN  = dlaH*dlce_dlceNN*lceH_lce;
+                dlfNN  = dlaNN;
+
                 fvN=calcFvDer(dlfNN*forceVelocityCalibrationFactor,0);
 
-                %Assume the Hill forces are completely balanced by 
+                %Approximate XE strain as if the Hill forces in the
+                % acceleration equation are completely balanced by 
                 %the spring forces developed by fxHN
                 %
                 %    fxHN  = kxHNN*lxHN + betaxHNN*dlxHN;
@@ -293,6 +304,7 @@ if(flag_evaluateInitializationFunctions > 0)
                 %
                 lxHN      = fvN/kAXHN;
 
+
                 %Solve for flN and related quantities
                 lxH       = lxHN*lceN_lce;
                 laH       = lceH-lmH-lxH;
@@ -303,110 +315,59 @@ if(flag_evaluateInitializationFunctions > 0)
                 kxHNN     = a*flN*kAXHN;
                 betaxHNN  = a*flN*betaAXHN;
 
-
-                %Evaluate dlce
                 A = -(kxHNN*lxHN ...
                         - (betaxHNN*dlaH/lceOpt) ...
                         + fpeN ...
-                      )*cosAlpha ...
-                      + fCpN;
-
+                     )*cosAlpha ...
+                     + fCpN;
+              
                 B = (fTkN + betaTNN*(dlp/ltSlk));
+              
+                C = - ((betaxHNN*0.5/lceOpt) + (betaNum + betafEcmHN*fEcmkHN)*(0.5/lceOpt))*cosAlpha ...
+                    - (betaTNN/(cosAlpha*ltSlk));
+              
+                errSoln =  abs(-C*dlce-(A+B));
 
-                C = - ((betaxHNN*0.5/lceOpt) ...
-                           + (betaNum + betafEcmHN*fEcmkHN)*(0.5/lceOpt))*cosAlpha ...
-                      - (betaTNN/(cosAlpha*ltSlk));
 
-                dlce = -(A+B)/C; 
-
-                %Evaluate the error: dlx, we want to drive this to zero
-                dlceH = dlce*lce_lceH;
-                dlxH  = dlceH - (dlaH);
-                dlxHN = dlxH*lce_lceN;
-                
-                %Evaluate the tendon velocity
-                %Pennation angle and tendon
-                fibKin  = calcFixedWidthPennatedFiberKinematicsAlongTendon(...
-                                lce,dlce,lceOpt,alphaOpt);
-                
-                dlceAT = fibKin.fiberVelocityAlongTendon ;
-                dalpha = fibKin.pennationAngularVelocity ;  
-                dlt   = dlp - dlceAT;    
-                
-
-                if(errBest < 0)
-                  errBest=abs(dlxHN);
-                  dlfNNBest=dlfNN;
-                  dlceBest=dlce;
+                if(solnBest.err < 0)
+                  solnBest.err    = errSoln;
+                  solnBest.dlceAT = dlceAT;
+                  solnBest.lce    = lce;
+                  solnBest.dlaH   = dlaH;
+                  solnBest.laH    = laH;
                 else
-                  if(abs(dlxHN)<errBest && stepSign > 0 && dlceAT*dlt >=0)
-                    errBestR   = abs(dlxHN);
-                    dlfNNBestR = dlfNN;
-                    dlceBestR  = dlce;
-                  elseif(abs(dlxHN)<errBest && stepSign < 0 && dlceAT*dlt >=0)
-                    errBestL   = abs(dlxHN);
-                    dlfNNBestL = dlfNN;                    
-                    dlceBestL  = dlce;
+                  if(errSoln<solnBest.err && stepSign > 0)
+                    solnR.err    = errSoln;
+                    solnR.dlceAT = dlceAT;
+                    solnR.lce    = lce;
+                    solnR.dlaH   = dlaH;
+                    solnR.laH    = laH;                                       
+                  elseif(errSoln<solnBest.err && stepSign < 0)
+                    solnL.err    = errSoln;
+                    solnL.dlceAT = dlceAT;
+                    solnL.lce    = lce;
+                    solnL.dlaH   = dlaH;
+                    solnL.laH    = laH;
                   end
                 end
 
               end
 
-              if(errBestL < errBest && errBestL < errBestR)
-                errBest   = errBestL;
-                dlfNNBest = dlfNNBestL;  
-                dlceBest  = dlceBestL;
+              if(solnL.err < solnBest.err && solnL.err < solnR.err)
+                solnBest=solnL;
               end
-              if(errBestR < errBest && errBestR < errBestL)
-                errBest   = errBestR;
-                dlfNNBest = dlfNNBestR;  
-                dlceBest  = dlceBestR;                
+              if(solnR.err < solnBest.err && solnR.err < solnL.err)
+                solnBest=solnR;
               end
-
               delta=delta*0.5;
             end
 
-            %Update the model's kinematics to reflect the best solution
-            dlfNN  = dlfNNBest;
-            dlaNN  = dlfNN;
-            dlaH   = dlaNN/(dlce_dlceNN*lceH_lce);
-            dlaHN  = dlaH*dlce_dlceN;
 
-            fvN=calcFvDer(dlfNN*forceVelocityCalibrationFactor,0);
-            lxHN      = fvN/kAXHN;
-
-            dlceH = dlceBest*lce_lceH;
-            dlxH  = dlceH - (dlaH);
-            dlxHN = dlxH*lce_lceN;            
-
-            %Solve for flN and related quantities
-            lxH       = lxHN*lceN_lce;
-            laH       = lceH-lmH-lxH;
-            lamH      = (lmH+laH);
-            lamN      = (2*lamH)*lce_lceN; 
-
-            flN       = calcFalDer(lamN,0);
-            kxHNN     = a*flN*kAXHN;
-            betaxHNN  = a*flN*betaAXHN;
-              
-
-            %Evaluate ddlaHN
-            dlxHN = dlxH*lce_lceN;
-            fxHN  = kxHNN*lxHN + betaxHNN*dlxHN;           
-            
-            ddlaHN_HillError    =   ((fxHN - a*flN*(fvN))/(tau));
-            ddlaHN_Damping      = - betaCXHN*dlaNN;
-            
-            ka                  = (a/lowActivationThreshold);
-            ddlaHN_Tracking     = lowActivationGain*exp(-ka*ka)*(lxHN + dlxHN);
-            ddlaHN = ddlaHN_HillError + ddlaHN_Damping + ddlaHN_Tracking;
-
-            errI(1,1) = (ddlaHN);
-
-            modelCache.lceAT=lceAT;
-            modelCache.lce=lce;
-            modelCache.laH=laH;
-            modelCache.dlaH=dlaH;
+            errI(1,1) = solnBest.err;
+            modelCache.dlceAT = solnBest.dlceAT;
+            modelCache.lce    = solnBest.lce;
+            modelCache.laH    = solnBest.laH;
+            modelCache.dlaH   = solnBest.dlaH;
 
             return;
         case 2

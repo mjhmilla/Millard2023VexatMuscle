@@ -111,7 +111,7 @@ alphaOpt= musculotendonProperties.pennationAngle;
 ltSlk   = musculotendonProperties.tendonSlackLength;
 
 lp0         = lceOpt*cos(alphaOpt)+ltSlk;
-omega       = 1;
+omega       = 10;
 amp         = 0.1*lp0;
 tStart      = 0;
 tEnd        = (2*pi)/omega;
