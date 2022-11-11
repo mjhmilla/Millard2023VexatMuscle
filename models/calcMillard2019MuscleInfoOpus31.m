@@ -562,6 +562,7 @@ if(modelConfig.initializeState==1)
     
       vars=zeros(2,1);
 
+      numMaxBisections = 8;
     
       %Solve for an initial state that leads to dlx->0 and an acceleration
       %of zero.
@@ -611,7 +612,13 @@ if(modelConfig.initializeState==1)
           end
           
 
-        for j=1:1:8
+        if(i==1 && useElasticTendon==0)
+            numBisections = 0;
+        else
+            numBisections=numMaxBisections;
+        end
+
+        for j=1:1:numBisections
     
           stepSign = 0;
     

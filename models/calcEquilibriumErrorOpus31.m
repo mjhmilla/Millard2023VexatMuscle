@@ -394,45 +394,77 @@ if(flag_evaluateInitializationFunctions > 0)
             assert(0);
     end
 
-    lceAT     = args(1,1);
-    fiberKinematics = calcFixedWidthPennatedFiberKinematics(lceAT,0,lceOpt,alphaOpt);
-    lce   = fiberKinematics.fiberLength;
-    l1H       = args(2,1);
-
-    modelCache.lce = lce;
-    modelCache.l1H = l1H;
-    
-    %With the lce and l1 established, the state derivative equations
-    %can be evaluated given values for laH and dlaH. This will
-    %yield values for the rest of the state. By iterating over laH and
-    %dlaH we can search for a solution which minimizes
-    % 
-    % 1. d/dt(fce*cos(alpha)-ft-fcp)
-    % 2. ddlaHN 
-
-    %feqDot= d/dt( (fxHN + f2HN + fEcmHN)*cosAlpha -fCpN -ftN)
-    %fxHN  = kxHNN*lxHN + betaxHNN*dlxHN;
-
-
-
-    %errI(1,1) = -(fxHN + f2HN + fEcmHN)*cosAlpha + fTN + fCpN; 
-    %errI(2,1) = f1kHN-f2kHN; %This error term works for titin models 0 and 1
-    %errI(3,1) = ddlaHN;
   else
-    
-    assert(length(args)==1);
+%%
+% Rigid Tendon Initialization
+%%
+    assert(length(args)==2);
 
-    if(flag_evaluateInitializationFunctions==2)
-        l1H       = args(1,1);
-        l2H       = lceH - (l1H+lTitinFixedHN*lceOpt);
-        l1HN      = l1H*li_liN;
-        l2HN      = l2H*li_liN;
-        f1kHN     = calcF1HDer(l1HN,0);
-        f2kHN     = calcF2HDer(l2HN,0);    
+    switch flag_evaluateInitializationFunctions
+        case 1
+            lp        = modelCache.lp;   
+            dlp       = modelCache.dlp;
+            lceAT     = lp-ltSlk;
+            dlceAT    = dlp;
+            fibKin = calcFixedWidthPennatedFiberKinematics(...
+                lceAT,dlceAT,lceOpt,alphaOpt);
+            lce    = fibKin.fiberLength;
+            dlce    = fibKin.fiberVelocity;
+            if(lce <= lceMin)
+                lce=lceMin;
+                fibKin=calcFixedWidthPennatedFiberKinematicsAlongTendon(...
+                                        lce,...
+                                        0,...
+                                        lceOpt,...
+                                        alphaOpt);
+                lceAT = fibKin.fiberLengthAlongTendon;
+                dlceAT = 0;
+                dlce   = 0;
+            end
+            dlceH = dlce*lce_lceH;
+            %Assume the XE has a strain rate of zero
+            dlxH  = 0;
+            dlaH  = dlceH-dlxH;
+
+
+            %As with the elastic tendon, assume that the 
+            %XE forces perfectly balance the Hill forces in the 
+            %acceleration equation
+            dlaHN  = dlaH*dlce_dlceN;
+            dlaNN  = dlaH*dlce_dlceNN*lceH_lce;
+            dlfNN  = dlaNN;
+            
+            fvN=calcFvDer(dlfNN*forceVelocityCalibrationFactor,0);  
+            lxHN      = fvN/kAXHN;
+            lceH      = lce*lce_lceH;
+            lxH       = lxHN*lceN_lce;
+            laH       = lceH-lmH-lxH;
+
+            errI(1,1) = 0;
+            modelCache.dlceAT = dlceAT;
+            modelCache.lce    = lce;
+            modelCache.laH    = laH;
+            modelCache.dlaH   = dlaH;
+            
+        case 2 
+            % l1H:  Static elastic solution between the two titin segments
+            lceAT           = args(1,1);
+            fiberKinematics = calcFixedWidthPennatedFiberKinematics(lceAT,0,lceOpt,alphaOpt);        
+            lce             = fiberKinematics.fiberLength;
     
-        errI(1,1) = f2kHN-f1kHN;
-        return;
+            l1H       = args(2,1);
+            l2H       = lce*lce_lceH - (l1H+lTitinFixedHN*lceOpt);
+            l1HN      = l1H*li_liN;
+            l2HN      = l2H*li_liN;
+            f1kHN     = calcF1HDer(l1HN,0);
+            f2kHN     = calcF2HDer(l2HN,0);    
+        
+            errI(2,1) = f2kHN-f1kHN;
+            modelCache.l1H=l1H;
+            return;
     end
+
+
 
     %errI(1,1) = f1kHN-f2kHN; %This error term works for titin models 0 and 1
     %errI(2,1) = ddlaHN;    
