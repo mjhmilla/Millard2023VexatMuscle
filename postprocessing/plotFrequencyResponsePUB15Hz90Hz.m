@@ -332,8 +332,8 @@ for z=1:1:length(freqSeriesFiles)
                 idxPhase     = idxPhase15;
                 xTicksVector = xTicksVector15;
 
-                kdLineColor = (kdLineColor).*0.75 ...
-                          +[1,1,1].*0.25;
+                %kdLineColor = (kdLineColor).*0.75 ...
+                %          +[1,1,1].*0.25;
                 
 
           case 90
@@ -550,8 +550,9 @@ for z=1:1:length(freqSeriesFiles)
             idxGain      = idxGain15;
             idxPhase     = idxPhase15;
             xTicksVector = xTicksVector15;
-            kdLineColor = (kdLineColor).*0.75 ...
-                          +[1,1,1].*0.25;
+            %kdLineColor = (kdLineColor).*0.75 ...
+            %              +[1,1,1].*0.25;
+            
         case 90
             idxForce     = idxForce90;            
             idxGain      = idxGain90;
@@ -1029,21 +1030,25 @@ for z=1:1:length(freqSeriesFiles)
       xlabel(dataKBR1994Fig3Gain(idxExp).xName);          
       ylabel('Phase (deg)');      
 
-      if(contains(freqSeriesFiles{z},'Elastic')==1)
+      if(contains(freqSeriesFiles{z},'Elastic')==1 && expBWPlot(1,k)==90)
+        lh=[];
+        icons=[];
+        plots=[];
+        txt=[];
+
         if(flag_Hill)
             lh = legend('Location','South');    
-            lh.Position(1,1) = lh.Position(1,1);% -0.15625;        
+            lh.Position(1,1) = lh.Position(1,1)-0.1;% -0.15625;        
             lh.Position(1,2) = lh.Position(1,2) -0.1;%40625;   
-            lh.NumColumns=1;
+            lh.NumColumns=3;
             legend boxoff; 
         else
             lh = legend('Location','North');    
-            lh.Position(1,1) = lh.Position(1,1);% -0.15625;        
+            lh.Position(1,1) = lh.Position(1,1)-0.1;% -0.15625;        
             lh.Position(1,2) = lh.Position(1,2)+0.12;%40625;   
-            lh.NumColumns=1;
+            lh.NumColumns=3;
             legend boxoff; 
         end
-
                
       end      
   end
