@@ -232,7 +232,8 @@ if(flag_evaluateInitializationFunctions > 0)
             %velocity at which the model is moving at a constant
             %velocity: when the strain rate of the XE is zero,
             %and the acceleration (ddlaHN) is zero.
-            for i=1:1:10
+            numMaxBisections=16;
+            for i=1:1:numMaxBisections
               stepDir = 2;
 
               if(i==1)
@@ -273,36 +274,57 @@ if(flag_evaluateInitializationFunctions > 0)
                 
                 %Cross bridge strain rates
                 %I want a solution in which the cross-bridge strain rate is zero
-                dlaH  = dlceH;                
-                dlxH  = dlceH - (dlaH);
-                dlxHN = dlxH*lce_lceN;
+                dlxH  = 0;
+                dlxHN = dlxH*lce_lceN;                
+                dlaH  = dlceH - dlxH;                
 
                 %Related velocities
                 dlaHN  = dlaH*dlce_dlceN;
                 dlaNN  = dlaH*dlce_dlceNN*lceH_lce;
                 dlfNN  = dlaNN;
 
+                %Approximate XE strain as if the acceleration equation
+                %evalates to zero.
+                %
+                %  ddlaHN  = ((kxHNN*lxHN + betaxHNN*dlxHN)-a*flN*fvN)/tau
+                %             -betaCXHN*dlaNN
+                %             +lowActivationGain*exp(-ka*ka)*(lxHN + dlxHN)   
+                %          = 0
+                %  since we've set dlx=0, and have a candidate values for lceAT
+                %  and dlceAT the only unknown in this equation is lx. Technically
+                %  this function is nonlinear in lx since flN(lamN(lmH,laH))
+                %
+                %    lxHN*(kxHNN/tau + lowActivationGain*exp(-ka*ka)) = 
+                %      -( betaxHNN*dlxHN - a*flN*fvN)/tau
+                %      + betaCXHN*dlaNN
+                %      -( lowActivationGain*exp(-ka*ka) )*dlxHN
+                %
                 fvN=calcFvDer(dlfNN*forceVelocityCalibrationFactor,0);
 
-                %Approximate XE strain as if the Hill forces in the
-                % acceleration equation are completely balanced by 
-                %the spring forces developed by fxHN
-                %
-                %    fxHN  = kxHNN*lxHN + betaxHNN*dlxHN;
-                %
-                %  we've set dlx=0 and so
-                %
-                %    ddlaHN_HillError    =   ((fxHN - a*flN*(fvN))/(tau));
-                %
-                %  becomes
-                %
-                %    a*flN*kAXHN*lxHN - a*flN*fvN = 0
-                %
-                %  and so
-                %
-                %    lxHN = fvN/kAXHN
-                %
                 lxHN      = fvN/kAXHN;
+
+                %Fixed point interation: this converges very quickly
+                for z=1:1:2
+                    lxH       = lxHN*lceN_lce;
+    
+                    laH       = lceH-lmH-lxH;
+                    lamH      = (lmH+laH);
+                    lamN      = (2*lamH)*lce_lceN;
+                    
+                    flN              = calcFalDer(lamN,0); 
+                    kxHNN            = a*flN*kAXHN;
+                    betaxHNN         = a*flN*betaAXHN;               
+                     
+                    ka                  = (a/lowActivationThreshold);
+    
+                    t0 =  (kxHNN/tau + lowActivationGain*exp(-ka*ka));
+                    t1 =  -(betaxHNN*dlxHN- (a*flN*fvN))/tau ...
+                          + betaCXHN*dlaNN ...
+                          -( lowActivationGain*exp(-ka*ka) )*dlxHN;
+                    lxHN = t1/t0;                    
+                end
+
+                %Check
 
 
                 %Solve for flN and related quantities
@@ -409,6 +431,7 @@ if(flag_evaluateInitializationFunctions > 0)
             fibKin = calcFixedWidthPennatedFiberKinematics(...
                 lceAT,dlceAT,lceOpt,alphaOpt);
             lce    = fibKin.fiberLength;
+            lceH   = lce*lce_lceH;
             dlce    = fibKin.fiberVelocity;
             if(lce <= lceMin)
                 lce=lceMin;
@@ -424,6 +447,7 @@ if(flag_evaluateInitializationFunctions > 0)
             dlceH = dlce*lce_lceH;
             %Assume the XE has a strain rate of zero
             dlxH  = 0;
+            dlxHN = dlxH*lce_lceN;
             dlaH  = dlceH-dlxH;
 
 
@@ -434,15 +458,35 @@ if(flag_evaluateInitializationFunctions > 0)
             dlaNN  = dlaH*dlce_dlceNN*lceH_lce;
             dlfNN  = dlaNN;
             
-            fvN=calcFvDer(dlfNN*forceVelocityCalibrationFactor,0);  
-            lxHN      = fvN/kAXHN;
-            lceH      = lce*lce_lceH;
-            lxH       = lxHN*lceN_lce;
-            laH       = lceH-lmH-lxH;
+
+            fvN     =calcFvDer(dlfNN*forceVelocityCalibrationFactor,0);
+            lxHN    = fvN/kAXHN;
+            a       = modelCache.a;
+            %Fixed point interation: this converges very quickly
+            for z=1:1:2
+                lxH       = lxHN*lceN_lce;
+
+                laH       = lceH-lmH-lxH;
+                lamH      = (lmH+laH);
+                lamN      = (2*lamH)*lce_lceN;
+                
+                flN              = calcFalDer(lamN,0); 
+                kxHNN            = a*flN*kAXHN;
+                betaxHNN         = a*flN*betaAXHN;               
+                 
+                ka                  = (a/lowActivationThreshold);
+
+                t0 =  (kxHNN/tau + lowActivationGain*exp(-ka*ka));
+                t1 =  -(betaxHNN*dlxHN- (a*flN*fvN))/tau ...
+                      + betaCXHN*dlaNN ...
+                      -( lowActivationGain*exp(-ka*ka) )*dlxHN;
+                lxHN = t1/t0;                    
+            end
 
             errI(1,1) = 0;
             modelCache.dlceAT = dlceAT;
             modelCache.lce    = lce;
+            modelCache.lceAT  = lceAT;
             modelCache.laH    = laH;
             modelCache.dlaH   = dlaH;
             
@@ -456,11 +500,11 @@ if(flag_evaluateInitializationFunctions > 0)
             l2H       = lce*lce_lceH - (l1H+lTitinFixedHN*lceOpt);
             l1HN      = l1H*li_liN;
             l2HN      = l2H*li_liN;
-            f1kHN     = calcF1HDer(l1HN,0);
-            f2kHN     = calcF2HDer(l2HN,0);    
+            f1kHN     = scaleTitinProximal * calcF1HDer(l1HN,0);
+            f2kHN     = scaleTitinDistal   * calcF2HDer(l2HN,0);    
         
             errI(2,1) = f2kHN-f1kHN;
-            modelCache.l1H=l1H;
+            modelCache.l1H=l1H;        
             return;
     end
 

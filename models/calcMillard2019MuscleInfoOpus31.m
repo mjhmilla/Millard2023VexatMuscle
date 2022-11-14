@@ -548,7 +548,7 @@ if(modelConfig.initializeState==1)
   errFJac = 0;
   errI    = zeros(1+useElasticTendon,1);
   errIJac = zeros(1+useElasticTendon,1+useElasticTendon);
-  argsBest = zeros(1+useElasticTendon,1);
+  argsBest = zeros(2,1);
   flag_initializeAtRest     = 0;
 
   if(  flag_initializeAtRest == 0)
@@ -562,10 +562,11 @@ if(modelConfig.initializeState==1)
     
       vars=zeros(2,1);
 
-      numMaxBisections = 8;
+      numMaxBisections = 16;
     
       %Solve for an initial state that leads to dlx->0 and an acceleration
       %of zero.
+
       for i=1:1:2
     
           delta=0;
@@ -600,6 +601,9 @@ if(modelConfig.initializeState==1)
           switch i 
               case 1
                 errBest = abs(errI(1,1));
+                if(useElasticTendon==0)
+                    vars(i,1)=modelCache.lceAT;
+                end
                 varsBest=vars;
                 argsBest(i,1)=vars(i,1);
               case 2

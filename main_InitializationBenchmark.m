@@ -15,9 +15,12 @@ initTol = sqrt(eps);
 loopTol = min(absTol,relTol)/100.;
 iterMax = 100;
 
-nCycle      = 1;
+timeExcitationOn = 0;
+
+nCycle      = 3;
 omega       = 2*pi; %0 is allowed for a static path
-pathStrain  = 0.05;
+lceATStrain        = 0.05;
+lceATStrainOffset  = 0;
 
 transientWindowMax = 0.025;
 
@@ -107,7 +110,7 @@ end
 
 
 excitationFcn = @(argT)calcStepFunction(argT,...
-                              0.0,...
+                              timeExcitationOn,...
                               Inf,...
                               1.0);
 
@@ -119,8 +122,8 @@ lceOpt  = musculotendonProperties.optimalFiberLength;
 alphaOpt= musculotendonProperties.pennationAngle;
 ltSlk   = musculotendonProperties.tendonSlackLength;
 
-lp0         = lceOpt*cos(alphaOpt)+ltSlk;
-amp         = pathStrain*lp0;
+lp0         = lceOpt*cos(alphaOpt)*(1+lceATStrainOffset)+ltSlk;
+amp         = lceATStrain*lceOpt*cos(alphaOpt);
 tStart      = 0;
 
 if(omega == 0)
