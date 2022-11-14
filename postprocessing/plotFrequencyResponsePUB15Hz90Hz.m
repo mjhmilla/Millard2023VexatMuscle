@@ -28,16 +28,16 @@ assert( isempty(strfind(freqSeriesFiles_RT{1,1},'Hill'))==0 ...
      && isempty(strfind(freqSeriesFiles_ET{1,1},'Hill'))==0);
 
 freqSeriesFiles = {freqSeriesFiles_ET{1,2},...
-                   freqSeriesFiles_RT{1,2},...
                    freqSeriesFiles_ET{1,1},...
+                   freqSeriesFiles_RT{1,2},...                   
                    freqSeriesFiles_RT{1,1}};
 freqSeriesName =  {freqSeriesName_ET{1,2},...
-                   freqSeriesName_RT{1,2},...
                    freqSeriesName_ET{1,1},...
+                   freqSeriesName_RT{1,2},...
                    freqSeriesName_RT{1,1}};
 freqSeriesColor = [freqSeriesColor_ET(2,:);...
-                   freqSeriesColor_RT(2,:);...
                    freqSeriesColor_ET(1,:);...
+                   freqSeriesColor_RT(2,:);...                   
                    freqSeriesColor_RT(1,:)];
 
 
@@ -149,7 +149,7 @@ for i=1:1:length(freqSeriesFiles)
   
   
   deltaY = subPlotOffsetY*0.5;
-  if( contains(freqSeriesFiles{i},'Hill') == 1)
+  if( i >= 3)
     deltaY = -subPlotOffsetY*0.5;
   end
     
@@ -199,10 +199,10 @@ for i=1:1:length(freqSeriesFiles)
 
 end
 
-subPlotLabel = {'A. Model (elastic tendon)','B.15Hz','C.15Hz','D.90Hz','E.90Hz','F.90Hz',... 
-                'G. Model (rigid tendon)','H.15Hz','I.15Hz','J.90Hz','K.90Hz','L.90Hz',... 
-                'A. Hill Model (elastic tendon)','B.15Hz','C.15Hz','D.90Hz','E.90Hz','F.90Hz',... 
-                'G. Hill Model (rigid tendon)','H.15Hz','I.15Hz','J.90Hz','K.90Hz','L.90Hz',... 
+subPlotLabel = {'A.Model (elastic tendon)','B.15Hz','C.15Hz','D.90Hz','E.90Hz','F.90Hz',...                 
+                'G.Hill Model (elastic tendon)','H.15Hz','I.15Hz','J.90Hz','K.90Hz','L.90Hz',...
+                'A.Model (rigid tendon)','B.15Hz','C.15Hz','D.90Hz','E.90Hz','F.90Hz',...                 
+                'G.Hill Model (rigid tendon)','H.15Hz','I.15Hz','J.90Hz','K.90Hz','L.90Hz',... 
                 'X.','Y.','Z.'};
 
 %%
@@ -332,8 +332,8 @@ for z=1:1:length(freqSeriesFiles)
                 idxPhase     = idxPhase15;
                 xTicksVector = xTicksVector15;
 
-                kdLineColor = (kdLineColor).*0.75 ...
-                          +[1,1,1].*0.25;
+                %kdLineColor = (kdLineColor).*0.75 ...
+                %          +[1,1,1].*0.25;
                 
 
           case 90
@@ -550,8 +550,9 @@ for z=1:1:length(freqSeriesFiles)
             idxGain      = idxGain15;
             idxPhase     = idxPhase15;
             xTicksVector = xTicksVector15;
-            kdLineColor = (kdLineColor).*0.75 ...
-                          +[1,1,1].*0.25;
+            %kdLineColor = (kdLineColor).*0.75 ...
+            %              +[1,1,1].*0.25;
+            
         case 90
             idxForce     = idxForce90;            
             idxGain      = idxGain90;
@@ -765,7 +766,7 @@ for z=1:1:length(freqSeriesFiles)
     yPos = 0;
     vAlign = 'bottom';
     hAlign = 'right';
-    if(flag_Hill==1)
+    %if(flag_Hill==1)
         if(expBWPlot(1,k) == 90)
             hAlign = 'right';
             vAlign = 'bottom';
@@ -777,12 +778,12 @@ for z=1:1:length(freqSeriesFiles)
             xPos = 0.05;
             yPos = 0.05;
         end
-    else
-        hAlign = 'left';
-        vAlign = 'top';
-        xPos = 0.05;
-        yPos = 0.95;
-    end
+    %else
+    %    hAlign = 'left';
+    %    vAlign = 'top';
+    %    xPos = 0.05;
+    %    yPos = 0.95;
+    %end
 
     text('Units','normalized','Position',[xPos,yPos],...
          'String',phaseRMSEStr,'FontSize',6,...
@@ -1029,12 +1030,26 @@ for z=1:1:length(freqSeriesFiles)
       xlabel(dataKBR1994Fig3Gain(idxExp).xName);          
       ylabel('Phase (deg)');      
 
-      if(contains(freqSeriesFiles{z},'Rigid')==1)
-        lh = legend('Location','South');    
-        lh.Position(1,1) = lh.Position(1,1);% -0.15625;        
-        lh.Position(1,2) = lh.Position(1,2) -0.1;%40625;   
-        lh.NumColumns=1;
-        legend boxoff;        
+      if(contains(freqSeriesFiles{z},'Elastic')==1 && expBWPlot(1,k)==90)
+        lh=[];
+        icons=[];
+        plots=[];
+        txt=[];
+
+        if(flag_Hill)
+            lh = legend('Location','South');    
+            lh.Position(1,1) = lh.Position(1,1)-0.1;% -0.15625;        
+            lh.Position(1,2) = lh.Position(1,2) -0.1;%40625;   
+            lh.NumColumns=3;
+            legend boxoff; 
+        else
+            lh = legend('Location','North');    
+            lh.Position(1,1) = lh.Position(1,1)-0.1;% -0.15625;        
+            lh.Position(1,2) = lh.Position(1,2)+0.12;%40625;   
+            lh.NumColumns=3;
+            legend boxoff; 
+        end
+               
       end      
   end
 
