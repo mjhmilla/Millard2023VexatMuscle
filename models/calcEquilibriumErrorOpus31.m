@@ -204,7 +204,7 @@ if(flag_evaluateInitializationFunctions > 0)
             fEcmfcnHN   = scaleECM*calcFeHDer(lceHN,0);
             fEcmkHN     = fEcmfcnHN;   
 
-            fpeN=calcFpeDer(lceN,0);
+%            fpeN=calcFpeDer(lceN,0);
             
             fCpN=calcCpDer(lceATN,0);
 
@@ -227,12 +227,84 @@ if(flag_evaluateInitializationFunctions > 0)
             solnL    = struct('dlceAT',0,'lce',0,'laH',0,'dlaH',0,'err',-1);
             solnR    = struct('dlceAT',0,'lce',0,'laH',0,'dlaH',0,'err',-1);
 
+            %This loop iterates over the length of the titin segments
+
+            numMaxBisections=modelConstants.iterMax;
+            lTitinFreeH = (lceHN-lTitinFixedHN)*lceN_lce;
+            argBest = 0.5;
+            errBest =-Inf;
+            argL    = 0;
+            errL    = Inf;
+            argR    = 0;
+            errR    = Inf;
+
+            for i=1:1:numMaxBisections
+              stepDir = 2;
+
+              if(i==1)
+                delta = 0;
+                stepDir=1;
+              end 
+              if(i==2)
+                delta=0.25;                
+              end
+
+              errL=inf;
+              errR=inf;
+
+              for j=1:1:stepDir
+                stepSign=0;
+                switch j 
+                  case 1 
+                    stepSign=1;
+                  case 2
+                    stepSign=-1;
+                  otherwise
+                    assert(0);
+                end
+                arg = (argBest+stepSign*delta);
+                l1H       = lTitinFreeH*arg;
+                l2H       = lce*lce_lceH - (l1H+lTitinFixedHN*lceOpt);
+                l1HN      = l1H*li_liN;
+                l2HN      = l2H*li_liN;
+                f1kHN     = scaleTitinProximal*calcF1HDer(l1HN,0);
+                f2kHN     = scaleTitinDistal*calcF2HDer(l2HN,0);    
+            
+                errSoln = abs(f2kHN-f1kHN);
+                if(errBest<0)
+                    errBest=errSoln;
+                elseif(errSoln < errBest && stepSign < 0)
+                    errL=errSoln;
+                    argL=arg;
+                elseif(errSoln < errBest && stepSign > 0)
+                    errR=errSoln;
+                    argR=arg;                    
+                end
+              end
+              if(errL<errBest && errL<errR)
+                errBest=errL;
+                argBest=argL;
+              end
+              if(errR<errBest && errR<errL)
+                errBest=errR;
+                argBest=argR;
+              end
+              delta=delta*0.5;
+            end
+
+            arg       = argBest;
+            l1H       = lTitinFreeH*arg;
+            l2H       = lce*lce_lceH - (l1H+lTitinFixedHN*lceOpt);
+            l1HN      = l1H*li_liN;
+            l2HN      = l2H*li_liN;
+            f1kHN     = scaleTitinProximal*calcF1HDer(l1HN,0);
+            f2kHN     = scaleTitinDistal*calcF2HDer(l2HN,0);  
+
 
             %This loop iterates over dlfNN in an effort to find a 
             %velocity at which the model is moving at a constant
             %velocity: when the strain rate of the XE is zero,
             %and the acceleration (ddlaHN) is zero.
-            numMaxBisections=16;
             for i=1:1:numMaxBisections
               stepDir = 2;
 
@@ -339,7 +411,8 @@ if(flag_evaluateInitializationFunctions > 0)
 
                 A = -(kxHNN*lxHN ...
                         - (betaxHNN*dlaH/lceOpt) ...
-                        + fpeN ...
+                        + f2kHN ...
+                        + fEcmfcnHN ...
                      )*cosAlpha ...
                      + fCpN;
               

@@ -13,14 +13,14 @@ relTol  = absTol;
 maxStep = 0.001;
 initTol = sqrt(eps);
 loopTol = min(absTol,relTol)/100.;
-iterMax = 100;
+iterMax = 12;
 
-timeExcitationOn = 0;
+timeExcitationOn = Inf;
 
 nCycle      = 3;
 omega       = 2*pi; %0 is allowed for a static path
 lceATStrain        = 0.05;
-lceATStrainOffset  = 0;
+lceATStrainOffset  = 0.0;
 
 transientWindowMax = 0.025;
 

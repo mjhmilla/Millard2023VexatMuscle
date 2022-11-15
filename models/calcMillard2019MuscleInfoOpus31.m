@@ -404,7 +404,8 @@ modelConstants = struct( ...
     'smoothStepFunctionRadius',...
       sarcomereProperties.smoothStepFunctionRadius,...
     'titinModelType', sarcomereProperties.titinModelType,...
-    'initialization', modelConfig.initializeState);
+    'initialization', modelConfig.initializeState,...
+    'iterMax',modelConfig.iterMax);
 
 
 
@@ -562,7 +563,7 @@ if(modelConfig.initializeState==1)
     
       vars=zeros(2,1);
 
-      numMaxBisections = 16;
+      numMaxBisections = modelConfig.iterMax;
     
       %Solve for an initial state that leads to dlx->0 and an acceleration
       %of zero.
