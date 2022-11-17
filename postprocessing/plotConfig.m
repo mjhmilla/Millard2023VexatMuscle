@@ -4,10 +4,12 @@
 %totalWidth = 177.13668/10; %Frontiers journal text width.
 totalWidth = 21.0;
 
-
-pageWidth  = 21.0;
-pageHeight = 29.7;
-
+if(exist('pageWidth','var')==0)
+    pageWidth  = 21.0;
+end 
+if(exist('pageHeight','var')==0)
+    pageHeight = 29.7;
+end
 
 if(flag_usingOctave == 0)
   set(groot, 'defaultAxesFontSize',8);
@@ -27,10 +29,16 @@ if(exist('plotHorizMarginCm','var')==0)
   plotHorizMarginCm = 7;  
 end
 
-plotVertMarginCm  = 1;
+if(exist('plotVertMarginCm','var')==0)
+    plotVertMarginCm  = 1;
+end
 
-plotHorizMarginSplitCm = 2.0;
-plotVertMarginSplitCm  = 2.0;
+if(exist('plotHorizMarginSplitCm','var')==0)
+    plotHorizMarginSplitCm = 2.0;
+end
+if(exist('plotVertMarginSplitCm','var')==0)
+    plotVertMarginSplitCm  = 2.0;
+end
 
 %plotWidth = 7; %((pageWidth-plotHorizMarginCm)/numberOfHorizontalPlotColumns);
 if(isempty(plotWidth)==1)
