@@ -81,27 +81,63 @@ if(pennationAngleAtOptimalFiberLength > eps^0.5)
     %    the fiber velocity (dlce) and the fiber velocity along the tendon
     %    dlceAT.
     %%
-    A = [sin(alpha), lceAT;... % [1 0; 0 1];%
-        cos(alpha), -h   ]; 
-
-    b = [0; ...   %[0;0];
-         dlceAT];
-
-    if(isnan(dlceAT) == 0)
-        if( max(max(isnan(A))) > 0 || max(max(isinf(A))) >0 )
-           here=1; 
-        end
-        x = pinv(A)*b;
-
-        dlce   = x(1);
-        dalpha = x(2);
-    else
-        dlce = NaN;
-        dalpha=NaN;
-    end
+    %A = [sin(alpha), lceAT;... % [1 0; 0 1];%
+    %    cos(alpha), -h   ]; 
+    %    
+    %b = [0; ...   %[0;0];
+    %     dlceAT];
+    %     
+    %if(isnan(dlceAT) == 0)
+    %    if( max(max(isnan(A))) > 0 || max(max(isinf(A))) >0 )
+    %       here=1; 
+    %    end
+    %    x = pinv(A)*b;
+    %    
+    %    dlce   = x(1);
+    %    dalpha = x(2);
+    %else
+    %    dlce = NaN;
+    %    dalpha=NaN;
+    %end
     
-    
-    
+    %%
+    % Across the tendon we have
+    %
+    % [1]  lce*sin(alpha)=h
+    %
+    % where h is a constant. Taking a time derivative
+    %
+    % [2] dlce*sin(alpha)+lce*cos(alpha)*dalpha=0
+    %
+    % and solving for dalpha yields
+    %
+    % [3] dalpha = (-dlce*sin(alpha)) / (lce*cos(alpha)) 
+    %
+    % Along the tendon we have
+    %
+    % [4] lceAT = lce*cos(alpha)
+    %
+    % Taking a time derivative yields
+    %
+    % [5]  dlceAT = dlce*cos(alpha) - lce*sin(alpha)*dalpha
+    %
+    % Substituting in Eqn. 3 yields
+    %
+    % [6]  dlceAT = dlce*cos(alpha) - lce*sin(alpha)*(-dlce*sin(alpha)) / (lce*cos(alpha)) 
+    %
+    % Which simplifies to
+    %
+    % [7]  dlceAT = [dlce*cos2(alpha) + dlce*sin2(alpha)] / (cos(alpha))
+    %
+    % and finally
+    %
+    % [8]  dlceAT = dlce/cos(alpha)
+    %
+
+
+    dlce=dlceAT*cos(alpha);
+    dalpha = -(dlce/lce)*tan(alpha)
+
 else
     lce    = lceAT;
     dlce   = dlceAT;
