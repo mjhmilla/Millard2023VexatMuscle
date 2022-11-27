@@ -2,7 +2,7 @@ clc;
 close all;
 clear all;
 
-flag_useElasticTendon=1;
+flag_useElasticTendon=0;
 
 %%
 % Simulation parameters
@@ -19,7 +19,7 @@ timeExcitationOn = Inf;
 
 nCycle      = 3;
 omega       = 2*pi; %0 is allowed for a static path
-lceATStrain        = 0.05;
+lceATStrain        = 0.0;
 lceATStrainOffset  = 0.0;
 
 transientWindowMax = 0.025;
@@ -212,6 +212,9 @@ mtInfo = calcMillard2019MuscleInfoOpus31(activationState0,...
     dstate = zeros(length(tV),nStates);
     forces = zeros(length(tV),1);
     forcesLabels = {'$$f^{\mathrm{T}}$$'};
+
+    auxStates=zeros(length(tV),1);
+    
 
     for indexTime=1:1:length(tV)
         dactivation = activationFcn(excitationFcn(tV(indexTime,1)),...

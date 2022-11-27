@@ -355,7 +355,7 @@ if(flag_evaluateInitializationFunctions > 0)
                 dlaNN  = dlaH*dlce_dlceNN*lceH_lce;
                 dlfNN  = dlaNN;
 
-                %Approximate XE strain as if the acceleration equation
+                %Solve for the XE strain as if the acceleration equation
                 %evalates to zero.
                 %
                 %  ddlaHN  = ((kxHNN*lxHN + betaxHNN*dlxHN)-a*flN*fvN)/tau
