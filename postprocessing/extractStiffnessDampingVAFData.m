@@ -21,9 +21,16 @@ kbr1994Data(9) = struct('amplitude',      0,...
                         'warningMessage' , '');
                       
 kbr1994Stiffness(9) = struct(  'fo', [],...
-                                'g', []);                              
+                                'g', [],...
+                                'x', [],...
+                                'y', [],...
+                                'yN',[]);
+
 kbr1994Damping(9)   = struct(  'fo', [],...
-                                'g', []);
+                                'g', [],...
+                                'x', [],...
+                                'y', [],...
+                                'yN',[]);
 
                       
 modelData(9) = struct(  'amplitude',      0,...
@@ -36,17 +43,22 @@ modelData(9) = struct(  'amplitude',      0,...
                         'vaf_y',          []);
                       
 modelStiffness(9) = struct(  'fo', [],...
-                              'g', []);    
+                              'g', [],...
+                              'x',[],...
+                              'y',[],...
+                              'yN',[]);    
                             
 modelDamping(9)   = struct(  'fo', [],...
-                              'g', []);
+                              'g', [],...
+                              'x', [],...
+                              'y', [],...
+                              'yN',[]);
                             
-modelVaf(9)   = struct(  'fo', [],...
+modelVaf(9)   = struct(  'fo',[],...
                          'g', [], ...
-                         'mean', 0, ...
-                         'std', 0,...
-                         'min', 0,...
-                         'max', 0);
+                         'x', [],...
+                         'y', [],...
+                         'yN',[]);
                                         
 hillTable   = struct('stiffness',[],'damping',[],'vaf',[],'vafData',[]);
 opus31Table = struct('stiffness',[],'damping',[],'vaf',[],'vafData',[]);
@@ -76,7 +88,7 @@ for z=1:1:length(freqSeriesFiles)
     flag_Hill = 1;
   end
   
-  currData      = modelData;
+  rawData      = modelData;
   currStiffness = modelStiffness;
   currDamping   = modelDamping;
   currVaf       = modelVaf;
@@ -88,78 +100,85 @@ for z=1:1:length(freqSeriesFiles)
                               freqSimData.bandwidthHz(1,i),amp,freq);
                             
     %If data is being concatenated make sure it is to the correct trial
-    if( currData(idx).amplitude ~= 0)
-      assert(currData(idx).amplitude == freqSimData.amplitudeMM(1,i));
-      assert(currData(idx).frequency == freqSimData.bandwidthHz(1,i));
+    if( rawData(idx).amplitude ~= 0)
+      assert(rawData(idx).amplitude == freqSimData.amplitudeMM(1,i));
+      assert(rawData(idx).frequency == freqSimData.bandwidthHz(1,i));
     else
-      currData(idx).amplitude = freqSimData.amplitudeMM(1,i);
-      currData(idx).frequency = freqSimData.bandwidthHz(1,i);      
+      rawData(idx).amplitude = freqSimData.amplitudeMM(1,i);
+      rawData(idx).frequency = freqSimData.bandwidthHz(1,i);      
     end
                             
-    currData(idx).stiffness_x = [currData(idx).stiffness_x;...
+    rawData(idx).stiffness_x = [rawData(idx).stiffness_x;...
                                  freqSimData.nominalForce(1,i)];
-    currData(idx).stiffness_y = [currData(idx).stiffness_y;...
+    rawData(idx).stiffness_y = [rawData(idx).stiffness_y;...
                                  freqSimData.stiffness(1,i)/1000];
                                
-    currData(idx).damping_x = [currData(idx).damping_x;...
+    rawData(idx).damping_x = [rawData(idx).damping_x;...
                                  freqSimData.nominalForce(1,i)];
-    currData(idx).damping_y = [currData(idx).damping_y;...
+    rawData(idx).damping_y = [rawData(idx).damping_y;...
                                  freqSimData.damping(1,i)/1000];   
     
-    currData(idx).vaf_x = [currData(idx).vaf_x;...
+    rawData(idx).vaf_x = [rawData(idx).vaf_x;...
                            freqSimData.nominalForce(1,i)];
-    currData(idx).vaf_y = [currData(idx).vaf_y;...
+    rawData(idx).vaf_y = [rawData(idx).vaf_y;...
                            freqSimData.vafTime(1,i)];
   end
   
   %Order the data and fit a line to it
-  for idx=1:1:length(currData)
+  for idx=1:1:length(rawData)
     % Stiffness
-    data_x = currData(idx).stiffness_x;
-    data_y = currData(idx).stiffness_y;
+    data_x = rawData(idx).stiffness_x;
+    data_y = rawData(idx).stiffness_y;
     
     [k_x,map] = sort(data_x);
     k_y       = data_y(map);    
     
-    currData(idx).stiffness_x = k_x;
-    currData(idx).stiffness_y = k_y;
+
     
     [fo, g] = fit(k_x,k_y,'poly1');
     
     currStiffness(idx).fo = fo;
     currStiffness(idx).g = g;
+    currStiffness(idx).x = k_x;
+    currStiffness(idx).y = k_y;
+    currStiffness(idx).yN= k_y./k_x;
     
     % Damping    
-    data_x = currData(idx).damping_x;
-    data_y = currData(idx).damping_y;
+    data_x = rawData(idx).damping_x;
+    data_y = rawData(idx).damping_y;
     
     [d_x,map] = sort(data_x);
     d_y       = data_y(map);    
     
-    currData(idx).damping_x = d_x;
-    currData(idx).damping_y = d_y;    
-    
+       
     [fo, g] = fit(d_x,d_y,'poly1');
     currDamping(idx).fo = fo;
     currDamping(idx).g = g;
-    
+    currDamping(idx).x = d_x;
+    currDamping(idx).y = d_y;
+    currDamping(idx).yN = d_y./d_x;
     %VAF
-    data_x = currData(idx).vaf_x;
-    data_y = currData(idx).vaf_y;
+    data_x = rawData(idx).vaf_x;
+    data_y = rawData(idx).vaf_y;
     
     [vaf_x,map] = sort(data_x);
     vaf_y       = data_y(map);    
     
-    currData(idx).vaf_x = vaf_x;
-    currData(idx).vaf_y = vaf_y;    
+ 
     
     [fo, g] = fit(vaf_x,vaf_y,'poly1');
     currVaf(idx).fo = fo;
     currVaf(idx).g = g;
-    currVaf(idx).mean = mean(vaf_y);
-    currVaf(idx).std = std(vaf_y);
-    currVaf(idx).min = min(vaf_y);
-    currVaf(idx).max = max(vaf_y);
+    currVaf(idx).x = vaf_x;
+    currVaf(idx).y = vaf_y;
+    currVaf(idx).yN=noDataCode;
+    
+%     currVaf(idx).mean = mean(vaf_y);
+%     currVaf(idx).std = std(vaf_y);
+%     currVaf(idx).min = min(vaf_y);
+%     currVaf(idx).max = max(vaf_y);
+%     currVaf(idx).frequency = freq;
+%     currVaf(idx).amplitude = amp;
   end
   
   %Re-arrange the data into tables
@@ -179,18 +198,16 @@ for z=1:1:length(freqSeriesFiles)
   %dataFolder,
   
   vafData = currVaf;
-  save([dataFolder,fNameTable],'stiffness','damping','vaf','vafData');
+  save([dataFolder,fNameTable],'stiffness','damping','vaf');
   
   if(flag_Hill ==1)
-    hillTable.stiffness = stiffness;
-    hillTable.damping   = damping;
-    hillTable.vaf       = vaf;
-    hillTable.vafData   = vafData;
+    hillTable.stiffness     = stiffness;
+    hillTable.damping       = damping;
+    hillTable.vaf           = vaf;
   else
-    opus31Table.stiffness = stiffness;
-    opus31Table.damping   = damping;
-    opus31Table.vaf       = vaf;  
-    opus31Table.vafData   = vafData;
+    opus31Table.stiffness   = stiffness;
+    opus31Table.damping     = damping;
+    opus31Table.vaf         = vaf;  
   end
                            
 end
@@ -204,22 +221,28 @@ amp9A = [0.4,0.8,1.6];
 freq9A = [15,15,15];
 assert(length(dataKBR1994Fig9A)==3);
 
-for i=1:1:length(freq9A)
-  idx = getIndexIntoVectors(amp9A(1,i),freq9A(1,i),amp,freq);
+flag_useFig9A = 1;
 
-  data_x = [dataKBR1994Fig9A(i).x];
-  data_y = [dataKBR1994Fig9A(i).y];
-  [k_x,map] = sort(data_x);
-  k_y       = data_y(map);
-
-  kbr1994(idx).stiffness_x = k_x;
-  kbr1994(idx).stiffness_y = k_y;
-
-  [fo, g] = fit(k_x,k_y,'poly1');
-  kbr1994Stiffness(idx).fo = fo;
-  kbr1994Stiffness(idx).g  = g;
+if(flag_useFig9A==1)
+    for i=1:1:length(freq9A)
+      idx = getIndexIntoVectors(amp9A(1,i),freq9A(1,i),amp,freq);
+    
+      data_x = [kbr1994Stiffness(idx).x;dataKBR1994Fig9A(i).x];
+      data_y = [kbr1994Stiffness(idx).y;dataKBR1994Fig9A(i).y];
+      [k_x,map] = sort(data_x);
+      k_y       = data_y(map);
+    
+      kbr1994(idx).stiffness_x = k_x;
+      kbr1994(idx).stiffness_y = k_y;
+    
+      [fo, g] = fit(k_x,k_y,'poly1');
+      kbr1994Stiffness(idx).fo = fo;
+      kbr1994Stiffness(idx).g  = g;
+      kbr1994Stiffness(idx).x  = k_x;
+      kbr1994Stiffness(idx).y  = k_y;
+      kbr1994Stiffness(idx).yN  = k_y./k_x;
+    end
 end
-
 %%
 % KBR 1994 Data: From Fig. 9b
 %%
@@ -227,22 +250,28 @@ amp9B =  [0.4,0.4,0.4,1.6,1.6,1.6];
 freq9B = [ 15, 35, 90, 15, 35, 90];
 assert(length(dataKBR1994Fig9B)==6);
 
-for i=1:1:length(freq9B)
-  idx = getIndexIntoVectors(amp9B(1,i),freq9B(1,i),amp,freq);
+flag_useFig9B = 1;
 
-  data_x = [dataKBR1994Fig9B(i).x];
-  data_y = [dataKBR1994Fig9B(i).y];
-  [k_x,map] = sort(data_x);
-  k_y       = data_y(map);
-
-  kbr1994(idx).stiffness_x = k_x;
-  kbr1994(idx).stiffness_y = k_y;
-
-  [fo, g] = fit(k_x,k_y,'poly1');
-  kbr1994Stiffness(idx).fo = fo;
-  kbr1994Stiffness(idx).g  = g;
+if(flag_useFig9B==1)
+    for i=1:1:length(freq9B)
+      idx = getIndexIntoVectors(amp9B(1,i),freq9B(1,i),amp,freq);
+    
+      data_x = [kbr1994Stiffness(idx).x;dataKBR1994Fig9B(i).x];
+      data_y = [kbr1994Stiffness(idx).y;dataKBR1994Fig9B(i).y];
+      [k_x,map] = sort(data_x);
+      k_y       = data_y(map);
+    
+      kbr1994(idx).stiffness_x = k_x;
+      kbr1994(idx).stiffness_y = k_y;
+    
+      [fo, g] = fit(k_x,k_y,'poly1');
+      kbr1994Stiffness(idx).fo = fo;
+      kbr1994Stiffness(idx).g  = g;
+      kbr1994Stiffness(idx).x  = k_x;
+      kbr1994Stiffness(idx).y  = k_y;
+      kbr1994Stiffness(idx).yN = k_y./k_x;
+    end
 end
-
 
 %%
 % KBR 1994 Data: From Fig. 10
@@ -259,48 +288,55 @@ freq10 = [ 15, 35, 90,  15, 35, 90,  15, 35, 90];
 % not fine for doing statistics unless this data is also specially handled
 % as a 'grouped' class.
 
-for i=1:1:length(amp10)
-  j = 0;
-  switch freq10(i)
-    case 15
-      j=1;
-    case 35
-      j=2;
-    case 90
-      j=3;
-    otherwise
-      assert(0,'Invalid frequency');
-  end
-  
-  idx = getIndexIntoVectors(amp10(1,i),freq10(1,i),amp,freq);
+flag_useFig10 = 1;
 
-  data_x    = [dataKBR1994Fig10(j).x];
-  data_y    = [dataKBR1994Fig10(j).y];
-  [d_x,map] = sort(data_x);
-  d_y       = data_y(map);
-
-  kbr1994(idx).damping_x = d_x;
-  kbr1994(idx).damping_y = d_y;
-
-  [fo, g] = fit(d_x,d_y,'poly1');
-  kbr1994Damping(idx).fo = fo;
-  kbr1994Damping(idx).g  = g;
-  kbr1994(idx).warning = 1;
-  kbr1994(idx).warningMessage = 'Grouped data from Fig. 10';
+if(flag_useFig10==1)    
+    for i=1:1:length(amp10)
+      j = 0;
+      switch freq10(i)
+        case 15
+          j=1;
+        case 35
+          j=2;
+        case 90
+          j=3;
+        otherwise
+          assert(0,'Invalid frequency');
+      end
+      
+      idx = getIndexIntoVectors(amp10(1,i),freq10(1,i),amp,freq);
+    
+      data_x    = [kbr1994Damping(idx).x;dataKBR1994Fig10(j).x];
+      data_y    = [kbr1994Damping(idx).y;dataKBR1994Fig10(j).y];
+      [d_x,map] = sort(data_x);
+      d_y       = data_y(map);
+    
+      kbr1994(idx).damping_x = d_x;
+      kbr1994(idx).damping_y = d_y;
+    
+      [fo, g] = fit(d_x,d_y,'poly1');
+      kbr1994Damping(idx).fo = fo;
+      kbr1994Damping(idx).g  = g;
+      kbr1994Damping(idx).x  = d_x;
+      kbr1994Damping(idx).y  = d_y;
+      kbr1994Damping(idx).yN = d_y./d_x;
+      
+      kbr1994(idx).warning = 1;
+      kbr1994(idx).warningMessage = 'Grouped data from Fig. 10';
+    end
 end
-
 %%
 % KBR 1994 Data: From Fig. 12
 %%
-flag_addInFig12 = 1;
+flag_useFig12 = 1;
 
-if(flag_addInFig12 == 1)
+if(flag_useFig12 == 1)
   idx = getIndexIntoVectors(0.8,35,amp,freq);
 
   assert(length(dataKBR1994Fig12K)==2);
 
-  data_x = [dataKBR1994Fig12K(1).x;dataKBR1994Fig12K(2).x];
-  data_y = [dataKBR1994Fig12K(1).y;dataKBR1994Fig12K(2).y];
+  data_x = [kbr1994Stiffness(idx).x;dataKBR1994Fig12K(1).x;dataKBR1994Fig12K(2).x];
+  data_y = [kbr1994Stiffness(idx).y;dataKBR1994Fig12K(1).y;dataKBR1994Fig12K(2).y];
   [k_x,map] = sort(data_x);
   k_y       = data_y(map);
 
@@ -310,9 +346,12 @@ if(flag_addInFig12 == 1)
   [fo, g] = fit(k_x,k_y,'poly1');
   kbr1994Stiffness(idx).fo = fo;
   kbr1994Stiffness(idx).g  = g;
+  kbr1994Stiffness(idx).x = k_x;
+  kbr1994Stiffness(idx).y = k_y;
+  kbr1994Stiffness(idx).yN= k_y./k_x;
 
-  data_x = [dataKBR1994Fig12D(1).x;dataKBR1994Fig12D(2).x];
-  data_y = [dataKBR1994Fig12D(1).y;dataKBR1994Fig12D(2).y];
+  data_x = [kbr1994Damping(idx).x;dataKBR1994Fig12D(1).x;dataKBR1994Fig12D(2).x];
+  data_y = [kbr1994Damping(idx).y;dataKBR1994Fig12D(1).y;dataKBR1994Fig12D(2).y];
   [d_x,map] = sort(data_x);
   d_y       = data_y(map);
 
@@ -322,8 +361,26 @@ if(flag_addInFig12 == 1)
   [fo, g] = fit(d_x,d_y,'poly1');
   kbr1994Damping(idx).fo = fo;
   kbr1994Damping(idx).g  = g;
+  kbr1994Damping(idx).x  = d_x;
+  kbr1994Damping(idx).y  = d_y;
+  kbr1994Damping(idx).yN = d_y./d_x;
 end
 
+for idx=1:1:length(kbr1994Stiffness)
+
+    if(isempty(kbr1994Stiffness(idx).x))
+        kbr1994Stiffness(idx).x = noDataCode;
+        kbr1994Stiffness(idx).y = noDataCode;
+        kbr1994Stiffness(idx).yN= noDataCode;
+        
+    end
+    
+    if(isempty(kbr1994Damping(idx).x))
+        kbr1994Damping(idx).x = noDataCode;
+        kbr1994Damping(idx).y = noDataCode;
+        kbr1994Damping(idx).yN = noDataCode;
+    end
+end
 
 %%
 % Arrange the fitting information into a tabular form
@@ -346,27 +403,24 @@ kbr1994Table.damping = extractTablesOfFittedParameters(...
 kbr1994Table.vaf = opus31Table.vaf;
 
 kbr1994Table.vaf.pMean = ones(size(kbr1994Table.vaf.pMean)).*(0.5*(0.88+0.99));
-kbr1994Table.vaf.pMean(:,:,1)=kbr1994Table.vaf.pMean(:,:,1).*nan;
+kbr1994Table.vaf.pMean(:,:,1)=ones(size(kbr1994Table.vaf.pMean(:,:,1))).*noDataCode;
 
 kbr1994Table.vaf.p95CIMin = ones(size(kbr1994Table.vaf.p95CIMin)).*(0.88);
-kbr1994Table.vaf.p95CIMin(:,:,1)=kbr1994Table.vaf.p95CIMin(:,:,1).*nan;
+kbr1994Table.vaf.p95CIMin(:,:,1)=ones(size(kbr1994Table.vaf.p95CIMin(:,:,1))).*noDataCode;
 
-kbr1994Table.vaf.p95CIMax = ones(size(kbr1994Table.vaf.p95CIMax)).*(0.99);
-kbr1994Table.vaf.p95CIMax(:,:,1)=kbr1994Table.vaf.p95CIMax(:,:,1).*nan;
+kbr1994Table.vaf.p95CIMax = ones(size(kbr1994Table.vaf.p95CIMax)).*noDataCode;
+kbr1994Table.vaf.p95CIMax(:,:,1)=ones(size(kbr1994Table.vaf.p95CIMax(:,:,1))).*noDataCode;
 
-kbr1994Table.vaf.rmse = ones(size(kbr1994Table.vaf.rmse)).*nan;
+kbr1994Table.vaf.rmse = ones(size(kbr1994Table.vaf.rmse)).*noDataCode;
 
-kbr1994Table.vafData = opus31Table.vafData;
-
-for i=1:1:length(kbr1994Table.vafData)
-    kbr1994Table.vafData(i).fo = [];
-    kbr1994Table.vafData(i).g  = [];
-    kbr1994Table.vafData(i).mean = (0.5*(0.88+0.99));
-    kbr1994Table.vafData(i).std  = nan;
-    kbr1994Table.vafData(i).min  = 0.88;
-    kbr1994Table.vafData(i).max  = 0.99;
-
+for i=1:1:3
+    for j=1:1:3
+        kbr1994Table.vaf.data(i,j).x = [1,1].*noDataCode;
+        kbr1994Table.vaf.data(i,j).y = [0.88,0.99];
+        kbr1994Table.vaf.data(i,j).yN = [1,1].*noDataCode;
+    end
 end
+
 
 
 

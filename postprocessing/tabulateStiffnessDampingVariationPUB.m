@@ -212,19 +212,13 @@ for i=1:1:length(ampTable)
     
     
     strVal = '';
-    if(opus31Table.vafData(idx).mean == noDataCode)
-      strVal = '--';      
-    else
-      strVal = sprintf('%1.1f',opus31Table.vafData(idx).mean*100);
-    end
+    strVal = sprintf('%1.1f',mean(opus31Table.vaf.data(idx).y*100));
+
     opus31Vaf(1,j) = {strVal};
     
-    strVal = '';
-    if(hillTable.vafData(idx).mean == noDataCode)
-      strVal = '--';      
-    else
-      strVal = sprintf('%1.1f',hillTable.vafData(idx).mean*100);
-    end
+    strVal = '';    
+    strVal = sprintf('%1.1f',mean(hillTable.vaf.data(idx).y*100));
+
     hillVaf(1,j) = {strVal};    
   end
 

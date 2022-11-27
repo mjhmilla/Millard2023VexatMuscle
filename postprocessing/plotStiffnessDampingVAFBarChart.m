@@ -31,7 +31,7 @@ numberOfVerticalPlotRows      = 3;
 plotHorizMarginCm             = 2;
 plotVertMarginCm              = 2;
 plotHorizMarginSplitCm        = 1;
-plotVertMarginSplitCm         = 2;
+plotVertMarginSplitCm         = 3;
 flag_fixedPlotWidth           = 1;
 plotWidth                     = 5;
 plotWidth43                   = 4;
@@ -50,7 +50,7 @@ plotConfig;
 
 barWidth   = 0.04;
 skinnySpaceWidth = 0.02;
-spaceWidth = 0.05;
+spaceWidth = 0.1;
 
 subPlotTypes = {'stiffness','damping','vaf'};
 
@@ -69,14 +69,14 @@ for idxTendon=1:1:2
                 else
                     row=1;
                 end
-                yLimVals = [0.0;1.55];
+                yLimVals = [0.0;4];
             case 'damping'
                 if(idxTendon==type_elasticTendon)
                     row=2;            
                 else
                     row=2;
                 end
-                yLimVals = [0.000;0.025];
+                yLimVals = [0.000;0.05];
                 
             case 'vaf'
                 if(idxTendon==type_elasticTendon)
@@ -92,13 +92,17 @@ for idxTendon=1:1:2
     
         for idxTrial=1:1:length(freq)    
             col = nan;
+            titleLabel = '';
             switch freq(idxTrial)
                 case 15
                     col=1;
+                    titleLabel = 'A. ';
                 case 35
                     col=2;
+                    titleLabel = 'B. ';                    
                 case 90
                     col=3;
+                    titleLabel = 'C. ';                    
                 otherwise
                     assert(0,'Frequency not in list');
             end
@@ -113,29 +117,72 @@ for idxTendon=1:1:2
             seriesMax   = [];
             
             fieldName = subPlotTypes{idxType};
-            if(contains(fieldName,'vaf'))
-                k=2;
-            end
+
             if(idxTendon == type_elasticTendon)
-                seriesMean = [kbr1994Table.(fieldName).pMean(i,j,k),...
-                               opus31Table_ET.(fieldName).pMean(i,j,k),...
-                               hillTable_ET.(fieldName).pMean(i,j,k)];
-                seriesMin = [kbr1994Table.(fieldName).p95CIMin(i,j,k),...
-                               opus31Table_ET.(fieldName).p95CIMin(i,j,k),...
-                               hillTable_ET.(fieldName).p95CIMin(i,j,k)];
-                seriesMax = [kbr1994Table.(fieldName).p95CIMax(i,j,k),...
-                               opus31Table_ET.(fieldName).p95CIMax(i,j,k),...
-                               hillTable_ET.(fieldName).p95CIMax(i,j,k)];
+                if(contains(fieldName,'vaf')==1)
+                    seriesMean = [ mean(kbr1994Table.(fieldName).data(i,j).y),...
+                                   mean(opus31Table_ET.(fieldName).data(i,j).y),...
+                                   mean(hillTable_ET.(fieldName).data(i,j).y)];
+                    seriesMin =  [ min(kbr1994Table.(fieldName).data(i,j).y),...
+                                   min(opus31Table_ET.(fieldName).data(i,j).y),...
+                                   min(hillTable_ET.(fieldName).data(i,j).y) ];
+                    seriesMax =  [ max(kbr1994Table.(fieldName).data(i,j).y),...
+                                   max(opus31Table_ET.(fieldName).data(i,j).y),...
+                                   max(hillTable_ET.(fieldName).data(i,j).y )];
+                else
+                    seriesMean = [ mean(kbr1994Table.(fieldName).data(i,j).yN),...
+                                   mean(opus31Table_ET.(fieldName).data(i,j).yN),...
+                                   mean(hillTable_ET.(fieldName).data(i,j).yN)];
+                    seriesMin =  [ min(kbr1994Table.(fieldName).data(i,j).yN),...
+                                   min(opus31Table_ET.(fieldName).data(i,j).yN),...
+                                   min(hillTable_ET.(fieldName).data(i,j).yN) ];
+                    seriesMax =  [ max(kbr1994Table.(fieldName).data(i,j).yN),...
+                                   max(opus31Table_ET.(fieldName).data(i,j).yN),...
+                                   max(hillTable_ET.(fieldName).data(i,j).yN )];
+                end
             else
-                seriesMean = [kbr1994Table.(fieldName).pMean(i,j,k),...
-                               opus31Table_RT.(fieldName).pMean(i,j,k),...
-                               hillTable_RT.(fieldName).pMean(i,j,k)];
-                seriesMin = [kbr1994Table.(fieldName).p95CIMin(i,j,k),...
-                               opus31Table_RT.(fieldName).p95CIMin(i,j,k),...
-                               hillTable_RT.(fieldName).p95CIMin(i,j,k)];
-                seriesMax = [kbr1994Table.(fieldName).p95CIMax(i,j,k),...
-                               opus31Table_RT.(fieldName).p95CIMax(i,j,k),...
-                               hillTable_RT.(fieldName).p95CIMax(i,j,k)];
+                if(contains(fieldName,'vaf')==1)
+                    seriesMean = [ mean(kbr1994Table.(fieldName).data(i,j).y),...
+                                   mean(opus31Table_RT.(fieldName).data(i,j).y),...
+                                   mean(hillTable_RT.(fieldName).data(i,j).y)];
+                    seriesMin =  [ min(kbr1994Table.(fieldName).data(i,j).y),...
+                                   min(opus31Table_RT.(fieldName).data(i,j).y),...
+                                   min(hillTable_RT.(fieldName).data(i,j).y) ];
+                    seriesMax =  [ max(kbr1994Table.(fieldName).data(i,j).y),...
+                                   max(opus31Table_RT.(fieldName).data(i,j).y),...
+                                   max(hillTable_RT.(fieldName).data(i,j).y )];
+                else
+                    seriesMean = [ mean(kbr1994Table.(fieldName).data(i,j).yN),...
+                                   mean(opus31Table_RT.(fieldName).data(i,j).yN),...
+                                   mean(hillTable_RT.(fieldName).data(i,j).yN)];
+                    seriesMin =  [ min(kbr1994Table.(fieldName).data(i,j).yN),...
+                                   min(opus31Table_RT.(fieldName).data(i,j).yN),...
+                                   min(hillTable_RT.(fieldName).data(i,j).yN) ];
+                    seriesMax =  [ max(kbr1994Table.(fieldName).data(i,j).yN),...
+                                   max(opus31Table_RT.(fieldName).data(i,j).yN),...
+                                   max(hillTable_RT.(fieldName).data(i,j).yN )];                    
+%                     seriesMean = [kbr1994Table.(fieldName).pMean(i,j,k),...
+%                                    opus31Table_RT.(fieldName).pMean(i,j,k),...
+%                                    hillTable_RT.(fieldName).pMean(i,j,k)];
+%                     seriesMin = [kbr1994Table.(fieldName).p95CIMin(i,j,k),...
+%                                    opus31Table_RT.(fieldName).p95CIMin(i,j,k),...
+%                                    hillTable_RT.(fieldName).p95CIMin(i,j,k)];
+%                     seriesMax = [kbr1994Table.(fieldName).p95CIMax(i,j,k),...
+%                                    opus31Table_RT.(fieldName).p95CIMax(i,j,k),...
+%                                    hillTable_RT.(fieldName).p95CIMax(i,j,k)];
+                end
+            end
+
+            idxNoData = find(seriesMean == noDataCode);
+            seriesMean(idxNoData) = nan;
+            idxNoData = find(seriesMax == noDataCode);
+            seriesMax(idxNoData) = nan;
+            idxNoData = find(seriesMin == noDataCode);
+            seriesMin(idxNoData) = nan;
+
+
+            if(length(seriesMin)==2)
+                here=1;
             end
 
             if(contains(fieldName,'vaf'))
@@ -146,6 +193,7 @@ for idxTendon=1:1:2
 
             seriesColors = [];
             edgeColors = [];
+            seriesLabels = [];
 
             if(idxTendon == type_elasticTendon)
                 seriesColors = [kbr1994Color;...
@@ -154,6 +202,9 @@ for idxTendon=1:1:2
                 edgeColors = [kbr1994Color;...
                                 opus31Color;...
                                 hillColor];
+                seriesLabels = {'Kirsch 1994',...
+                                'Model',...
+                                'Hill'};
 %                 edgeColors = [-1,-1,-1;
 %                               -1,-1,-1;
 %                               -1,-1,-1];
@@ -172,6 +223,11 @@ for idxTendon=1:1:2
                 edgeColors = [kbr1994Color;...
                                 opus31Color;...
                                 hillColor];
+
+                seriesLabels = {'Kirsch 1994',...
+                                'Model (RT)',...
+                                'Hill (RT)'};
+                
                 
             end
     
@@ -192,17 +248,48 @@ for idxTendon=1:1:2
                 end
                 
                 if(sum(edgeColors(k,:))<0)
-                    fill([x0,x1,x1,x0,x0],[y0,y0,y1,y1,y0],seriesColors(k,:),...
-                          'EdgeColor','none');
+
+                    pid = fill([x0,x1,x1,x0,x0],[y0,y0,y1,y1,y0],seriesColors(k,:),...
+                          'EdgeColor','none','DisplayName',seriesLabels{k});
                     hold on;
                 else
-                    fill([x0,x1,x1,x0,x0],[y0,y0,y1,y1,y0],seriesColors(k,:),...
-                          'EdgeColor',edgeColors(k,:));
+                    pid = fill([x0,x1,x1,x0,x0],[y0,y0,y1,y1,y0],seriesColors(k,:),...
+                          'EdgeColor',edgeColors(k,:),'DisplayName',seriesLabels{k});
                     hold on;
                 end
 
+                if( (idxType == 3 && idxTrial == 6)==0)
+                    set(get(get(pid,'Annotation'),...
+                        'LegendInformation'),...
+                        'IconDisplayStyle','off');
+                end
+
+                lineColors = edgeColors(k,:).*0.5 + [0,0,0].*0.5;
+                yMin = seriesMin(1,k);
+                yMax = seriesMax(1,k);
+                xM = 0.5*(x0+x1);
+                xL = xM - 0.5*(x1-x0);
+                xR = xM + 0.5*(x1-x0);
+
+                pid=plot([xM;xM],[yMin;yMax],'Color',lineColors);
+                hold on;
+                set(get(get(pid,'Annotation'),...
+                        'LegendInformation'),...
+                        'IconDisplayStyle','off');
+
+                pid=plot([xL;xR],[yMin;yMin],'Color',lineColors);
+                hold on;
+                set(get(get(pid,'Annotation'),...
+                        'LegendInformation'),...
+                        'IconDisplayStyle','off');
+                
+                pid=plot([xL;xR],[yMax;yMax],'Color',lineColors);
+                hold on;
+                set(get(get(pid,'Annotation'),...
+                        'LegendInformation'),...
+                        'IconDisplayStyle','off');
+
                 if(k==2 && idxTendon == type_elasticTendon)  
-                    xM = 0.5*(x0+x1);
                     text(xM,-0.1,sprintf('%1.1fmm',amp(1,idxTrial)),...
                         'Units','normalized',...
                         'HorizontalAlignment','center');
@@ -211,10 +298,19 @@ for idxTendon=1:1:2
                 x0 = x1+barWidth+skinnySpaceWidth;
             end
             set(gca,'xticklabel',{[]});
-            xlim([0,1]);
+           %xlim([0,1]);
+            axis tight;
             ylim(yLimVals);
             box off;
-    
+
+            if(idxType == 3 && idxTrial == 6 && idxTendon == type_rigidTendon)
+                lh=legend('Location','South');
+                lh.Position(1,1) = lh.Position(1,1);% -0.15625;        
+                lh.Position(1,2) = lh.Position(1,2) -0.2;%40625;   
+                lh.NumColumns=6;
+                legend boxoff;
+
+            end
             if(i==1)
                 switch idxType
                     case 1
@@ -228,7 +324,7 @@ for idxTendon=1:1:2
                 end
             end
             if(j==1)
-                title(sprintf('%iHz',freq(idxTrial)));
+                title([titleLabel, sprintf('%iHz',freq(idxTrial))]);
                 hold on;
             end
     

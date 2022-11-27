@@ -151,6 +151,19 @@ sarcomerePropertiesOpus31_ET     = tmp.fittedFelineSoleus.sarcomere;
 normMuscleCurvesOpus31_ET        = tmp.fittedFelineSoleus.curves;
 fittingOpus31_ET                 = tmp.fittedFelineSoleus.fitting;
 
+if(exist('updSlidingTimeConstant','var')==1)
+    sarcomerePropertiesOpus31_RT.slidingTimeConstant=updSlidingTimeConstant;
+    sarcomerePropertiesOpus31_ET.slidingTimeConstant=updSlidingTimeConstant;
+end
+
+
+if(exist('updForceVelocityCalibrationFactor','var')==1)
+    sarcomerePropertiesOpus31_RT.forceVelocityCalibrationFactor=...
+        updForceVelocityCalibrationFactor;
+    sarcomerePropertiesOpus31_ET.forceVelocityCalibrationFactor=...
+        updForceVelocityCalibrationFactor;
+end
+
 sarcomerePropertiesOpus31       = [];
 musculotendonPropertiesOpus31   = [];
 

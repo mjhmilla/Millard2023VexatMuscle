@@ -85,7 +85,7 @@ flag_plotInput              = 0;
 %   region was described in the paper.
 
 sampleFrequency = 333; % Sampling frequency
-paddingPoints   = round(0.2*sampleFrequency);
+paddingPoints   = 200; %1 second of padding
 samplePoints    = 2048;% Number of points in the random sequence
 totalPoints     = samplePoints;
 amplitudeMM     = [0.4, 0.8, 1.6]'; %Amplitude scaling in mm
@@ -99,10 +99,14 @@ signalFileEnding = sprintf('_%sHz_%s',num2str(sampleFrequency),...
 %%
 
 flag_setNominalForceUsingKBR1994 = 0; %To do: re-run this set to 0 for all.
-nominalForceSteps                = 3;
+nominalForceSteps                = 10;
 nominalForceIndex5N              = 2;
 nominalForceKDFit                = 5;
-nominalForce                     = [2.5,nominalForceKDFit,11.5];
+
+f0 = 2.5;
+f1 = 11.5;
+df = (f1-f0)/(nominalForceSteps-1);
+nominalForce                     = [f0:df:f1];%[2.5,nominalForceKDFit,11.5];
 
 
 flag_runOneSimulation       = 0;
@@ -268,7 +272,7 @@ if(flag_setNominalForceUsingKBR1994==1)
 end
 if(flag_runOneSimulation==1)
   if(length(nominalForce) > 1)
-    nominalForce = nominalForce(1,2);
+    nominalForce = nominalForceKDFit;% nominalForce(1,2);
   end
   nominalForceSteps=1;
 end
@@ -376,6 +380,25 @@ musculotendonPropertiesOpus31  = [];
 sarcomerePropertiesOpus31      = [];
 normMuscleCurvesOpus31         = [];
 fitting                        = [];
+
+if(exist('updSlidingTimeConstant','var')==1)
+    sarcomereProperties.slidingTimeConstant=...
+        updSlidingTimeConstant;
+    sarcomerePropertiesOpus31_RT.slidingTimeConstant=...
+        updSlidingTimeConstant;
+    sarcomerePropertiesOpus31_ET.slidingTimeConstant=...
+        updSlidingTimeConstant;
+end
+
+
+if(exist('updForceVelocityCalibrationFactor','var')==1)
+    sarcomerePropertiesOpus31.forceVelocityCalibrationFactor=...
+        updForceVelocityCalibrationFactor;
+    sarcomerePropertiesOpus31_RT.forceVelocityCalibrationFactor=...
+        updForceVelocityCalibrationFactor;
+    sarcomerePropertiesOpus31_ET.forceVelocityCalibrationFactor=...
+        updForceVelocityCalibrationFactor;
+end
 
 if(flag_useElasticTendon==1)
     musculotendonPropertiesOpus31  = musculotendonPropertiesOpus31_ET;
@@ -504,16 +527,31 @@ simSeriesFiles_RT  = {   ['benchRecordHill',  seriesNameTendon_RT, outputFileEnd
 simSeriesFiles_ET  = {   ['benchRecordHill',  seriesNameTendon_ET, outputFileEndingHill_ET,  '.mat'],...
                          ['benchRecordOpus31',seriesNameTendon_ET, outputFileEndingOpus31_ET,'.mat']};
                        
-simSeriesNames  = {'Hill ','Model '};    
-simSeriesColors = [0.796, 0.255, 0.329;...
-                     0, 0.137, 0.800];                 
+simSeriesNames  = {'Hill','Model', ...
+    '$$K-\beta$$ fit to Hill', ...
+    '$$K-\beta$$ fit to Model'};    
+simSeriesColors = [1,0,0;...
+                   0,0,1;...
+                   1,0.63,0.63;...
+                   0.63,0.63,1.0];                 
 
-simSeriesNames_RT  = {'Hill RT','Model RT'};    
-simSeriesColors_RT = [0.796, 0.255, 0.329;...
-                     0, 0.137, 0.800];                 
-simSeriesNames_ET  = {'Hill ET','Model ET'};    
-simSeriesColors_ET = [0.796, 0.255, 0.329;...
-                     0, 0.137, 0.800];                 
+simSeriesNames_RT = {'Hill RT',...
+                     'Model RT', ...
+                     '$$K-\beta$$ fit to Hill RT',...
+                     '$$K-\beta$$ fit to Model RT'};    
+simSeriesColors_RT = [1,0,0;...
+                   0,0,1;...
+                   1,0.63,0.63;...
+                   0.63,0.63,1.0];  
+
+simSeriesNames_ET  = {'Hill',...
+                      'Model', ...
+                      '$$K-\beta$$ fit to Hill',...
+                      '$$K-\beta$$ fit to Model'};    
+simSeriesColors_ET = [1,0,0;...
+                   0,0,1;...
+                   1,0.63,0.63;...
+                   0.63,0.63,1.0];                 
                    
                    
 freqSeriesFiles    = {   ['freqResponseHill',  seriesNameTendon, outputFileEndingHill,      '.mat'],...

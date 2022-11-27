@@ -48,9 +48,18 @@ else
     idxA = 1;
     idxB = numberOfInterpPoints;
     
-    val = interp1(  inputVector(idxA:idxB,1),...
-                   outputVector(idxA:idxB,1),...
-                   inputSample, 'linear', 'extrap');
+    dInputVector = abs(diff(inputVector(idxA:idxB,1)));
+    idxNonZero = find(dInputVector > 0);
+
+
+    if(isempty(idxNonZero)==0)
+        
+        val = interp1(  inputVector(idxNonZero,1),...
+                       outputVector(idxNonZero,1),...
+                       inputSample, 'linear', 'extrap');
+    else
+        val = mean(outputVector(idxA:idxB,1));
+    end
   end
   
 end

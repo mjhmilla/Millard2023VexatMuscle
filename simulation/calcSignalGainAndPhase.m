@@ -116,9 +116,9 @@ for idxModel = 1:1:length(simSeriesFiles)
           
           freqSimData.nominalForceDesired(1,idx) = nominalForce(1,idxActivation);
           
-          idxMidPadding = round(0.5*inputFunctions.padding);
+          %idxMidPadding = round(0.5*inputFunctions.padding);
           freqSimData.nominalForce(1,idx)     = ...
-            benchRecord.tendonForce(idxMidPadding,idx);
+            benchRecord.tendonForce(end,idx);
 
 
           idxWave = getSignalIndex(amplitudeMM(i),bandwidthHz(j),...

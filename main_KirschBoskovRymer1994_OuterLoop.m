@@ -6,10 +6,13 @@ clear all;
 %Run all of the simulations
 %%
 
-flag_runSimulations     = 0;
-flag_frequencyAnalysis  = 0;
+flag_runSimulations     = 1;
+flag_frequencyAnalysis  = 1;
 flag_generatePlots      = 1;
 
+%Parameters that are tuned
+%updSlidingTimeConstant              = 0.0005;
+updForceVelocityCalibrationFactor   = 0.95;
 
 flag_useCalibratedOpus31Curves= 1;
 flag_useTwoSidedTitinCurves   = 0;
@@ -189,6 +192,22 @@ if(flag_generatePlots==1)
   flag_generateRandomInput    = 0;
   flag_processInputFunctions  = 0;
 
+  flag_simulateHillModel      = 0; 
+  flag_simulateOpus31Model    = 0;
+  flag_fitToFig3KirchBoskovRymer1994               = 0; 
+  flag_useElasticTendon       = 0;
+  flag_useFiberDamping       = 1;
+  flag_frequencyAnalysisMuscleModels            = 0;
+  flag_plotAccelerationEquationFactors          = 1;
+  flag_pubPlotFrequencyResponseKBR1994Fig3      = 1;
+  flag_pubPlotStiffnessDampingKBR1994Fig9Fig10  = 0;
+  flag_pubPlotStiffnessDampingKBR1994Fig12      = 0;
+  flag_pubTabulateStiffnessDampingVariation     = 0;
+
+  main_KirschBoskovRymer1994;
+
+  close all;
+
   %Elastic tendon
   flag_simulateHillModel      = 0; 
   flag_simulateOpus31Model    = 0;
@@ -221,21 +240,7 @@ if(flag_generatePlots==1)
 
   close all;
 
-  flag_simulateHillModel      = 0; 
-  flag_simulateOpus31Model    = 0;
-  flag_fitToFig3KirchBoskovRymer1994               = 0; 
-  flag_useElasticTendon       = 0;
-  flag_useFiberDamping       = 1;
-  flag_frequencyAnalysisMuscleModels            = 0;
-  flag_plotAccelerationEquationFactors          = 1;
-  flag_pubPlotFrequencyResponseKBR1994Fig3      = 1;
-  flag_pubPlotStiffnessDampingKBR1994Fig9Fig10  = 0;
-  flag_pubPlotStiffnessDampingKBR1994Fig12      = 0;
-  flag_pubTabulateStiffnessDampingVariation     = 0;
 
-  main_KirschBoskovRymer1994;
-
-  close all;
 
 %   %Rigid tendon - generate publication version of Kirsch et al. Fig 3  
 %   flag_simulateHillModel      = 0; 

@@ -111,7 +111,7 @@ disp('Running Opus 31  Kirsch, Boskov, and Rymer 1994  Simulations');
           % Setup the function handles
           %%
 
-          excitationFcn = @(argT)calcStepFunction(argT,0,max(inputFunctions.time)*2,activation(1,idxActivation));
+          excitationFcn = @(argT)calcStepFunction(argT,-inf,inf,activation(1,idxActivation));
           activationFcn = @(argU,argA)calcFirstOrderActivationDerivative(...
                             argU,argA, sarcomereProperties.activationTimeConstant,...
                                       sarcomereProperties.deactivationTimeConstant,0);

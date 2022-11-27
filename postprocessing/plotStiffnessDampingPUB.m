@@ -15,6 +15,8 @@ function [success] = plotStiffnessDampingPUB(...
                       
 success = 0;
 
+%Writes text of the VAF near the data point
+flag_addVAF=0;
 
 numberOfHorizontalPlotColumns = plotLayoutSettings.numberOfHorizontalPlotColumns;
 numberOfVerticalPlotRows      = plotLayoutSettings.numberOfVerticalPlotRows;
@@ -178,6 +180,8 @@ fig_fig12 = figure;
     end
 
     for i=1:1:length(nominalForce)
+
+
     
       idxSim = 0;
       tol = 1e-6;
@@ -195,6 +199,12 @@ fig_fig12 = figure;
         end
       end
       
+      if(contains(freqSeriesFiles{1,z},'Opus31')==1 ...
+              && flag_useElasticTendon == 1 ...
+              && i==length(nominalForce))
+        here=1;
+      end
+
       subplot('Position', [ subPlotList(idxK,1),...
                             subPlotList(idxK,2),...
                             subPlotList(idxK,3),...
@@ -244,10 +254,12 @@ fig_fig12 = figure;
         end
         
       end
-      text(posText(1,1)+textDeltaX,...
-           posText(1,2)+textDeltaY,[vafText,'\%'],...
-            'HorizontalAlignment',textAlign);
-      hold on;
+      if(flag_addVAF==1)
+          text(posText(1,1)+textDeltaX,...
+               posText(1,2)+textDeltaY,[vafText,'\%'],...
+                'HorizontalAlignment',textAlign);
+          hold on;
+      end
       xlim([fMin,fMax]);
       ylim([kMin,kMax]);      
 

@@ -52,11 +52,11 @@ samplePoints   = inputFunctions.samples;
     chunkDuration = 0.2;  
         
     timePadding    = paddingPoints/sampleFrequency;
-    timeChunkStart = round(paddingPoints*0.5)/sampleFrequency;
-    timeChunkEnd   = timePadding+chunkDuration;    
-    idxChunk       = [round(paddingPoints*0.5):1:...
+    timeChunkStart = (paddingPoints*0.9)/sampleFrequency;
+    timeChunkEnd   = (timePadding+chunkDuration);    
+    idxChunk       = [round(paddingPoints*0.9):1:...
                      (paddingPoints+sampleFrequency*chunkDuration)];    
-    timeTicks = [0, round(timePadding,2), round(timeChunkEnd,2)];
+    timeTicks = [round(timeChunkStart,2), round(timeChunkEnd,2)];
     
     
     %Plot the time domain signal

@@ -25,7 +25,10 @@ fitTable = struct(...
             'p95CIMin',zeros(length(ampTable),length(freqTable),fitDim),...
             'p95CIMax',zeros(length(ampTable),length(freqTable),fitDim),...
             'pNames', {''},...
-            'rmse'    ,zeros(  length(ampTable),length(freqTable)));
+            'rmse'   , zeros(  length(ampTable),length(freqTable)),...
+            'data'   , []);
+
+data(3,3) = struct('x',[],'y',[],'yN',[]);
 
 pNames = {};          
 flag_firstData = 0;          
@@ -34,6 +37,12 @@ for i = 1:1:length(ampTable)
   for j=1:1:length(freqTable)
     idx = getIndexIntoVectors(ampTable(1,i),freqTable(1,j),ampData,freqData);
     
+    data(i,j).x=fittedData(idx).x;
+    data(i,j).y=fittedData(idx).y;
+    data(i,j).yN=fittedData(idx).yN;
+
+
+
     if(isempty(fittedData(idx).fo) == 0)    
       if(flag_firstData == 0)
         pNames = coeffnames(fittedData(idx).fo);
@@ -66,6 +75,7 @@ for i = 1:1:length(ampTable)
     
   end
 end
-          
+        
+fitTable.data = data;
           
                                                    
