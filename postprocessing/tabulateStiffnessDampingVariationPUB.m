@@ -24,8 +24,12 @@ freqTable = [15,35,90];
 ampTable = [0.4,0.8,1.6];
 noDataCode = -42;
 
-freq = [ 15,  15,  15,  35,  35,  35,  90,  90,  90];
-amp  = [0.4, 0.8, 1.6, 0.4, 0.8, 1.6, 0.4, 0.8, 1.6];
+freq = [ 15,  35,  90,  15,  35,  90,  15,  35,  90,];
+amp  = [0.4, 0.4, 0.4, 0.8, 0.8, 0.8, 1.6, 1.6, 1.6];
+
+tableFreqCol=[  1,   1,   1,   2,   2,   2,   3,   3,   3];
+tableAmpRow =[  1,   2,   3,   1,   2,   3,   1,   2,   3];
+
 
 %%
 % Transform the table of fitted variables into a tex file
@@ -83,51 +87,47 @@ fprintf(fid,'%s & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz \
             'A. \hfill Norm. Stiffness ($\frac{K}{F})$', 15, 35, 90, 15, 35, 90, 15, 35, 90 );
 
 firstLineExtra = '\hline ';          
-for i=1:1:length(ampTable)
+kbrK    = cell(3,3);
+opus31K = cell(3,3);
+hillK   = cell(3,3);
   
-  kbrK    = cell(1,3);
-  opus31K = cell(1,3);
-  hillK   = cell(1,3);
+for idxTrial=1:1:length(freq)
+  
 
-  for j=1:1:3
-    strVal = '';
-    if(kbr1994Table.stiffness.pMean(i,j,1) == noDataCode)
-      strVal = '--';      
-    else
-      strVal = sprintf('%1.2f',kbr1994Table.stiffness.pMean(i,j,1));
-    end
-    kbrK(1,j) = {strVal};
-    
-    strVal = '';
-    if(opus31Table.stiffness.pMean(i,j,1) == noDataCode)
-      strVal = '--';      
-    else
-      strVal = sprintf('%1.2f',opus31Table.stiffness.pMean(i,j,1));
-    end
-    opus31K(1,j) = {strVal};
-    
-    strVal = '';
-    if(hillTable.stiffness.pMean(i,j,1) == noDataCode)
-      strVal = '--';      
-    else
-      strVal = sprintf('%1.2f',hillTable.stiffness.pMean(i,j,1));
-    end
-    hillK(1,j) = {strVal};    
-  end
+
+     
+  i = tableFreqCol(1,idxTrial);
+  j = tableAmpRow(1,idxTrial);
+
+
+  val       = mean(kbr1994Table.stiffness.data(i,j).yN);
+  strVal    = sprintf('%1.2f',val);
+  kbrK(i,j) = {strVal};
+
+  val           = mean(opus31Table.stiffness.data(i,j).yN);
+  strVal        = sprintf('%1.2f',val);
+  opus31K(i,j)  = {strVal};
+
+  val           = mean(hillTable.stiffness.data(i,j).yN);
+  strVal        = sprintf('%1.2f',val);
+  hillK(i,j)  = {strVal};
   
   
 
 
-  fprintf(fid,['%s %1.1f mm & %s & %s & %s ',...
-                        '& %s & %s & %s ',...
-                        '& %s & %s & %s \\\\ \n'],...
-              firstLineExtra, ampTable(i), ...
-              kbrK{1,1},    kbrK{1,2},    kbrK{1,3},...
-              opus31K{1,1}, opus31K{1,2}, opus31K{1,3}, ...
-              hillK{1,1},   hillK{1,2},   hillK{1,3} );
-  firstLineExtra = '';    
-  
 end
+
+
+for i=1:1:3
+      fprintf(fid,['%s %1.1f mm & %s & %s & %s ',...
+                            '& %s & %s & %s ',...
+                            '& %s & %s & %s \\\\ \n'],...
+                  firstLineExtra, ampTable(1,i), ...
+                     kbrK{i,1},    kbrK{i,2},    kbrK{i,3},...
+                  opus31K{i,1}, opus31K{i,2}, opus31K{i,3}, ...
+                    hillK{i,1},   hillK{i,2},   hillK{i,3} );
+      firstLineExtra = '';    
+end 
 
 
 
@@ -139,100 +139,94 @@ fprintf(fid,'%s & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz \
 
 
 firstLineExtra = '\hline ';          
-for i=1:1:length(ampTable)
+
+kbrD    = cell(3,3);
+opus31D = cell(3,3);
+hillD   = cell(3,3);
   
-  kbrD    = cell(1,3);
-  opus31D = cell(1,3);
-  hillD   = cell(1,3);
-
-  for j=1:1:3
-    strVal = '';
-    if(kbr1994Table.damping.pMean(i,j,1) == noDataCode)
-      strVal = '--';      
-    else
-      strVal = sprintf('%1.4f',kbr1994Table.damping.pMean(i,j,1));
-    end
-    kbrD(1,j) = {strVal};
-    
-    strVal = '';
-    if(opus31Table.damping.pMean(i,j,1) == noDataCode)
-      strVal = '--';      
-    else
-      strVal = sprintf('%1.4f',opus31Table.damping.pMean(i,j,1));
-    end
-    opus31D(1,j) = {strVal};
-    
-    strVal = '';
-    if(hillTable.damping.pMean(i,j,1) == noDataCode)
-      strVal = '--';      
-    else
-      strVal = sprintf('%1.4f',hillTable.damping.pMean(i,j,1));
-    end
-    hillD(1,j) = {strVal};    
-  end
+for idxTrial=1:1:length(freq)
+  
 
 
-  fprintf(fid,['%s %1.1fmm & %s & %s & %s ',...
-                        '& %s & %s & %s ',...
-                        '& %s & %s & %s \\\\ \n'],...
-              firstLineExtra, ampTable(i), ...
-              kbrD{1,1},    kbrD{1,2},    kbrD{1,3},...
-              opus31D{1,1}, opus31D{1,2}, opus31D{1,3}, ...
-              hillD{1,1},   hillD{1,2},   hillD{1,3} );
-  firstLineExtra = '';    
+     
+  i = tableFreqCol(1,idxTrial);
+  j = tableAmpRow(1,idxTrial);
+
+
+
+  val       = mean(kbr1994Table.damping.data(i,j).yN);
+  strVal    = sprintf('%1.2f',val);
+  kbrD(i,j) = {strVal};
+
+  val           = mean(opus31Table.damping.data(i,j).yN);
+  strVal        = sprintf('%1.2f',val);
+  opus31D(i,j)  = {strVal};
+
+  val           = mean(hillTable.damping.data(i,j).yN);
+  strVal        = sprintf('%1.2f',val);
+  hillD(i,j)  = {strVal};
   
 end
 
-
+for i=1:1:3
+      fprintf(fid,['%s %1.1f mm & %s & %s & %s ',...
+                            '& %s & %s & %s ',...
+                            '& %s & %s & %s \\\\ \n'],...
+                  firstLineExtra, ampTable(1,i), ...
+                     kbrD{i,1},    kbrD{i,2},    kbrD{i,3},...
+                  opus31D{i,1}, opus31D{i,2}, opus31D{i,3}, ...
+                    hillD{i,1},   hillD{i,2},   hillD{i,3} );
+      firstLineExtra = '';    
+end 
 
 fprintf(fid,'\\multicolumn{10}{c}{} \\\\ \n');
 
 fprintf(fid,'%s & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz \\\\ \n',...
             'C. VAF (\%) \hfill', 15, 35, 90, 15, 35, 90, 15, 35, 90 );
-firstLineExtra = '\hline ';          
-for i=1:1:length(ampTable)
+firstLineExtra = '\hline ';  
 
 
-  kbrVaf    = cell(1,3);
-  opus31Vaf = cell(1,3);
-  hillVaf   = cell(1,3);
-
-  for j=1:1:3
-    
-    idx = getIndexIntoVectors(ampTable(1,i),freqTable(1,j),amp,freq);   
-    
-%     strVal = '';
-%     if(kbr1994TableDamping.pMean(i,j,1) == noDataCode)
-%       strVal = '--';      
-%     else
-%       strVal = sprintf('%1.3f',kbr1994TableDamping.pMean(i,j,1));
-%     end
-    kbrVaf(1,j) = {''};
-    
-    
-    
-    strVal = '';
-    strVal = sprintf('%1.1f',mean(opus31Table.vaf.data(idx).y*100));
-
-    opus31Vaf(1,j) = {strVal};
-    
-    strVal = '';    
-    strVal = sprintf('%1.1f',mean(hillTable.vaf.data(idx).y*100));
-
-    hillVaf(1,j) = {strVal};    
-  end
+kbrVAF    = cell(3,3);
+opus31VAF = cell(3,3);
+hillVAF   = cell(3,3);
+  
+for idxTrial=1:1:length(freq)
+  
 
 
-  fprintf(fid,['%s %1.1fmm & %s & %s & %s ',...
-                        '& %s & %s & %s ',...
-                        '& %s & %s & %s \\\\ \n'],...
-              firstLineExtra, ampTable(i), ...
-              kbrVaf{1,1},    kbrVaf{1,2},    kbrVaf{1,3},...
-              opus31Vaf{1,1}, opus31Vaf{1,2}, opus31Vaf{1,3}, ...
-              hillVaf{1,1},   hillVaf{1,2},   hillVaf{1,3} );
-  firstLineExtra = '';     
-end
-          
+     
+  i = tableFreqCol(1,idxTrial);
+  j = tableAmpRow(1,idxTrial);
+
+
+
+  val       = mean(kbr1994Table.vaf.data(i,j).y)*100;
+  strVal    = sprintf('%1.2f',val);
+  kbrVAF(i,j) = {strVal};
+
+  val           = mean(opus31Table.vaf.data(i,j).y)*100;
+  strVal        = sprintf('%1.2f',val);
+  opus31VAF(i,j)  = {strVal};
+
+  val           = mean(hillTable.vaf.data(i,j).y)*100;
+  strVal        = sprintf('%1.2f',val);
+  hillVAF(i,j)  = {strVal};
+  
+  
+
+
+end 
+
+for i=1:1:3
+      fprintf(fid,['%s %1.1f mm & %s & %s & %s ',...
+                            '& %s & %s & %s ',...
+                            '& %s & %s & %s \\\\ \n'],...
+                  firstLineExtra, ampTable(1,i), ...
+                     kbrVAF{i,1},    kbrVAF{i,2},    kbrVAF{i,3},...
+                  opus31VAF{i,1}, opus31VAF{i,2}, opus31VAF{i,3}, ...
+                    hillVAF{i,1},   hillVAF{i,2},   hillVAF{i,3} );
+      firstLineExtra = '';    
+end 
 
 fprintf(fid,'\\end{tabular}\n');
 fprintf(fid,'\\end{center}\n');
