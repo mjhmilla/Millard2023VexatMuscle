@@ -12,6 +12,7 @@ function [success] = calcSignalGainAndPhase(...
                         outputFolder,...
                         flag_plotStiffnessDamping,...
                         flag_plotDetailedSpectrumData,...
+                        flag_zeroPaddingData,...
                         flag_usingOctave)
 success = 0;
 
@@ -139,12 +140,28 @@ for idxModel = 1:1:length(simSeriesFiles)
 
           x  = inputFunctions.x(   inputFunctions.idxSignal, idxWave)...
                             ./lengthNorm;
+          
           y  = benchRecord.tendonForce(inputFunctions.idxSignal, idx)...
                             ./forceNorm;
           yo = y(round(inputFunctions.padding*0.5),1);
           y  = y - yo;
           freqSimData.force(:,idx)  =  benchRecord.tendonForce(:, idx);
 
+          %On the very last simulation in the force series Opus31 is
+          %poorly initialized and this means
+          %that the model spends most of the padding zone going from an 
+          %activation of 0 to 1. If this data is included in the subsequent
+          %analysis it throws the results off. Until I've figured out what
+          %the initialization problem is I am just zeroing out the padding
+          %points.
+          if(flag_zeroPaddingData==1)
+              padding = inputFunctions.padding;
+              xo = x(round(padding*0.75));
+              yo = y(round(padding*0.75));
+    
+              x(1:1:padding) = xo;
+              y(1:1:padding) = yo;
+          end
 
 
           %Compute the cross-correlation vector
@@ -326,9 +343,14 @@ for idxModel = 1:1:length(simSeriesFiles)
           %domain. I've also done this in the frequency domain, but
           %it is less insightful there: the nonlinearity of the model
           %introduces quite a bit of variance.
+          
           yVar  = var(y);
           ymVar = var(y-modelResponseTime);              
           freqSimData.vafTime(1,idx)     = (yVar-ymVar)/yVar;
+
+          if( idx==82 && contains(simSeriesFiles{idxModel},'benchRecordOpus31_ElasticTendon')==1)
+             here=1;
+          end
 
           modelGain  =    abs(modelResponseFreq);
           modelPhase =  angle(modelResponseFreq);
