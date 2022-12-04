@@ -64,18 +64,16 @@ modelVaf(9)   = struct(  'fo',[],...
 hillTable   = struct('stiffness',[],'damping',[],'vaf',[],'vafData',[]);
 opus31Table = struct('stiffness',[],'damping',[],'vaf',[],'vafData',[]);
                       
-freq = [ 15,  15,  15,  35,  35,  35,  90,  90,  90];
-amp  = [0.4, 0.8, 1.6, 0.4, 0.8, 1.6, 0.4, 0.8, 1.6];
-                      
-for i=1:1:length(freq)
-  kbr1994(i).amplitude = amp(i);
-  kbr1994(i).frequency = freq(i);
+                  
+for i=1:1:length(inputFunctions.amplitudeMM)
+  kbr1994(i).amplitude = inputFunctions.amplitudeMM(1,i);
+  kbr1994(i).frequency = inputFunctions.bandwidthHz(1,i);
   
-  model(i).amplitude = amp(i);
-  model(i).frequency = freq(i);  
+  model(i).amplitude = inputFunctions.amplitudeMM(1,i);
+  model(i).frequency = inputFunctions.bandwidthHz(1,i);  
   
-  hillModel(i).amplitude = amp(i);
-  hillModel(i).frequency = freq(i);    
+  hillModel(i).amplitude = inputFunctions.amplitudeMM(1,i);
+  hillModel(i).frequency = inputFunctions.bandwidthHz(1,i);    
 end
   
 for z=1:1:length(freqSeriesFiles)
@@ -98,7 +96,9 @@ for z=1:1:length(freqSeriesFiles)
 
   for i = 1:1:length(freqSimData.amplitudeMM)
     idx = getIndexIntoVectors(freqSimData.amplitudeMM(1,i),...
-                              freqSimData.bandwidthHz(1,i),amp,freq);
+                              freqSimData.bandwidthHz(1,i),...
+                              inputFunctions.amplitudeMM,...
+                              inputFunctions.bandwidthHz);
                             
     %If data is being concatenated make sure it is to the correct trial
     if( rawData(idx).amplitude ~= 0)
@@ -184,13 +184,16 @@ for z=1:1:length(freqSeriesFiles)
   
   %Re-arrange the data into tables
   stiffness = extractTablesOfFittedParameters(...
-                            ampTable, freqTable, amp, freq, ...
+                            inputFunctions.amplitudeMM, ...
+                            inputFunctions.bandwidthHz, ...
                             currStiffness, noDataCode); 
   damping = extractTablesOfFittedParameters(...
-                            ampTable, freqTable, amp, freq, ...
+                            inputFunctions.amplitudeMM, ...
+                            inputFunctions.bandwidthHz, ...
                             currDamping, noDataCode); 
   vaf = extractTablesOfFittedParameters(...
-                            ampTable, freqTable, amp, freq, ...
+                            inputFunctions.amplitudeMM, ...
+                            inputFunctions.bandwidthHz, ...
                             currVaf, noDataCode); 
   
   fName = freqSeriesFiles{1,z};
@@ -226,7 +229,9 @@ flag_useFig9A = 1;
 
 if(flag_useFig9A==1)
     for i=1:1:length(freq9A)
-      idx = getIndexIntoVectors(amp9A(1,i),freq9A(1,i),amp,freq);
+      idx = getIndexIntoVectors(amp9A(1,i),freq9A(1,i),...
+                            inputFunctions.amplitudeMM, ...
+                            inputFunctions.bandwidthHz);
     
       data_x = [kbr1994Stiffness(idx).x;dataKBR1994Fig9A(i).x];
       data_y = [kbr1994Stiffness(idx).y;dataKBR1994Fig9A(i).y];
@@ -255,7 +260,9 @@ flag_useFig9B = 1;
 
 if(flag_useFig9B==1)
     for i=1:1:length(freq9B)
-      idx = getIndexIntoVectors(amp9B(1,i),freq9B(1,i),amp,freq);
+      idx = getIndexIntoVectors(amp9B(1,i),freq9B(1,i),...
+                                inputFunctions.amplitudeMM, ...
+                                inputFunctions.bandwidthHz);
     
       data_x = [kbr1994Stiffness(idx).x;dataKBR1994Fig9B(i).x];
       data_y = [kbr1994Stiffness(idx).y;dataKBR1994Fig9B(i).y];
@@ -305,7 +312,9 @@ if(flag_useFig10==1)
           assert(0,'Invalid frequency');
       end
       
-      idx = getIndexIntoVectors(amp10(1,i),freq10(1,i),amp,freq);
+      idx = getIndexIntoVectors(amp10(1,i),freq10(1,i),...
+                            inputFunctions.amplitudeMM, ...
+                            inputFunctions.bandwidthHz);
     
       data_x    = [kbr1994Damping(idx).x;dataKBR1994Fig10(j).x];
       data_y    = [kbr1994Damping(idx).y;dataKBR1994Fig10(j).y];
@@ -332,7 +341,9 @@ end
 flag_useFig12 = 1;
 
 if(flag_useFig12 == 1)
-  idx = getIndexIntoVectors(0.8,35,amp,freq);
+  idx = getIndexIntoVectors(0.8,35,...
+                            inputFunctions.amplitudeMM, ...
+                            inputFunctions.bandwidthHz);
 
   assert(length(dataKBR1994Fig12K)==2);
 
@@ -394,11 +405,13 @@ kbr1994Table = struct('stiffness',[],'damping',[],'vaf',[],'vafData',[]);
 
 
 kbr1994Table.stiffness = extractTablesOfFittedParameters(...
-                          ampTable, freqTable, amp, freq, ...
+                          inputFunctions.amplitudeMM, ...
+                          inputFunctions.bandwidthHz, ...
                           kbr1994Stiffness, noDataCode);
                         
 kbr1994Table.damping = extractTablesOfFittedParameters(...
-                          ampTable, freqTable, amp, freq, ...
+                          inputFunctions.amplitudeMM, ...
+                          inputFunctions.bandwidthHz, ...
                           kbr1994Damping, noDataCode);
 
 kbr1994Table.vaf = opus31Table.vaf;

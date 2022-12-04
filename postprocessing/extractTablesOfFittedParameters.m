@@ -1,5 +1,5 @@
-function fitTable = extractTablesOfFittedParameters(ampTable,freqTable,...
-                                                    ampData,freqData,...
+function fitTable = extractTablesOfFittedParameters(ampData,...
+                                                    freqData,...
                                                     fittedData,...
                                                     noDataCode)
 
@@ -21,27 +21,23 @@ for z=1:1:length(fittedData)
 end
 
 fitTable = struct(...
-            'pMean'   ,zeros(length(ampTable),length(freqTable),fitDim),...
-            'p95CIMin',zeros(length(ampTable),length(freqTable),fitDim),...
-            'p95CIMax',zeros(length(ampTable),length(freqTable),fitDim),...
+            'pMean'   ,zeros(length(ampData),fitDim),...
+            'p95CIMin',zeros(length(ampData),fitDim),...
+            'p95CIMax',zeros(length(ampData),fitDim),...
             'pNames', {''},...
-            'rmse'   , zeros(  length(ampTable),length(freqTable)),...
+            'rmse'   , zeros(  length(ampData),1),...
             'data'   , []);
 
-data(3,3) = struct('x',[],'y',[],'yN',[]);
+data(length(ampData)) = struct('x',[],'y',[],'yN',[]);
 
 pNames = {};          
 flag_firstData = 0;          
 
-for i = 1:1:length(ampTable)
-  for j=1:1:length(freqTable)
-    idx = getIndexIntoVectors(ampTable(1,i),freqTable(1,j),ampData,freqData);
+for idx = 1:1:length(ampData)
     
-    data(i,j).x=fittedData(idx).x;
-    data(i,j).y=fittedData(idx).y;
-    data(i,j).yN=fittedData(idx).yN;
-
-
+    data(idx).x=fittedData(idx).x;
+    data(idx).y=fittedData(idx).y;
+    data(idx).yN=fittedData(idx).yN;
 
     if(isempty(fittedData(idx).fo) == 0)    
       if(flag_firstData == 0)
@@ -59,21 +55,20 @@ for i = 1:1:length(ampTable)
       coeffCI = confint(fittedData(idx).fo);
 
       for k=1:1:fitDim
-        fitTable.pMean(i,j,k) = coeff(1,k);
-        fitTable.p95CIMin(i,j,k) = coeffCI(1,k);
-        fitTable.p95CIMax(i,j,k) = coeffCI(2,k);        
+        fitTable.pMean(idx,k) = coeff(1,k);
+        fitTable.p95CIMin(idx,k) = coeffCI(1,k);
+        fitTable.p95CIMax(idx,k) = coeffCI(2,k);        
       end
-      fitTable.rmse(i,j) = fittedData(idx).g.rmse;
+      fitTable.rmse(idx,1) = fittedData(idx).g.rmse;
     else
       for k=1:1:fitDim
-        fitTable.pMean(i,j,k)     = noDataCode;
-        fitTable.p95CIMin(i,j,k)  = noDataCode;
-        fitTable.p95CIMax(i,j,k)  = noDataCode;          
+        fitTable.pMean(idx,k)     = noDataCode;
+        fitTable.p95CIMin(idx,k)  = noDataCode;
+        fitTable.p95CIMax(idx,k)  = noDataCode;          
       end
-      fitTable.rmse(i,j)      = noDataCode;            
+      fitTable.rmse(idx,1)      = noDataCode;            
     end
     
-  end
 end
         
 fitTable.data = data;
