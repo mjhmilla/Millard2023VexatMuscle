@@ -23,7 +23,7 @@ success=0;
                
 freqTable = [15,35,90];
 ampTable = [0.4,0.8,1.6];
-noDataCode = -42;
+noDataCode = nan;
 
 
 
