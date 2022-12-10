@@ -283,7 +283,7 @@ end
 %%
 % KBR 1994 Data: From Fig. 10
 %%
-amp10 =  [0.4,0.4,0.4, 0.8,0.8,0.8, 1.6,1.6,1.6];
+amp10  = [0.4,0.4,0.4, 0.8,0.8,0.8, 1.6,1.6,1.6];
 freq10 = [ 15, 35, 90,  15, 35, 90,  15, 35, 90];
 
 % This figure is a bit of a special case: data from the different
@@ -294,6 +294,8 @@ freq10 = [ 15, 35, 90,  15, 35, 90,  15, 35, 90];
 % perturbation sections. This is fine for generating a table, but it is
 % not fine for doing statistics unless this data is also specially handled
 % as a 'grouped' class.
+%
+
 
 flag_useFig10 = 1;
 
@@ -315,9 +317,11 @@ if(flag_useFig10==1)
                             inputFunctions.amplitudeMM, ...
                             inputFunctions.bandwidthHz);
 
-      assert(contains(dataKBR1994Fig10(i).seriesName, num2str(amp10(1,i)) ) ...
-          && contains(dataKBR1994Fig10(i).seriesName,num2str(freq10(1,i))));
+      %assert(contains(dataKBR1994Fig10(i).seriesName, num2str(amp10(1,i)) ) ...
+      %    && contains(dataKBR1994Fig10(i).seriesName,num2str(freq10(1,i))));
+     assert(contains(dataKBR1994Fig10(j).seriesName,num2str(freq10(1,i))));
     
+
       data_x    = [kbr1994Damping(idx).x;dataKBR1994Fig10(j).x];
       data_y    = [kbr1994Damping(idx).y;dataKBR1994Fig10(j).y];
       [d_x,map] = sort(data_x);
@@ -340,7 +344,7 @@ end
 %%
 % KBR 1994 Data: From Fig. 12
 %%
-flag_useFig12 = 1;
+flag_useFig12 = 0;
 
 if(flag_useFig12 == 1)
   idx = getIndexIntoVectors(0.8,35,...
@@ -349,9 +353,15 @@ if(flag_useFig12 == 1)
 
   assert(length(dataKBR1994Fig12K)==2);
 
-      assert(contains(dataKBR1994Fig12K(i).seriesName, num2str(0.8))  ...
-          && contains(dataKBR1994Fig12K(i).seriesName,num2str(35)));
-
+  %2022/10/12
+  %The perturbation and frequency was not stored in the title of the
+  %data entry. I only have myself to blame! I've justed checked Fig 2
+  %and 0.8 mm 0-35Hz is correct
+  %
+  %assert(contains(dataKBR1994Fig12K(1).seriesName, num2str(0.8))  ...
+  %        && contains(dataKBR1994Fig12K(1).seriesName,num2str(35)));
+  %assert(contains(dataKBR1994Fig12K(2).seriesName, num2str(0.8))  ...
+  %        && contains(dataKBR1994Fig12K(2).seriesName,num2str(35)));
 
   data_x = [kbr1994Stiffness(idx).x;dataKBR1994Fig12K(1).x;dataKBR1994Fig12K(2).x];
   data_y = [kbr1994Stiffness(idx).y;dataKBR1994Fig12K(1).y;dataKBR1994Fig12K(2).y];
@@ -368,8 +378,8 @@ if(flag_useFig12 == 1)
   kbr1994Stiffness(idx).y = k_y;
   kbr1994Stiffness(idx).yN= k_y./k_x;
 
-  assert(contains(dataKBR1994Fig12D(i).seriesName, num2str(0.8))  ...
-      && contains(dataKBR1994Fig12D(i).seriesName,num2str(35)));
+  %assert(contains(dataKBR1994Fig12D(i).seriesName, num2str(0.8))  ...
+  %    && contains(dataKBR1994Fig12D(i).seriesName,num2str(35)));
 
 
   data_x = [kbr1994Damping(idx).x;dataKBR1994Fig12D(1).x;dataKBR1994Fig12D(2).x];
@@ -422,7 +432,7 @@ kbr1994Table.vaf = opus31Table.vaf;
 kbr1994Table.vaf.pMean = ones(size(kbr1994Table.vaf.pMean)).*(0.5*(0.88+0.99));
 kbr1994Table.vaf.pMean(:,:,1)=ones(size(kbr1994Table.vaf.pMean(:,:,1))).*noDataCode;
 
-kbr1994Table.vaf.p95CIMin = ones(size(kbr1994Table.vaf.p95CIMin)).*(0.88);
+kbr1994Table.vaf.p95CIMin = ones(size(kbr1994Table.vaf.p95CIMin)).*noDataCode;
 kbr1994Table.vaf.p95CIMin(:,:,1)=ones(size(kbr1994Table.vaf.p95CIMin(:,:,1))).*noDataCode;
 
 kbr1994Table.vaf.p95CIMax = ones(size(kbr1994Table.vaf.p95CIMax)).*noDataCode;
@@ -430,14 +440,13 @@ kbr1994Table.vaf.p95CIMax(:,:,1)=ones(size(kbr1994Table.vaf.p95CIMax(:,:,1))).*n
 
 kbr1994Table.vaf.rmse = ones(size(kbr1994Table.vaf.rmse)).*noDataCode;
 
-for i=1:1:3
-    for j=1:1:3
-        kbr1994Table.vaf.data(i,j).x = [1,1].*noDataCode;
-        kbr1994Table.vaf.data(i,j).y = [0.88,0.99];
-        kbr1994Table.vaf.data(i,j).yN = [1,1].*noDataCode;
-    end
+for i=1:1:length(kbr1994Table.vaf.data)
+    kbr1994Table.vaf.data(i).x = [1,1].*noDataCode;
+    kbr1994Table.vaf.data(i).y = [0.88,0.99];
+    kbr1994Table.vaf.data(i).yN = [1,1].*noDataCode;
 end
 
+here=1;
 
 
 

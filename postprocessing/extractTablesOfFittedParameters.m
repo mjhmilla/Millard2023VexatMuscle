@@ -54,8 +54,8 @@ for idx = 1:1:length(fittedData)
 
       for k=1:1:fitDim
         fitTable.pMean(idx,k) = coeff(1,k);
-        fitTable.p95CIMin(idx,k) = coeffCI(1,k);
-        fitTable.p95CIMax(idx,k) = coeffCI(2,k);        
+        fitTable.p95CIMin(idx,k) = coeffCI(k,1);
+        fitTable.p95CIMax(idx,k) = coeffCI(k,2);        
       end
       fitTable.rmse(idx,1) = fittedData(idx).g.rmse;
     else

@@ -1,11 +1,10 @@
-function success = tabulateStiffnessDampingVariationPUB( ...
-                                              opus31Table,...
-                                              hillTable,...
-                                              kbr1994Table,...
-                                              inputFunctions,...
-                                              flag_useElasticTendon,... 
-                                              tableNameEnding,...
-                                              outputFolder)
+function success = tabulateStiffnessDampingVariationPUB(opus31Table,...
+                                          hillTable,...
+                                          kbr1994Table,...
+                                          inputFunctions,...
+                                          flag_useElasticTendon,... 
+                                          tableNameEnding,...
+                                          outputFolder)
 
 %                                               dataFolder,...
 %                                               freqSeriesFiles,...
@@ -87,20 +86,21 @@ kbrK    = cell(3,3);
 opus31K = cell(3,3);
 hillK   = cell(3,3);
   
-for idxTrial=1:1:length(freq)
+for idxTrial=1:1:length(kbr1994Table.stiffness.data)
   
-  [val, idxAmp] = min(ampTable-inputFunctions.amplitudeMM(1,idxTrial));
-  [val, idxFreq] = min(freqTable-inputFunctions.bandwidthHz(1,idxTrial));
+
+  [val, idxAmp] = min(abs(ampTable-inputFunctions.amplitudeMM(1,idxTrial)));
+  [val, idxFreq] = min(abs(freqTable-inputFunctions.bandwidthHz(1,idxTrial)));
     
-  val       = mean(kbr1994Table.stiffness.data(idxAmp,idxFreq).yN);
+  val       = mean(kbr1994Table.stiffness.data(idxTrial).yN);
   strVal    = sprintf('%1.2f',val);
   kbrK(idxAmp,idxFreq) = {strVal};
 
-  val           = mean(opus31Table.stiffness.data(idxAmp,idxFreq).yN);
+  val           = mean(opus31Table.stiffness.data(idxTrial).yN);
   strVal        = sprintf('%1.2f',val);
   opus31K(idxAmp,idxFreq)  = {strVal};
 
-  val           = mean(hillTable.stiffness.data(idxAmp,idxFreq).yN);
+  val           = mean(hillTable.stiffness.data(idxTrial).yN);
   strVal        = sprintf('%1.2f',val);
   hillK(idxAmp,idxFreq)  = {strVal};
   
@@ -136,24 +136,24 @@ kbrD    = cell(3,3);
 opus31D = cell(3,3);
 hillD   = cell(3,3);
   
-for idxTrial=1:1:length(freq)
+for idxTrial=1:1:length(kbr1994Table.damping.data)
   
-  [val, idxAmp] = min(ampTable-inputFunctions.amplitudeMM(1,idxTrial));
-  [val, idxFreq] = min(freqTable-inputFunctions.bandwidthHz(1,idxTrial));
+  [val, idxAmp] = min(abs(ampTable-inputFunctions.amplitudeMM(1,idxTrial)));
+  [val, idxFreq] = min(abs(freqTable-inputFunctions.bandwidthHz(1,idxTrial)));
 
 
 
-  val       = mean(kbr1994Table.damping.data(idxAmp,idxFreq).yN);
-  strVal    = sprintf('%1.2f',val);
+  val       = mean(kbr1994Table.damping.data(idxTrial).yN);
+  strVal    = sprintf('%1.4f',val);
   kbrD(idxAmp,idxFreq) = {strVal};
 
-  val           = mean(opus31Table.damping.data(idxAmp,idxFreq).yN);
-  strVal        = sprintf('%1.2f',val);
-  opus31D(i,j)  = {strVal};
+  val           = mean(opus31Table.damping.data(idxTrial).yN);
+  strVal        = sprintf('%1.4f',val);
+  opus31D(idxAmp,idxFreq)  = {strVal};
 
-  val           = mean(hillTable.damping.data(idxAmp,idxFreq).yN);
-  strVal        = sprintf('%1.2f',val);
-  hillD(i,j)  = {strVal};
+  val           = mean(hillTable.damping.data(idxTrial).yN);
+  strVal        = sprintf('%1.4f',val);
+  hillD(idxAmp,idxFreq)  = {strVal};
   
 end
 
@@ -179,27 +179,26 @@ kbrVAF    = cell(3,3);
 opus31VAF = cell(3,3);
 hillVAF   = cell(3,3);
   
-for idxTrial=1:1:length(freq)
+for idxTrial=1:1:length(kbr1994Table.vaf.data)
   
 
 
-     
-  i = tableFreqCol(1,idxTrial);
-  j = tableAmpRow(1,idxTrial);
+  [val, idxAmp] = min(abs(ampTable-inputFunctions.amplitudeMM(1,idxTrial)));
+  [val, idxFreq] = min(abs(freqTable-inputFunctions.bandwidthHz(1,idxTrial)));
 
 
 
-  val       = mean(kbr1994Table.vaf.data(i,j).y)*100;
-  strVal    = sprintf('%1.2f',val);
-  kbrVAF(i,j) = {strVal};
+  val       = mean(kbr1994Table.vaf.data(idxTrial).y)*100;
+  strVal    = sprintf('%1.0f',val);
+  kbrVAF(idxAmp,idxFreq) = {strVal};
 
-  val           = mean(opus31Table.vaf.data(i,j).y)*100;
-  strVal        = sprintf('%1.2f',val);
-  opus31VAF(i,j)  = {strVal};
+  val           = mean(opus31Table.vaf.data(idxTrial).y)*100;
+  strVal        = sprintf('%1.0f',val);
+  opus31VAF(idxAmp,idxFreq)  = {strVal};
 
-  val           = mean(hillTable.vaf.data(i,j).y)*100;
-  strVal        = sprintf('%1.2f',val);
-  hillVAF(i,j)  = {strVal};
+  val           = mean(hillTable.vaf.data(idxTrial).y)*100;
+  strVal        = sprintf('%1.0f',val);
+  hillVAF(idxAmp,idxFreq)  = {strVal};
   
   
 
@@ -211,9 +210,9 @@ for i=1:1:3
                             '& %s & %s & %s ',...
                             '& %s & %s & %s \\\\ \n'],...
                   firstLineExtra, ampTable(1,i), ...
-                     kbrVAF{1,i},    kbrVAF{2,i},    kbrVAF{3,i},...
-                  opus31VAF{1,i}, opus31VAF{2,i}, opus31VAF{3,i}, ...
-                    hillVAF{1,i},   hillVAF{2,i},   hillVAF{3,i} );
+                     kbrVAF{i,1},    kbrVAF{i,2},    kbrVAF{i,3},...
+                  opus31VAF{i,1}, opus31VAF{i,2}, opus31VAF{i,3}, ...
+                    hillVAF{i,1},   hillVAF{i,2},   hillVAF{i,3} );
       firstLineExtra = '';    
 end 
 
