@@ -17,7 +17,7 @@ function f = calcWormLikeChainModelDer(z,L,Tkb_div_A,Tkb_div_ASq,derOrder)
 %kb = 1;%1.380649e-23;%Boltzman's constant in J/K
 
 %                  z               A                L
-derCase = derOrder(1)*1 + derOrder(2)*10 + derOrder(2)*100 ; 
+derCase = derOrder(1)*1 + derOrder(2)*10;% + derOrder(2)*100 ; 
 
 
 f = 0;

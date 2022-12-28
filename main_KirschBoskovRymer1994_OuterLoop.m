@@ -12,7 +12,7 @@ flag_generatePlots      = 1;
 
 %Parameters that are tuned
 %updSlidingTimeConstant              = 0.0005;
-updForceVelocityCalibrationFactor   = 0.95;
+%updForceVelocityCalibrationFactor   = 0.95;
 
 flag_useCalibratedOpus31Curves= 1;
 flag_useTwoSidedTitinCurves   = 0;
