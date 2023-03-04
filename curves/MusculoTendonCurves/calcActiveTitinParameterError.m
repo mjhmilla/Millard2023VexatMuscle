@@ -124,7 +124,14 @@ flag_simulateStatic         =0;
 %telapsed=toc(tstart);
 
 %% Evaluate the error
-sim = load([dataFolder,'benchRecordOpus31_ElasticTendonfitting.mat']);
+simFileName = '';
+if(flag_useElasticTendon == 1)
+    simFileName = ['benchRecordOpus31_','ElasticTendon',outputFileEndingOpus31,'.mat'];
+else
+    simFileName = ['benchRecordOpus31_','RigidTendon',outputFileEndingOpus31,'.mat'];
+end
+
+sim = load([dataFolder,simFileName]);
 
 
 if(flag_plot==1)
