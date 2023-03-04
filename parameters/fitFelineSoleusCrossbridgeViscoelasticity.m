@@ -220,7 +220,9 @@ if(flag_skipThisCode==0)
     fprintf('%1.6f lce/lopt \n',dx);
     fprintf('%1.6f mm \n',dx*(musculotendonPropertiesOpus31_ET.optimalFiberLength*1000));
 
-    lceNStart = felineSoleusActiveForceLengthDataDefault(1,1);
-    save('output/structs/normalizedFiberLengthStartHerzogLeonard2002.mat',...
-         'lceNStart');
+
+    simParamsHL2002 = csvread('experiments/HerzogLeonard2002/simulationParametersHerzogLeonard2002.csv');
+    simParamsHL2002(1,1) = felineSoleusActiveForceLengthDataDefault(1,1);
+    csvwrite('experiments/HerzogLeonard2002/simulationParametersHerzogLeonard2002.csv',simParamsHL2002);
+
 end

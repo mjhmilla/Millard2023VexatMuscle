@@ -95,10 +95,9 @@ flag_computeCurveIntegrals=0;
 %% Run the simulation of Herzog & Leonard
 
 
-tmp = load('output/structs/normalizedFiberLengthStartHerzogLeonard2002.mat',...
- 'lceNStart');
+simParamsHL2002 = csvread('experiments/HerzogLeonard2002/simulationParametersHerzogLeonard2002.csv');
+nominalNormalizedFiberLength = simParamsHL2002(1,1);
 
-nominalNormalizedFiberLength  = tmp.lceNStart;%0.98;
 outputFileEndingOpus31 = 'fitting';
 
 flag_simulateActiveStretch  =1;
@@ -126,7 +125,6 @@ flag_simulateStatic         =0;
 
 %% Evaluate the error
 sim = load([dataFolder,'benchRecordOpus31_ElasticTendonfitting.mat']);
-
 
 
 if(flag_plot==1)

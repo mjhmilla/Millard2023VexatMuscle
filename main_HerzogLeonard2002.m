@@ -40,10 +40,10 @@ if(flag_outerLoopMode == 0)% && flag_buildCombinedPlot == 1)
   subFigureNumber    = 1;
   trialNumber        = 2;  
 
-  tmp = load('output/structs/normalizedFiberLengthStartHerzogLeonard2002.mat',...
-     'lceNStart');
-  
-  nominalNormalizedFiberLength  = tmp.lceNStart;%0.98;
+
+  simParamsHL2002 = csvread('experiments/HerzogLeonard2002/simulationParametersHerzogLeonard2002.csv');
+  nominalNormalizedFiberLength = simParamsHL2002(1,1);
+
 
 
   scaleMaximumIsometricForce     = [];

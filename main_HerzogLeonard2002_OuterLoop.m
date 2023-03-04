@@ -33,11 +33,9 @@ flag_useTitinCurvesWithRigidIgDSegment   = 0;
 flag_useTwoSidedTitinCurves   = 0;
 flag_plotDataComparison       = 1;
 
-tmp = load('output/structs/normalizedFiberLengthStartHerzogLeonard2002.mat',...
-   'lceNStart');
 
-nominalNormalizedFiberLength  = tmp.lceNStart;
-
+simParamsHL2002 = csvread('experiments/HerzogLeonard2002/simulationParametersHerzogLeonard2002.csv');
+nominalNormalizedFiberLength = simParamsHL2002(1,1);
 
 
 
