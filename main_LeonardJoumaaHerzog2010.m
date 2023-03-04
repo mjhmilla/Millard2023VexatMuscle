@@ -1,4 +1,4 @@
-%Replication of
+%Simulation of
 %Leonard TR, Joumaa V, Herzog W. An activatable molecular spring reduces 
 %muscle tearing during extreme stretching. Journal of biomechanics. 
 %2010 Nov 16;43(15):3063-6.

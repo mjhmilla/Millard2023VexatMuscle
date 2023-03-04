@@ -1,3 +1,5 @@
+% A simulation of 
+%
 % Herzog W, Leonard TR. Force enhancement following stretching of skeletal 
 % muscle: a new mechanism. Journal of Experimental Biology. 
 % 2002 May 1;205(9):1275-83.

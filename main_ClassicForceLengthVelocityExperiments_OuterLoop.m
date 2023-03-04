@@ -1,16 +1,27 @@
+% A simulation of versions of the experiments of Gordon et al., and Hill.
+%
+% Gordon, A. M., Huxley, A. F., & Julian, F. J. (1966). The variation 
+% in isometric tension with sarcomere length in vertebrate muscle 
+% fibres. The Journal of physiology, 184(1), 170-192.
+%
+% Hill AV. The heat of shortening and the dynamic constants of muscle. 
+% Proceedings of the Royal Society of London. Series B-Biological Sciences. 
+% 1938 Oct 10;126(843):136-95.
+
 clc;
 close all;
 clear all;
 
 %Parameters that are tuned
 % updSlidingTimeConstant              = 0.0025;
-updForceVelocityCalibrationFactor   = 0.95;
+% updForceVelocityCalibrationFactor   = 0.95;
 
 %Parameters that do not change
-flag_simulateHillModel            = 0;  
+flag_simulateHillModel            = 1;  
 flag_simulateOpus31Model          = 1;
+
 flag_useSimulatePlotRigidTendon   = 1;
-flag_useSimulatePlotElasticTendon = 0;
+flag_useSimulatePlotElasticTendon = 1;
 
 flag_removeActiveTitinForces      = 0;
 flag_useTwoSidedTitinCurves       = 0;
@@ -25,8 +36,8 @@ flag_useFig3KirchBoskovRymer1994  = 0;
 flag_useOctave                    = 0;
 
 
-flag_activeForceLengthSimulations  = 0;
-flag_passiveForceLengthSimulations = 0;  
+flag_activeForceLengthSimulations  = 1;
+flag_passiveForceLengthSimulations = 1;  
 flag_forceVelocitySimulations      = 1;
 
 normFiberLengthAtForceVelocitySample  = 1.;

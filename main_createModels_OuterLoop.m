@@ -9,9 +9,9 @@ disp('set flag_fitFelineSoleusActiveTitinProperties ');
 disp(' and flag_fitFelineCrossbridgeProperties ');
 disp(' to true if running from scratch');
 
-flag_useOctave                        = 0; 
-%It's been a long time since this script has been tested on Octave: it 
+%It has been a long time since this script has been tested on Octave: it 
 %probably no longer works.
+flag_useOctave                        = 0; 
 
 flag_makeAndSavePubPlots              = 1;
 plotOutputFolder                      = 'output/plots/MuscleCurves/';

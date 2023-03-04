@@ -1,8 +1,17 @@
+%%
+% This script will simulate a muscle with a constant activation that is
+% subject to a sinusoidal length change. The quality of the model 
+% initialization is evaluated by comparing the initial state of the 
+% model to the state after a nCycles of the sin wave (after which it)
+% has presumably reached steady state.
+%%
+
 clc;
 close all;
 clear all;
 
-flag_useElasticTendon=0;
+
+flag_useElasticTendon=1;
 
 %%
 % Simulation parameters

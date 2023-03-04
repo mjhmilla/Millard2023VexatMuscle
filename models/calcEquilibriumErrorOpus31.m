@@ -932,7 +932,8 @@ if(flag_evaluateInitializationFunctions == 0)
     
       B = (fTkN + betaTNN*(dlp/ltSlk));
     
-      C = - ((betaxHNN*0.5/lceOpt) + (betaNum + betafEcmHN*fEcmkHN)*(0.5/lceOpt))*cosAlpha ...
+      C = - ((betaxHNN*0.5/lceOpt) ...
+          +  (betaNum + betafEcmHN*fEcmkHN)*(0.5/lceOpt) )*cosAlpha ...
           - (betaTNN/(cosAlpha*ltSlk));
     
       dlce = -(A+B)/C;
