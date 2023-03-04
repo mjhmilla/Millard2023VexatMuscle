@@ -136,7 +136,7 @@ if(pennationAngleAtOptimalFiberLength > eps^0.5)
 
 
     dlce=dlceAT*cos(alpha);
-    dalpha = -(dlce/lce)*tan(alpha)
+    dalpha = -(dlce/lce)*tan(alpha);
 
 else
     lce    = lceAT;

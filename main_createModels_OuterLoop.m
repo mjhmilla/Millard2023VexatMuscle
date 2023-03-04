@@ -135,7 +135,7 @@ scaleMaximumIsometricTensionHumanSoleus = 1;
 %%
 % Cat Soleus Model Parameters
 %%
-flag_fitFelineSoleusActiveTitinProperties               = 1;
+flag_fitFelineSoleusActiveTitinProperties               = 1; 
 flag_loadFittedFelineSoleusActiveTitinProperties        = 0;
 %Takes 10-20 minutes, but must be done once.
 %Numerically identifies the point of attachement between the PEVK segment
