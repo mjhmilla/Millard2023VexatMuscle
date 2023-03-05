@@ -75,42 +75,45 @@ end
 lineOpus31 = [];
 lineHill = [];
 
-for i=1:1:size(dataOpus31.benchRecord.time,2)
-  n=0;
-  if(size(dataOpus31.benchRecord.time,2)>1)
-    n = (i-1)/(size(dataOpus31.benchRecord.time,2)-1);
-  end
-  lineColor = [1,0,0].*(1-n) + [0.75,0.25,0.25].*(n);
-  if(i==1)
-    lineOpus31 = plot(dataOpus31.benchRecord.time(:,i), ...
-                      dataOpus31.benchRecord.tendonForce(:,i),...
-                      'Color',lineColorModel,'LineWidth',1);      
-  else
-    plot(dataOpus31.benchRecord.time(:,i), ...
-                      dataOpus31.benchRecord.tendonForce(:,i),...
-                      'Color',lineColorModel,'LineWidth',1);
-  end
-  hold on;
+if(isempty(dataOpus31.benchRecord)==0)
+    for i=1:1:size(dataOpus31.benchRecord.time,2)
+      n=0;
+      if(size(dataOpus31.benchRecord.time,2)>1)
+        n = (i-1)/(size(dataOpus31.benchRecord.time,2)-1);
+      end
+      lineColor = [1,0,0].*(1-n) + [0.75,0.25,0.25].*(n);
+      if(i==1)
+        lineOpus31 = plot(dataOpus31.benchRecord.time(:,i), ...
+                          dataOpus31.benchRecord.tendonForce(:,i),...
+                          'Color',lineColorModel,'LineWidth',1);      
+      else
+        plot(dataOpus31.benchRecord.time(:,i), ...
+                          dataOpus31.benchRecord.tendonForce(:,i),...
+                          'Color',lineColorModel,'LineWidth',1);
+      end
+      hold on;
+    end
 end
 
-for i=1:1:size(dataDampedEq.benchRecord.time,2)
-  n=0;
-  if(size(dataDampedEq.benchRecord.time,2)>1)
-    n = (i-1)/(size(dataDampedEq.benchRecord.time,2)-1);
-  end
-  lineColor = [0,0,1].*(1-n) + [0.25,0.25,0.75].*(n);
-  if(i==1)
-    lineHill = plot(dataDampedEq.benchRecord.time(:,i), ...
-                    dataDampedEq.benchRecord.tendonForce(:,i),...
-                   '-','Color',lineColorHill,'LineWidth',1);
-  else
-    plot(dataDampedEq.benchRecord.time(:,i), ...
-                    dataDampedEq.benchRecord.tendonForce(:,i),...
-                   '-','Color',lineColorHill,'LineWidth',1);
-  end
-  hold on;
+if(isempty(dataDampedEq.benchRecord)==0)
+    for i=1:1:size(dataDampedEq.benchRecord.time,2)
+      n=0;
+      if(size(dataDampedEq.benchRecord.time,2)>1)
+        n = (i-1)/(size(dataDampedEq.benchRecord.time,2)-1);
+      end
+      lineColor = [0,0,1].*(1-n) + [0.25,0.25,0.75].*(n);
+      if(i==1)
+        lineHill = plot(dataDampedEq.benchRecord.time(:,i), ...
+                        dataDampedEq.benchRecord.tendonForce(:,i),...
+                       '-','Color',lineColorHill,'LineWidth',1);
+      else
+        plot(dataDampedEq.benchRecord.time(:,i), ...
+                        dataDampedEq.benchRecord.tendonForce(:,i),...
+                       '-','Color',lineColorHill,'LineWidth',1);
+      end
+      hold on;
+    end
 end
-
 if(trialNumber == 3)
   legend([lineOpus31,lineHill],'Model', 'Hill-type');
   legend boxoff;
