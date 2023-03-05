@@ -436,8 +436,19 @@ kH  = max(dataDampedEq.benchRecord.musculotendonStiffness(:,idxMapH(1,i))./1000)
 % hold on;
 
 
-kMax = max(dataOpus31.benchRecord.musculotendonStiffness(:,idxMap31(1,i))./1000);
-[kMin, idxKmin] = min(dataDampedEq.benchRecord.musculotendonStiffness(:,idxMapH(1,i))./1000);
+[kMax31,idxKmax31] = max(dataOpus31.benchRecord.musculotendonStiffness(:,idxMap31(1,i))./1000);
+[kMin31,idxKmin31] = min(dataOpus31.benchRecord.musculotendonStiffness(:,idxMap31(1,i))./1000);
+
+[kMaxH, idxKmaxH] = max(dataDampedEq.benchRecord.musculotendonStiffness(:,idxMapH(1,i))./1000);
+[kMinH, idxKminH] = min(dataDampedEq.benchRecord.musculotendonStiffness(:,idxMapH(1,i))./1000);
+
+kMax = max([kMax31,kMaxH]);
+kMin = min([kMin31,kMinH]);
+
+idxKmin = idxKminH;
+if(kMin31<kMinH)
+    idxKmin=idxKminH;
+end
 
 tkMin = dataDampedEq.benchRecord.time(idxKmin,idxMapH(1,i));
 
@@ -450,7 +461,7 @@ if(flag_useElasticTendon==1)
   text(tkMin, kMin+2.5, 'Negative stiffness!');
 end
 kvec = unique([kMin,0,kH1,kMax]);
-kDelta = (kMax-kMin).*0.05;
+kDelta = max([abs(kMax-kMin).*0.05, abs(kMax)*0.1 ]);
 
 if(flag_useElasticTendon==0)
   ylim([(kMin-kDelta),(kMax+kDelta)]);
