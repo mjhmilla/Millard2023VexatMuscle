@@ -820,6 +820,8 @@ if(flag_evaluateInitializationFunctions == 0)
       modelCache.fEcmfcnHN  = fEcmfcnHN  ; 
       modelCache.fTfcnN     = fTfcnN  ; 
       modelCache.DfTfcnN_DltN = DfTfcnN_DltN;
+
+      modelCache.fCpN       = fCpN;
     end
     
     

@@ -25,7 +25,6 @@ flag_simulateActiveStretch  = 1;
 flag_simulatePassiveStretch = 1;
 flag_simulateStatic         = 1;
 
-
 flag_simulateHillModel        = 1; 
 flag_simulateOpus31Model      = 1;
 flag_useCalibratedOpus31Curves= 1;
