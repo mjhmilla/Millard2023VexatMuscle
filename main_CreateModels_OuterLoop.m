@@ -2,6 +2,8 @@ clc;
 close all;
 clear all;
 
+add('parameters');
+
 %%
 % Global model parameters
 %%
