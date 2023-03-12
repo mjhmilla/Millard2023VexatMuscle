@@ -1,62 +1,41 @@
 function projectFolders = getProjectFolders(rootProjectDirectoryFullPath)
 
 
-startingDir = pwd;
-cd(rootProjectDirectoryFullPath);
-
-projectFolders.root = rootProjectDirectoryFullPath;
-
-rootDirContents = dir();
-experimentNameList = [];
-%Automatically build a structure that contains the 
-for i=1:1:length(rootDirContents)
-
-    if(rootDirContents(i).isdir==1 ...
-        && contains(rootDirContents(i).name,'.')==0) 
-
-                    
-
-        cd( rootDirContents(i).name );
-        subDirContents=dir();
-
-        subFolders=[];
-        subFolders.('path')=fullfile(rootProjectDirectoryFullPath,rootDirContents(i).name);
-
-        for j=1:1:length(subDirContents)
-            if(subDirContents(j).isdir ...
-                && contains(subDirContents(j).name,'.')==0)
-
-    
-                subFolders.(subDirContents(j).name) = ...
-                    fullfile(subFolders.path, ...
-                             subDirContents(j).name);
-
-                if(strcmp(rootDirContents(i).name,'experiments'))
-                    experimentNameList.(subDirContents(j).name)=...
-                        subDirContents(j).name;
-                end
-
-            end
-
-        end
-
-        %fieldName = [rootDirContents(i).name,'_'];
 
 
-        projectFolders.(rootDirContents(i).name) = subFolders;
-
-        if(isempty(experimentNameList)==0)
-            projectFolders.experiment_names = experimentNameList;
-            experimentNameList=[];
-        end
-
-        cd(projectFolders.root);
-
-    end
-
-end
+projectFolders.curves         = fullfile(rootProjectDirectoryFullPath,'curves'        );   
+projectFolders.experiments    = fullfile(rootProjectDirectoryFullPath,'experiments'   );  
+projectFolders.models         = fullfile(rootProjectDirectoryFullPath,'models'        ); 
+projectFolders.output         = fullfile(rootProjectDirectoryFullPath,'output'        );  
+projectFolders.parameters     = fullfile(rootProjectDirectoryFullPath,'parameters'    );   
+projectFolders.postprocessing = fullfile(rootProjectDirectoryFullPath,'postprocessing');  
+projectFolders.simulation     = fullfile(rootProjectDirectoryFullPath,'simulation'    ); 
 
 
 
+projectFolders.experiments_HL2002        = fullfile(projectFolders.experiments, 'HerzogLeonard2002'                   );   
+projectFolders.experiments_KBR1994       = fullfile(projectFolders.experiments, 'KirschBoskovRymer1994'               ); 
+projectFolders.experiments_LJH2010       = fullfile(projectFolders.experiments, 'LeonardJoumaaHerzog2010'             ); 
+projectFolders.experiments_NDRAN1996     = fullfile(projectFolders.experiments, 'NettiDamoreRoncaAmbrosioNicolais1996');  
+projectFolders.experiments_StandardTests = fullfile(projectFolders.experiments, 'StandardTests'                       );   
+projectFolders.experiments_TGFG1998      = fullfile(projectFolders.experiments, 'TrombitasGreaserFrenchGranzier1998'  );
 
-cd(startingDir);
+projectFolders.output_plots     = fullfile(projectFolders.output,'plots');
+projectFolders.output_structs   = fullfile(projectFolders.output,'structs');
+projectFolders.output_tables    = fullfile(projectFolders.output,'tables');
+
+
+projectFolders.output_plots     = fullfile(projectFolders.output,'plots');
+
+projectFolders.output_plots_HL2002        = fullfile(projectFolders.output_plots, 'HerzogLeonard2002'                   );   
+projectFolders.output_plots_KBR1994       = fullfile(projectFolders.output_plots, 'KirschBoskovRymer1994'               ); 
+projectFolders.output_plots_LJH2010       = fullfile(projectFolders.output_plots, 'LeonardJoumaaHerzog2010'             ); 
+projectFolders.output_plots_NDRAN1996     = fullfile(projectFolders.output_plots, 'NettiDamoreRoncaAmbrosioNicolais1996');  
+projectFolders.output_plots_StandardTests = fullfile(projectFolders.output_plots, 'StandardTests'                       );   
+
+projectFolders.output_plots_MuscleCurves   = fullfile(projectFolders.output_plots, 'MuscleCurves'                       );   
+projectFolders.output_plots_Initialization = fullfile(projectFolders.output_plots, 'InitializationBenchmark'            );   
+
+
+projectFolders.output_tables_KBR1994      = fullfile(projectFolders.output_tables,'KirschBoskovRymer1994');
+projectFolders.output_tables_MUscleCurves = fullfile(projectFolders.output_tables,'MuscleCurves');
