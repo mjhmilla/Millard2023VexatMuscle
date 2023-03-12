@@ -5,10 +5,18 @@
 
 flag_outerLoopMode = 1;
 
+rootDir         = pwd;
+projectFolders  = getProjectFolders(rootDir);
+
+
 if(flag_outerLoopMode == 0)
   clc;
   close all;
   clear all;
+
+  rootDir         = pwd;
+  projectFolders  = getProjectFolders(rootDir);
+
 
   flag_simulateHillModel            = 0; 
   flag_simulateOpus31Model          = 0;

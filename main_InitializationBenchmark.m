@@ -11,7 +11,10 @@ close all;
 clear all;
 
 
-flag_useElasticTendon=1;
+rootDir         = pwd;
+projectFolders  = getProjectFolders(rootDir);
+
+flag_useElasticTendon=0;
 
 %%
 % Simulation parameters
@@ -28,22 +31,21 @@ timeExcitationOn = Inf;
 
 nCycle      = 3;
 omega       = 2*pi; %0 is allowed for a static path
-lceATStrain        = 0.0;
+lceATStrain        = 0.10;
 lceATStrainOffset  = 0.0;
 
 transientWindowMax = 0.025;
 
 
-pubOutputFolder = 'output/plots/InitializationBenchmark/';
 %%
 %Path setup
 %%
-parametersDirectoryTree       = genpath('parameters');
-curvesDirectoryTree           = genpath('curves');
-experimentsDirectoryTree      = genpath('experiments');
-simulationDirectoryTree       = genpath('simulation');
-modelDirectoryTree            = genpath('models');
-postprocessingDirectoryTree   = genpath('postprocessing');
+parametersDirectoryTree       = genpath(projectFolders.parameters);
+curvesDirectoryTree           = genpath(projectFolders.curves);
+experimentsDirectoryTree      = genpath(projectFolders.experiments);
+simulationDirectoryTree       = genpath(projectFolders.simulation);
+modelDirectoryTree            = genpath(projectFolders.models);
+postprocessingDirectoryTree   = genpath(projectFolders.postprocessing);
 
 addpath(parametersDirectoryTree       );
 addpath(curvesDirectoryTree           );
@@ -86,7 +88,10 @@ plotConfigGeneric;
 %Load the model
 %%
 
-load('output/structs/defaultFelineSoleus.mat')
+fileDefaultFelineSoleus = ...
+    fullfile(projectFolders.output_structs,'defaultFelineSoleus.mat');
+
+load(fileDefaultFelineSoleus);
 musculotendonProperties   = defaultFelineSoleus.musculotendon;
 sarcomereProperties       = defaultFelineSoleus.sarcomere;
 normMuscleCurves          = defaultFelineSoleus.curves;
@@ -393,6 +398,9 @@ mtInfo = calcMillard2019MuscleInfoOpus31(activationState0,...
     set(fig_StateRecord,'renderer','painters');     
     set(gcf,'InvertHardCopy','off')
 
-    print('-dpdf', [pubOutputFolder,'fig_StateRecord',tendonTag,'_.pdf']);     
+    fullFilePath = fullfile(projectFolders.output_plots_Initialization,...
+                        ['fig_StateRecord',tendonTag,'_.pdf']);
+
+    print('-dpdf', fullFilePath);     
 
 

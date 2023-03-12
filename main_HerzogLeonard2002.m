@@ -4,14 +4,19 @@
 % muscle: a new mechanism. Journal of Experimental Biology. 
 % 2002 May 1;205(9):1275-83.
 
-flag_outerLoopMode = 1;
-%flag_buildCombinedPlot = 1;
+flag_outerLoopMode = 0;
+
+rootDir         = pwd;
+projectFolders  = getProjectFolders(rootDir);
 
 
 if(flag_outerLoopMode == 0)% && flag_buildCombinedPlot == 1)
   clc;
   close all;
   clear all;
+
+  rootDir         = pwd;
+  projectFolders  = getProjectFolders(rootDir);
 
   figDescendingCombined = figure;
   flag_buildCombinedPlot = 1;
@@ -21,7 +26,7 @@ if(flag_outerLoopMode == 0)% && flag_buildCombinedPlot == 1)
   flag_simulateOpus31Model                      = 1;
   flag_useCalibratedOpus31Curves                = 1;
   flag_useTitinCurvesWithRigidIgDSegment        = 0;
-  flag_useTwoSidedTitinCurves                   = 1;
+  flag_useTwoSidedTitinCurves                   = 0;
 
   flag_useFig3KirchBoskovRymer1994              = 0; 
   flag_useElasticTendon                         = 0;  
@@ -31,6 +36,7 @@ if(flag_outerLoopMode == 0)% && flag_buildCombinedPlot == 1)
   flag_simulatePassiveStretch = 1;
   flag_simulateStatic         = 1;
   
+
   flag_plotData = 1;
   flag_savePlotsToFile=1;
   pubOutputFolder = '';       
@@ -41,7 +47,10 @@ if(flag_outerLoopMode == 0)% && flag_buildCombinedPlot == 1)
   trialNumber        = 2;  
 
 
-  simParamsHL2002 = csvread('experiments/HerzogLeonard2002/simulationParametersHerzogLeonard2002.csv');
+  fileSimParamsHL2002 = fullfile( projectFolders.experiments_HL2002,... 
+                                  'simulationParametersHerzogLeonard2002.csv');
+
+  simParamsHL2002 = csvread(fileSimParamsHL2002);
   nominalNormalizedFiberLength = simParamsHL2002(1,1);
 
 
@@ -62,12 +71,12 @@ if(flag_outerLoopMode == 0)% && flag_buildCombinedPlot == 1)
 end
 
 
-parametersDirectoryTree       = genpath('parameters');
-curvesDirectoryTree           = genpath('curves');
-experimentsDirectoryTree      = genpath('experiments');
-simulationDirectoryTree       = genpath('simulation');
-modelDirectoryTree            = genpath('models');
-postprocessingDirectoryTree   = genpath('postprocessing');
+parametersDirectoryTree       = genpath(projectFolders.parameters);
+curvesDirectoryTree           = genpath(projectFolders.curves);
+experimentsDirectoryTree      = genpath(projectFolders.experiments);
+simulationDirectoryTree       = genpath(projectFolders.simulation);
+modelDirectoryTree            = genpath(projectFolders.models);
+postprocessingDirectoryTree   = genpath(projectFolders.postprocessing);
 
 addpath(parametersDirectoryTree       );
 addpath(curvesDirectoryTree           );
@@ -99,6 +108,9 @@ plotConfig;
 %subPlotPanel(1,1,2) = subPlotPanel(1,1,2)-subPlotPanel(1,1,4);%y top left
 
 
+flag_runSimulations = (flag_simulateActiveStretch ...
+                  ||  flag_simulatePassiveStretch ...
+                  ||  flag_simulateStatic);
 
 %%
 % Configure the muscle models:  load the configurations generated from 
@@ -106,7 +118,10 @@ plotConfig;
 %%
 
 %Basic parameters for the Hill model
-load('output/structs/defaultFelineSoleus.mat')
+fileDefaultFelineSoleus = fullfile( projectFolders.output_structs_FittedModels,...
+                                    'defaultFelineSoleus.mat');
+
+load(fileDefaultFelineSoleus);
 musculotendonProperties   = defaultFelineSoleus.musculotendon;
 sarcomereProperties       = defaultFelineSoleus.sarcomere;
 normMuscleCurves          = defaultFelineSoleus.curves;
@@ -131,14 +146,21 @@ end
 % tendon damping
 % titin's multiple segments
 
-tmp=load(['output/structs/fittedFelineSoleusHL2002KBR1994',figNameGainPhase,'_RT.mat']);
+fileFittedFelineSoleusRT = fullfile(projectFolders.output_structs_FittedModels,...
+    ['fittedFelineSoleusHL2002KBR1994',figNameGainPhase,'_RT.mat']);
+
+fileFittedFelineSoleusET = fullfile(projectFolders.output_structs_FittedModels,...
+    ['fittedFelineSoleusHL2002KBR1994',figNameGainPhase,'_ET.mat']);
+
+
+tmp=load(fileFittedFelineSoleusRT);
 musculotendonPropertiesOpus31_RT = tmp.fittedFelineSoleus.musculotendon;
 sarcomerePropertiesOpus31_RT     = tmp.fittedFelineSoleus.sarcomere;
 normMuscleCurvesOpus31_RT        = tmp.fittedFelineSoleus.curves;
 fittingOpus31_RT                 = tmp.fittedFelineSoleus.fitting;
 
 
-tmp=load(['output/structs/fittedFelineSoleusHL2002KBR1994',figNameGainPhase,'_ET.mat']);
+tmp=load(fileFittedFelineSoleusET);
 musculotendonPropertiesOpus31_ET = tmp.fittedFelineSoleus.musculotendon;
 sarcomerePropertiesOpus31_ET     = tmp.fittedFelineSoleus.sarcomere;
 normMuscleCurvesOpus31_ET        = tmp.fittedFelineSoleus.curves;
@@ -230,20 +252,6 @@ end
 
 
 
-%%
-% Meta configuration properties: Do not touch.  
-%%
-
-%flag_useFiberDampingHill    = 1; %Appears not to affect results
-%scaleHillFpe                = 1; %Appears not to affect results
-
-%f(flag_useElasticTendon==0)
-%  flag_useFiberDampingHill = 0;
-%end
-
-
-dataFolder = 'experiments/HerzogLeonard2002/';
-plotFolder = 'output/plots/HerzogLeonard2002/';
 
 
 %%
@@ -350,7 +358,7 @@ if(flag_testOpus31DerivativeFunction==1)
   lceHN   = 0.5*lceN;
   lce     = lceN*lceOpt;
   
-  l1 = 0.5*normMuscleCurves.forceLengthIgpCurve.xEnd(1)*lceOpt;
+  l1 = 0.5*normMuscleCurves.forceLengthIgPTitinCurve.xEnd(1)*lceOpt;
 
   lx = 0;
   dlx = 0;
@@ -387,7 +395,7 @@ if(flag_testOpus31DerivativeFunction==1)
                                                 
 end
 
-if(flag_simulateOpus31Model==1)
+if(flag_simulateOpus31Model==1 && flag_runSimulations == 1)
   %expConfigHerzogLeonard2002.timeSpan  
   %tspanAct = [0,expConfigHerzogLeonard2002.lengthRampKeyPoints(1,1)];  
   [success] = runHerzogLeonard2002SimulationsOpus31(...
@@ -401,14 +409,14 @@ if(flag_simulateOpus31Model==1)
                             sarcomerePropertiesOpus31,...
                             normMuscleCurvesOpus31,...
                             outputFileEndingOpus31, ...
-                            dataFolder,...
+                            projectFolders.output_structs_HL2002,...
                             flag_simulateActiveStretch,...
                             flag_simulatePassiveStretch,...
                             flag_simulateStatic,...
                             flag_useOctave);
 end
 
-if(flag_simulateHillModel==1)
+if(flag_simulateHillModel==1 && flag_runSimulations==1)
 
   [success] = runHerzogLeonard2002SimulationsDampedEquilibrium(...
                             nominalNormalizedFiberLength,...
@@ -422,7 +430,7 @@ if(flag_simulateHillModel==1)
                             sarcomereProperties,...
                             normMuscleCurves,...
                             outputFileEndingHill, ...
-                            dataFolder,...
+                            projectFolders.output_structs_HL2002,...
                             flag_simulateActiveStretch,...
                             flag_simulatePassiveStretch,...
                             flag_simulateStatic,...
@@ -437,12 +445,12 @@ if(flag_plotData == 1)
     nameModification = 'RigidTendon';          
   end
 
-  fileNameOpus31 = [dataFolder,'benchRecordOpus31_',...
-                    nameModification,outputFileEndingOpus31,'.mat'];
+  fileNameOpus31 = fullfile( projectFolders.output_structs_HL2002,...
+    ['benchRecordOpus31_',nameModification,outputFileEndingOpus31,'.mat']);
   dataOpus31 = load(fileNameOpus31);
 
-  fileNameDampedEq = [dataFolder,'benchRecordHill_',...
-                      nameModification,outputFileEndingHill,'.mat'];
+  fileNameDampedEq = fullfile(projectFolders.output_structs_HL2002,...
+    ['benchRecordHill_',nameModification,outputFileEndingHill,'.mat']);
   dataDampedEq = load(fileNameDampedEq);
   
 
@@ -469,7 +477,8 @@ if(flag_plotData == 1)
                       expConfigHerzogLeonard2002,dataOpus31, dataDampedEq,  ...
                       nominalNormalizedFiberLength,flag_useElasticTendon,...
                       figureNumber,subFigureNumber,trialNumber,...
-                      subPlotHerzogLeonard2000Stability,plotFolder,...
+                      subPlotHerzogLeonard2000Stability,...
+                      projectFolders.output_plots_HL2002,...
                       figDesLimbName,pageWidth,pageHeight);
   end
   %axis square;
@@ -488,13 +497,16 @@ if(flag_plotData == 1)
     set(gcf,'InvertHardCopy','off')
 
 
-    
-    print('-dpdf', [plotFolder,'fig_Pub_HerzogLeonard2002_',...
+    filePlotName = fullfile(projectFolders.output_plots_HL2002,...
+                    ['fig_Pub_HerzogLeonard2002_',...
                     num2str(figureNumber), subFigTitle,...
                     tendonTag,'_',tScaleStr,'_TiAD',titinActiveDampingStr,...
                     '_TiPD',titinPassiveDampingStr,...  
                     '_NomLen',nominalNormalizedFiberLengthStr,...
-                    '_',strFittingBandwidth,'.pdf']);   
+                    '_',strFittingBandwidth,'.pdf']);
+
+    
+    print('-dpdf', filePlotName);   
 
 
   end

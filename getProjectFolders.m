@@ -1,6 +1,24 @@
 function projectFolders = getProjectFolders(rootProjectDirectoryFullPath)
 
+currDir = pwd();
 
+%check the root directory
+cd(rootProjectDirectoryFullPath);
+rootDirContents = dir();
+
+
+flag_rootDirPathValid = 0;
+for i=1:1:length(rootDirContents)
+    if(strcmp(rootDirContents(i).name,'.rootDirectory') && ...
+       rootDirContents(i).isdir == 0)
+        flag_rootDirPathValid = 1;
+    end
+end
+cd(currDir);
+
+assert(flag_rootDirPathValid==1, ['Error: the rootProjectDirectoryFullPath ',...
+    'does not appear to be the root project directory because it is missing ',...
+    'hidden file (.rootDir) that marks it as the root project directory.']);
 
 
 projectFolders.curves         = fullfile(rootProjectDirectoryFullPath,'curves'        );   
@@ -32,10 +50,19 @@ projectFolders.output_plots_KBR1994       = fullfile(projectFolders.output_plots
 projectFolders.output_plots_LJH2010       = fullfile(projectFolders.output_plots, 'LeonardJoumaaHerzog2010'             ); 
 projectFolders.output_plots_NDRAN1996     = fullfile(projectFolders.output_plots, 'NettiDamoreRoncaAmbrosioNicolais1996');  
 projectFolders.output_plots_StandardTests = fullfile(projectFolders.output_plots, 'StandardTests'                       );   
-
 projectFolders.output_plots_MuscleCurves   = fullfile(projectFolders.output_plots, 'MuscleCurves'                       );   
 projectFolders.output_plots_Initialization = fullfile(projectFolders.output_plots, 'InitializationBenchmark'            );   
 
 
 projectFolders.output_tables_KBR1994      = fullfile(projectFolders.output_tables,'KirschBoskovRymer1994');
-projectFolders.output_tables_MUscleCurves = fullfile(projectFolders.output_tables,'MuscleCurves');
+projectFolders.output_tables_MuscleCurves = fullfile(projectFolders.output_tables,'MuscleCurves');
+
+
+projectFolders.output_structs_FittedModels   = fullfile(projectFolders.output_structs, 'FittedModels'                        );
+projectFolders.output_structs_HL2002         = fullfile(projectFolders.output_structs, 'HerzogLeonard2002'                   );   
+projectFolders.output_structs_KBR1994        = fullfile(projectFolders.output_structs, 'KirschBoskovRymer1994'               ); 
+projectFolders.output_structs_LJH2010        = fullfile(projectFolders.output_structs, 'LeonardJoumaaHerzog2010'             ); 
+projectFolders.output_structs_NDRAN1996      = fullfile(projectFolders.output_structs, 'NettiDamoreRoncaAmbrosioNicolais1996');  
+projectFolders.output_structs_StandardTests  = fullfile(projectFolders.output_structs, 'StandardTests'                       );   
+projectFolders.output_structs_MuscleCurves   = fullfile(projectFolders.output_structs, 'MuscleCurves'                       );   
+projectFolders.output_structs_Initialization = fullfile(projectFolders.output_structs, 'InitializationBenchmark'            );   

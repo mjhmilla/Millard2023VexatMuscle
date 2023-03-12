@@ -627,7 +627,7 @@ if(flag_useElasticTendon==1)
 
 
 
-  print('-dpdf', [outputFolder,fileName]);                     
+  print('-dpdf', fullfile(outputFolder,fileName));                     
   %benchRecord.musculotendonStiffness
   %benchRecord.musculotendonDamping
 end
