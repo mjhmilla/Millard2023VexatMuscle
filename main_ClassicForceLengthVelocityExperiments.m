@@ -1,6 +1,8 @@
 
 flag_outerLoopMode = 1;
 
+rootDir         = getRootProjectDirectory();
+projectFolders  = getProjectFolders(rootDir);
 
 % Run once set to 1
 % Run a second time set to 2 
@@ -9,6 +11,9 @@ if(flag_outerLoopMode == 0)
   clc;  
   close all;      
   clear all;
+
+  rootDir         = getRootProjectDirectory();
+  projectFolders  = getProjectFolders(rootDir);
 
   flag_outerLoopMode      = 0;
   flag_buildCombinedPlot  = 0;
@@ -86,22 +91,16 @@ if(flag_outerLoopMode == 0)
 
 end
 
-dataFolder            = 'experiments/StandardTests/';
-plotFolder            = 'output/plots/StandardTests/';
+dataFolder = [projectFolders.experiments_StandardTests,filesep];
+plotFolder = [projectFolders.output_plots_StandardTests,filesep];
 
-parametersDirectoryTree       = genpath('parameters');
-curvesDirectoryTree           = genpath('curves');
-experimentsDirectoryTree      = genpath('experiments');
-simulationDirectoryTree       = genpath('simulation');
-modelDirectoryTree            = genpath('models');
-postprocessingDirectoryTree   = genpath('postprocessing');
 
-addpath(parametersDirectoryTree       );
-addpath(curvesDirectoryTree           );
-addpath(experimentsDirectoryTree      );
-addpath(simulationDirectoryTree       );
-addpath(modelDirectoryTree            );
-addpath(postprocessingDirectoryTree   );
+addpath( genpath(projectFolders.parameters)     );
+addpath( genpath(projectFolders.curves)         );
+addpath( genpath(projectFolders.experiments)    );
+addpath( genpath(projectFolders.simulation)     );
+addpath( genpath(projectFolders.models)         );
+addpath( genpath(projectFolders.postprocessing) );
 
 plotLayoutSettings = struct('numberOfHorizontalPlotColumns',  2,...
                             'numberOfVerticalPlotRows',       2,...
@@ -122,7 +121,9 @@ plotConfig;
 % Load the latest cat soleus configuration
 %%
 %Basic parameters for the Hill model
-load('output/structs/defaultFelineSoleus.mat')
+load(fullfile(projectFolders.output_structs_FittedModels,...
+              'defaultFelineSoleus.mat'));
+
 musculotendonProperties   = defaultFelineSoleus.musculotendon;
 sarcomereProperties       = defaultFelineSoleus.sarcomere;
 normMuscleCurves          = defaultFelineSoleus.curves;
@@ -139,13 +140,20 @@ if(flag_useFig3KirchBoskovRymer1994==1)
   figNameGainPhase = 'Fig3';  
 end
 
-tmp=load(['output/structs/fittedFelineSoleusHL2002KBR1994',figNameGainPhase,'_RT.mat']);
+tmp = load(fullfile(projectFolders.output_structs_FittedModels,...
+              ['fittedFelineSoleusHL2002KBR1994',figNameGainPhase,'_RT.mat']));
+
+%tmp=load(['output/structs/fittedFelineSoleusHL2002KBR1994',figNameGainPhase,'_RT.mat']);
 musculotendonPropertiesOpus31_RT = tmp.fittedFelineSoleus.musculotendon;
 sarcomerePropertiesOpus31_RT     = tmp.fittedFelineSoleus.sarcomere;
 normMuscleCurvesOpus31_RT        = tmp.fittedFelineSoleus.curves;
 fittingOpus31_RT                 = tmp.fittedFelineSoleus.fitting;
 
-tmp=load(['output/structs/fittedFelineSoleusHL2002KBR1994',figNameGainPhase,'_ET.mat']);
+
+tmp = load(fullfile(projectFolders.output_structs_FittedModels,...
+              ['fittedFelineSoleusHL2002KBR1994',figNameGainPhase,'_ET.mat']));
+
+%tmp=load(['output/structs/fittedFelineSoleusHL2002KBR1994',figNameGainPhase,'_ET.mat']);
 musculotendonPropertiesOpus31_ET = tmp.fittedFelineSoleus.musculotendon;
 sarcomerePropertiesOpus31_ET     = tmp.fittedFelineSoleus.sarcomere;
 normMuscleCurvesOpus31_ET        = tmp.fittedFelineSoleus.curves;

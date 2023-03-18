@@ -2,7 +2,9 @@ clc;
 close all;
 clear all;
 
-add('parameters');
+rootDir         = getRootProjectDirectory();
+projectFolders  = getProjectFolders(rootDir);
+
 
 %%
 % Global model parameters
@@ -13,10 +15,10 @@ disp(' to true if running from scratch');
 
 %It has been a long time since this script has been tested on Octave: it 
 %probably no longer works.
-flag_useOctave                        = 0; 
+flag_useOctave            = 0; 
 
-flag_makeAndSavePubPlots              = 1;
-plotOutputFolder                      = 'output/plots/MuscleCurves/';
+flag_makeAndSavePubPlots  = 1;
+plotOutputFolder          = [projectFolders.output_plots_MuscleCurves,filesep];
 
 normMaxActiveTitinToActinDamping = 65;
 
@@ -158,20 +160,13 @@ elasticTendonReferenceModelCatSoleus    = [];
 %%
 % Paths
 %%
+addpath( genpath(projectFolders.parameters)     );
+addpath( genpath(projectFolders.curves)         );
+addpath( genpath(projectFolders.experiments)    );
+addpath( genpath(projectFolders.simulation)     );
+addpath( genpath(projectFolders.models)         );
+addpath( genpath(projectFolders.postprocessing) );
 
-parametersDirectoryTreeMTParams     = genpath('parameters');
-parametersDirectoryTreeExperiments  = genpath('experiments');
-parametersDirectoryTreeModels       = genpath('models');
-parametersDirectoryTreeCurves       = genpath('curves');
-parametersDirectoryTreeSimulation   = genpath('simulation');
-postprocessingDirectoryTree         = genpath('postprocessing');
-
-addpath(parametersDirectoryTreeMTParams     );
-addpath(parametersDirectoryTreeExperiments  );
-addpath(parametersDirectoryTreeModels       );
-addpath(parametersDirectoryTreeCurves       );
-addpath(parametersDirectoryTreeSimulation   );
-addpath(postprocessingDirectoryTree         );
 
 
 %%
@@ -214,8 +209,11 @@ fprintf('\n\nCreating: default feline soleus model\n\n');
                 scaleMaximumIsometricTensionCatSoleus,...
                 flag_useOctave);
 
-save('output/structs/defaultFelineSoleus.mat',...
-     'defaultFelineSoleus');  
+
+filePathDefault = fullfile(   projectFolders.output_structs_FittedModels,...
+                                    'defaultFelineSoleus.mat');
+
+save(filePathDefault,'defaultFelineSoleus');  
 
 if(flag_plotAllDefaultFelineSoleusCurves==1)
     figHumanSoleusCurves = ...
@@ -245,13 +243,18 @@ if(flag_fitFelineSoleusActiveTitinProperties==1)
             defaultFelineSoleus,...
             flag_useElasticTendon,...
             felineSoleusPassiveForceLengthCurveSettings,...
+            projectFolders,...
             flag_useOctave);
 
     fittedFelineSoleus = fittedFelineSoleusHL2002_RT;
     fittingTag = 'HL2002';
     
-    save(['output/structs/fittedFelineSoleus',fittingTag,'_RT'],...
-            'fittedFelineSoleus');
+    filePathHL2002RT = fullfile(   projectFolders.output_structs_FittedModels,...
+                                    ['fittedFelineSoleus',fittingTag,'_RT']);
+
+    save(filePathHL2002RT,'fittedFelineSoleus');
+    %save(['output/structs/fittedFelineSoleus',fittingTag,'_RT'],...
+    %        'fittedFelineSoleus');
 
     flag_useElasticTendon = 1;
     fittedFelineSoleusHL2002_ET = ...
@@ -264,8 +267,12 @@ if(flag_fitFelineSoleusActiveTitinProperties==1)
     fittedFelineSoleus = fittedFelineSoleusHL2002_ET;
     fittingTag = 'HL2002';
 
-    save(['output/structs/fittedFelineSoleus',fittingTag,'_ET'],...
-            'fittedFelineSoleus');
+    filePathHL2002ET = fullfile(   projectFolders.output_structs_FittedModels,...
+                                    ['fittedFelineSoleus',fittingTag,'_ET']);
+    save(filePathHL2002ET,'fittedFelineSoleus');
+
+    %save(['output/structs/fittedFelineSoleus',fittingTag,'_ET'],...
+    %        'fittedFelineSoleus');
 
 end
 
@@ -274,14 +281,23 @@ if(flag_loadFittedFelineSoleusActiveTitinProperties==1)
     disp(['   fitFelineSoleusPevkActinBondLocation']);
 
     fittingTag = 'HL2002';
-    tmp=load(['output/structs/fittedFelineSoleus',fittingTag,'_ET']);
-    fittedFelineSoleusHL2002_ET=tmp.fittedFelineSoleus;
+    filePathHL2002RT = fullfile(   projectFolders.output_structs_FittedModels,...
+                                    ['fittedFelineSoleus',fittingTag,'_RT']);
+    tmp=load(filePathHL2002RT);    
+    %tmp=load(['output/structs/fittedFelineSoleus',fittingTag,'_RT']);
 
-    
-    tmp=load(['output/structs/fittedFelineSoleus',fittingTag,'_RT']);
     fittedFelineSoleusHL2002_RT=tmp.fittedFelineSoleus;
+    
+
+    filePathHL2002ET = fullfile(   projectFolders.output_structs_FittedModels,...
+                                    ['fittedFelineSoleus',fittingTag,'_ET']);
 
 
+    tmp=load(filePathHL2002ET);
+    %tmp=load(['output/structs/fittedFelineSoleus',fittingTag,'_ET']);
+
+    fittedFelineSoleusHL2002_ET=tmp.fittedFelineSoleus;
+    
 else
     disp([' Using default feline solues ']);        
 end
@@ -353,9 +369,14 @@ for indexGainPhase = 1:1:length(gainPhaseTypeNames)
                 flag_useOctave);
 
         
-        save([['output/structs/fittedFelineSoleus',fittingTag],...
-            figNameGainPhase,tendonTypeNames{indexTendon},'.mat'],...
-              'fittedFelineSoleus')
+        filePathKBR1994 = fullfile(projectFolders.output_structs_FittedModels,...
+            ['fittedFelineSoleus',fittingTag,...
+            figNameGainPhase,tendonTypeNames{indexTendon},'.mat']);
+        save(filePathKBR1994,'fittedFelineSoleus');
+
+        %save([['output/structs/fittedFelineSoleus',fittingTag],...
+        %    figNameGainPhase,tendonTypeNames{indexTendon},'.mat'],...
+        %      'fittedFelineSoleus')
 
         typeNumber = (tendonTypeValues(1,indexTendon))*100 ...
                      + gainPhaseTypeValues(1,indexGainPhase);
@@ -420,8 +441,13 @@ rabbitPsoasFibrilWLC = createRabbitPsoasFibrilModel(...
                               scaleMaximumIsometricTensionRabbitPsoas, ...
                               flag_useOctave);
 
-save('output/structs/rabbitPsoasFibrilWLC.mat',...
-     'rabbitPsoasFibrilWLC');  
+filePathRabbitPsoas = fullfile(projectFolders.output_structs_FittedModels,...
+                                'rabbitPsoasFibrilWLC.mat');
+
+save(filePathRabbitPsoas,'rabbitPsoasFibrilWLC');
+
+%save('output/structs/rabbitPsoasFibrilWLC.mat',...
+%     'rabbitPsoasFibrilWLC');  
 
 if(flag_plotAllRabbitPsoasFibrilCurves==1)
     figRabbitPsoasFibrilCurves = ...
@@ -452,8 +478,12 @@ tunedRabbitPsoasFibril = createRabbitPsoasFibrilModel(...
 tunedRabbitPsoasFibril.sarcomere.normMaxActiveTitinToActinDamping = ...
     tunedRabbitPsoasFibril.sarcomere.normMaxActiveTitinToActinDamping*10;
 
-save('output/structs/tunedRabbitPsoasFibril.mat',...
-     'tunedRabbitPsoasFibril');  
+filePathTunedRabbitPsoas = fullfile(projectFolders.output_structs_FittedModels,...
+                                'tunedRabbitPsoasFibril.mat');
+save(filePathTunedRabbitPsoas,'tunedRabbitPsoasFibril');
+
+%save('output/structs/tunedRabbitPsoasFibril.mat',...
+%     'tunedRabbitPsoasFibril');  
 
 flag_plotAllTunedRabbitPsoasFibrilCurves=1;
 if(flag_plotAllTunedRabbitPsoasFibrilCurves==1)
@@ -484,8 +514,12 @@ defaultHumanSoleus = createHumanSoleusModel(...
                         scaleMaximumIsometricTensionHumanSoleus,...
                         flag_useOctave);
 
-save('output/structs/defaultHumanSoleus.mat',...
-     'defaultHumanSoleus');  
+filePathHumanSoleus = fullfile(projectFolders.output_structs_FittedModels,...
+                                'defaultHumanSoleus.mat');
+save(filePathHumanSoleus,'defaultHumanSoleus');
+
+%save('output/structs/defaultHumanSoleus.mat',...
+%     'defaultHumanSoleus');  
 
 if(flag_plotAllHumanSoleusCurves==1)
     figHumanSoleusCurves = ...

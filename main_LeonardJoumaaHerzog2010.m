@@ -5,16 +5,15 @@
 
 flag_outerLoopMode = 1;
 
-rootDir         = pwd;
+rootDir         = getRootProjectDirectory();
 projectFolders  = getProjectFolders(rootDir);
-
 
 if(flag_outerLoopMode == 0)
   clc;
   close all;
   clear all;
 
-  rootDir         = pwd;
+  rootDir         = getRootProjectDirectory();
   projectFolders  = getProjectFolders(rootDir);
 
 
@@ -53,19 +52,12 @@ assert(flag_useElasticTendon ==0,...
        'This is a skinned fibril experiment: there is no tendon!');
 
 
-parametersDirectoryTree       = genpath('parameters');
-curvesDirectoryTree           = genpath('curves');
-experimentsDirectoryTree      = genpath('experiments');
-simulationDirectoryTree       = genpath('simulation');
-modelDirectoryTree            = genpath('models');
-postprocessingDirectoryTree   = genpath('postprocessing');
-
-addpath(parametersDirectoryTree       );
-addpath(curvesDirectoryTree           );
-addpath(experimentsDirectoryTree      );
-addpath(simulationDirectoryTree       );
-addpath(modelDirectoryTree            );
-addpath(postprocessingDirectoryTree   );
+addpath( genpath(projectFolders.parameters)     );
+addpath( genpath(projectFolders.curves)         );
+addpath( genpath(projectFolders.experiments)    );
+addpath( genpath(projectFolders.simulation)     );
+addpath( genpath(projectFolders.models)         );
+addpath( genpath(projectFolders.postprocessing) );
 
 plotLayoutSettings = struct('numberOfHorizontalPlotColumns',  1,...
                             'numberOfVerticalPlotRows',       3,...
@@ -106,7 +98,9 @@ outputFileEndingHill = 'Default';
 
 %Basic parameters for the Hill model
 if(flag_useTunedRabbitPsoasModel==0)
-    tmp=load('output/structs/rabbitPsoasFibrilWLC.mat');
+    tmp=load(fullfile(projectFolders.output_structs_FittedModels,...
+                      'rabbitPsoasFibrilWLC.mat'));
+
     musculotendonProperties   = tmp.rabbitPsoasFibrilWLC.musculotendon;
     sarcomereProperties       = tmp.rabbitPsoasFibrilWLC.sarcomere;
     normMuscleCurves          = tmp.rabbitPsoasFibrilWLC.curves;
@@ -114,7 +108,8 @@ if(flag_useTunedRabbitPsoasModel==0)
     outputFileEndingOpus31 = 'WLC-Titin';
 
 else
-    tmp=load('output/structs/tunedRabbitPsoasFibril.mat');
+    tmp=load(fullfile(projectFolders.output_structs_FittedModels,...
+                     'tunedRabbitPsoasFibril.mat'));
     musculotendonProperties   = tmp.tunedRabbitPsoasFibril.musculotendon;
     sarcomereProperties       = tmp.tunedRabbitPsoasFibril.sarcomere;
     normMuscleCurves          = tmp.tunedRabbitPsoasFibril.curves;
@@ -142,12 +137,12 @@ if(flag_useFig3KirchBoskovRymer1994==1)
 end
 
 
-%%
+%%[
 % Meta configuration properties: Do not touch.  
 %%
 
-dataFolder = 'experiments/LeonardJoumaaHerzog2010/';
-plotFolder = 'output/plots/LeonardJoumaaHerzog2010/';
+dataFolder = [projectFolders.experiments_LJH2010,filesep];
+plotFolder = [projectFolders.output_plots_LJH2010,filesep];
 
 
 %%
@@ -160,10 +155,16 @@ plotFolder = 'output/plots/LeonardJoumaaHerzog2010/';
 %%
 % Retreive the experiment information
 %%
-fileFig2Inset = ['experiments/LeonardJoumaaHerzog2010/data/',...
-                 'fig_LeonardJoumaaHerzog2010_Fig2_Inset.csv'];
-fileFig2Main  = ['experiments/LeonardJoumaaHerzog2010/data/',...
-                 'fig_LeonardJoumaaHerzog2010_Fig2_Main.csv'];
+
+fileFit2Inset = fullfile(projectFolders.experiments_LJH2010,...
+                        'data','fig_LeonardJoumaaHerzog2010_Fig2_Inset.csv');
+fileFig2Main  = fullfile(projectFolders.experiments_LJH2010,...
+                         'data','fig_LeonardJoumaaHerzog2010_Fig2_Main.csv');
+
+%fileFig2Inset = ['experiments/LeonardJoumaaHerzog2010/data/',...
+%                 'fig_LeonardJoumaaHerzog2010_Fig2_Inset.csv'];
+%fileFig2Main  = ['experiments/LeonardJoumaaHerzog2010/data/',...
+%                 'fig_LeonardJoumaaHerzog2010_Fig2_Main.csv'];
 
 dataLJH2010Fig2Inset = ...
     loadDigitizedData( fileFig2Inset,...

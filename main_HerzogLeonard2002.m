@@ -1,29 +1,34 @@
-% A simulation of 
+%
+% A simulation of Herzog & Leonard's 2002 experiment using matlab 
+% implementations of the proposed model and a Hill model (the Matlab
+% version of the Millard2012 model that is a part of OpenSim)
+%
+%   Proposed model: rigid and elastic tendon versions
+%   Hill model    : rigid and elastic tendon versions 
 %
 % Herzog W, Leonard TR. Force enhancement following stretching of skeletal 
 % muscle: a new mechanism. Journal of Experimental Biology. 
 % 2002 May 1;205(9):1275-83.
+%
+flag_outerLoopMode = 1;
 
-flag_outerLoopMode = 0;
-
-rootDir         = pwd;
+rootDir         = getRootProjectDirectory();
 projectFolders  = getProjectFolders(rootDir);
-
 
 if(flag_outerLoopMode == 0)% && flag_buildCombinedPlot == 1)
   clc;
   close all;
   clear all;
 
-  rootDir         = pwd;
+  rootDir         = getRootProjectDirectory();
   projectFolders  = getProjectFolders(rootDir);
 
   figDescendingCombined = figure;
   flag_buildCombinedPlot = 1;
 
   
-  flag_simulateHillModel                        = 1; 
-  flag_simulateOpus31Model                      = 1;
+  flag_simulateHillModel                        = 0; 
+  flag_simulateOpus31Model                      = 0;
   flag_useCalibratedOpus31Curves                = 1;
   flag_useTitinCurvesWithRigidIgDSegment        = 0;
   flag_useTwoSidedTitinCurves                   = 0;
@@ -32,9 +37,9 @@ if(flag_outerLoopMode == 0)% && flag_buildCombinedPlot == 1)
   flag_useElasticTendon                         = 0;  
   flag_useFiberDamping                          = 1;
   
-  flag_simulateActiveStretch  = 1;
-  flag_simulatePassiveStretch = 1;
-  flag_simulateStatic         = 1;
+  flag_simulateActiveStretch  = 0;
+  flag_simulatePassiveStretch = 0;
+  flag_simulateStatic         = 0;
   
 
   flag_plotData = 1;
@@ -71,19 +76,12 @@ if(flag_outerLoopMode == 0)% && flag_buildCombinedPlot == 1)
 end
 
 
-parametersDirectoryTree       = genpath(projectFolders.parameters);
-curvesDirectoryTree           = genpath(projectFolders.curves);
-experimentsDirectoryTree      = genpath(projectFolders.experiments);
-simulationDirectoryTree       = genpath(projectFolders.simulation);
-modelDirectoryTree            = genpath(projectFolders.models);
-postprocessingDirectoryTree   = genpath(projectFolders.postprocessing);
-
-addpath(parametersDirectoryTree       );
-addpath(curvesDirectoryTree           );
-addpath(experimentsDirectoryTree      );
-addpath(simulationDirectoryTree       );
-addpath(modelDirectoryTree            );
-addpath(postprocessingDirectoryTree   );
+addpath( genpath(projectFolders.parameters)     );
+addpath( genpath(projectFolders.curves)         );
+addpath( genpath(projectFolders.experiments)    );
+addpath( genpath(projectFolders.simulation)     );
+addpath( genpath(projectFolders.models)         );
+addpath( genpath(projectFolders.postprocessing) );
 
 plotLayoutSettings = struct('numberOfHorizontalPlotColumns',  1,...
                             'numberOfVerticalPlotRows',       3,...

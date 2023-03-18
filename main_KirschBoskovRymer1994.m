@@ -6,10 +6,16 @@
 
 flag_outerLoopMode = 1;
 
+rootDir         = getRootProjectDirectory();
+projectFolders  = getProjectFolders(rootDir);
+
+
 if(flag_outerLoopMode == 0)
   clc;
   close all;
   clear all;
+  rootDir         = getRootProjectDirectory();
+  projectFolders  = getProjectFolders(rootDir);
 
   flag_simulateHillModel                        = 0; 
   flag_simulateOpus31Model                      = 1;
@@ -32,19 +38,14 @@ if(flag_outerLoopMode == 0)
 end 
 
 
-parametersDirectoryTree       = genpath('parameters');
-curvesDirectoryTree           = genpath('curves');
-experimentsDirectoryTree      = genpath('experiments');
-simulationDirectoryTree       = genpath('simulation');
-modelDirectoryTree            = genpath('models');
-postprocessingDirectoryTree   = genpath('postprocessing');
+modelStructsDir = [projectFolders.output_structs_FittedModels,filesep];
 
-addpath(parametersDirectoryTree       );
-addpath(curvesDirectoryTree           );
-addpath(experimentsDirectoryTree      );
-addpath(simulationDirectoryTree       );
-addpath(modelDirectoryTree            );
-addpath(postprocessingDirectoryTree   );
+addpath( genpath(projectFolders.parameters)     );
+addpath( genpath(projectFolders.curves)         );
+addpath( genpath(projectFolders.experiments)    );
+addpath( genpath(projectFolders.simulation)     );
+addpath( genpath(projectFolders.models)         );
+addpath( genpath(projectFolders.postprocessing) );
 
 assert(flag_pubPlotFrequencyResponseKBR1994Fig3 ...
       *flag_pubPlotStiffnessDampingKBR1994Fig12 ==0);
@@ -357,19 +358,19 @@ if(flag_fitToFig3KirchBoskovRymer1994==1)
   figNameGainPhase = 'Fig3';  
 end
 
-tmp = load('output/structs/defaultFelineSoleus.mat');
+tmp = load([modelStructsDir,'defaultFelineSoleus.mat']);
 musculotendonProperties   = tmp.defaultFelineSoleus.musculotendon;
 sarcomereProperties       = tmp.defaultFelineSoleus.sarcomere;
 normMuscleCurves          = tmp.defaultFelineSoleus.curves;
 normMuscleCurves.useCalibratedCurves=flag_useCalibratedOpus31Curves;
 
-tmp=load(['output/structs/fittedFelineSoleusHL2002KBR1994',figNameGainPhase,'_RT.mat']);
+tmp=load([modelStructsDir,'fittedFelineSoleusHL2002KBR1994',figNameGainPhase,'_RT.mat']);
 musculotendonPropertiesOpus31_RT = tmp.fittedFelineSoleus.musculotendon;
 sarcomerePropertiesOpus31_RT     = tmp.fittedFelineSoleus.sarcomere;
 normMuscleCurvesOpus31_RT        = tmp.fittedFelineSoleus.curves;
 fittingOpus31_RT                 = tmp.fittedFelineSoleus.fitting;
 
-tmp=load(['output/structs/fittedFelineSoleusHL2002KBR1994',figNameGainPhase,'_ET.mat']);
+tmp=load([modelStructsDir,'fittedFelineSoleusHL2002KBR1994',figNameGainPhase,'_ET.mat']);
 musculotendonPropertiesOpus31_ET = tmp.fittedFelineSoleus.musculotendon;
 sarcomerePropertiesOpus31_ET     = tmp.fittedFelineSoleus.sarcomere;
 normMuscleCurvesOpus31_ET          = tmp.fittedFelineSoleus.curves;

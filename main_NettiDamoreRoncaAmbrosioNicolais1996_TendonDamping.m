@@ -5,23 +5,28 @@ clear all;
 flag_usingOctave=0;
 flag_NormalizeByKmax=1;
 
-experimentsDirectoryTree      = genpath('experiments');
-addpath(experimentsDirectoryTree      );
+flag_addCurveStorageModulus=0;
+%The publication plots are making the point that the loss modulus is
+%well approximated as a scaled version of the storage modulus. It is 
+%a bit of a distraction to show, on top of this, the storage modulus
+%of the tendon-force-lenght curve.
 
-postprocessingDirectoryTree      = genpath('postprocessing');
-addpath(postprocessingDirectoryTree   );
+rootDir         = getRootProjectDirectory();
+projectFolders  = getProjectFolders(rootDir);
 
-parametersDirectoryTreeCurves       = genpath('curves');
-addpath(parametersDirectoryTreeCurves);
+addpath(genpath(projectFolders.curves));
+addpath(genpath(projectFolders.experiments));
+addpath(genpath(projectFolders.postprocessing));
 
-pubOutputFolder = 'output/plots/NettiDamoreRoncaAmbrosioNicolais1996/';
 
-folderNetti1996 = 'experiments/NettiDamoreRoncaAmbrosioNicolais1996/';
-
-fileNetti1996Figure5  = [folderNetti1996, 'Netti1996Figure5.csv'];
-fileNetti1996Figure7  = [folderNetti1996, 'Netti1996Figure7.csv'];
-fileNetti1996Figure9  = [folderNetti1996, 'Netti1996Figure9.csv'];
-fileNetti1996Figure11 = [folderNetti1996, 'Netti1996Figure11.csv'];
+fileNetti1996Figure5  = fullfile( projectFolders.experiments_NDRAN1996,...
+                        'Netti1996Figure5.csv' );
+fileNetti1996Figure7  = fullfile( projectFolders.experiments_NDRAN1996,...
+                        'Netti1996Figure7.csv' );
+fileNetti1996Figure9  = fullfile( projectFolders.experiments_NDRAN1996,...
+                        'Netti1996Figure9.csv' );
+fileNetti1996Figure11 = fullfile( projectFolders.experiments_NDRAN1996,...
+                        'Netti1996Figure11.csv');
 
 dataNetti1996Figure5 = loadDigitizedData(fileNetti1996Figure5,...
                          'Frequency (Hz)',['Storage Modulus, E` MPa'],...
@@ -92,9 +97,9 @@ plotConfigGeneric;
 figNetti = figure;
 figPub = figure;
 
-%subPlotSquare(1,1)=subPlotSquare(1,1)*0.5;
-%subPlotSquare(1,2)=subPlotSquare(1,2);
-load('output/structs/defaultFelineSoleus.mat');
+load(fullfile(projectFolders.output_structs_FittedModels,'defaultFelineSoleus.mat'));
+
+
 
 figure(figPub);
     subplot('Position',reshape(subPlotPanel(1,1,:),1,4));
@@ -118,6 +123,26 @@ figure(figPub);
     box off;
     axis tight;
 
+    ftIso = 161.3+86.4+24.1;
+%    
+% From Siebert et al, we know the maximum isometric
+% forces that the gastrocs (161.3 +/- 18.2N), plantarius (86.4 +/- 21.3 N), 
+% and soleus (24.1 +/- 5.8 N) can apply to the Achilles tendon of a 
+% 3.2 kg rabbit is, in total 271.8 +/- 45.3 N. 
+%
+% If we assume at the rabbits in Siebert et al.'s study are a decent
+% approximation of the rabbits in Netti et al.'s study (the species
+% differs, and the Netti did not report the mass of the rabbits) then the 
+% 60 N load in Netti's study corresponds to a normalized tendon load of
+% 60/271.8 = 0.22
+% 
+% The plot of the storage modulus does not look great. Since it is unclear
+% exactly what the maximum isometric force of the triceps surae of the 
+%
+% Siebert T, Leichsenring K, Rode C, Wick C, Stutzig N, Schubert H, 
+% Blickhan R, Böl M. Three-dimensional muscle architecture and 
+% comprehensive dynamic properties of rabbit gastrocnemius, plantaris 
+% and soleus: input for simulation studies. PLoS one. 2015 Jun 26;10(6):e0130985.
 
 figure(figNetti);
 subplotStorageVsFreq = reshape(subPlotPanel(1,1,:),1,4);
@@ -233,11 +258,11 @@ for idxFigure=1:1:2
       text(dataNetti1996Figure7(z).x(end),...
            dataNetti1996Figure7(z).y(end),...
            [dataNetti1996Figure7(z).seriesName, ' Netti'],...
-           'HorizontalAlignment','left',...
+           'HorizontalAlignment','right',...
            'Color',lineColor);
       hold on;
          
-      
+          
       if(z==length(dataNetti1996Figure7))
         xlabel(dataNetti1996Figure7(z).xName);
         ylabel(dataNetti1996Figure7(z).yName);       
@@ -246,6 +271,21 @@ for idxFigure=1:1:2
       end
       %axis square;
       
+    end
+
+    if(flag_addCurveStorageModulus==1)
+        ftCurve = curveSample.y.*ftIso;
+        idx_5N_60N = find(ftCurve <= 60 & ftCurve >= 5);
+        dydxAt60N = max(curveSample.dydx(idx_5N_60N));
+        curveNormStiffness.f = ftCurve(idx_5N_60N);
+        curveNormStiffness.kN = curveSample.dydx(idx_5N_60N)./dydxAt60N;
+        plot(curveNormStiffness.f,...
+             curveNormStiffness.kN,...
+            '-','Color',[0,0,0] );
+        hold on;
+        text(curveNormStiffness.f(1,1),...
+             curveNormStiffness.kN(1,1),'Model');
+        hold on;
     end
     xlim([0,70]);
     
@@ -276,7 +316,7 @@ for idxFigure=1:1:2
       text(dataNetti1996Figure11(z).x(end),...
            dataNetti1996Figure11(z).y(end),...
            [dataNetti1996Figure11(z).seriesName,' Netti'],...
-           'HorizontalAlignment','left',...
+           'HorizontalAlignment','right',...
            'Color',lineColor);
       hold on;
          
@@ -331,37 +371,38 @@ for idxFigure=1:1:2
     [x,flag_converged,relres,iter] =lsqr(A,b,1e-6,1000);
     
     disp('Damping Model Coefficients')
-    disp([num2str(x(1,1)),' Linear']);
+    disp(['  ',num2str(x(1,1)),' Linear']);
     %disp([num2str(x(2,1)),' Constant']);
-    disp([num2str(relres),' Rel.Error']);
-    disp([num2str(iter),' Iter']);
-    disp([num2str(flag_converged),' Converged']);
+    disp(['  ',num2str(relres),' Rel.Error']);
+    disp(['  ',num2str(iter),' Iter']);
+    disp(['  ',num2str(flag_converged),' Converged']);
     
     modelDamping= A*x;
     
-    subplot('Position',subplotLossVsFreq);
-    
-    for w = 1:1:length(modelDamping)
-      n = (w-1)/(length(modelDamping)-1);
-      color0 = [0.5,0.5,0.5];
-      color1 = [0,0,0];
-      lineColor = color0.*(1-n) + color1.*(n);
-      
-      loglog( [0.4,40],...
-              [1,1].*modelDamping(w,1),...
-              '-.','Color',lineColor);
-      hold on;
-      
-      text(0.4,...
-           modelDamping(w,1),...
-           [dataNetti1996Figure9(w).seriesName, ' Model'],...
-           'HorizontalAlignment','left',...
-           'VerticalAlignment','bottom',...
-           'Color',lineColor);
-      hold on;  
-      
+    if(idxFigure==1)    
+        subplot('Position',subplotLossVsFreq);
+        
+        for w = 1:1:length(modelDamping)
+          n = (w-1)/(length(modelDamping)-1);
+          color0 = [0.5,0.5,0.5];
+          color1 = [0,0,0];
+          lineColor = color0.*(1-n) + color1.*(n);
+          
+          loglog( [0.4,40],...
+                  [1,1].*modelDamping(w,1),...
+                  '-.','Color',lineColor);
+          hold on;
+          
+          text(0.4,...
+               modelDamping(w,1),...
+               [dataNetti1996Figure9(w).seriesName, ' Model'],...
+               'HorizontalAlignment','left',...
+               'VerticalAlignment','bottom',...
+               'Color',lineColor);
+          hold on;  
+          
+        end
     end
-    
     %xlim([0,100]);
     
     subplot('Position',subplotLossVsForce)
@@ -382,11 +423,30 @@ for idxFigure=1:1:2
     plot(sampleForces, sampleDamping,'-.','Color',[0,0,0]);
     hold on;
     
-    text(sampleForces(1),sampleDamping(1),'Model',...
-         'HorizontalAlignment','left',...
-         'VerticalAlignment','top',...
-         'Color',[0,0,0]);
-    hold on;     
+    if(flag_addCurveStorageModulus==1)
+        plot(curveNormStiffness.f,...
+             curveNormStiffness.kN.*x,...
+            '-','Color',[0,0,0] );
+        hold on;
+        text(curveNormStiffness.f(1,1),...
+             curveNormStiffness.kN(1,1).*x,...
+             'Model');
+        hold on;
+    end
+
+    if(flag_addCurveStorageModulus==1)
+        text(sampleForces(1),sampleDamping(1),'Scaled Storage Modulus',...
+             'HorizontalAlignment','left',...
+             'VerticalAlignment','top',...
+             'Color',[0,0,0]);
+        hold on;     
+    else
+        text(sampleForces(1),sampleDamping(1),'Model',...
+             'HorizontalAlignment','left',...
+             'VerticalAlignment','top',...
+             'Color',[0,0,0]);
+        hold on; 
+    end
     
     text(1,max(sampleDamping),'$$\beta = \beta_1 \hat{K}^T$$');
     %text(1,max(sampleDamping),'$$\beta = (\beta_1 \hat{K}^T + \beta_0)\,K^T_{max}$$');
@@ -396,12 +456,17 @@ for idxFigure=1:1:2
     xlim([0,70]);
     %axis square;
 
+
 end
 
 figure(figNetti);
 configPlotExporter;
-print('-dpdf', [pubOutputFolder,'fig_NettiData_TendonDampingModel.pdf']); 
+filePath = fullfile(projectFolders.output_plots_NDRAN1996,...
+                    'fig_NettiData_TendonDampingModel.pdf');
+print('-dpdf', filePath); 
 
 figure(figPub);
 configPlotExporter;
-print('-dpdf', [pubOutputFolder,'fig_Pub_NettiData_TendonDampingModel.pdf']); 
+filePath = fullfile(projectFolders.output_plots_NDRAN1996,...
+                    'fig_Pub_NettiData_TendonDampingModel.pdf');
+print('-dpdf', filePath); 

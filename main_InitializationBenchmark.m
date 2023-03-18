@@ -1,10 +1,10 @@
-%%
+%
 % This script will simulate a muscle with a constant activation that is
 % subject to a sinusoidal length change. The quality of the model 
 % initialization is evaluated by comparing the initial state of the 
 % model to the state after a nCycles of the sin wave (after which it)
 % has presumably reached steady state.
-%%
+%
 
 clc;
 close all;
@@ -40,19 +40,12 @@ transientWindowMax = 0.025;
 %%
 %Path setup
 %%
-parametersDirectoryTree       = genpath(projectFolders.parameters);
-curvesDirectoryTree           = genpath(projectFolders.curves);
-experimentsDirectoryTree      = genpath(projectFolders.experiments);
-simulationDirectoryTree       = genpath(projectFolders.simulation);
-modelDirectoryTree            = genpath(projectFolders.models);
-postprocessingDirectoryTree   = genpath(projectFolders.postprocessing);
-
-addpath(parametersDirectoryTree       );
-addpath(curvesDirectoryTree           );
-addpath(experimentsDirectoryTree      );
-addpath(simulationDirectoryTree       );
-addpath(modelDirectoryTree            );
-addpath(postprocessingDirectoryTree   );
+addpath( genpath(projectFolders.parameters)     );
+addpath( genpath(projectFolders.curves)         );
+addpath( genpath(projectFolders.experiments)    );
+addpath( genpath(projectFolders.simulation)     );
+addpath( genpath(projectFolders.models)         );
+addpath( genpath(projectFolders.postprocessing) );
 
 %%
 %Plotting setup
@@ -89,7 +82,8 @@ plotConfigGeneric;
 %%
 
 fileDefaultFelineSoleus = ...
-    fullfile(projectFolders.output_structs,'defaultFelineSoleus.mat');
+    fullfile(   projectFolders.output_structs_FittedModels,...
+                'defaultFelineSoleus.mat');
 
 load(fileDefaultFelineSoleus);
 musculotendonProperties   = defaultFelineSoleus.musculotendon;
