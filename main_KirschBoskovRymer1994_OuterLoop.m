@@ -2,6 +2,9 @@ clc;
 close all;
 clear all;
 
+rootDir         = getRootProjectDirectory();
+projectFolders  = getProjectFolders(rootDir);
+
 %%
 %Run all of the simulations
 %%

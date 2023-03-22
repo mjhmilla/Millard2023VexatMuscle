@@ -3,6 +3,9 @@ close all;
 clear all;
 
 
+rootDir         = getRootProjectDirectory();
+projectFolders  = getProjectFolders(rootDir);
+
 disp('Set these three flags to 1 if running from scratch.');
 flag_defaultSimulation       =1;
 flag_tunedSimulation         =1;

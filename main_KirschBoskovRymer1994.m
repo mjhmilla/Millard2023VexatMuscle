@@ -199,21 +199,23 @@ scaleCrossBridgeCyclingDamping = 1;
 % goes to 1 (with a slope of zero)  at the end of the toe region.
 
                         
-dataFolder = 'experiments/KirschBoskovRymer1994/';
-plotFolder = 'output/plots/KirschBoskovRymer1994/';
-tableFolder= 'output/tables/KirschBoskovRymer1994/';
+dataFolder = [projectFolders.experiments_KBR1994,filesep];
+plotFolder = [projectFolders.output_plots_KBR1994,filesep];
+tableFolder= [projectFolders.output_tables_KBR1994,filesep];
 
 %%
 %Fitting Data
 %%
-fittingFilesGain      = 'experiments/KirschBoskovRymer1994/data/fig_KirschBoskovRymer1994_Fig3_gain.csv';
-fittingFilesPhase     = 'experiments/KirschBoskovRymer1994/data/fig_KirschBoskovRymer1994_Fig3_phase.csv';
-fittingFilesCoherence = 'experiments/KirschBoskovRymer1994/data/fig_KirschBoskovRymer1994_Fig3_coherence.csv';
-fittingFilesK = {'experiments/KirschBoskovRymer1994/data/fig_KirschBoskovRymer1994_Fig9A.csv',...
-                 'experiments/KirschBoskovRymer1994/data/fig_KirschBoskovRymer1994_Fig9B.csv',...
-                 'experiments/KirschBoskovRymer1994/data/fig_KirschBoskovRymer1994_Fig12_K.csv'}; 
-fittingFilesD = {'experiments/KirschBoskovRymer1994/data/fig_KirschBoskovRymer1994_Fig10.csv',...
-                 'experiments/KirschBoskovRymer1994/data/fig_KirschBoskovRymer1994_Fig12_D.csv'}; 
+fittingFilesGain      = fullfile(projectFolders.experiments_KBR1994 ,'data','fig_KirschBoskovRymer1994_Fig3_gain.csv');
+fittingFilesPhase     = fullfile(projectFolders.experiments_KBR1994 ,'data','fig_KirschBoskovRymer1994_Fig3_phase.csv');
+fittingFilesCoherence = fullfile(projectFolders.experiments_KBR1994 ,'data','fig_KirschBoskovRymer1994_Fig3_coherence.csv');
+
+fittingFilesK = {fullfile(projectFolders.experiments_KBR1994,'data','fig_KirschBoskovRymer1994_Fig9A.csv'  ),...
+                 fullfile(projectFolders.experiments_KBR1994,'data','fig_KirschBoskovRymer1994_Fig9B.csv'  ),...
+                 fullfile(projectFolders.experiments_KBR1994,'data','fig_KirschBoskovRymer1994_Fig12_K.csv')}; 
+                 
+fittingFilesD = {fullfile(projectFolders.experiments_KBR1994,'data','fig_KirschBoskovRymer1994_Fig10.csv'  ),...
+                 fullfile(projectFolders.experiments_KBR1994,'data','fig_KirschBoskovRymer1994_Fig12_D.csv')}; 
 
 
 

@@ -5,6 +5,8 @@ clear all;
 %%
 % Generic setup
 %%
+rootDir         = getRootProjectDirectory();
+projectFolders  = getProjectFolders(rootDir);
 
 
 flag_useFig3KirchBoskovRymer1994              = 0; 
@@ -33,9 +35,10 @@ flag_useTwoSidedTitinCurves   = 0;
 flag_plotDataComparison       = 1;
 
 
-simParamsHL2002 = csvread('experiments/HerzogLeonard2002/simulationParametersHerzogLeonard2002.csv');
+simParamsHL2002File = fullfile( projectFolders.experiments_HL2002,...
+                                'simulationParametersHerzogLeonard2002.csv');
+simParamsHL2002 = csvread(simParamsHL2002File);
 nominalNormalizedFiberLength = simParamsHL2002(1,1);
-
 
 
 scaleMaximumIsometricForce     = [];

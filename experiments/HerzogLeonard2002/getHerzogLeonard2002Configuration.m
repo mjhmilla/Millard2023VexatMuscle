@@ -1,5 +1,6 @@
 function expConfigHerzogLeonard2002 = getHerzogLeonard2002Configuration(...
-                        figureNumber, subFigureNumber, trialNumber)
+                        figureNumber, subFigureNumber, trialNumber,...
+                        projectFolders)
 
 idxFitMax = 1500; %All experimental data except series 50 stops at 1500 samples
 
@@ -35,7 +36,8 @@ switch(figureNumber)
   case 7
     switch(subFigureNumber)
       case 1
-        expDataFile = 'data/dataHerzogLeonard2002Figure6and7A.csv';     
+        expDataFile = fullfile(projectFolders.experiments_HL2002,...
+                        'data','dataHerzogLeonard2002Figure6and7A.csv');     
         tmp       = csvread(expDataFile,1,0);
         idxMax = 0;
         for(z=1:1:size(tmp,1))
@@ -64,7 +66,8 @@ switch(figureNumber)
         colLengthPassive = colForcePassive+1;
 
       case 2
-        expDataFile = 'data/dataHerzogLeonard2002Figure7B.csv';        
+        expDataFile = fullfile(projectFolders.experiments_HL2002,...
+                        'data','dataHerzogLeonard2002Figure7B.csv');       
         expData       = csvread(expDataFile,1,0);        
         rampSlope      = (9/1000);  
         idxFitMax = size(expData,1);
@@ -87,7 +90,9 @@ switch(figureNumber)
         colLengthPassive = colForcePassive+1;
 
       case 3
-        expDataFile = 'dataHerzogLeonard2002Figure7C.csv';        
+        expDataFile = fullfile(projectFolders.experiments_HL2002,...
+                        'data','dataHerzogLeonard2002Figure7C.csv');
+
         expData       = csvread(expDataFile,1,0);        
         rampSlope      = (27/1000);  
         idxFitMax = size(expData,1);
