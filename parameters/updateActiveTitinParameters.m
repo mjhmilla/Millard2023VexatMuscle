@@ -11,7 +11,7 @@ function [sarcomerePropertiesOpus31Upd, normMuscleCurvesUpd] = ...
 disp('fitActiveTitinParameters');
 flag_computeCurveIntegrals=0;
 
-dataFolder = fullfile(projectFolders.experiments_HL2002,['fitting',filesep]);
+dataFolder = fullfile(projectFolders.output_structs_HL2002,['fitting',filesep]);
 
 
 %simParamsHL2002 = csvread('experiments/HerzogLeonard2002/simulationParametersHerzogLeonard2002.csv');

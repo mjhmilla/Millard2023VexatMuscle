@@ -25,7 +25,7 @@ expConfigHerzogLeonard2002 =...
                                     projectFolders);
 
 %dataFolder = 'experiments/HerzogLeonard2002/fitting/';
-dataFolder = fullfile(projectFolders.experiments_HL2002,['fitting',filesep]);
+dataFolder = fullfile(projectFolders.output_structs_HL2002,['fitting',filesep]);
 
 
 fittedFelineSoleus=defaultFelineSoleus;

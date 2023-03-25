@@ -9,9 +9,7 @@ projectFolders  = getProjectFolders(rootDir);
 %%
 % Global model parameters
 %%
-disp('set flag_fitFelineSoleusActiveTitinProperties ');
-disp(' and flag_fitFelineCrossbridgeProperties ');
-disp(' to true if running from scratch');
+
 
 %It has been a long time since this script has been tested on Octave: it 
 %probably no longer works.
@@ -145,9 +143,22 @@ flag_loadFittedFelineSoleusActiveTitinProperties        = 0;
 %Numerically identifies the point of attachement between the PEVK segment
 %and actin that produces simulated forces that most closely matches 
 %Herzog & Leonard 2002.
+if(flag_fitFelineSoleusActiveTitinProperties==0)
+    disp('Note 1A: set flag_fitFelineSoleusActiveTitinProperties',...
+        ' to 1 if running the script from scratch.');
+else
+    disp(['Note 1B: Fitting the active properties of titin will take',...
+          ' about 20-30 minutes']);
+end
 
 flag_fitFelineCrossbridgeProperties               = 1;
 flag_loadFittedFelineCrossbridgeProperties        = 0;
+
+if(flag_fitFelineCrossbridgeProperties==0)
+    disp('Note 2: set fitFelineCrossbridgeProperties',...
+        ' to 1 if running the script from scratch.');
+end
+
 
 
 scaleOptimalFiberLengthCatSoleus        = 1.0; 
@@ -263,6 +274,7 @@ if(flag_fitFelineSoleusActiveTitinProperties==1)
             defaultFelineSoleus,...
             flag_useElasticTendon,...          
             felineSoleusPassiveForceLengthCurveSettings,...
+            projectFolders,...
             flag_useOctave);
 
     fittedFelineSoleus = fittedFelineSoleusHL2002_ET;
