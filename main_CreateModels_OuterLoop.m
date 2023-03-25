@@ -5,6 +5,27 @@ clear all;
 rootDir         = getRootProjectDirectory();
 projectFolders  = getProjectFolders(rootDir);
 
+disp('----------------------------------------');
+disp(' running main_CreateModels_OuterLoop');
+disp('----------------------------------------');
+disp('   :run-time: ~20  minutes with titin fitting ');
+disp('             2-3 minutes without titin fitting');
+disp('            *Intel i7-3630QM @ 2.40 GHz, Ubuntu 22');
+disp '             8 GB ram, SSD harddrive');
+disp('----------------------------------------');
+disp('   1. To fit titin:');
+disp('      a. set these flags to 1');
+disp('        flag_fitFelineSoleusActiveTitinProperties');
+disp('        flag_fitFelineCrossbridgeProperties');
+disp('   2. To load saved titin parameters: ');
+disp('      a. set these flags to 0');
+disp('        flag_fitFelineSoleusActiveTitinProperties');
+disp('        flag_fitFelineCrossbridgeProperties');
+disp('      b. set these flags to 1');
+disp('        flag_loadFittedFelineSoleusActiveTitinProperties');
+disp('        flag_loadFittedFelineCrossbridgeProperties');
+disp('----------------------------------------');
+
 
 %%
 % Global model parameters

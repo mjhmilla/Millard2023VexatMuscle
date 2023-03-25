@@ -2,6 +2,15 @@ clc;
 close all;
 clear all;
 
+
+disp('----------------------------------------');
+disp(' running main_HerzogLeonard2002_OuterLoop');
+disp('----------------------------------------');
+disp('   :run-time: ~30 minutes ');
+disp('            *Intel i7-3630QM @ 2.40 GHz, Ubuntu 22');
+disp '             8 GB ram, SSD harddrive');
+disp('----------------------------------------');
+
 %%
 % Generic setup
 %%

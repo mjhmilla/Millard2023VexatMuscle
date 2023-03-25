@@ -12,6 +12,14 @@ clc;
 close all;
 clear all;
 
+disp('----------------------------------------');
+disp(' running main_ClassicForceLengthVelocityExperiments_OuterLoop');
+disp('----------------------------------------');
+disp('   :run-time: ~40 minutes ');
+disp('            *Intel i7-3630QM @ 2.40 GHz, Ubuntu 22');
+disp '             8 GB ram, SSD harddrive');
+disp('----------------------------------------');
+
 %Parameters that are tuned
 % updSlidingTimeConstant              = 0.0025;
 % updForceVelocityCalibrationFactor   = 0.95;
