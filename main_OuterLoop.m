@@ -2,7 +2,7 @@ clc;
 close all;
 clear all;
 
-main_createModels_OuterLoop;
+main_CreateModels_OuterLoop;
 
 clc;
 close all;
