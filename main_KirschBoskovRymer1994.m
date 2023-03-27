@@ -200,7 +200,7 @@ scaleCrossBridgeCyclingDamping = 1;
 
                         
 
-structsFolder = [projectFolders.output_plots_KBR1994,filesep];
+structsFolder = [projectFolders.output_structs_KBR1994,filesep];
 waveFolder    = [structsFolder,'waveforms',filesep];
 plotFolder    = [projectFolders.output_plots_KBR1994,filesep];
 tableFolder   = [projectFolders.output_tables_KBR1994,filesep];

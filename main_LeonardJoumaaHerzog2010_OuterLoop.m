@@ -8,6 +8,15 @@ if(flag_OuterOuterLoopMode ==0)
 end
 
 
+disp('----------------------------------------');
+disp(' running main_LeonardJoumaaHerzog2010_OuterLoop');
+disp('----------------------------------------');
+disp('   :run-time: 6 minutes ');
+disp('            *Intel i7-3630QM @ 2.40 GHz, Ubuntu 22');
+disp '             8 GB ram, SSD harddrive');
+disp('----------------------------------------');
+
+
 rootDir         = getRootProjectDirectory();
 projectFolders  = getProjectFolders(rootDir);
 

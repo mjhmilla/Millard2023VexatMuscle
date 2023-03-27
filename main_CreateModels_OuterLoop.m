@@ -13,29 +13,21 @@ projectFolders  = getProjectFolders(rootDir);
 disp('----------------------------------------');
 disp(' running main_CreateModels_OuterLoop');
 disp('----------------------------------------');
-disp('   :run-time: ~20  minutes with titin fitting ');
+disp('   :run-time: ~26  minutes with titin fitting ');
 disp('             2-3 minutes without titin fitting');
 disp('            *Intel i7-3630QM @ 2.40 GHz, Ubuntu 22');
 disp '             8 GB ram, SSD harddrive');
-disp('----------------------------------------');
-disp('   1. To fit titin:');
-disp('      a. set these flags to 1');
-disp('        flag_fitFelineSoleusActiveTitinProperties');
-disp('        flag_fitFelineCrossbridgeProperties');
-disp('   2. To load saved titin parameters: ');
-disp('      a. set these flags to 0');
-disp('        flag_fitFelineSoleusActiveTitinProperties');
-disp('        flag_fitFelineCrossbridgeProperties');
-disp('      b. set these flags to 1');
-disp('        flag_loadFittedFelineSoleusActiveTitinProperties');
-disp('        flag_loadFittedFelineCrossbridgeProperties');
 disp('----------------------------------------');
 
 
 %%
 % Global model parameters
 %%
-
+flag_loadPreviouslyOptimizedParameters = 1;
+% 0: A lengthy optimization is done to find the best point within the
+%    PEVK segment to bond to actin. This value is saved to file for later
+%    use.
+% 1: Previously calculated parameters are loaded. 
 
 %It has been a long time since this script has been tested on Octave: it 
 %probably no longer works.
@@ -163,29 +155,26 @@ scaleMaximumIsometricTensionHumanSoleus = 1;
 %%
 % Cat Soleus Model Parameters
 %%
-flag_fitFelineSoleusActiveTitinProperties               = 1; 
-flag_loadFittedFelineSoleusActiveTitinProperties        = 0;
-%Takes 10-20 minutes, but must be done once.
-%Numerically identifies the point of attachement between the PEVK segment
-%and actin that produces simulated forces that most closely matches 
-%Herzog & Leonard 2002.
-if(flag_fitFelineSoleusActiveTitinProperties==0)
-    disp('Note 1A: set flag_fitFelineSoleusActiveTitinProperties',...
-        ' to 1 if running the script from scratch.');
+
+flag_fitFelineSoleusActiveTitinProperties               = nan; 
+flag_loadFittedFelineSoleusActiveTitinProperties        = nan;
+flag_fitFelineCrossbridgeProperties                     = nan;
+flag_loadFittedFelineCrossbridgeProperties              = nan;
+
+
+if(flag_loadPreviouslyOptimizedParameters==1)
+    flag_fitFelineSoleusActiveTitinProperties               = 0; 
+    flag_loadFittedFelineSoleusActiveTitinProperties        = 1;
+    flag_fitFelineCrossbridgeProperties                     = 0;
+    flag_loadFittedFelineCrossbridgeProperties              = 1;
+
 else
-    disp(['Note 1B: Fitting the active properties of titin will take',...
-          ' about 20-30 minutes']);
+    flag_fitFelineSoleusActiveTitinProperties               = 1; 
+    flag_loadFittedFelineSoleusActiveTitinProperties        = 0;
+    flag_fitFelineCrossbridgeProperties                     = 1;
+    flag_loadFittedFelineCrossbridgeProperties              = 0;
+
 end
-
-flag_fitFelineCrossbridgeProperties               = 1;
-flag_loadFittedFelineCrossbridgeProperties        = 0;
-
-if(flag_fitFelineCrossbridgeProperties==0)
-    disp('Note 2: set fitFelineCrossbridgeProperties',...
-        ' to 1 if running the script from scratch.');
-end
-
-
 
 scaleOptimalFiberLengthCatSoleus        = 1.0; 
 scaleMaximumIsometricTensionCatSoleus   = 1;

@@ -10,8 +10,8 @@ end
 disp('----------------------------------------');
 disp(' running main_KirschBoskovRymer1994_OuterLoop');
 disp('----------------------------------------');
-disp('   :run-time: ~3 hours ');
-disp('            : Why 3 hours? Nearly 400 simulations are performed');
+disp('   :run-time: 3h 45min (226 min) ');
+disp('            :Why so long? Nearly 400 simulations are performed');
 disp('            *Intel i7-3630QM @ 2.40 GHz, Ubuntu 22');
 disp '             8 GB ram, SSD harddrive');
 disp('----------------------------------------');

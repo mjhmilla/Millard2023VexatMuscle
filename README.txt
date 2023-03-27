@@ -8,7 +8,7 @@ Milard M, Franklin D, and Herzog W. A three filament mechanistic model of muscul
 
 Quick start guide:
 
-1. Execute 'main_OuterLoop.m' from Matlab to run everything. Several hours are needed to run all of the experiments due to the number and numerical stiffness of the simulations performed.
+1. Execute 'main_OuterLoop.m' from Matlab to run everything. Roughly 6 hours (Intel i7-3630QM @ 2.40 GHz, Ubuntu 22 8 GB ram, SSD harddrive) are needed to run all of the experiments due to the number and numerical stiffness of the simulations performed. 
 
 2. The muscle model used for all of the experiments that of a cat soleus. The script that creates all of the parameters needed for the model is 'main_createDefaultFelineSoleusModel.m', while all of the sub-scripts used to create the cat soleus parameters appears in the 'parameters' folder.
 

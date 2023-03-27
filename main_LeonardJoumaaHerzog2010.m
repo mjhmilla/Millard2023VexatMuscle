@@ -16,12 +16,13 @@ if(flag_outerLoopMode == 0)
   rootDir         = getRootProjectDirectory();
   projectFolders  = getProjectFolders(rootDir);
 
+  flag_useTunedRabbitPsoasModel     = 0;
 
   flag_simulateHillModel            = 0; 
   flag_simulateOpus31Model          = 0;
 
   flag_useCalibratedOpus31Curves    = 1;
-  flag_useTwoSidedTitinCurves       = 1;
+  flag_useTwoSidedTitinCurves       = 0;
 
   flag_simulateActiveStretch  = 1;
   flag_simulatePassiveStretch = 1;
@@ -279,9 +280,9 @@ if(flag_plotData == 1)
   subPlotSquareC(1,2) = subPlotSquareC(1,2) - subPlotSquareC(1,4)*1.3;  
 
   
-  dataOpus31LinearTitin = load([dataFolder,'benchRecordOpus31_Linear-Titin.mat']);  
-  dataOpus31WLCTitin = load([dataFolder,'benchRecordOpus31_WLC-Titin']);
-  dataDampedEq = load([dataFolder,'benchRecordHill_Default.mat']);
+  dataOpus31LinearTitin = load([structsFolder,'benchRecordOpus31_Linear-Titin.mat']);  
+  dataOpus31WLCTitin = load([structsFolder,'benchRecordOpus31_WLC-Titin']);
+  dataDampedEq = load([structsFolder,'benchRecordHill_Default.mat']);
 
   expActiveColor  = [1,1,1].*0.75;
   expPassiveColor = [1,1,1].*0.75;

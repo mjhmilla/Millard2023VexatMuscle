@@ -8,14 +8,19 @@
 % Proceedings of the Royal Society of London. Series B-Biological Sciences. 
 % 1938 Oct 10;126(843):136-95.
 
-clc;
-close all;
-clear all;
+%This flag allows us to avoid the memory clearing functions so that
+%this can be timed using tic and tock from within main_OuterLoop
+flag_OuterOuterLoopMode =1;
+if(flag_OuterOuterLoopMode ==0)
+    clc;
+    close all;
+    clear all;
+end
 
 disp('----------------------------------------');
 disp(' running main_ClassicForceLengthVelocityExperiments_OuterLoop');
 disp('----------------------------------------');
-disp('   :run-time: ~40 minutes ');
+disp('   :run-time: ~26 minutes ');
 disp('            *Intel i7-3630QM @ 2.40 GHz, Ubuntu 22');
 disp '             8 GB ram, SSD harddrive');
 disp('----------------------------------------');
