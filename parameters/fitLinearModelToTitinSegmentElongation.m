@@ -47,7 +47,7 @@ dataTrombitas1998Figure5 = loadDigitizedData(fileTrombitas1998Figure5,...
 %Z-to-Igp
 ba = dataTrombitas1998Figure5(1).y;
 Aa = [dataTrombitas1998Figure5(1).x, ones(size(ba))];
-cZToPEVKp = (Aa'*Aa)\(Aa'*ba);
+cZToPEVKp = pinv(Aa'*Aa)*(Aa'*ba);
 
 %lT12 = 0.1;
 %l
@@ -55,7 +55,7 @@ cZToPEVKp = (Aa'*Aa)\(Aa'*ba);
 %Z-to-Pevk
 bb = dataTrombitas1998Figure5(2).y;
 Ab = [dataTrombitas1998Figure5(2).x, ones(size(bb))];
-cZToPEVKd = (Ab'*Ab)\(Ab'*bb);
+cZToPEVKd = pinv(Ab'*Ab)*(Ab'*bb);
 
 cZToPEVKpAdj = cZToPEVKp;
 cZToPEVKdAdj = cZToPEVKd;  
