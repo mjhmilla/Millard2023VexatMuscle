@@ -232,35 +232,49 @@ end
 %%
 [maxDlVal, idxMaxDL] = max(expLengthDataFilt(:,3));
 
-clusterDL = kmeans(expLengthDataFilt(:,3),2);
+% clusterDL = kmeans(expLengthDataFilt(:,3),2);
+% 
+% k         = idxMaxDL;
+% flagSet   = 0;
+% lenT0     = 0;
+% idxRampT0 = 0;
+% cluster0 = clusterDL(idxMaxDL,1);
+% 
+% while(flagSet==0 && k > 2)
+%    if(clusterDL(k,1) ~= cluster0 && flagSet == 0)
+%     lenT0     = expLengthDataFilt(k,1);
+%     idxRampT0 = k;
+%     flagSet   = 1;
+%    end
+%    k=k-1;
+% end
+% 
+% k         = idxMaxDL;
+% flagSet   = 0;
+% lenT1     = 0;
+% idxRampT1 = 0;
+% while(flagSet==0 && k < size(expLengthData,1))
+%    if(clusterDL(k,1) ~= cluster0 && flagSet == 0)
+%     lenT1     = expLengthDataFilt(k,1);
+%     idxRampT1 = k;
+%     flagSet   = 1;
+%    end
+%    k=k+1;
+% end
 
-k         = idxMaxDL;
-flagSet   = 0;
-lenT0     = 0;
-idxRampT0 = 0;
-cluster0 = clusterDL(idxMaxDL,1);
+freq = 1/(expLengthData(2,1)-expLengthData(1,1));
+[b,a] = butter(2,5/(0.5*freq),'low');
+rampSmooth = filtfilt(b,a, expLengthData(:,2));
+rampSmoothVelocity = ...
+    calcCentralDifferenceDataSeries(expLengthData(:,1), rampSmooth);
+rampSmoothAcceleration = filtfilt(b,a, rampSmoothVelocity);
+rampSmoothAcceleration = ...
+    calcCentralDifferenceDataSeries(expLengthData(:,1), rampSmoothAcceleration);
 
-while(flagSet==0 && k > 2)
-   if(clusterDL(k,1) ~= cluster0 && flagSet == 0)
-    lenT0     = expLengthDataFilt(k,1);
-    idxRampT0 = k;
-    flagSet   = 1;
-   end
-   k=k-1;
-end
+[maxVal,idxRampT0] = max(rampSmoothAcceleration);
+[minVal,idxRampT1] = min(rampSmoothAcceleration);
 
-k         = idxMaxDL;
-flagSet   = 0;
-lenT1     = 0;
-idxRampT1 = 0;
-while(flagSet==0 && k < size(expLengthData,1))
-   if(clusterDL(k,1) ~= cluster0 && flagSet == 0)
-    lenT1     = expLengthDataFilt(k,1);
-    idxRampT1 = k;
-    flagSet   = 1;
-   end
-   k=k+1;
-end
+
 
 dl = (expLengthData(idxRampT1,2)-expLengthData(idxRampT0,2))/1000;
 dt =  expLengthData(idxRampT1,1)-expLengthData(idxRampT0,1);
