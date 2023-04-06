@@ -1,6 +1,6 @@
 %This flag allows us to avoid the memory clearing functions so that
 %this can be timed using tic and tock from within main_OuterLoop
-flag_OuterOuterLoopMode =0;
+flag_OuterOuterLoopMode =1;
 if(flag_OuterOuterLoopMode ==0)
     clc;
     close all;
