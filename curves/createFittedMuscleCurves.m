@@ -1,3 +1,17 @@
+%%
+% SPDX-FileCopyrightText: 2023 Matthew Millard <millard.matthew@gmail.com>
+%
+% SPDX-License-Identifier: MIT
+%
+% If you use this code in your work please cite the pre-print of this paper
+% or the most recent peer-reviewed version of this paper:
+%
+%    Matthew Millard, David W. Franklin, Walter Herzog. 
+%    A three filament mechanistic model of musculotendon force and impedance. 
+%    bioRxiv 2023.03.27.534347; doi: https://doi.org/10.1101/2023.03.27.534347 
+%
+%%
+
 function [normMuscleCurves,...
           musculotendonPropertiesUpd,...
           sarcomerePropertiesUpd,...
@@ -20,7 +34,7 @@ function [normMuscleCurves,...
                       flag_useOctave)
 %%
 % Will create all of the Bezier curves that are needed to simulate both
-% Opus31 and 2012 equilibrium muscle model
+% Vexat and 2012 equilibrium muscle model
 % 
 % @param musculotendonProperties:
 %   A struct that contains architectural properties of the muscle along with 
@@ -31,7 +45,7 @@ function [normMuscleCurves,...
 %   A struct that returns the normalized lengths of the various filaments
 %   in the sarcomeres of the type of muscle being simulated in addition to
 %   some additional properites related to cross bridge stiffness and damping
-%   required in Opus31. See the current example in
+%   required in Vexat. See the current example in
 %   in parameters/felineSoleus/getMammalianSkeletalMuscleNormalizedSarcomereProperties.m
 %
 % @param dataActiveForceLength

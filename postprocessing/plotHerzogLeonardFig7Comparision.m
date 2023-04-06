@@ -1,5 +1,19 @@
+%%
+% SPDX-FileCopyrightText: 2023 Matthew Millard <millard.matthew@gmail.com>
+%
+% SPDX-License-Identifier: MIT
+%
+% If you use this code in your work please cite the pre-print of this paper
+% or the most recent peer-reviewed version of this paper:
+%
+%    Matthew Millard, David W. Franklin, Walter Herzog. 
+%    A three filament mechanistic model of musculotendon force and impedance. 
+%    bioRxiv 2023.03.27.534347; doi: https://doi.org/10.1101/2023.03.27.534347 
+%
+%%
+
 function figH = plotHerzogLeonardFig7Comparision(...
-                  expConfigHerzogLeonard2002,dataOpus31, dataDampedEq,  ...
+                  expConfigHerzogLeonard2002,dataVexat, dataDampedEq,  ...
                   figureNumber,subFigureNumber,trialNumber,...
                   figH,subPlotPairPanel)
                
@@ -72,23 +86,23 @@ if(trialNumber==3)
         'Color',lineColorExp,'LineWidth',expLineWidth);
   hold on;
 end  
-lineOpus31 = [];
+lineVexat = [];
 lineHill = [];
 
-if(isempty(dataOpus31.benchRecord)==0)
-    for i=1:1:size(dataOpus31.benchRecord.time,2)
+if(isempty(dataVexat.benchRecord)==0)
+    for i=1:1:size(dataVexat.benchRecord.time,2)
       n=0;
-      if(size(dataOpus31.benchRecord.time,2)>1)
-        n = (i-1)/(size(dataOpus31.benchRecord.time,2)-1);
+      if(size(dataVexat.benchRecord.time,2)>1)
+        n = (i-1)/(size(dataVexat.benchRecord.time,2)-1);
       end
       lineColor = [1,0,0].*(1-n) + [0.75,0.25,0.25].*(n);
       if(i==1)
-        lineOpus31 = plot(dataOpus31.benchRecord.time(:,i), ...
-                          dataOpus31.benchRecord.tendonForce(:,i),...
+        lineVexat = plot(dataVexat.benchRecord.time(:,i), ...
+                          dataVexat.benchRecord.tendonForce(:,i),...
                           'Color',lineColorModel,'LineWidth',1);      
       else
-        plot(dataOpus31.benchRecord.time(:,i), ...
-                          dataOpus31.benchRecord.tendonForce(:,i),...
+        plot(dataVexat.benchRecord.time(:,i), ...
+                          dataVexat.benchRecord.tendonForce(:,i),...
                           'Color',lineColorModel,'LineWidth',1);
       end
       hold on;
@@ -115,7 +129,7 @@ if(isempty(dataDampedEq.benchRecord)==0)
     end
 end
 if(trialNumber == 3)
-  legend([lineOpus31,lineHill],'Model', 'Hill-type');
+  legend([lineVexat,lineHill],'Model', 'Hill-type');
   legend boxoff;
 end
 

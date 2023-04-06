@@ -1,3 +1,17 @@
+%%
+% SPDX-FileCopyrightText: 2023 Matthew Millard <millard.matthew@gmail.com>
+%
+% SPDX-License-Identifier: MIT
+%
+% If you use this code in your work please cite the pre-print of this paper
+% or the most recent peer-reviewed version of this paper:
+%
+%    Matthew Millard, David W. Franklin, Walter Herzog. 
+%    A three filament mechanistic model of musculotendon force and impedance. 
+%    bioRxiv 2023.03.27.534347; doi: https://doi.org/10.1101/2023.03.27.534347 
+%
+%%
+
 %This flag allows us to avoid the memory clearing functions so that
 %this can be timed using tic and tock from within main_OuterLoop
 flag_OuterOuterLoopMode =1;
@@ -30,7 +44,7 @@ figHerzogLeonard2002Fig7Comparision = figure;
 
 figDescendingCombined = figure;
 
-flag_testOpus31DerivativeFunction = 0;
+flag_testVexatDerivativeFunction = 0;
 flag_useOctave                    = 0;
 
 
@@ -42,8 +56,8 @@ flag_simulatePassiveStretch = 1;
 flag_simulateStatic         = 1;
 
 flag_simulateHillModel        = 1; 
-flag_simulateOpus31Model      = 1;
-flag_useCalibratedOpus31Curves= 1;
+flag_simulateVexatModel      = 1;
+flag_useCalibratedVexatCurves= 1;
 flag_useTitinCurvesWithRigidIgDSegment   = 0;
 flag_useTwoSidedTitinCurves   = 0;
 flag_plotDataComparison       = 1;
@@ -63,7 +77,7 @@ normPassiveTitinToActinDamping = [];%[]: take the default. Prev. 1.5;
 
 
 if( flag_simulateHillModel == 1 ... 
-    || flag_simulateOpus31Model == 1)
+    || flag_simulateVexatModel == 1)
   
   for indexTendonType=1:1:2
 
@@ -96,7 +110,7 @@ end
 if(flag_plotDataComparison==1)
 
   flag_simulateHillModel      = 0; 
-  flag_simulateOpus31Model    = 0;
+  flag_simulateVexatModel    = 0;
 
   flag_plotData=1;
   for indexSubFigureNumber=1:1:3

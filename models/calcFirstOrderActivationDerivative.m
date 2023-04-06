@@ -1,3 +1,10 @@
+%%
+% SPDX-FileCopyrightText: 2015 Matthew Millard <millard.matthew@gmail.com>
+%
+% SPDX-License-Identifier: Apache-2.0
+%
+%%
+
 %/*-------------------------------------------------------------------------- *
 %*              OpenSim:  FirstOrderMuscleActivationDynamics.cpp              *
 %* -------------------------------------------------------------------------- *

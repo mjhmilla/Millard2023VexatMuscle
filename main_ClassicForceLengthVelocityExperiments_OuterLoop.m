@@ -1,3 +1,17 @@
+%%
+% SPDX-FileCopyrightText: 2023 Matthew Millard <millard.matthew@gmail.com>
+%
+% SPDX-License-Identifier: MIT
+%
+% If you use this code in your work please cite the pre-print of this paper
+% or the most recent peer-reviewed version of this paper:
+%
+%    Matthew Millard, David W. Franklin, Walter Herzog. 
+%    A three filament mechanistic model of musculotendon force and impedance. 
+%    bioRxiv 2023.03.27.534347; doi: https://doi.org/10.1101/2023.03.27.534347 
+%
+%%
+
 % A simulation of versions of the experiments of Gordon et al., and Hill.
 %
 % Gordon, A. M., Huxley, A. F., & Julian, F. J. (1966). The variation 
@@ -31,7 +45,7 @@ disp('----------------------------------------');
 
 %Parameters that do not change
 flag_simulateHillModel            = 1;  
-flag_simulateOpus31Model          = 1;
+flag_simulateVexatModel          = 1;
 
 flag_useSimulatePlotRigidTendon   = 1;
 flag_useSimulatePlotElasticTendon = 1;

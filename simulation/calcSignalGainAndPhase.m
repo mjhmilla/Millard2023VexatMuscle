@@ -1,3 +1,17 @@
+%%
+% SPDX-FileCopyrightText: 2023 Matthew Millard <millard.matthew@gmail.com>
+%
+% SPDX-License-Identifier: MIT
+%
+% If you use this code in your work please cite the pre-print of this paper
+% or the most recent peer-reviewed version of this paper:
+%
+%    Matthew Millard, David W. Franklin, Walter Herzog. 
+%    A three filament mechanistic model of musculotendon force and impedance. 
+%    bioRxiv 2023.03.27.534347; doi: https://doi.org/10.1101/2023.03.27.534347 
+%
+%%
+
 function [success] = calcSignalGainAndPhase(...
                         normFiberLength,...
                         nominalForce,...
@@ -147,7 +161,7 @@ for idxModel = 1:1:length(simSeriesFiles)
           y  = y - yo;
           freqSimData.force(:,idx)  =  benchRecord.tendonForce(:, idx);
 
-          %On the very last simulation in the force series Opus31 is
+          %On the very last simulation in the force series Vexat is
           %poorly initialized and this means
           %that the model spends most of the padding zone going from an 
           %activation of 0 to 1. If this data is included in the subsequent
@@ -348,7 +362,7 @@ for idxModel = 1:1:length(simSeriesFiles)
           ymVar = var(y-modelResponseTime);              
           freqSimData.vafTime(1,idx)     = (yVar-ymVar)/yVar;
 
-          if( idx==82 && contains(simSeriesFiles{idxModel},'benchRecordOpus31_ElasticTendon')==1)
+          if( idx==82 && contains(simSeriesFiles{idxModel},'benchRecordVexat_ElasticTendon')==1)
              here=1;
           end
 

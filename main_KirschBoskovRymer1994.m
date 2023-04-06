@@ -1,3 +1,17 @@
+%%
+% SPDX-FileCopyrightText: 2023 Matthew Millard <millard.matthew@gmail.com>
+%
+% SPDX-License-Identifier: MIT
+%
+% If you use this code in your work please cite the pre-print of this paper
+% or the most recent peer-reviewed version of this paper:
+%
+%    Matthew Millard, David W. Franklin, Walter Herzog. 
+%    A three filament mechanistic model of musculotendon force and impedance. 
+%    bioRxiv 2023.03.27.534347; doi: https://doi.org/10.1101/2023.03.27.534347 
+%
+%%
+
 %Simulation of:
 %  Kirsch RF, Boskov D, Rymer WZ. Muscle stiffness during transient and continuous 
 %  movements of cat muscle: perturbation characteristics and physiological 
@@ -18,7 +32,7 @@ if(flag_outerLoopMode == 0)
   projectFolders  = getProjectFolders(rootDir);
 
   flag_simulateHillModel                        = 0; 
-  flag_simulateOpus31Model                      = 1;
+  flag_simulateVexatModel                      = 1;
   
   flag_fitToFig3KirchBoskovRymer1994            = 0; 
   flag_useElasticTendon                         = 1;
@@ -30,7 +44,7 @@ if(flag_outerLoopMode == 0)
   flag_pubPlotStiffnessDampingKBR1994Fig9Fig10  = 0;
   flag_pubPlotStiffnessDampingKBR1994Fig12      = 0;
   flag_pubTabulateStiffnessDampingVariation     = 0;
-  flag_useCalibratedOpus31Curves                = 1;
+  flag_useCalibratedVexatCurves                = 1;
   flag_useTwoSidedTitinCurves                   = 1;
 
   flag_generateRandomInput    = 0;
@@ -366,64 +380,64 @@ tmp = load([modelStructsDir,'defaultFelineSoleus.mat']);
 musculotendonProperties   = tmp.defaultFelineSoleus.musculotendon;
 sarcomereProperties       = tmp.defaultFelineSoleus.sarcomere;
 normMuscleCurves          = tmp.defaultFelineSoleus.curves;
-normMuscleCurves.useCalibratedCurves=flag_useCalibratedOpus31Curves;
+normMuscleCurves.useCalibratedCurves=flag_useCalibratedVexatCurves;
 
 tmp=load([modelStructsDir,'fittedFelineSoleusHL2002KBR1994',figNameGainPhase,'_RT.mat']);
-musculotendonPropertiesOpus31_RT = tmp.fittedFelineSoleus.musculotendon;
-sarcomerePropertiesOpus31_RT     = tmp.fittedFelineSoleus.sarcomere;
-normMuscleCurvesOpus31_RT        = tmp.fittedFelineSoleus.curves;
-fittingOpus31_RT                 = tmp.fittedFelineSoleus.fitting;
+musculotendonPropertiesVexat_RT = tmp.fittedFelineSoleus.musculotendon;
+sarcomerePropertiesVexat_RT     = tmp.fittedFelineSoleus.sarcomere;
+normMuscleCurvesVexat_RT        = tmp.fittedFelineSoleus.curves;
+fittingVexat_RT                 = tmp.fittedFelineSoleus.fitting;
 
 tmp=load([modelStructsDir,'fittedFelineSoleusHL2002KBR1994',figNameGainPhase,'_ET.mat']);
-musculotendonPropertiesOpus31_ET = tmp.fittedFelineSoleus.musculotendon;
-sarcomerePropertiesOpus31_ET     = tmp.fittedFelineSoleus.sarcomere;
-normMuscleCurvesOpus31_ET          = tmp.fittedFelineSoleus.curves;
-fittingOpus31_ET                   = tmp.fittedFelineSoleus.fitting;
+musculotendonPropertiesVexat_ET = tmp.fittedFelineSoleus.musculotendon;
+sarcomerePropertiesVexat_ET     = tmp.fittedFelineSoleus.sarcomere;
+normMuscleCurvesVexat_ET          = tmp.fittedFelineSoleus.curves;
+fittingVexat_ET                   = tmp.fittedFelineSoleus.fitting;
 
 
-musculotendonPropertiesOpus31  = [];
-sarcomerePropertiesOpus31      = [];
-normMuscleCurvesOpus31         = [];
+musculotendonPropertiesVexat  = [];
+sarcomerePropertiesVexat      = [];
+normMuscleCurvesVexat         = [];
 fitting                        = [];
 
 if(exist('updSlidingTimeConstant','var')==1)
     sarcomereProperties.slidingTimeConstant=...
         updSlidingTimeConstant;
-    sarcomerePropertiesOpus31_RT.slidingTimeConstant=...
+    sarcomerePropertiesVexat_RT.slidingTimeConstant=...
         updSlidingTimeConstant;
-    sarcomerePropertiesOpus31_ET.slidingTimeConstant=...
+    sarcomerePropertiesVexat_ET.slidingTimeConstant=...
         updSlidingTimeConstant;
 end
 
 
 if(exist('updForceVelocityCalibrationFactor','var')==1)
-    sarcomerePropertiesOpus31.forceVelocityCalibrationFactor=...
+    sarcomerePropertiesVexat.forceVelocityCalibrationFactor=...
         updForceVelocityCalibrationFactor;
-    sarcomerePropertiesOpus31_RT.forceVelocityCalibrationFactor=...
+    sarcomerePropertiesVexat_RT.forceVelocityCalibrationFactor=...
         updForceVelocityCalibrationFactor;
-    sarcomerePropertiesOpus31_ET.forceVelocityCalibrationFactor=...
+    sarcomerePropertiesVexat_ET.forceVelocityCalibrationFactor=...
         updForceVelocityCalibrationFactor;
 end
 
 if(flag_useElasticTendon==1)
-    musculotendonPropertiesOpus31  = musculotendonPropertiesOpus31_ET;
-    sarcomerePropertiesOpus31      = sarcomerePropertiesOpus31_ET;
-    normMuscleCurvesOpus31         = normMuscleCurvesOpus31_ET;    
-    fitting =  fittingOpus31_ET;
+    musculotendonPropertiesVexat  = musculotendonPropertiesVexat_ET;
+    sarcomerePropertiesVexat      = sarcomerePropertiesVexat_ET;
+    normMuscleCurvesVexat         = normMuscleCurvesVexat_ET;    
+    fitting =  fittingVexat_ET;
 else
-    musculotendonPropertiesOpus31  = musculotendonPropertiesOpus31_RT;
-    sarcomerePropertiesOpus31      = sarcomerePropertiesOpus31_RT;
-    normMuscleCurvesOpus31         = normMuscleCurvesOpus31_RT;    
-    fitting =  fittingOpus31_RT;
+    musculotendonPropertiesVexat  = musculotendonPropertiesVexat_RT;
+    sarcomerePropertiesVexat      = sarcomerePropertiesVexat_RT;
+    normMuscleCurvesVexat         = normMuscleCurvesVexat_RT;    
+    fitting =  fittingVexat_RT;
     
 end
 
-assert(flag_useTwoSidedTitinCurves==normMuscleCurvesOpus31.useTwoSidedTitinCurves,...
+assert(flag_useTwoSidedTitinCurves==normMuscleCurvesVexat.useTwoSidedTitinCurves,...
        'Error: curves struct does not contain the desired sided curves');
 
 
-normMuscleCurvesOpus31.useCalibratedCurves    = flag_useCalibratedOpus31Curves;
-normMuscleCurvesOpus31.useTwoSidedTitinCurves = flag_useTwoSidedTitinCurves;
+normMuscleCurvesVexat.useCalibratedCurves    = flag_useCalibratedVexatCurves;
+normMuscleCurvesVexat.useTwoSidedTitinCurves = flag_useTwoSidedTitinCurves;
                                      
 %%
 % Create the text tags that capture the configuration of the model
@@ -438,26 +452,26 @@ generateModelSpecificKeyWords;
 %%
 % Create a unique set of file names for the Hill model and Opus 31
 %%
-outputFileEndingOpus31    = '';
-outputFileEndingOpus31_ET = '';
-outputFileEndingOpus31_RT = '';
+outputFileEndingVexat    = '';
+outputFileEndingVexat_ET = '';
+outputFileEndingVexat_RT = '';
 
-outputFileEndingOpus31_ET = sprintf('_K%sD%sTau%s_KTC%s_KTL%s_%iA%iL%iB%iD_%s',...
+outputFileEndingVexat_ET = sprintf('_K%sD%sTau%s_KTC%s_KTL%s_%iA%iL%iB%iD_%s',...
   kScaleStr_ET, dScaleStr_ET, tScaleStr, kTConstStr, kTLinearStr,...
   length(nominalForce),length(normFiberLength),...
   length(bandwidthHz),length(amplitudeMM),...
   strFittingBandwidth);%'_Std_5A1L3B3D_Descending';  
 
-outputFileEndingOpus31_RT = sprintf('_K%sD%sTau%s_%iA%iL%iB%iD_%s',...
+outputFileEndingVexat_RT = sprintf('_K%sD%sTau%s_%iA%iL%iB%iD_%s',...
   kScaleStr_RT, dScaleStr_RT, tScaleStr, ...
   length(nominalForce),length(normFiberLength),...
   length(bandwidthHz),length(amplitudeMM),...
   strFittingBandwidth);%'_Std_5A1L3B3D_Descending';
 
 if(flag_useElasticTendon==1)
-  outputFileEndingOpus31 = outputFileEndingOpus31_ET;
+  outputFileEndingVexat = outputFileEndingVexat_ET;
 else
-  outputFileEndingOpus31 = outputFileEndingOpus31_RT;
+  outputFileEndingVexat = outputFileEndingVexat_RT;
 end
 
 scaleHillFpeStr = sprintf('%1.2f',scaleHillFpe);
@@ -482,30 +496,30 @@ outputFileEndingHill_ET = ...
 
 if(length(normFiberLength) == 1)
   if( abs(normFiberLength(1)-1) < sqrt(eps))
-      outputFileEndingOpus31_RT = [outputFileEndingOpus31_RT,'_opt'];
+      outputFileEndingVexat_RT = [outputFileEndingVexat_RT,'_opt'];
       outputFileEndingHill_RT = [outputFileEndingHill_RT,'_opt'];      
-      outputFileEndingOpus31_ET = [outputFileEndingOpus31_ET,'_opt'];
+      outputFileEndingVexat_ET = [outputFileEndingVexat_ET,'_opt'];
       outputFileEndingHill_ET = [outputFileEndingHill_ET,'_opt'];    
       
-      outputFileEndingOpus31 = [outputFileEndingOpus31,'_opt'];
+      outputFileEndingVexat = [outputFileEndingVexat,'_opt'];
       outputFileEndingHill = [outputFileEndingHill,'_opt'];            
   end
   if( (normFiberLength(1)-1) > sqrt(eps))
-      outputFileEndingOpus31_RT = [outputFileEndingOpus31_RT,'_des'];    
+      outputFileEndingVexat_RT = [outputFileEndingVexat_RT,'_des'];    
       outputFileEndingHill_RT = [outputFileEndingHill_RT,'_des'];
-      outputFileEndingOpus31_ET = [outputFileEndingOpus31_ET,'_des'];    
+      outputFileEndingVexat_ET = [outputFileEndingVexat_ET,'_des'];    
       outputFileEndingHill_ET = [outputFileEndingHill_ET,'_des'];      
 
-      outputFileEndingOpus31 = [outputFileEndingOpus31,'_des'];
+      outputFileEndingVexat = [outputFileEndingVexat,'_des'];
       outputFileEndingHill = [outputFileEndingHill,'_des'];                  
   end
   if( (normFiberLength(1)-1) < -sqrt(eps))
-      outputFileEndingOpus31_RT = [outputFileEndingOpus31_RT,'_asc'];    
+      outputFileEndingVexat_RT = [outputFileEndingVexat_RT,'_asc'];    
       outputFileEndingHill_RT = [outputFileEndingHill_RT,'_asc'];
-      outputFileEndingOpus31_ET = [outputFileEndingOpus31_ET,'_asc'];    
+      outputFileEndingVexat_ET = [outputFileEndingVexat_ET,'_asc'];    
       outputFileEndingHill_ET = [outputFileEndingHill_ET,'_asc'];      
 
-      outputFileEndingOpus31 = [outputFileEndingOpus31,'_asc'];
+      outputFileEndingVexat = [outputFileEndingVexat,'_asc'];
       outputFileEndingHill = [outputFileEndingHill,'_asc'];                  
   end  
 end
@@ -526,11 +540,11 @@ else
 end
 
 simSeriesFiles     = {   ['benchRecordHill',  seriesNameTendon,    outputFileEndingHill,     '.mat'],...
-                         ['benchRecordOpus31',seriesNameTendon,    outputFileEndingOpus31,   '.mat']};
+                         ['benchRecordVexat',seriesNameTendon,    outputFileEndingVexat,   '.mat']};
 simSeriesFiles_RT  = {   ['benchRecordHill',  seriesNameTendon_RT, outputFileEndingHill_RT,  '.mat'],...
-                         ['benchRecordOpus31',seriesNameTendon_RT, outputFileEndingOpus31_RT,'.mat']};
+                         ['benchRecordVexat',seriesNameTendon_RT, outputFileEndingVexat_RT,'.mat']};
 simSeriesFiles_ET  = {   ['benchRecordHill',  seriesNameTendon_ET, outputFileEndingHill_ET,  '.mat'],...
-                         ['benchRecordOpus31',seriesNameTendon_ET, outputFileEndingOpus31_ET,'.mat']};
+                         ['benchRecordVexat',seriesNameTendon_ET, outputFileEndingVexat_ET,'.mat']};
                        
 simSeriesNames  = {'Hill','Model', ...
     '$$K-\beta$$ fit to Hill', ...
@@ -560,11 +574,11 @@ simSeriesColors_ET = [1,0,0;...
                    
                    
 freqSeriesFiles    = {   ['freqResponseHill',  seriesNameTendon, outputFileEndingHill,      '.mat'],...
-                         ['freqResponseOpus31',seriesNameTendon, outputFileEndingOpus31,    '.mat']};                   
+                         ['freqResponseVexat',seriesNameTendon, outputFileEndingVexat,    '.mat']};                   
 freqSeriesFiles_RT = {   ['freqResponseHill',  seriesNameTendon_RT, outputFileEndingHill_RT,   '.mat'],...
-                         ['freqResponseOpus31',seriesNameTendon_RT, outputFileEndingOpus31_RT, '.mat']};
+                         ['freqResponseVexat',seriesNameTendon_RT, outputFileEndingVexat_RT, '.mat']};
 freqSeriesFiles_ET = {   ['freqResponseHill',  seriesNameTendon_ET, outputFileEndingHill_ET,   '.mat'],...
-                         ['freqResponseOpus31',seriesNameTendon_ET, outputFileEndingOpus31_ET, '.mat']};
+                         ['freqResponseVexat',seriesNameTendon_ET, outputFileEndingVexat_ET, '.mat']};
 
 freqSeriesName  = simSeriesNames;    
 freqSeriesColor = simSeriesColors;    
@@ -578,8 +592,8 @@ freqSeriesColor_ET = simSeriesColors_ET;
 %%
 % Simulate the perturbation experiments
 %%
-if(flag_simulateOpus31Model==1)
-  [success] = runKirschBoskovRymer1994SimulationsOpus31(...
+if(flag_simulateVexatModel==1)
+  [success] = runKirschBoskovRymer1994SimulationsVexat(...
                             inputFunctions,...                          
                             normFiberLength,...
                             nominalForce,...
@@ -587,10 +601,10 @@ if(flag_simulateOpus31Model==1)
                             bandwidthHz,... 
                             numberOfSimulations,...
                             flag_useElasticTendon,...
-                            musculotendonPropertiesOpus31,...
-                            sarcomerePropertiesOpus31,...
-                            normMuscleCurvesOpus31,...
-                            outputFileEndingOpus31, ...
+                            musculotendonPropertiesVexat,...
+                            sarcomerePropertiesVexat,...
+                            normMuscleCurvesVexat,...
+                            outputFileEndingVexat, ...
                             structsFolder,...
                             flag_useOctave);
 
@@ -773,7 +787,7 @@ end
 if(  flag_plotAccelerationEquationFactors==1 )
 %  for z=0:1:2
     flag_Mode15Hz90HzBoth = 2;    
-    [success] = plotAccelerationEquationFactorsOpus31( ...
+    [success] = plotAccelerationEquationFactorsVexat( ...
                         structsFolder,...
                             freqSeriesFiles_RT,...
                             freqSeriesName_RT,...

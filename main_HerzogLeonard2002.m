@@ -1,3 +1,17 @@
+%%
+% SPDX-FileCopyrightText: 2023 Matthew Millard <millard.matthew@gmail.com>
+%
+% SPDX-License-Identifier: MIT
+%
+% If you use this code in your work please cite the pre-print of this paper
+% or the most recent peer-reviewed version of this paper:
+%
+%    Matthew Millard, David W. Franklin, Walter Herzog. 
+%    A three filament mechanistic model of musculotendon force and impedance. 
+%    bioRxiv 2023.03.27.534347; doi: https://doi.org/10.1101/2023.03.27.534347 
+%
+%%
+
 %
 % A simulation of Herzog & Leonard's 2002 experiment using matlab 
 % implementations of the proposed model and a Hill model (the Matlab
@@ -28,8 +42,8 @@ if(flag_outerLoopMode == 0)% && flag_buildCombinedPlot == 1)
 
   
   flag_simulateHillModel                        = 0; 
-  flag_simulateOpus31Model                      = 0;
-  flag_useCalibratedOpus31Curves                = 1;
+  flag_simulateVexatModel                      = 0;
+  flag_useCalibratedVexatCurves                = 1;
   flag_useTitinCurvesWithRigidIgDSegment        = 0;
   flag_useTwoSidedTitinCurves                   = 0;
 
@@ -69,7 +83,7 @@ if(flag_outerLoopMode == 0)% && flag_buildCombinedPlot == 1)
    
   figHerzogLeonard2002Fig7Comparision = figure;
   
-  flag_testOpus31DerivativeFunction = 1;
+  flag_testVexatDerivativeFunction = 1;
   flag_useOctave                    = 0;
 %else
 %  flag_useElasticTendon                         = 1;
@@ -124,7 +138,7 @@ musculotendonProperties   = defaultFelineSoleus.musculotendon;
 sarcomereProperties       = defaultFelineSoleus.sarcomere;
 normMuscleCurves          = defaultFelineSoleus.curves;
 
-normMuscleCurves.useCalibratedCurves = flag_useCalibratedOpus31Curves;
+normMuscleCurves.useCalibratedCurves = flag_useCalibratedVexatCurves;
 normMuscleCurves.useTitinCurvesWithRigidIgDSegment=...
     flag_useTitinCurvesWithRigidIgDSegment;
 normMuscleCurves.useTwoSidedTitinCurves = flag_useTwoSidedTitinCurves;
@@ -152,51 +166,51 @@ fileFittedFelineSoleusET = fullfile(projectFolders.output_structs_FittedModels,.
 
 
 tmp=load(fileFittedFelineSoleusRT);
-musculotendonPropertiesOpus31_RT = tmp.fittedFelineSoleus.musculotendon;
-sarcomerePropertiesOpus31_RT     = tmp.fittedFelineSoleus.sarcomere;
-normMuscleCurvesOpus31_RT        = tmp.fittedFelineSoleus.curves;
-fittingOpus31_RT                 = tmp.fittedFelineSoleus.fitting;
+musculotendonPropertiesVexat_RT = tmp.fittedFelineSoleus.musculotendon;
+sarcomerePropertiesVexat_RT     = tmp.fittedFelineSoleus.sarcomere;
+normMuscleCurvesVexat_RT        = tmp.fittedFelineSoleus.curves;
+fittingVexat_RT                 = tmp.fittedFelineSoleus.fitting;
 
 
 tmp=load(fileFittedFelineSoleusET);
-musculotendonPropertiesOpus31_ET = tmp.fittedFelineSoleus.musculotendon;
-sarcomerePropertiesOpus31_ET     = tmp.fittedFelineSoleus.sarcomere;
-normMuscleCurvesOpus31_ET        = tmp.fittedFelineSoleus.curves;
-fittingOpus31_ET                 = tmp.fittedFelineSoleus.fitting;
+musculotendonPropertiesVexat_ET = tmp.fittedFelineSoleus.musculotendon;
+sarcomerePropertiesVexat_ET     = tmp.fittedFelineSoleus.sarcomere;
+normMuscleCurvesVexat_ET        = tmp.fittedFelineSoleus.curves;
+fittingVexat_ET                 = tmp.fittedFelineSoleus.fitting;
 
-sarcomerePropertiesOpus31     = [];
-musculotendonPropertiesOpus31 = [];
+sarcomerePropertiesVexat     = [];
+musculotendonPropertiesVexat = [];
 
 if(flag_useElasticTendon==1)
-  sarcomerePropertiesOpus31     = sarcomerePropertiesOpus31_ET;
-  musculotendonPropertiesOpus31 = musculotendonPropertiesOpus31_ET;
-  normMuscleCurvesOpus31        = normMuscleCurvesOpus31_ET;
-  fitting = fittingOpus31_ET;
+  sarcomerePropertiesVexat     = sarcomerePropertiesVexat_ET;
+  musculotendonPropertiesVexat = musculotendonPropertiesVexat_ET;
+  normMuscleCurvesVexat        = normMuscleCurvesVexat_ET;
+  fitting = fittingVexat_ET;
 else
-  sarcomerePropertiesOpus31     = sarcomerePropertiesOpus31_RT;  
-  musculotendonPropertiesOpus31 = musculotendonPropertiesOpus31_RT;
-  normMuscleCurvesOpus31        = normMuscleCurvesOpus31_RT;  
-  fitting = fittingOpus31_RT;
+  sarcomerePropertiesVexat     = sarcomerePropertiesVexat_RT;  
+  musculotendonPropertiesVexat = musculotendonPropertiesVexat_RT;
+  normMuscleCurvesVexat        = normMuscleCurvesVexat_RT;  
+  fitting = fittingVexat_RT;
   
 end
 
-assert(flag_useTwoSidedTitinCurves==normMuscleCurvesOpus31.useTwoSidedTitinCurves,...
+assert(flag_useTwoSidedTitinCurves==normMuscleCurvesVexat.useTwoSidedTitinCurves,...
        'Error: curves struct does not contain the desired sided curves');
 
-normMuscleCurvesOpus31.useCalibratedCurves = flag_useCalibratedOpus31Curves;
-normMuscleCurvesOpus31.useTitinCurvesWithRigidIgDSegment=...
+normMuscleCurvesVexat.useCalibratedCurves = flag_useCalibratedVexatCurves;
+normMuscleCurvesVexat.useTitinCurvesWithRigidIgDSegment=...
     flag_useTitinCurvesWithRigidIgDSegment;
-normMuscleCurvesOpus31.useTwoSidedTitinCurves = flag_useTwoSidedTitinCurves;
+normMuscleCurvesVexat.useTwoSidedTitinCurves = flag_useTwoSidedTitinCurves;
 
 if(isempty(scaleOptimalFiberLength)==0)
   musculotendonProperties.optimalFiberLength = ...
     musculotendonProperties.optimalFiberLength*scaleOptimalFiberLength;
-  musculotendonPropertiesOpus31.optimalFiberLength = ...
-    musculotendonPropertiesOpus31.optimalFiberLength*scaleOptimalFiberLength;
-  musculotendonPropertiesOpus31_RT.optimalFiberLength = ...
-    musculotendonPropertiesOpus31_RT.optimalFiberLength*scaleOptimalFiberLength;
-  musculotendonPropertiesOpus31_ET.optimalFiberLength = ...
-    musculotendonPropertiesOpus31_ET.fiso*scaleOptimalFiberLength;
+  musculotendonPropertiesVexat.optimalFiberLength = ...
+    musculotendonPropertiesVexat.optimalFiberLength*scaleOptimalFiberLength;
+  musculotendonPropertiesVexat_RT.optimalFiberLength = ...
+    musculotendonPropertiesVexat_RT.optimalFiberLength*scaleOptimalFiberLength;
+  musculotendonPropertiesVexat_ET.optimalFiberLength = ...
+    musculotendonPropertiesVexat_ET.fiso*scaleOptimalFiberLength;
 else
   scaleOptimalFiberLength=1;
 end
@@ -204,12 +218,12 @@ end
 if(isempty(scaleMaximumIsometricForce)==0)
   musculotendonProperties.fiso = ...
     musculotendonProperties.fiso*scaleMaximumIsometricForce;
-  musculotendonPropertiesOpus31.fiso = ...
-    musculotendonPropertiesOpus31.fiso*scaleMaximumIsometricForce;
-  musculotendonPropertiesOpus31_RT.fiso = ...
-    musculotendonPropertiesOpus31_RT.fiso*scaleMaximumIsometricForce;
-  musculotendonPropertiesOpus31_ET.fiso = ...
-    musculotendonPropertiesOpus31_ET.fiso*scaleMaximumIsometricForce;
+  musculotendonPropertiesVexat.fiso = ...
+    musculotendonPropertiesVexat.fiso*scaleMaximumIsometricForce;
+  musculotendonPropertiesVexat_RT.fiso = ...
+    musculotendonPropertiesVexat_RT.fiso*scaleMaximumIsometricForce;
+  musculotendonPropertiesVexat_ET.fiso = ...
+    musculotendonPropertiesVexat_ET.fiso*scaleMaximumIsometricForce;
 else
   scaleMaximumIsometricForce = 1.0;
 end
@@ -218,12 +232,12 @@ if(isempty(scaleSlidingTimeConstant)==0)
 
   sarcomereProperties.slidingTimeConstant = ...
     sarcomereProperties.slidingTimeConstant*scaleSlidingTimeConstant;
-  sarcomerePropertiesOpus31.slidingTimeConstant = ...
-    sarcomerePropertiesOpus31.slidingTimeConstant*scaleSlidingTimeConstant;
-  sarcomerePropertiesOpus31_RT.slidingTimeConstant = ...
-    sarcomerePropertiesOpus31_RT.slidingTimeConstant*scaleSlidingTimeConstant;
-  sarcomerePropertiesOpus31_ET.slidingTimeConstant = ...
-    sarcomerePropertiesOpus31_ET.slidingTimeConstant*scaleSlidingTimeConstant;
+  sarcomerePropertiesVexat.slidingTimeConstant = ...
+    sarcomerePropertiesVexat.slidingTimeConstant*scaleSlidingTimeConstant;
+  sarcomerePropertiesVexat_RT.slidingTimeConstant = ...
+    sarcomerePropertiesVexat_RT.slidingTimeConstant*scaleSlidingTimeConstant;
+  sarcomerePropertiesVexat_ET.slidingTimeConstant = ...
+    sarcomerePropertiesVexat_ET.slidingTimeConstant*scaleSlidingTimeConstant;
   
   
 else
@@ -232,18 +246,18 @@ end
 
 if(isempty(normPassiveTitinToActinDamping)==0)
   sarcomereProperties.normPassiveTitinToActinDamping          = normPassiveTitinToActinDamping;
-  sarcomerePropertiesOpus31.normPassiveTitinToActinDamping    = normPassiveTitinToActinDamping;
-  sarcomerePropertiesOpus31_RT.normPassiveTitinToActinDamping = normPassiveTitinToActinDamping;
-  sarcomerePropertiesOpus31_ET.normPassiveTitinToActinDamping = normPassiveTitinToActinDamping;
+  sarcomerePropertiesVexat.normPassiveTitinToActinDamping    = normPassiveTitinToActinDamping;
+  sarcomerePropertiesVexat_RT.normPassiveTitinToActinDamping = normPassiveTitinToActinDamping;
+  sarcomerePropertiesVexat_ET.normPassiveTitinToActinDamping = normPassiveTitinToActinDamping;
 else
   normPassiveTitinToActinDamping = sarcomereProperties.normPassiveTitinToActinDamping;
 end
 
 if(isempty(normActiveTitinToActinDamping)==0)
   sarcomereProperties.normMaxActiveTitinToActinDamping          = normActiveTitinToActinDamping;
-  sarcomerePropertiesOpus31.normMaxActiveTitinToActinDamping    = normActiveTitinToActinDamping;
-  sarcomerePropertiesOpus31_RT.normMaxActiveTitinToActinDamping = normActiveTitinToActinDamping;
-  sarcomerePropertiesOpus31_ET.normMaxActiveTitinToActinDamping = normActiveTitinToActinDamping;
+  sarcomerePropertiesVexat.normMaxActiveTitinToActinDamping    = normActiveTitinToActinDamping;
+  sarcomerePropertiesVexat_RT.normMaxActiveTitinToActinDamping = normActiveTitinToActinDamping;
+  sarcomerePropertiesVexat_ET.normMaxActiveTitinToActinDamping = normActiveTitinToActinDamping;
 else
   normActiveTitinToActinDamping = sarcomereProperties.normMaxActiveTitinToActinDamping;
 end
@@ -278,11 +292,11 @@ switch subFigureNumber
     assert(0);
 end
 
-outputFileEndingOpus31    = '';
-outputFileEndingOpus31_ET = '';
-outputFileEndingOpus31_RT = '';
+outputFileEndingVexat    = '';
+outputFileEndingVexat_ET = '';
+outputFileEndingVexat_RT = '';
 
-outputFileEndingOpus31_ET = sprintf('_K%sD%sTau%s_KTC%s_KTL%s_HL2002_%i%i%i_%s_%s_%s_%s',...
+outputFileEndingVexat_ET = sprintf('_K%sD%sTau%s_KTC%s_KTL%s_HL2002_%i%i%i_%s_%s_%s_%s',...
   kScaleStr_ET, dScaleStr_ET, tScaleStr, kTConstStr, kTLinearStr,...
   figureNumber,subFigureNumber,trialNumber,...
   ['_TiAD',titinActiveDampingStr],...
@@ -290,7 +304,7 @@ outputFileEndingOpus31_ET = sprintf('_K%sD%sTau%s_KTC%s_KTL%s_HL2002_%i%i%i_%s_%
   ['NomLen',nominalNormalizedFiberLengthStr],...
   strFittingBandwidth);
 
-outputFileEndingOpus31_RT = sprintf('_K%sD%sTau%s_HL2002_%i%i%i_%s_%s_%s_%s',...
+outputFileEndingVexat_RT = sprintf('_K%sD%sTau%s_HL2002_%i%i%i_%s_%s_%s_%s',...
   kScaleStr_RT, dScaleStr_RT, tScaleStr,...
   figureNumber,subFigureNumber,...
   trialNumber,['_TiAD',titinActiveDampingStr],...
@@ -299,9 +313,9 @@ outputFileEndingOpus31_RT = sprintf('_K%sD%sTau%s_HL2002_%i%i%i_%s_%s_%s_%s',...
   strFittingBandwidth);
 
 if(flag_useElasticTendon==1)
-  outputFileEndingOpus31 = outputFileEndingOpus31_ET;
+  outputFileEndingVexat = outputFileEndingVexat_ET;
 else
-  outputFileEndingOpus31 = outputFileEndingOpus31_RT;
+  outputFileEndingVexat = outputFileEndingVexat_RT;
 end
 
 %scaleHillFpeStr = sprintf('%1.2f',scaleHillFpe);
@@ -342,15 +356,15 @@ expConfigHerzogLeonard2002 =...
 
 
 
-if(flag_testOpus31DerivativeFunction==1)
+if(flag_testVexatDerivativeFunction==1)
     
   a     = 1;
   dadt  = 0;
   
-  lceOpt    = musculotendonPropertiesOpus31.optimalFiberLength; 
-  alphaOpt  = musculotendonPropertiesOpus31.pennationAngle;
-  ltSlk     = musculotendonPropertiesOpus31.tendonSlackLength;
-  etIso     = musculotendonPropertiesOpus31.tendonStrainAtOneNormForce;
+  lceOpt    = musculotendonPropertiesVexat.optimalFiberLength; 
+  alphaOpt  = musculotendonPropertiesVexat.pennationAngle;
+  ltSlk     = musculotendonPropertiesVexat.tendonSlackLength;
+  etIso     = musculotendonPropertiesVexat.tendonStrainAtOneNormForce;
   ltIso     = ltSlk*(1+etIso);
   
   lceN    = 1;
@@ -361,7 +375,7 @@ if(flag_testOpus31DerivativeFunction==1)
 
   lx = 0;
   dlx = 0;
-  la = lce*0.5-sarcomerePropertiesOpus31.normMyosinHalfLength*lceOpt;
+  la = lce*0.5-sarcomerePropertiesVexat.normMyosinHalfLength*lceOpt;
   dla = 0;
 
 
@@ -384,30 +398,30 @@ if(flag_testOpus31DerivativeFunction==1)
                        'iterMax', 100,...
                        'tol', 1e-8);
   
-  mtInfo = calcMillard2019MuscleInfoOpus31( activationState,...
+  mtInfo = calcMillard2023VexatMuscleInfo( activationState,...
                                             pathState,...
                                             muscleState,...
-                                            musculotendonPropertiesOpus31,...
-                                            sarcomerePropertiesOpus31,...
-                                            normMuscleCurvesOpus31,...
+                                            musculotendonPropertiesVexat,...
+                                            sarcomerePropertiesVexat,...
+                                            normMuscleCurvesVexat,...
                                             modelConfig);
                                                 
 end
 
-if(flag_simulateOpus31Model==1 && flag_runSimulations == 1)
+if(flag_simulateVexatModel==1 && flag_runSimulations == 1)
   %expConfigHerzogLeonard2002.timeSpan  
   %tspanAct = [0,expConfigHerzogLeonard2002.lengthRampKeyPoints(1,1)];  
-  [success] = runHerzogLeonard2002SimulationsOpus31(...
+  [success] = runHerzogLeonard2002SimulationsVexat(...
                             nominalNormalizedFiberLength,...
                             expConfigHerzogLeonard2002.nominalForce,...                            
                             expConfigHerzogLeonard2002.timeSpan,...
                             expConfigHerzogLeonard2002.lengthRampKeyPoints,...
                             expConfigHerzogLeonard2002.stimulationKeyTimes,...
                             flag_useElasticTendon,...
-                            musculotendonPropertiesOpus31,...
-                            sarcomerePropertiesOpus31,...
-                            normMuscleCurvesOpus31,...
-                            outputFileEndingOpus31, ...
+                            musculotendonPropertiesVexat,...
+                            sarcomerePropertiesVexat,...
+                            normMuscleCurvesVexat,...
+                            outputFileEndingVexat, ...
                             projectFolders.output_structs_HL2002,...
                             flag_simulateActiveStretch,...
                             flag_simulatePassiveStretch,...
@@ -444,9 +458,9 @@ if(flag_plotData == 1)
     nameModification = 'RigidTendon';          
   end
 
-  fileNameOpus31 = fullfile( projectFolders.output_structs_HL2002,...
-    ['benchRecordOpus31_',nameModification,outputFileEndingOpus31,'.mat']);
-  dataOpus31 = load(fileNameOpus31);
+  fileNameVexat = fullfile( projectFolders.output_structs_HL2002,...
+    ['benchRecordVexat_',nameModification,outputFileEndingVexat,'.mat']);
+  dataVexat = load(fileNameVexat);
 
   fileNameDampedEq = fullfile(projectFolders.output_structs_HL2002,...
     ['benchRecordHill_',nameModification,outputFileEndingHill,'.mat']);
@@ -455,7 +469,7 @@ if(flag_plotData == 1)
 
   figHerzogLeonard2002Fig7Comparision = ...
     plotHerzogLeonardFig7Comparision(...
-                  expConfigHerzogLeonard2002,dataOpus31, dataDampedEq,  ...
+                  expConfigHerzogLeonard2002,dataVexat, dataDampedEq,  ...
                   figureNumber,subFigureNumber,trialNumber,...
                   figHerzogLeonard2002Fig7Comparision,subPlotPairPanel); 
   
@@ -467,13 +481,13 @@ if(flag_plotData == 1)
                     '_',strFittingBandwidth,'.pdf'];
 
   if(flag_buildCombinedPlot > 0 ...
-          && isempty(dataOpus31.benchRecord)==0 ...
+          && isempty(dataVexat.benchRecord)==0 ...
           && isempty(dataDampedEq.benchRecord)==0)
     
     
     figDescendingCombined = ...
       plotHerzogLeonardDescendingLimb(figDescendingCombined,...
-                      expConfigHerzogLeonard2002,dataOpus31, dataDampedEq,  ...
+                      expConfigHerzogLeonard2002,dataVexat, dataDampedEq,  ...
                       nominalNormalizedFiberLength,flag_useElasticTendon,...
                       figureNumber,subFigureNumber,trialNumber,...
                       subPlotHerzogLeonard2000Stability,...

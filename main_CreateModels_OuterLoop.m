@@ -1,3 +1,17 @@
+%%
+% SPDX-FileCopyrightText: 2023 Matthew Millard <millard.matthew@gmail.com>
+%
+% SPDX-License-Identifier: MIT
+%
+% If you use this code in your work please cite the pre-print of this paper
+% or the most recent peer-reviewed version of this paper:
+%
+%    Matthew Millard, David W. Franklin, Walter Herzog. 
+%    A three filament mechanistic model of musculotendon force and impedance. 
+%    bioRxiv 2023.03.27.534347; doi: https://doi.org/10.1101/2023.03.27.534347 
+%
+%%
+
 %This flag allows us to avoid the memory clearing functions so that
 %this can be timed using tic and tock from within main_OuterLoop
 flag_OuterOuterLoopMode =1;
@@ -13,7 +27,7 @@ projectFolders  = getProjectFolders(rootDir);
 disp('----------------------------------------');
 disp(' running main_CreateModels_OuterLoop');
 disp('----------------------------------------');
-disp('   :run-time: ~26  minutes with titin fitting ');
+disp('   :run-time: ~36  minutes with titin fitting ');
 disp('             2-3 minutes without titin fitting');
 disp('            *Intel i7-3630QM @ 2.40 GHz, Ubuntu 22');
 disp '             8 GB ram, SSD harddrive');

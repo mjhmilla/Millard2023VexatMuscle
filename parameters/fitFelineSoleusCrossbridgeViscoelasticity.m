@@ -1,3 +1,17 @@
+%%
+% SPDX-FileCopyrightText: 2023 Matthew Millard <millard.matthew@gmail.com>
+%
+% SPDX-License-Identifier: MIT
+%
+% If you use this code in your work please cite the pre-print of this paper
+% or the most recent peer-reviewed version of this paper:
+%
+%    Matthew Millard, David W. Franklin, Walter Herzog. 
+%    A three filament mechanistic model of musculotendon force and impedance. 
+%    bioRxiv 2023.03.27.534347; doi: https://doi.org/10.1101/2023.03.27.534347 
+%
+%%
+
 function fittedFelineSoleus = fitFelineSoleusCrossbridgeViscoelasticity( ...
                                 defaultFelineSoleus,...
                                 flag_useElasticTendon,...
@@ -120,13 +134,13 @@ normTendonDampingLinear = ...
 flag_updateNormFiberLengthByTendonStretch = 1;
 
 
-%Note:  is updateOpus31CrossBridgeParameters using the tendon damping model that
+%Note:  is updateVexatCrossBridgeParameters using the tendon damping model that
 %       scales with tendon stiffness?
-%disp('To do: separate use of KBR1994 from updateOpus31CrossBridgeParameters');
+%disp('To do: separate use of KBR1994 from updateVexatCrossBridgeParameters');
 %disp('     : put that code here in fitFelineSoleusCrossbridgeViscoelasticity');
 %disp('     : and pass in kmt and dmt here.');
-[fittedMusculotendonProperties,fittedSarcomerePropertiesOpus31] = ...
-  updateOpus31CrossBridgeParameters(...
+[fittedMusculotendonProperties,fittedSarcomerePropertiesVexat] = ...
+  updateVexatCrossBridgeParameters(...
     nominalForceKDFit,...
     nominalNormFiberLengthAtSlack,...
     flag_figureNumberToFitTo,...
@@ -157,7 +171,7 @@ fittingStr = sprintf('KBR1994_%s_%s_%s',...
 fittedFelineSoleus = defaultFelineSoleus;
 fittedFelineSoleus.curves        = defaultFelineSoleus.curves;
 fittedFelineSoleus.musculotendon = fittedMusculotendonProperties;
-fittedFelineSoleus.sarcomere     = fittedSarcomerePropertiesOpus31;
+fittedFelineSoleus.sarcomere     = fittedSarcomerePropertiesVexat;
 
 %The calibrated active force length curve is affected by the change
 %in cross-bridge stiffness. No other curve is.
