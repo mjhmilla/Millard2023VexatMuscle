@@ -1,12 +1,12 @@
-author: Matthew Millard
-date: 6/9/2021
-version: 0.0
-
 # Description
 
 This repository contains the Matlab prototype for the muscle model described in the paper:
 
 Matthew Millard, David W. Franklin, Walter Herzog. A three filament mechanistic model of musculotendon %force and impedance. bioRxiv 2023.03.27.534347; doi: https://doi.org/10.1101/2023.03.27.534347 
+
+- author: Matthew Millard
+- date: 6/9/2021
+- version: 0.0
 
 # Quick start guide:
 
