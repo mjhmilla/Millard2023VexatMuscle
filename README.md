@@ -1,12 +1,8 @@
 # Description
 
-This repository contains the Matlab prototype for the muscle model described in the paper:
+This repository contains the Matlab prototype for the VEXAT muscle model described in the paper Millard et al. The model is named after the viscoelastic (VE) crossbridge (X) active-titin (AT) elements contained in the model
 
 Matthew Millard, David W. Franklin, Walter Herzog. A three filament mechanistic model of musculotendon %force and impedance. bioRxiv 2023.03.27.534347; doi: https://doi.org/10.1101/2023.03.27.534347 
-
-- author: Matthew Millard
-- date: 6/9/2021
-- version: 0.0
 
 # Quick start guide:
 
@@ -20,11 +16,6 @@ output/
 - MuscleCurves
 - NettiDamoreRoncaAmbrosioNicolais1996
 - StandardTests
-
-
-Matthew Millard, David W. Franklin, Walter Herzog. 
-A three filament mechanistic model of musculotendon force and impedance. 
-bioRxiv 2023.03.27.534347; doi: https://doi.org/10.1101/2023.03.27.534347 
 
 # Repostiory Overview
 
@@ -54,3 +45,9 @@ bioRxiv 2023.03.27.534347; doi: https://doi.org/10.1101/2023.03.27.534347
   - postprocessing:	Contains the scripts needed to generate the various custom plots and tables that are generated during the process of simulation
   - simulation: Contains the scripts that are needed to run the various simulations that are applied to each model.
   - LICENSE: A folder that contains the licenses that apply to the files in this project. This project's licensing will be compliant with the license auditing tool provided by https://api.reuse.software/
+
+#Readme Details
+
+- author: Matthew Millard
+- date: 10 April 2023
+- version: 0.0
