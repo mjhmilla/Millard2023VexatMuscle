@@ -23,7 +23,7 @@ output/
 
 
 Matthew Millard, David W. Franklin, Walter Herzog. 
-A three filament mechanistic model of musculotendon %force and impedance. 
+A three filament mechanistic model of musculotendon force and impedance. 
 bioRxiv 2023.03.27.534347; doi: https://doi.org/10.1101/2023.03.27.534347 
 
 # Repostiory Overview
@@ -33,8 +33,8 @@ bioRxiv 2023.03.27.534347; doi: https://doi.org/10.1101/2023.03.27.534347
 2. Each experiment is accompanied by a script (e.g. main_HerzogLeonard2002.m) and an script-harness to run the script with multiple configurations (e.g. main_HerzogLeonard2002_OuterLoop.m). Please refer to these files to see exactly how these experiments are simulated.
 
 3. These scripts are not run as a part of main_OuterLoop.m, but are important nonetheless:
-  1. This function compares the response of the viscoelastic tendon model to the data of Netti et al.: main_NettiDamoreRoncaAmbrosioNicolais1996_TendonDamping.m
-  2. This function numerically evaluates the quality of the initialization routine: main_InitializationBenchmark.m
+  - This function compares the response of the viscoelastic tendon model to the data of Netti et al.: main_NettiDamoreRoncaAmbrosioNicolais1996_TendonDamping.m
+  - This function numerically evaluates the quality of the initialization routine: main_InitializationBenchmark.m
 
 4. The model is implemented in 2 files: models/calcMillard2023VexatMuscleInfo.m and models/updateMillard2023VexatCache.m. The first file (models/calcMillard2023VexatMuscleInfo.m) acts as a wrapper file which takes in the inputs from the user, solves for the solution of the models state derivative, and populates the output structures. All of the numerical number crunching needed to evaluate the various computational stages of the model appear in  (models/updateMillard2023VexatCache.m).
 
