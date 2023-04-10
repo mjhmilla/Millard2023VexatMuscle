@@ -1,6 +1,8 @@
+author: Matthew Millard
+date: 6/9/2021
+version: 0.0
 
-by Matthew Millard
-6/9/2021
+# Description
 
 This repository contains the Matlab prototype for the muscle model described in the paper:
 
@@ -8,7 +10,7 @@ Matthew Millard, David W. Franklin, Walter Herzog. A three filament mechanistic 
 
 # Quick start guide:
 
-Execute 'main_OuterLoop.m' from Matlab to run everything. Roughly 6 hours (Intel i7-3630QM @ 2.40 GHz, Ubuntu 22 8 GB ram, SSD harddrive) is needed to run all of the experiments. The experiments require on the order of a thousand simulations, some of which are numerically stiff. At the end if this round of simulation, you can find all of the figures that appear in Millard et al., and many more besides, in the folders
+Execute 'main_OuterLoop.m' from Matlab to run everything. Roughly 6 hours (Intel i7-3630QM @ 2.40 GHz, Ubuntu 22 8 GB ram, SSD harddrive) is needed to run all of the experiments. The experiments require roughly 500 simulations, some of which are numerically stiff. At the end if this round of simulation, you can find all of the figures that appear in Millard et al., and many more besides, in the folders
 
 output/
   HerzogLeonard2002
@@ -31,8 +33,8 @@ bioRxiv 2023.03.27.534347; doi: https://doi.org/10.1101/2023.03.27.534347
 2. Each experiment is accompanied by a script (e.g. main_HerzogLeonard2002.m) and an script-harness to run the script with multiple configurations (e.g. main_HerzogLeonard2002_OuterLoop.m). Please refer to these files to see exactly how these experiments are simulated.
 
 3. These scripts are not run as a part of main_OuterLoop.m, but are important nonetheless:
-- This function compares the response of the viscoelastic tendon model to the data of Netti et al.: main_NettiDamoreRoncaAmbrosioNicolais1996_TendonDamping.m
-- This function numerically evaluates the quality of the initialization routine: main_InitializationBenchmark.m
+  1. This function compares the response of the viscoelastic tendon model to the data of Netti et al.: main_NettiDamoreRoncaAmbrosioNicolais1996_TendonDamping.m
+  2. This function numerically evaluates the quality of the initialization routine: main_InitializationBenchmark.m
 
 4. The model is implemented in 2 files: models/calcMillard2023VexatMuscleInfo.m and models/updateMillard2023VexatCache.m. The first file (models/calcMillard2023VexatMuscleInfo.m) acts as a wrapper file which takes in the inputs from the user, solves for the solution of the models state derivative, and populates the output structures. All of the numerical number crunching needed to evaluate the various computational stages of the model appear in  (models/updateMillard2023VexatCache.m).
 
@@ -44,11 +46,11 @@ bioRxiv 2023.03.27.534347; doi: https://doi.org/10.1101/2023.03.27.534347
     135(2), 021005.
 
 6. Here is a quick overview of all of the folders that appear
-- curves: Contains a library of functions to create and evaluate the various Bezier curves used for the models
-- experiments: Contains a series of subfolders that contain experimental data (either raw or digitized from the paper) needed both to simulate experiments and generate comparison plots
-- models: Contains the code needed to evaluate the state derivative of the various models that are simulated.
-- output:	All of the plots, structs, and tables created during the process of simulation are written to this folder	
-- parameters: Contains the scripts needed to set all of the parameters needed to simulate the cat soleus used in this work.	
-- postprocessing:	Contains the scripts needed to generate the various custom plots and tables that are generated during the process of simulation
-- simulation: Contains the scripts that are needed to run the various simulations that are applied to each model.
-- LICENSE: A folder that contains the licenses that apply to the files in this project. This project's licensing will be compliant with the license auditing tool provided by https://api.reuse.software/
+  - curves: Contains a library of functions to create and evaluate the various Bezier curves used for the models
+  - experiments: Contains a series of subfolders that contain experimental data (either raw or digitized from the paper) needed both to simulate experiments and generate comparison plots
+  - models: Contains the code needed to evaluate the state derivative of the various models that are simulated.
+  - output:	All of the plots, structs, and tables created during the process of simulation are written to this folder	
+  - parameters: Contains the scripts needed to set all of the parameters needed to simulate the cat soleus used in this work.	
+  - postprocessing:	Contains the scripts needed to generate the various custom plots and tables that are generated during the process of simulation
+  - simulation: Contains the scripts that are needed to run the various simulations that are applied to each model.
+  - LICENSE: A folder that contains the licenses that apply to the files in this project. This project's licensing will be compliant with the license auditing tool provided by https://api.reuse.software/
