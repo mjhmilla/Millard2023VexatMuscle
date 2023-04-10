@@ -6,7 +6,7 @@ Matthew Millard, David W. Franklin, Walter Herzog. A three filament mechanistic 
 
 # Quick start guide:
 
-Execute 'main_OuterLoop.m' from Matlab to run everything. Roughly 6 hours (Intel i7-3630QM @ 2.40 GHz, Ubuntu 22 8 GB ram, SSD harddrive) is needed to run all of the experiments. The experiments require roughly 500 simulations, some of which are numerically stiff. At the end if this round of simulation, you can find all of the figures that appear in Millard et al., and many more besides, in the folders
+Execute 'main_OuterLoop.m' from Matlab to run everything. Roughly 5 hours and 45 minutes is needed to run all of the experiments on my old 2013 Samsung laptop (Intel i7-3630QM @ 2.40 GHz, Ubuntu 22 8 GB ram, SSD harddrive), while the newer Lenovo machine (Windows 10) requires nearly an hour less time. The experiments require roughly 500 simulations, some of which are numerically stiff. At the end if this round of simulation, you can find all of the figures that appear in Millard et al., and many more besides, in the folders:
 
 output/
 - HerzogLeonard2002
