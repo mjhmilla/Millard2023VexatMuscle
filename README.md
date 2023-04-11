@@ -2,7 +2,7 @@
 
 This repository contains the Matlab prototype for the VEXAT muscle model described in the paper Millard et al. The model is named after the viscoelastic (VE) crossbridge (X) active-titin (AT) elements contained in the model
 
-Matthew Millard, David W. Franklin, Walter Herzog. A three filament mechanistic model of musculotendon %force and impedance. bioRxiv 2023.03.27.534347; doi: https://doi.org/10.1101/2023.03.27.534347 
+Matthew Millard, David W. Franklin, Walter Herzog. A three filament mechanistic model of musculotendon force and impedance. bioRxiv 2023.03.27.534347; doi: https://doi.org/10.1101/2023.03.27.534347 
 
 # Quick start guide:
 
