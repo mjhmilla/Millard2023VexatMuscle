@@ -17,7 +17,12 @@ output/
 - NettiDamoreRoncaAmbrosioNicolais1996
 - StandardTests
 
-# Repostiory Overview
+Please be aware that there might be slight differences between the results contained in Millard et al. and the simulation. These small differences can arise for two reasons:
+
+1. The properties of titin are fitted by optimization, the solution of which may differ from one run to the next.
+2. The simulations of Kirsch et al. require a pseudo-random perturbation waveform. This waveform is generated from scratch each time the script is run.
+
+# Repository Overview
 
 1. The muscle models used for the experiments consist of a cat soleus, a rabbit psoas, and a human soleus. These models are created and fitted in the function main_CreateModels_OuterLoop.m.
 
