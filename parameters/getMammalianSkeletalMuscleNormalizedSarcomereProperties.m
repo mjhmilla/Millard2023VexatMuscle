@@ -159,7 +159,16 @@ numResiduesPevkHuman= 2174;
 numDomainsIgDHuman  = 22;
 
 maxIgDomainStrain_um    = 25/1000;
+%DuVall MM, Gifford JL, Amrein M, Herzog W. Altered mechanical properties of 
+%titin immunoglobulin domain 27 in the presence of calcium. European Biophysics 
+%Journal. 2013 Apr;42:301-7.
+
 maxPevkResidueStrain_um = 0.38/1000;
+%(see pg. 254)
+%Cantor CR, Schimmel PR. Biophysical Chemistry, Part 1. The Conformation of 
+%Biological Macromolecules (Their Biophysical Chemistry; pt. 1).
+
+
 %%
 % Titin refrence model: 
 %
