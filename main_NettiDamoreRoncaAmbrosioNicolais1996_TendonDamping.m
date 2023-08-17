@@ -72,7 +72,7 @@ if(flag_NormalizeByKmax==1)
   end
   for z=1:1:length(dataNetti1996Figure7)
     dataNetti1996Figure7(z).y = dataNetti1996Figure7(z).y./kmax;
-    dataNetti1996Figure7(z).yName = 'Norm. Loss Modulus (MPa/MPa)';
+    dataNetti1996Figure7(z).yName = 'Norm. Storage Modulus (MPa/MPa)';
     
   end
   for z=1:1:length(dataNetti1996Figure9)
@@ -126,8 +126,10 @@ figure(figPub);
     hold on;
     plot(1+et,1,'.k');
     hold on;
-    xticks([round(1.0,3),round(1+et,3)]);
-    xticklabels({'0','$$e^T_o$$'});
+    %xticks([round(1.0,3),round(1+et,3)]);
+    %xticklabels({'0','$$e^T_o$$'});
+    xticks([round(1.0,3),round(1.05,3),round(1.10,4)]);
+    xticklabels({'0','0.05','0.10'});
     yticks([round(0.,3),round(2/3,3),round(1.0,3)]);
     yticklabels({'0','$$f^T_{toe}$$','$$f^M_o$$'});
 
@@ -135,7 +137,7 @@ figure(figPub);
     ylabel('Norm. Force ($$f^{T}/f^{M}_{o}$$)');
     title('A. Tendon force-length ($$\mathbf{f}^T$$)');
     box off;
-    axis tight;
+    axis([0.99,1.101,0,1.05]);
 
     ftIso = 161.3+86.4+24.1;
 %    

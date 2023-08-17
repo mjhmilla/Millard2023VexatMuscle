@@ -89,8 +89,12 @@ elseif(strcmp(animalName,'human')==1)
   animalId = 2;
 elseif(strcmp(animalName,'frog')==1)
   animalId = 3;
-elseif(strcmp(animalName,'rabbit')==1)
+elseif(strcmp(animalName,'rabbitPsoas')==1)
   animalId = 4;
+elseif(strcmp(animalName,'rabbitTA')==1)
+  animalId = 5;
+elseif(strcmp(animalName,'rabbitEDL')==1)
+  animalId = 6;
 else  
   assert(0,'animalName must be cat, human, frog, or rabbit');
 end
@@ -315,11 +319,23 @@ else
         numDomainsIgD     = nan;   
     
       case 4
-         %Rabbit: psoas default - 3400 kD version.
+         %Rabbit: psoas default - mix of 3300 kD (70%) and 3400 kD (30%)
+         %        For details see Prado et al. Fig 3B & the paragraph 
+         %        at the top of page 465 column 2)
          %
-         numDomainsIgP   = 50;   
-         numResiduesPevk = 800;    
-         numDomainsIgD   = 22;
+         %3400 kD version.         
+         numDomainsIgP3400kD   = 50;   
+         numResiduesPevk3400kD = 800;    
+         numDomainsIgD3400kD   = 22;
+
+         %3300 kD version.         
+         numDomainsIgP3300kD   = 43;   
+         numResiduesPevk3300kD = 650;    
+         numDomainsIgD3300kD   = 22;
+         
+         numDomainsIgP   = 0.7*numDomainsIgP3300kD   + 0.3*numDomainsIgP3400kD;   
+         numResiduesPevk = 0.7*numResiduesPevk3300kD + 0.3*numResiduesPevk3400kD;    
+         numDomainsIgD   = 0.7*numDomainsIgD3300kD   + 0.3*numDomainsIgD3400kD; 
          % For the psoas muscle from a rabbit (Prado et al.). Note that there 
          % are isoforms of titin within a rabbit that have a similar molecular
          % weight as human titin. 
@@ -327,7 +343,47 @@ else
          %Prado LG, Makarenko I, Andresen C, Krüger M, Opitz CA, Linke WA. 
          % Isoform diversity of giant proteins in relation to passive and active 
          % contractile properties of rabbit skeletal muscles. The Journal of 
-         % general physiology. 2005 Nov;126(5):461-80.    
+         % general physiology. 2005 Nov;126(5):461-80. 
+      case 5
+         %Rabbit: TA default - mix of 3300 kD (70%) and 3400 kD (30%)
+         %        For details see Prado et al. Fig 3B & the paragraph 
+         %        at the top of page 465 column 2)
+         %
+         % Fig 3B has two marks for the TA and these look quite close
+         % to the ones of psoas except the thick and thin bars are switched
+         % indicating that the TA has more of the 3400 kD isoform than the
+         % 3300 kD isoform. For lack of anything better to do I'm just
+         % going to reverse the fractions given for psoas.
+         %
+         %3400 kD version.
+         numDomainsIgP3400kD   = 50;   
+         numResiduesPevk3400kD = 800;    
+         numDomainsIgD3400kD   = 22;
+
+         %3300 kD version.
+         numDomainsIgP3300kD   = 43;   
+         numResiduesPevk3300kD = 650;    
+         numDomainsIgD3300kD   = 22;
+         
+         numDomainsIgP   = 0.3*numDomainsIgP3300kD   + 0.7*numDomainsIgP3400kD;   
+         numResiduesPevk = 0.3*numResiduesPevk3300kD + 0.7*numResiduesPevk3400kD;    
+         numDomainsIgD   = 0.3*numDomainsIgD3300kD   + 0.7*numDomainsIgD3400kD; 
+      case 6          
+         %Rabbit: EDL default - 3400 kD (100%)
+         %        For details see Prado et al. Fig 3B & the paragraph 
+         %        at the top of page 465 column 2)
+         %
+         % Fig 3B has one mark for the EDL and its close to the 3400 kD
+         % weight.
+         %
+         numDomainsIgP3400kD   = 50;   
+         numResiduesPevk3400kD = 800;    
+         numDomainsIgD3400kD   = 22;
+         
+         numDomainsIgP   = numDomainsIgP3400kD;   
+         numResiduesPevk = numResiduesPevk3400kD;    
+         numDomainsIgD   = numDomainsIgD3400kD; 
+         
       otherwise
         assert(0,['Error: animalId ',num2str(animalId),' not recognized']);
     end

@@ -63,6 +63,7 @@ actinLength          = nan;
 
 switch animalId
 
+  %cat
   case 1
     %From Rassier et al. Fig 3 & text
     geoCat   = [1.27, 1.7, 2.34, 2.51, 3.94];
@@ -79,6 +80,8 @@ switch animalId
                                     -2*zLineLength);      
 
     here=1;
+
+  %human    
   case 2
     %From Rassier et al. Fig 3 & text    
     geoHuman = [1.27, 1.7, 2.64, 2.81, 4.24];    
@@ -95,6 +98,7 @@ switch animalId
                             -2*zLineLength); 
     here=1;
     
+  %frog    
   case 3
     %From Rassier et al. Fig 3 & text    
     % 0.95 um actin filament length
@@ -134,38 +138,30 @@ switch animalId
     end
     here=1;
 
+ %rabbit psoas
   case 4
-    %From Higuchi et al.
-    actinLength       = 1.12;
-    myosinLength      = 1.63;
-    zLineLength       = 0.07;
-    myosinBareLength  = 0.16;
+    [ activeForceLengthKeyPoints, ...
+      halfMyosinBareLength, ...
+      halfMyosinLength,...
+      zLineLength,...
+      actinLength] = getRabbitSkeletalMuscleSarcomereFilamentLengths();      
 
-    halfMyosinBareLength = myosinBareLength*0.25;
-    halfMyosinLength     = myosinLength*0.5;
+ %rabbit TA
+  case 5
+    [ activeForceLengthKeyPoints, ...
+      halfMyosinBareLength, ...
+      halfMyosinLength,...
+      zLineLength,...
+      actinLength] = getRabbitSkeletalMuscleSarcomereFilamentLengths();      
 
-    lasc  = max(actinLength,myosinLength)    + 2*zLineLength;    
-    loptA = 2*actinLength                    + 2*zLineLength;
-    loptB = 2*actinLength  +myosinBareLength + 2*zLineLength;
-    lmax  = 2*actinLength  +myosinLength     + 2*zLineLength;
+ %rabbit EDL
+  case 6
+    [ activeForceLengthKeyPoints, ...
+      halfMyosinBareLength, ...
+      halfMyosinLength,...
+      zLineLength,...
+      actinLength] = getRabbitSkeletalMuscleSarcomereFilamentLengths();      
 
-    geoRabbit = [1.27,lasc, loptA, loptB,  lmax]; 
-
-    activeForceLengthKeyPoints = geoRabbit;
-
-    flag_debug=1;
-    if(flag_debug==1)
-        halfMyosinBareLength =     ( activeForceLengthKeyPoints(1,4) ...
-                                   - activeForceLengthKeyPoints(1,3) )*0.25;
-        
-        halfMyosinLength      = 0.5*(activeForceLengthKeyPoints(1,5) ...
-                                    -activeForceLengthKeyPoints(1,3));                    
-                           
-        actinLength           = 0.5*( (activeForceLengthKeyPoints(1,5))...
-                                -2*halfMyosinLength ...
-                                -2*zLineLength); 
-    end
-    here=1;
   otherwise
     assert(0,'animalName must be cat, human, frog, or rabbit');
 end

@@ -3,3 +3,4 @@
 *.fig
 *.tex
 *.asv
+*.~lock*

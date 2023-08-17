@@ -37,7 +37,7 @@ disp('----------------------------------------');
 %%
 % Global model parameters
 %%
-flag_loadPreviouslyOptimizedParameters = 0;
+flag_loadPreviouslyOptimizedParameters = 1;
 % 0: A lengthy optimization is done to find the best point within the
 %    PEVK segment to bond to actin. This value is saved to file for later
 %    use.
@@ -159,6 +159,20 @@ scaleOptimalFiberLengthRabbitPsoas      = 1;
 scaleMaximumIsometricTensionRabbitPsoas = 1;
 
 %%
+% Rabbit Tibialis Anterior Model parameters
+%%
+flag_plotAllRabbitTAFibrilCurves     = 0;
+scaleOptimalFiberLengthRabbitTA      = 1;
+scaleMaximumIsometricTensionRabbitTA = 1;
+
+%%
+% Rabbit Extensor Digitorum Longius Model parameters
+%%
+flag_plotAllRabbitEDLFibrilCurves     = 0;
+scaleOptimalFiberLengthRabbitEDL      = 1;
+scaleMaximumIsometricTensionRabbitEDL = 1;
+
+%%
 % Human Soleus Model parameters
 %%
 flag_plotAllHumanSoleusCurves           = 0;
@@ -196,6 +210,11 @@ scaleMaximumIsometricTensionCatSoleus   = 1;
 rigidTendonReferenceModelCatSoleus      = [];
 elasticTendonReferenceModelCatSoleus    = [];
 
+scaleOptimalFiberLengthRabbitTA        = 1.0; 
+scaleMaximumIsometricTensionRabbitTA   = 1;
+
+rigidTendonReferenceModelRabbitTA      = [];
+elasticTendonReferenceModelRabbitTA    = [];
 
 %%
 % Paths
@@ -257,7 +276,7 @@ filePathDefault = fullfile(   projectFolders.output_structs_FittedModels,...
 save(filePathDefault,'defaultFelineSoleus');  
 
 if(flag_plotAllDefaultFelineSoleusCurves==1)
-    figHumanSoleusCurves = ...
+    figFelineSoleusCurves = ...
     plotStructOfBezierSplines( defaultFelineSoleus.curves,...
                                       {'Inverse','use'});       
 end
@@ -575,7 +594,54 @@ end
 
 
 
+%%
+% Rabbit Tibialis Anterior 
+%%
 
+fprintf('\n\nCreating: default rabbit tibialis anterior model\n\n');
+
+ecmForceFractionRabbitEDL = 1-(0.665-0.245);
+% See Fig. 8D of Prado et al.
+%
+% Prado LG, Makarenko I, Andresen C, Krüger M, Opitz CA, Linke WA. 
+% Isoform diversity of giant proteins in relation to passive and 
+% active contractile properties of rabbit skeletal muscles. The 
+% Journal of general physiology. 2005 Nov;126(5):461-80.
+
+
+ecmForceFractionRabbitTA  = ecmForceFractionRabbitEDL;
+
+
+[ defaultRabbitTA,...
+  activeForceLengthCurveAnnotationPoints,...
+  rabbitTAActiveForceLengthDataDefault,...
+  rabbitTAPassiveForceLengthDataDefault,...
+  rabbitTAPassiveForceLengthCurveSettings ] = ...
+        createRabbitTibialisAnteriorModel(...
+                normPevkToActinAttachmentPointDefault,...
+                normMaxActiveTitinToActinDamping,...
+                normFiberLengthAtOneNormPassiveForceDefault,... 
+                ecmForceFractionRabbitTA,...
+                linearTitinModel,...
+                useCalibratedCurves,...
+                useTwoSidedTitinCurves,...
+                smallNumericallyNonZeroNumber,...
+                flag_enableNumericallyNonZeroGradients,...
+                scaleOptimalFiberLengthRabbitTA,... 
+                scaleMaximumIsometricTensionRabbitTA,...
+                projectFolders,...
+                flag_useOctave);
+
+
+filePathDefault = fullfile(   projectFolders.output_structs_FittedModels,...
+                                    'defaultRabbitTibialisAnterior.mat');
+
+
+
+
+%%
+% Plotting
+%%
 if(flag_makeAndSavePubPlots==1)
   [success] = plotMuscleCurves( fittedFelineSoleusKBR1994Fig12_ET,...
                                 defaultHumanSoleus,...

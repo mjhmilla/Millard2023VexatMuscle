@@ -33,9 +33,9 @@ if(flag_outerLoopMode == 0)
   flag_useTunedRabbitPsoasModel     = 0;
 
   flag_simulateHillModel            = 0; 
-  flag_simulateVexatModel          = 0;
+  flag_simulateVexatModel           = 0;
 
-  flag_useCalibratedVexatCurves    = 1;
+  flag_useCalibratedVexatCurves     = 1;
   flag_useTwoSidedTitinCurves       = 0;
 
   flag_simulateActiveStretch  = 1;
