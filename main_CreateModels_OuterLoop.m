@@ -14,7 +14,7 @@
 
 %This flag allows us to avoid the memory clearing functions so that
 %this can be timed using tic and tock from within main_OuterLoop
-flag_OuterOuterLoopMode =1;
+flag_OuterOuterLoopMode =0;
 if(flag_OuterOuterLoopMode ==0)
     clc;
     close all;
@@ -47,7 +47,7 @@ flag_loadPreviouslyOptimizedParameters = 1;
 %probably no longer works.
 flag_useOctave            = 0; 
 
-flag_makeAndSavePubPlots  = 1;
+flag_makeAndSavePubPlots  = 0;
 plotOutputFolder          = [projectFolders.output_plots_MuscleCurves,filesep];
 
 normMaxActiveTitinToActinDamping = 65;
@@ -158,10 +158,12 @@ flag_plotAllRabbitPsoasFibrilCurves     = 0;
 scaleOptimalFiberLengthRabbitPsoas      = 1;
 scaleMaximumIsometricTensionRabbitPsoas = 1;
 
+flag_plotAllTunedRabbitPsoasFibrilCurves= 0;
+
 %%
 % Rabbit Tibialis Anterior Model parameters
 %%
-flag_plotAllRabbitTAFibrilCurves     = 0;
+flag_plotAllRabbitTACurves           = 1;
 scaleOptimalFiberLengthRabbitTA      = 1;
 scaleMaximumIsometricTensionRabbitTA = 1;
 
@@ -549,7 +551,7 @@ save(filePathTunedRabbitPsoas,'tunedRabbitPsoasFibril');
 %save('output/structs/tunedRabbitPsoasFibril.mat',...
 %     'tunedRabbitPsoasFibril');  
 
-flag_plotAllTunedRabbitPsoasFibrilCurves=1;
+
 if(flag_plotAllTunedRabbitPsoasFibrilCurves==1)
     figRabbitPsoasFibrilCurves = ...
     plotStructOfBezierSplines( tunedRabbitPsoasFibril.curves,...
@@ -633,10 +635,27 @@ ecmForceFractionRabbitTA  = ecmForceFractionRabbitEDL;
                 flag_useOctave);
 
 
-filePathDefault = fullfile(   projectFolders.output_structs_FittedModels,...
+fileRabbitTA = fullfile(   projectFolders.output_structs_FittedModels,...
                                     'defaultRabbitTibialisAnterior.mat');
+save(fileRabbitTA,'defaultRabbitTA');
 
+if(flag_plotAllRabbitTACurves==1)
+    figRabbitTACurves = ...
+    plotStructOfBezierSplines( defaultRabbitTA.curves,...
+                                      {'Inverse','use'});  
+    figure(figRabbitTACurves.activeForceLengthCurve);
+    subplot(2,2,1);
+    plot(rabbitTAActiveForceLengthDataDefault(:,1),...
+         rabbitTAActiveForceLengthDataDefault(:,2),'.');
+    hold on;
 
+    figure(figRabbitTACurves.fiberForceLengthCurve);
+    subplot(2,2,1);    
+    plot(rabbitTAPassiveForceLengthDataDefault(:,1),...
+         rabbitTAPassiveForceLengthDataDefault(:,2),'.');
+    hold on;
+    
+end
 
 
 %%

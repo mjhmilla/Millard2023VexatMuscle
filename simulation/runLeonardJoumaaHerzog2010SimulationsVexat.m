@@ -189,7 +189,7 @@ disp('Running Opus 31 Leonard, Joumaa, and Herzog 2010 Simulations');
 
             fibKin = calcFixedWidthPennatedFiberKinematics(...
                                            lceAT1,dlceAT1,lceOpt,alphaOpt);
-            alpha1   = fibKin.pennationAngle;
+            alpha1  = fibKin.pennationAngle;
             lceN1   = fibKin.fiberLength/lceOpt;
             dlceN1  = fibKin.fiberVelocity...
                         /musculotendonProperties.maximumNormalizedFiberVelocity;

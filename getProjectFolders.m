@@ -51,6 +51,8 @@ projectFolders.experiments_LJH2010       = fullfile(projectFolders.experiments, 
 projectFolders.experiments_NDRAN1996     = fullfile(projectFolders.experiments, 'NettiDamoreRoncaAmbrosioNicolais1996');  
 projectFolders.experiments_StandardTests = fullfile(projectFolders.experiments, 'StandardTests'                       );   
 projectFolders.experiments_TGFG1998      = fullfile(projectFolders.experiments, 'TrombitasGreaserFrenchGranzier1998'  );
+projectFolders.experiments_HBSG1995      = fullfile(projectFolders.experiments, 'HasselmanBestSeaberGarret1995'       ); 
+
 
 projectFolders.output_plots     = fullfile(projectFolders.output,'plots');
 projectFolders.output_structs   = fullfile(projectFolders.output,'structs');
@@ -66,6 +68,7 @@ projectFolders.output_plots_NDRAN1996     = fullfile(projectFolders.output_plots
 projectFolders.output_plots_StandardTests = fullfile(projectFolders.output_plots, 'StandardTests'                       );   
 projectFolders.output_plots_MuscleCurves   = fullfile(projectFolders.output_plots, 'MuscleCurves'                       );   
 projectFolders.output_plots_Initialization = fullfile(projectFolders.output_plots, 'InitializationBenchmark'            );   
+projectFolders.output_plots_HBSG1995    = fullfile(projectFolders.output_plots, 'HasselmanBestSeaberGarret1995'             ); 
 
 
 projectFolders.output_tables_KBR1994      = fullfile(projectFolders.output_tables,'KirschBoskovRymer1994');
@@ -80,3 +83,7 @@ projectFolders.output_structs_NDRAN1996      = fullfile(projectFolders.output_st
 projectFolders.output_structs_StandardTests  = fullfile(projectFolders.output_structs, 'StandardTests'                       );   
 projectFolders.output_structs_MuscleCurves   = fullfile(projectFolders.output_structs, 'MuscleCurves'                       );   
 projectFolders.output_structs_Initialization = fullfile(projectFolders.output_structs, 'InitializationBenchmark'            );   
+
+projectFolders.output_structs_HBSG1995  = fullfile(projectFolders.output_structs, 'HasselmanBestSeaberGarret1995'             ); 
+
+

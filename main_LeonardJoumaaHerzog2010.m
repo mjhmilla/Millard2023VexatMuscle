@@ -152,7 +152,7 @@ if(flag_useFig3KirchBoskovRymer1994==1)
 end
 
 
-%%[
+%%
 % Meta configuration properties: Do not touch.  
 %%
 

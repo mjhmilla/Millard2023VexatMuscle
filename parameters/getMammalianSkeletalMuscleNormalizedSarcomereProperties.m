@@ -345,7 +345,7 @@ else
          % contractile properties of rabbit skeletal muscles. The Journal of 
          % general physiology. 2005 Nov;126(5):461-80. 
       case 5
-         %Rabbit: TA default - mix of 3300 kD (70%) and 3400 kD (30%)
+         %Rabbit: TA default - mix of 3300 kD (30%) and 3400 kD (70%)
          %        For details see Prado et al. Fig 3B & the paragraph 
          %        at the top of page 465 column 2)
          %
