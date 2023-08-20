@@ -14,7 +14,7 @@
 
 function [musculotendonProperties,...
           musculotendonPropertiesExp] = ...
-            getRabbitTAMusculotendonProperties(...
+            getRabbitEDLMusculotendonProperties(...
               maximumNormalizedFiberVelocity,...
               forceVelocityMultiplierAtHalfMaximumFiberVelocity,...
               tendonStrainAtOneNormForce,...
@@ -26,7 +26,7 @@ function [musculotendonProperties,...
               flag_useOctave)                        
 %%
 % This function uses data from Siebert et al. and Winters et al. to build 
-% the table of musculotendon properties for a Rabbit TA
+% the table of musculotendon properties for a Rabbit EDL
 %
 % The following parameters are numerical in nature and as such are chosen
 % to be small and non-zero.
@@ -50,21 +50,21 @@ function [musculotendonProperties,...
 
 
 %extracted from Siebert et al.
-lceOptExpSiebert    = 36.7/1000;
+lceOptExpSiebert    = 14.1/1000;
 
 %lopt from Siebert et al. 2015 is defined as the shortest length of the
 %plateau. All of the curves in this code base assume that lopt is in the
 %middle of the plateau, and so we must add an offset.
-lceOptExp           = lceOptExpSiebert*(1+0.5*(1.16-1.0));% 
+lceOptExp           = lceOptExpSiebert*(1+0.5*(1.21-1.0));% 
 lceOpt              = lceOptExp*scaleOptimalFiberLength;
 
 alphaOpt    = 0; %No data       
-ltSlk       = 56.2/1000;
+ltSlk       = 90.3/1000;
       
 %Scale it as desired
 %From Hasselman et al.
-fisoExp     = 14.32; %Averaage of the average values in Table 3
-%                    % 14.32, 13.85, 14.03, 13.93
+fisoExp     = 35.2; %Averaage of the average values in Table 3
+%                    % 34.33, 33.75, 36.59, 36.20
 fiso        = fisoScale*fisoExp;
 
 minimumFiberLengthAlongTendon = sqrt(eps);
@@ -82,7 +82,7 @@ if(isempty(forceVelocityMultiplierAtHalfMaximumFiberVelocity))
     %Use the force-velocity model of Siebert et al to evaluate the normalized
     %force at half the maximum contraction velocity
     vmax = -maximumNormalizedFiberVelocity;
-    curv = 0.33;
+    curv = 0.37;
     vcc =  vmax*0.5;
     
     fvHalf = (vmax-vcc)/(vmax + vcc/curv);
@@ -95,9 +95,9 @@ etIso = tendonStrainAtOneNormForce;
 if(isempty(tendonStrainAtOneNormForce))
     %From Siebert et al S1_Table.
     lsec0 = ltSlk;
-    lsec1 = lsec0*0.027;
-    f1N   = 0.2;
-    k     = 9/(1/1000); %N/mm -> N/m
+    lsec1 = lsec0*0.035;
+    f1N   = 0.41;
+    k     = 15.8/(1/1000); %N/mm -> N/m
     kN    = k/fisoExp;
     dlsec = (1-f1N)/kN;
     lsecAtFiso = dlsec + lsec1;
@@ -111,8 +111,8 @@ end
 
 
 musculotendonProperties = struct(...
-        'name'                        , 'Rabbit TA',  ... 
-        'abbr'                        , 'rTA',     ...
+        'name'                        , 'Rabbit EDL',  ... 
+        'abbr'                        , 'rEDL',     ...
         'fiso'                        , fiso,         ...  
         'optimalFiberLength'          , lceOpt,       ... 
         'pennationAngle'              , alphaOpt,     ... 

@@ -18,6 +18,11 @@
 
 plotFontName = 'latex';
 
+if(~exist('baseFontSize','var'))
+    baseFontSize=8;
+end 
+
+
 if(flag_usingOctave == 0)
 set(groot, 'defaultAxesFontSize',8);
 set(groot, 'defaultTextFontSize',8);

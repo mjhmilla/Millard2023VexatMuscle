@@ -55,8 +55,8 @@ activationFcn = @(argU,argA)calcFirstOrderActivationDerivative(...
 
 rampStartTime   = lengthRampKeyPoints(1,1);
 rampEndTime     = lengthRampKeyPoints(2,1);            
-rampStartLength = lengthRampKeyPoints(1,2)*lceOpt;
-rampEndLength   = lengthRampKeyPoints(2,2)*lceOpt;
+rampStartLength = lengthRampKeyPoints(1,2);
+rampEndLength   = lengthRampKeyPoints(2,2);
                                 
 rampSlope = (rampEndLength-rampStartLength) ...
          /(rampEndTime-rampStartTime);
@@ -64,16 +64,16 @@ rampSlope = (rampEndLength-rampStartLength) ...
 pathStartLength = lengthStart;
 
 pathLengthRampFcn = @(argT)calcRampStateSharp(...
-                       argT,rampStartTime+0.1,rampEndTime+0.1,...
+                       argT,rampStartTime,rampEndTime,...
                        pathStartLength,rampSlope);
 pathLengthStaticFcn = @(argT)calcRampStateSharp(...
-                       argT,rampStartTime+0.1,rampEndTime+0.1,...
+                       argT,rampStartTime,rampEndTime,...
                        pathStartLength,0);
 
 %%
 % Set up the simulation structs
 %%
-benchConfig.npts                  = round(timeSpan(1,2)-timeSpan(1,1))*100;
+benchConfig.npts                  = max(1000, round(timeSpan(1,2)-timeSpan(1,1))*1000);
 benchConfig.relTol                = 1e-6;
 benchConfig.absTol                = 1e-6;
 benchConfig.minActivation         = 0;
@@ -157,6 +157,7 @@ numberOfSimulations = flag_simulateActiveStretch...
 benchRecord = [];
 idx = 1;
 if(flag_simulateActiveStretch == 1)
+ benchConfig.initialActivation     = 1;
  benchConfig.pathFcn               = pathLengthRampFcn;
  benchConfig.excitationFcn         = excitationSquareFcn;             
  benchRecord = runPrescribedLengthActivationSimulation(...
@@ -173,7 +174,7 @@ end
 
 
 if(flag_simulatePassiveStretch == 1)
- 
+ benchConfig.initialActivation      = 0; 
   benchConfig.pathFcn               = pathLengthRampFcn;
   benchConfig.excitationFcn         = excitationZeroFcn;
   benchRecord = runPrescribedLengthActivationSimulation(...

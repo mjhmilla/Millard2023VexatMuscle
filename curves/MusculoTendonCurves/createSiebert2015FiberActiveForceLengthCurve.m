@@ -76,11 +76,11 @@ l3N = l3N-dxpN;
 l4N = l4N-dxpN;
 
 
-shoulder = 0.125*(l4N - l1N);
+shoulder = 0.05*(l4N - l1N);
 
 
 
-p0x    = l1N - 0.25*shoulder;
+p0x    = l1N - shoulder;
 p0y    = 0;
 p0DyDx = 0;
 
@@ -91,7 +91,7 @@ end
 
 p1x    = l1N + 0.5*(l2N-l1N);
 p1y    = fcN*0.5;
-p1DyDx = (fcN)/(l2N-l1N);
+p1DyDx = 1.1*(fcN)/(l2N-l1N);
 
 p2x    = l2N + 0.5*(loptSN-l2N);
 p2y    = fcN + 0.5*(1-fcN);
@@ -103,7 +103,7 @@ p3DyDx=0;
 
 p4x     = l3N + 0.5*(l4N-l3N);
 p4y     = 1 + 0.5*(0-1);
-p4DyDx  = -1/(l4N-l3N);
+p4DyDx  = -1.1/(l4N-l3N);
 
 p5x     = l4N + 0.5*shoulder;
 p5y     = 0;
@@ -126,12 +126,14 @@ activeForceLengthCurveAnnotationPoints = struct('x',[],'y',[]);
 activeForceLengthCurveAnnotationPoints.x ...
                     = [l1N;...
                       l2N;...
+                      (1.0-(l3N-1.0));...
                       1.0;...
                       l3N;...
                       l4N];
 activeForceLengthCurveAnnotationPoints.y ...
                     = [0;...
                       fcN;...
+                      1;...
                       1;...
                       1;...
                       0];                    
