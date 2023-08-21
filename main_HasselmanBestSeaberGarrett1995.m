@@ -313,20 +313,26 @@ if(flag_plotData==1)
         yC = ruptureV(idxC,1);
 
 
-        subPlotPanel(1,indexFile,4) = subPlotPanel(1,indexFile,4)*0.5;    
+        subPlotPanel(1,indexFile,4) = subPlotPanel(1,indexFile,4)*0.33;    
+
+        lceOpt  = musculotendonProperties.optimalFiberLength;
+        ltSlk   = musculotendonProperties.tendonSlackLength;
+        alphaOpt= musculotendonProperties.pennationAngle;
+
+        pathLength0 = ltSlk+lceOpt*cos(alphaOpt);
 
         subplot('Position',reshape(subPlotPanel(1,indexFile,:),1,4));
             plot(vexatSimData.benchRecord.time(:,1), ...
-                 vexatSimData.benchRecord.pathLength(:,1),...
+                 vexatSimData.benchRecord.pathLength(:,1)./pathLength0,...
                  vexatLine,'Color',vexatColor);
             hold on;
             plot(hillSimData.benchRecord.time(:,1), ...
-                 hillSimData.benchRecord.pathLength(:,1),...
+                 hillSimData.benchRecord.pathLength(:,1)./pathLength0,...
                  hillLine,'Color',hillColor);
             hold on;
 
             xticks(vexatSimData.lengthRampKeyPoints(:,1)');
-            yticks(vexatSimData.lengthRampKeyPoints(:,2)');
+            yticks(vexatSimData.lengthRampKeyPoints(:,2)'./pathLength0);
 
             box off;
             xlabel('Time (s)');
@@ -379,7 +385,7 @@ if(flag_plotData==1)
         %%
         % Plot the thresholds of failure
         %%
-        plot([0,5], [1,1].*tfN,'--','Color',[1,1,1].*0.5,'LineWidth',0.5,...
+        plot([0,5], [1,1].*tfN,'-','Color',[1,1,1].*0,'LineWidth',0.5,...
                 'DisplayName','none');
         hold on;
         text(0, yA, 'Minor Injury',...
@@ -391,7 +397,7 @@ if(flag_plotData==1)
         text(0, yB, 'Major Injury',...
             'HorizontalAlignment','left','VerticalAlignment','bottom','FontSize',6);        
         hold on;
-        plot([0,5],[1,1].*minorInjuryV,'-','Color',[0,0,0].*0.5,'LineWidth',0.5,...
+        plot([0,5],[1,1].*minorInjuryV,'--','Color',[1,1,1].*0.5,'LineWidth',0.5,...
              'DisplayName','none');
         hold on;
         text(0, yC, 'Rupture',...
@@ -402,7 +408,7 @@ if(flag_plotData==1)
         % Plot the force-length envelope
         %%
         lceN0 = 0;
-        lceN1 = max(vexatSimData.benchRecord.normFiberLength(:,1));
+        lceN1 = 1.5*max(vexatSimData.benchRecord.normFiberLength(:,1));
 
         lceNV = lceN0 + ([0:0.01:1]').*(lceN1-lceN0);
         fpeNV = zeros(length(lceNV),1);
