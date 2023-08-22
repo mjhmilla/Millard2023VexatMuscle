@@ -123,6 +123,20 @@ shiftLengthActiveForceLengthCurveDescendingCurve = 0.;
       flag_useOctave);
 
 
+
+% Some muscles appear to have a minimum length for developing linear
+% eccentric force profiles, others not. Here we set the default to 
+% be the start of the passive-force-length curve and adjust as needed
+%
+%Tomalka A. Eccentric muscle contractions: from single muscle fibre to 
+%whole muscle mechanics. Pflügers Archiv-European Journal of Physiology. 
+%2023 Apr;475(4):421-35.
+
+%I had trouble replicating Hasselman et al. And so I'm adjusting the 
+%minimum bond location.
+rabbitEDLSarcomerePropertiesDefault.normLengthTitinActinBondMinimum = 0.8;
+
+
 %Update the active-force-length curve using a function designed to take
 %Siebert et al.'s coefficients
 l1N = 0.39;

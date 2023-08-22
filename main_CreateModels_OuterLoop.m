@@ -363,9 +363,22 @@ if(flag_loadFittedFelineSoleusActiveTitinProperties==1)
     %tmp=load(['output/structs/fittedFelineSoleus',fittingTag,'_ET']);
 
     fittedFelineSoleusHL2002_ET=tmp.fittedFelineSoleus;
-    
+
 else
     disp([' Using default feline solues ']);        
+end
+
+%%
+% Add the new variable defining the minimum length of the titin-actin 
+% bond if it doesn't exist
+%%
+if(~isfield(fittedFelineSoleusHL2002_ET.sarcomere ,'normLengthTitinActinBondMinimum'))
+    fittedFelineSoleusHL2002_ET.sarcomere.normLengthTitinActinBondMinimum = ...
+        fittedFelineSoleusHL2002_ET.curves.fiberForceLengthCurve.xEnd(1,1);
+end
+if(~isfield(fittedFelineSoleusHL2002_RT.sarcomere ,'normLengthTitinActinBondMinimum'))
+    fittedFelineSoleusHL2002_RT.sarcomere.normLengthTitinActinBondMinimum = ...
+        fittedFelineSoleusHL2002_RT.curves.fiberForceLengthCurve.xEnd(1,1);
 end
 
 
@@ -616,10 +629,10 @@ ecmForceFractionRabbitEDL = 1-(0.665-0.245);
 
 ecmForceFractionRabbitTA  = ecmForceFractionRabbitEDL;
 
-ecmForceFractionRabbitTA  = ecmForceFractionRabbitTA*1.1;
-ecmForceFractionRabbitEDL = ecmForceFractionRabbitEDL*0.7;
-normPevkToActinAttachmentPointTA  = 0.3;
-normPevkToActinAttachmentPointEDL = 0.7;
+ecmForceFractionRabbitTA  = ecmForceFractionRabbitTA;
+ecmForceFractionRabbitEDL = ecmForceFractionRabbitEDL*0.125;
+normPevkToActinAttachmentPointTA  = 0.5;
+normPevkToActinAttachmentPointEDL = 0.75;
 
 [ defaultRabbitTA,...
   activeForceLengthCurveAnnotationPoints,...

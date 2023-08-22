@@ -130,7 +130,7 @@ numberOfSimulations = flag_simulateActiveStretch...
 benchRecord = [];
 idx = 1;
 if(flag_simulateActiveStretch == 1)
-  dampedFiberElasticTendonConfig.initialActivation     = 1;    
+  dampedFiberElasticTendonConfig.initialActivation     = 0;    
   dampedFiberElasticTendonConfig.pathFcn       = pathLengthRampFcn;
   dampedFiberElasticTendonConfig.excitationFcn = excitationSquareFcn;
   benchRecord = runPrescribedLengthActivationSimulation(...

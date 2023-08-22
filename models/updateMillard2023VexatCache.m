@@ -104,6 +104,7 @@ alphaOpt    = modelConstants.alphaOpt    ;
 ltSlk       = modelConstants.ltSlk       ;
 
 lceHNZeroFpeN= modelConstants.lceHNZeroFpeN;
+lceHNTitinActinBondMin = modelConstants.lceHNTitinActinBondMin;
 
 dlceMaxN    = modelConstants.dlceMaxN    ;
 lceMin      = modelConstants.lceMin      ;
@@ -1074,7 +1075,7 @@ if(flag_evaluateInitializationFunctions == 0)
         % 2009 Jul 22;42(10):1488-92.
         %
     
-        dTiLMin = lceHN-lceHNZeroFpeN;
+        dTiLMin = lceHN-lceHNTitinActinBondMin;%lceHNZeroFpeN;
         kTiLMin = dTiLMin/smoothStepFunctionRadius;
         uTiLMin = 0.5+0.5*tanh(kTiLMin);
         % To break beta1HNN down:

@@ -157,7 +157,7 @@ numberOfSimulations = flag_simulateActiveStretch...
 benchRecord = [];
 idx = 1;
 if(flag_simulateActiveStretch == 1)
- benchConfig.initialActivation     = 1;
+ benchConfig.initialActivation     = 0;
  benchConfig.pathFcn               = pathLengthRampFcn;
  benchConfig.excitationFcn         = excitationSquareFcn;             
  benchRecord = runPrescribedLengthActivationSimulation(...
