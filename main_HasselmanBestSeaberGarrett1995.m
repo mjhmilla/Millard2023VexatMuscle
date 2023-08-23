@@ -20,6 +20,16 @@ clear all;
 % continuum of injury during active stretch of rabbit skeletal muscle. 
 % The American Journal of Sports Medicine. 1995 Jan;23(1):65-73.
 
+disp('Warning: The results of this simulation should be taken with a grain');
+disp('of salt. Why? The result depend heavily on the passive-force-length');
+disp('curve. From my work so far, it is clear that the passive-force-length');
+disp('curve from Siebert et al. 2015 differes substantially from ');
+disp('Hasselman et al. 1995 because the Li values (see Hasselman et al.)');
+disp('are quite different. Unfortunately Hasselman et al. did not publish');
+disp('the shape of the curve, so I really cannot in good faith make a ');
+disp('simulation of their experiment. This is a pity because there is hardly');
+disp('any experiments that consider injury');
+
 rootDir         = getRootProjectDirectory();
 projectFolders  = getProjectFolders(rootDir);
 
