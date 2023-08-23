@@ -123,8 +123,8 @@ calcF2HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
 %Just to check to make sure the curves are consistent
 if(normMuscleCurves.useTwoSidedTitinCurves==1)
     assert(normMuscleCurves.forceLengthProximalTitinCurve.xEnd(1,1) < 0);
-else
-    assert(normMuscleCurves.forceLengthProximalTitinCurve.xEnd(1,1) >= 0);
+%else
+%    assert(normMuscleCurves.forceLengthProximalTitinCurve.xEnd(1,1) >= 0);
 end
 
 

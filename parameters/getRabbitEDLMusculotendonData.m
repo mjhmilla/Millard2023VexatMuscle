@@ -18,6 +18,7 @@ function [activeForceLengthData,...
                                       musculotendonProperties,...
                                       normPlateauShift,...
                                       useElasticTendon,...
+                                      shiftPassiveForceLengthCurveEDLInM,...
                                       projectFolders,...
                                       flag_useOctave)
 
@@ -34,11 +35,11 @@ dlMax = log((fpecMax/k1)+1)/k2;
 
 dlce = ([0:0.1:1]').*dlMax;
 fpe  = k1*(exp(k2.*dlce)-1);
-lce  = lpec0 + dlce;
+lce  = lpec0 + dlce + shiftPassiveForceLengthCurveEDLInM*1000;
 
 lce = lce ./1000; %Convert to meters
-lceN = lce./musculotendonProperties.optimalFiberLength;
-fpeN = fpe./musculotendonProperties.fiso;
+lceN = lce./musculotendonPropertiesExp.optimalFiberLength;
+fpeN = fpe./musculotendonPropertiesExp.fiso;
 
 passiveForceLengthData = [lceN, fpeN];
 
@@ -52,8 +53,8 @@ lceFL = [lceFLPts; lceFLmid ];
 lceFL = sort(lceFL);
 fceFL = interp1(lceFLPts, fceFLPts, lceFL);
 
-lceFLN = lceFL./musculotendonProperties.optimalFiberLength;
-fceFLN = fceFL./musculotendonProperties.fiso;
+lceFLN = lceFL./musculotendonPropertiesExp.optimalFiberLength;
+fceFLN = fceFL./musculotendonPropertiesExp.fiso;
 
 activeForceLengthData = [lceFLN, fceFLN];
 

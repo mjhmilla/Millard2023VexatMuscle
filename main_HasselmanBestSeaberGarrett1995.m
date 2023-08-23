@@ -81,8 +81,9 @@ plotFolder   = [projectFolders.output_plots_HBSG1995,filesep];
 %%
 %Load the model parameters
 %%
-files = {'defaultRabbitTibialisAnterior.mat','defaultRabbitExtensorDigitorumLongus.mat'};
-structNames = {'defaultRabbitTA','defaultRabbitEDL'};
+rabbitStudy = 'hasselman';%'siebert';
+files = {[rabbitStudy,'RabbitTibialisAnterior.mat'],[rabbitStudy,'RabbitExtensorDigitorumLongus.mat']};
+structNames = {[rabbitStudy,'RabbitTA'],[rabbitStudy,'RabbitEDL']};
 outputFileEnding = {'TA','EDL'};
 
 %TA
@@ -102,9 +103,12 @@ outputFileEnding = {'TA','EDL'};
 % 24.025%
 %
 
-hasselmanFailureData.initialLength = [nan,nan];
-hasselmanFailureData.strainFailure = [0.38305,0.24025];
-hasselmanFailureData.normForce  = [3.82,3.54]; 
+hasselmanFailureData.initialCELength = [nan,nan];
+
+hasselmanFailureData.strainFailure  = [0.38305,0.24025];
+hasselmanFailureData.normForce      = [3.82,3.54]; 
+hasselmanFailureData.pathStart      = [0.0889, 0.0948];
+hasselmanFailureData.pathOptimal    = [0.0988, 0.1017];
 
 if(flag_simulateVexatModel || flag_simulateHillModel)
     for indexFile = 1:1:length(files)
@@ -132,15 +136,21 @@ if(flag_simulateVexatModel || flag_simulateHillModel)
         etOne       = musculotendonProperties.tendonStrainAtOneNormForce;
         fiso        = musculotendonProperties.fiso;
 
-        fNStart   = 0.050*9.81/fiso; %Starting point was the passive length at 50g load        
-        lceNStart = calcBezierFcnXGivenY(fNStart,normMuscleCurves.fiberForceLengthCurve,0.8);
-        ltNStart  = calcBezierFcnXGivenY(fNStart,normMuscleCurves.tendonForceLengthCurve,1.01);
-        fiberKin = calcFixedWidthPennatedFiberKinematicsAlongTendon(lceNStart,0,lceOpt,alphaOpt);
-        alpha = fiberKin.pennationAngle;
+     
 
-        hasselmanFailureData.initialLength(1,indexFile)=lceNStart;
+        expKinematics = calcHasselmanBestSeaberGarrett1995ExpKinematics(...
+                            musculotendonProperties,...
+                            normMuscleCurves);
 
-        lengthStart = (lceNStart*lceOpt)*cos(alpha) + ltNStart*ltSlk;
+        hasselmanFailureData.initialCELength(1,indexFile)= expKinematics.lceNStart;
+        lengthStart = expKinematics.lpStart;
+
+        
+        disp('Hasselman path start vs. model');
+        fprintf('\t%1.3f\tvs\t%1.3f\n\n',hasselmanFailureData.pathStart(1,indexFile), expKinematics.lpStart);
+        disp('Hasselman path optimal vs. model');
+        fprintf('\t%1.3f\tvs\t%1.3f\n\n',hasselmanFailureData.pathOptimal(1,indexFile), expKinematics.lpOpt);
+
         switch indexFile
             case 1
                 lengthEnd   = lengthStart + 2*lceOpt*cos(alphaOpt);
@@ -327,11 +337,17 @@ if(flag_plotData==1)
 
         ruptureV     = c1.*tfN;
 
-        [yA,idxA] = max(minorInjuryV);
-        [yB,idxB] = max(majorInjuryV);
+        idxA = find(vexatSimData.benchRecord.time >= vexatSimData.lengthRampKeyPoints(1,1),1);
+        idxA = idxA-1;
+        yA = minorInjuryV(idxA,1);
+        idxB=idxA;
+        yB = majorInjuryV(idxB,1);
         idxC = idxB;
         yC = ruptureV(idxC,1);
 
+        expKinematics = calcHasselmanBestSeaberGarrett1995ExpKinematics(...
+                            musculotendonProperties,...
+                            normMuscleCurves);        
 
         subPlotPanel(1,indexFile,4) = subPlotPanel(1,indexFile,4)*0.33;    
 
@@ -387,6 +403,16 @@ if(flag_plotData==1)
                  vexatLine,'Color',vexatColor);
             hold on;
 
+            lpi = expKinematics.lpStart;
+            lpf = lpi * (1+hasselmanFailureData.strainFailure(1,indexFile));
+            timeF = interp1(vexatSimData.lengthRampKeyPoints(:,2),...
+                           vexatSimData.lengthRampKeyPoints(:,1),lpf);
+
+            ffN = hasselmanFailureData.normForce(1,indexFile);
+
+            plot(timeF,ffN,'s','Color',[0,0,0],'MarkerFaceColor',[0,0,0]);
+            hold on;
+
             idxHillFailure  = find(hillSimData.benchRecord.normFiberForceAlongTendon(:,1) > tfN*1.1, 1 );
             timeHillFailure = hillSimData.benchRecord.time(idxHillFailure,1);
             timeMax = hillSimData.benchRecord.time(:,1);
@@ -395,9 +421,9 @@ if(flag_plotData==1)
             
             xticks(round(timeKeyPoints',2));
 
-            yticks(round([0,1,yA,yB,yC],1));
+            yticks(round([0,1,yA,yB,yC],2));
             xlim([0,timeHillFailure]);
-            ylim([0,tfN*1.1]);
+            ylim([0,4.1]);
             box off;
             xlabel('Time (s)');
             ylabel('Norm. Force ($$f^M / f_o^M$$)');
@@ -451,15 +477,20 @@ if(flag_plotData==1)
         fpeNVFill = [fpeNV(1,1);fpeNV(1,1);fliplr(fpeNV')';fpeNV(1,1)];
 
         falNVFill = [falNV(1,1);falNV(end,1);fliplr(falNV')';falNV(1,1)];
-        
-        fill(lceNVFill,falNVFill,[1,1,1].*0.625,'EdgeColor','none',...
+        fenvNVFill = [fenvNV(1,1);fenvNV(1,1);fliplr(fenvNV')';fenvNV(1,1)];
+
+        fill(lceNVFill,fenvNVFill,[1,1,1].*0.6,'EdgeColor','none',...
+             'DisplayName','none');
+        hold on;        
+
+        fill(lceNVFill,falNVFill,[1,1,1].*0.7,'EdgeColor','none',...
              'DisplayName','none');
         hold on;
-        fill(lceNVFill,fpeNVFill,[1,1,1].*0.5,'EdgeColor','none',...
+        fill(lceNVFill,fpeNVFill,[1,1,1].*0.8,'EdgeColor','none',...
              'DisplayName','none');
         hold on;
 
-        plot(lceNV, fenvNV,'-','Color',[1,1,1].*0.75,'LineWidth',1.5,...
+        plot(lceNV, fenvNV,'-','Color',[1,1,1].*0.5,'LineWidth',1.5,...
             'DisplayName','none');
         hold on;
 
@@ -488,8 +519,8 @@ if(flag_plotData==1)
             hold on;
             text(hillSimData.benchRecord.normFiberLength(idx,1),...
                  hillSimData.benchRecord.normFiberForceAlongTendon(idx,1),...
-                 sprintf('%1.2f %s', hillSimData.benchRecord.normFiberLength(idx,1),'$$\ell_o$$'),...
-                 'HorizontalAlignment','right','VerticalAlignment','bottom',...
+                 sprintf('%1.2f%s', hillSimData.benchRecord.normFiberLength(idx,1),'$$\ell_o$$'),...
+                 'HorizontalAlignment','left','VerticalAlignment','bottom',...
                  'FontSize',6);
             hold on;
         end
@@ -503,11 +534,33 @@ if(flag_plotData==1)
             hold on;
             text(vexatSimData.benchRecord.normFiberLength(idx,1),...
                  vexatSimData.benchRecord.normFiberForceAlongTendon(idx,1),...
-                 sprintf('%1.2f %s', vexatSimData.benchRecord.normFiberLength(idx,1),'$$\ell_o$$'),...
+                 sprintf('%1.2f%s', vexatSimData.benchRecord.normFiberLength(idx,1),'$$\ell_o$$'),...
                  'HorizontalAlignment','right','VerticalAlignment','bottom',...
                  'FontSize',6);
             hold on;
         end        
+
+
+        plot(vexatSimData.benchRecord.normFiberLength(1,1),...
+             vexatSimData.benchRecord.normFiberForceAlongTendon(1,1),...
+             's','Color',[0,0,0],'MarkerFaceColor',[1,1,1]);
+        hold on;
+        text(vexatSimData.benchRecord.normFiberLength(1,1)+0.05,...
+             vexatSimData.benchRecord.normFiberForceAlongTendon(1,1),...
+             '1','FontSize',6, 'HorizontalAlignment','left','VerticalAlignment','bottom');
+
+        timeRampStart = vexatSimData.lengthRampKeyPoints(1,1);
+        idxRampStart = find(vexatSimData.benchRecord.time(:,1) >= timeRampStart,1);
+        idxRampStart = idxRampStart-1;
+        plot(vexatSimData.benchRecord.normFiberLength(idxRampStart,1),...
+             vexatSimData.benchRecord.normFiberForceAlongTendon(idxRampStart,1),...
+             's','Color',[0,0,0],'MarkerFaceColor',[1,1,1]);
+        hold on;
+        text(vexatSimData.benchRecord.normFiberLength(idxRampStart,1)-0.05,...
+             vexatSimData.benchRecord.normFiberForceAlongTendon(idxRampStart,1),...
+             '2','FontSize',6, 'HorizontalAlignment','right','VerticalAlignment','bottom');
+        
+
 
         %%
         %Evaluate Li
@@ -515,18 +568,37 @@ if(flag_plotData==1)
         %fi = 0.050*9.81; %50g load
         %fiN = fi/fiso;
         %liN = calcBezierFcnXGivenY(fiN,normMuscleCurves.fiberForceLengthCurve,1.0);
-        %liN = hasselmanFailureData.initialLength(1,indexFile);
-        liN = vexatSimData.benchRecord.normFiberLength(1,1);
-        lfN = liN*(1+hasselmanFailureData.strainFailure(1,indexFile));
+        %liN = hasselmanFailureData.initialCELength(1,indexFile);
+        lpi = expKinematics.lpStart;
+        lpf = lpi * (1+hasselmanFailureData.strainFailure(1,indexFile));
+        idx = find(vexatSimData.benchRecord.pathLength >= lpf,1);
+        
+        lceFN = vexatSimData.benchRecord.normFiberLength(idx,1);
         ffN = hasselmanFailureData.normForce(1,indexFile);
 
 %         plot(lfN,ffN,'s','MarkerFaceColor',[0,0,0],...
 %             'DisplayName',['HBSG1995: ',outputFileEnding{indexFile}]);
 %         hold on;
         
-        plot(lfN,ffN,'s','MarkerFaceColor',[0,0,0],...
+        plot(lceFN,ffN,'s','Color',[0,0,0],'MarkerFaceColor',[0,0,0],...
             'DisplayName',['HBSG1995: ',outputFileEnding{indexFile}]);
         hold on;
+
+        text(lceFN+0.05,...
+             ffN,...
+             '3','FontSize',6, 'HorizontalAlignment','left','VerticalAlignment','bottom');
+        hold on;
+        text(lceFN-0.05,...
+             ffN,...
+             'Exp.','FontSize',6, 'HorizontalAlignment','right','VerticalAlignment','bottom');
+        hold on;
+
+        lceNExp = [vexatSimData.benchRecord.normFiberLength(1,1);...
+                   vexatSimData.benchRecord.normFiberLength(idxRampStart,1);...
+                   lceFN];
+        fceNExp = [vexatSimData.benchRecord.normFiberForceAlongTendon(1,1);...
+                   vexatSimData.benchRecord.normFiberForceAlongTendon(idxRampStart,1);...
+                   ffN];
 
         %Manually made legend;
         plot([0.05,0.4],[1.5,1.5],vexatLine,'Color',vexatColor);
@@ -537,7 +609,7 @@ if(flag_plotData==1)
         hold on;
         text(0.45,1.0,'Hill','FontSize',6);
         hold on;
-        plot(0.225,0.5,'s','MarkerFaceColor',[0,0,0]);
+        plot(0.225,0.5,'s','Color',[0,0,0],'MarkerFaceColor',[0,0,0]);
         hold on;
         text(0.45,0.5,'Exp.','FontSize',6);
         hold on;
@@ -545,14 +617,31 @@ if(flag_plotData==1)
         %hasselmanFailureData.strainFailure = [0.38305,0.24025];
         %hasselmanFailureData.normForce  = [3.82,3.54];         
 
-        lengthHillFailure = hillSimData.benchRecord.normFiberLength(idxHillFailure,1);
-        xticks([0,1,round(lengthHillFailure,1)]);
-        yticks(round([0,1,yA,yB,yC],1));
-        xlim([0,lengthHillFailure]);
-        ylim([0,4]);
+        %lengthHillFailure = hillSimData.benchRecord.normFiberLength(idxHillFailure,1);
+        %xtickAnnotation = round(sort([0,1,lceNExp(2,1), lceNExp(end,1)]),2);
+        xtickAnnotation = round(sort([0,lceNExp(2:3,1)',2.8]),2);
+        xticks(xtickAnnotation);
+
+        ytickAnnotation = round(sort([0,1,yA,yB,yC,fceNExp(end,1)]),2);
+        yticks(ytickAnnotation);
+
+        yMax = 4.1;
+        idx = find(hillSimData.benchRecord.normFiberForceAlongTendon(:,1) >= yMax,1);
+        xMax = 2.27;%hillSimData.benchRecord.normFiberLength(idx,1);
+        switch rabbitStudy
+            case 'siebert'
+                xMax = 2.81;
+            case 'hasselman'
+                xMax = 2.27;
+            otherwise
+                assert(0,'Unrecognized rabbit study');
+        end
+
+        xlim([0,xMax]);
+        ylim([0,yMax]);
         box off;
 
-
+        xtickangle(0);
 
         xlabel('Norm. Length ($$\ell/\ell_o^M$$)')
         ylabel('Norm. Force ($$f^T/f_o^M$$)')
@@ -575,7 +664,7 @@ if(flag_savePlotsToFile==1)
     
     
     filePlotName = fullfile(projectFolders.output_plots_HBSG1995,...
-                    'fig_Pub_HasselmanBestSeaberGarrett1995.pdf');
+                   ['fig_Pub_HasselmanBestSeaberGarrett1995_',rabbitStudy,'.pdf']);
     
     
     print('-dpdf', filePlotName);   

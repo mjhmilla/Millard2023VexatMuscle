@@ -326,12 +326,12 @@ if(isempty(dataPassiveForceLength) == 0)
   kNum            = 2;
   kToe            = kNum/(normLengthToe-normLengthZero);
   curviness       = 0.75;
-  xshift          = 1.0;
+  xshift          = min(dataPassiveForceLength(:,1));
   xwidth          = 0.7;
   problemScaling  = 1000;
   params0         = [xshift  , xwidth].*problemScaling;
-  paramsLB        = [0.6    ;    0.4].*problemScaling;
-  paramsUB        = [1.4     ;   1.50].*problemScaling;
+  paramsLB        = [0.8*xshift    ;    0.5].*problemScaling;
+  paramsUB        = [2.0     ;   2.0].*problemScaling;
   
   fixedParams = [kLow,kNum,kZero,curviness];
 
