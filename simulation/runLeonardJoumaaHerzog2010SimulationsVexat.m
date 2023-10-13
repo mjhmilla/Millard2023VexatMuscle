@@ -161,11 +161,11 @@ disp('Running Opus 31 Leonard, Joumaa, and Herzog 2010 Simulations');
 
             %Evaluate the passive path length
             ft0 = fpeN0*cos(alpha0);
-            tendonForceLengthCurveInverse = ...
-                createInverseCurve(normMuscleCurves.tendonForceLengthCurve);
-            ltN0    = calcBezierYFcnXDerivative(ft0, tendonForceLengthCurveInverse,0);
-            if(flag_useElasticTendon==0)
-              ltN0 = 1;
+            ltN0 = 1;          
+            if(flag_useElasticTendon==1)
+                tendonForceLengthCurveInverse = ...
+                    createInverseCurve(normMuscleCurves.tendonForceLengthCurve);
+                ltN0    = calcBezierYFcnXDerivative(ft0, tendonForceLengthCurveInverse,0);                
             end            
             ltslk  = musculotendonProperties.tendonSlackLength;
             
@@ -178,12 +178,12 @@ disp('Running Opus 31 Leonard, Joumaa, and Herzog 2010 Simulations');
             falN0 = calcBezierYFcnXDerivative(lceN0, normMuscleCurves.activeForceLengthCurve  ,0);
             fvN0  = 1;
             ft1    = (falN0*fvN0 + fpeN0)*cos(alpha0);
-                      
-            ltN1   = calcBezierYFcnXDerivative(ft1,...
-                       tendonForceLengthCurveInverse,0);
-            if(flag_useElasticTendon==0)
-              ltN1 = 1;
-            end
+            ltN1   = 1;
+            if(flag_useElasticTendon==1)
+                tendonForceLengthCurveInverse = ...
+                    createInverseCurve(normMuscleCurves.tendonForceLengthCurve);
+                ltN1    = calcBezierYFcnXDerivative(ft1, tendonForceLengthCurveInverse,0);
+            end            
             lceAT1  = pathStartLength - ltN1*ltslk;
             dlceAT1 = 0;
 

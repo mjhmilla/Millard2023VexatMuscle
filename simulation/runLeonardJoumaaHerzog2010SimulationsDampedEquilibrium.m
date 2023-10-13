@@ -115,13 +115,13 @@ benchRecord = [];
         fpeN0  = calcBezierYFcnXDerivative(lceN0, ...
                     normMuscleCurves.fiberForceLengthCurve  ,0)*scaleFPE;
 
-        %Evaluate the passive path length
+        %Evaluate the passive path length    
+        ltN0=1;
         ft0 = fpeN0*cos(alpha0);
-        tendonForceLengthCurveInverse = ...
-            createInverseCurve(normMuscleCurves.tendonForceLengthCurve);
-        ltN0    = calcBezierYFcnXDerivative(ft0, tendonForceLengthCurveInverse,0);
-        if(flag_useElasticTendon==0)
-          ltN0 = 1;
+        if(flag_useElasticTendon==1)
+            tendonForceLengthCurveInverse = ...
+                createInverseCurve(normMuscleCurves.tendonForceLengthCurve);
+            ltN0    = calcBezierYFcnXDerivative(ft0, tendonForceLengthCurveInverse,0);
         end            
         ltslk  = musculotendonProperties.tendonSlackLength;
 
@@ -134,10 +134,11 @@ benchRecord = [];
         falN0 = calcBezierYFcnXDerivative(lceN0, normMuscleCurves.activeForceLengthCurve  ,0);
         fvN0  = 1;        
         ft1    = (falN0*fvN0 + fpeN0)*cos(alpha0);
-        ltN1   = calcBezierYFcnXDerivative(ft1,...
-                   tendonForceLengthCurveInverse,0);
-        if(flag_useElasticTendon==0)
-          ltN1 = 1;
+        ltN1=1;
+        if(flag_useElasticTendon==1)
+            tendonForceLengthCurveInverse = ...
+                createInverseCurve(normMuscleCurves.tendonForceLengthCurve);
+            ltN1    = calcBezierYFcnXDerivative(ft1, tendonForceLengthCurveInverse,0);
         end
         lceAT1  = pathStartLength - ltN1*ltslk;
         dlceAT1 = 0;

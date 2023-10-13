@@ -41,11 +41,13 @@ alphaOpt = 0;
 fiso     = 1;
 
 
-ltSlk = 0.01; 
+ltSlk = 0.0; 
 
 %Set the elasticity of the tendon as desired
 etIso = tendonStrainAtOneNormForce;
 normTendonLength = 1+etIso;
+
+assert(useElasticTendon==0,'Error: a fibril has no tendon');
 if(useElasticTendon==0)
   etIso = 0;
   normTendonLength = 1;

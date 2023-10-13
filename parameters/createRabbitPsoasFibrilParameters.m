@@ -118,7 +118,7 @@ tendonStrainAtOneNormForce      = 1.375/kisoScott;
 
 %Get the (formatted) experimental data on the active/passive
 %force-length curves
-useElasticTendonExp = 1;
+useElasticTendonExp = 0;
 
 normPlateauOffset = ...
   rabbitPsoasSarcomereProperties.normMyosinBareHalfLength;

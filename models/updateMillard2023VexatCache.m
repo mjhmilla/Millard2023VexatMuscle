@@ -221,7 +221,7 @@ if(flag_evaluateInitializationFunctions > 0)
 %            fpeN=calcFpeDer(lceN,0);
             
             fCpN=calcCpDer(lceATN,0);
-
+            
             fTfcnN      = calcFtDer(ltN,0);            
             fTkN        = fTfcnN;
             betaTNN     = calcDtDer(ltN,0)*betafTN + DftfcnN_DltN_max*betaCTN + betaNum;
@@ -1405,7 +1405,10 @@ if(flag_evaluateInitializationFunctions == 0)
       %DfTdN_DltN      = D_fTfcnN_D_ltN*betafTN*dltN;
       
       %betaTNN       = calcDtDer(ltN,0)*betafTN + betaCTN;
-      DfTdN_DltN     = ( calcDtDer(ltN,1)*betafTN )*dltN; 
+      DfTdN_DltN = 0;
+      if(flag_useElasticTendon==1)
+        DfTdN_DltN     = ( calcDtDer(ltN,1)*betafTN )*dltN; 
+      end
       
       DfTN_DltN       = DfTdN_DltN + DfTkN_DltN;
       kTNN      = DfTkN_DltN;

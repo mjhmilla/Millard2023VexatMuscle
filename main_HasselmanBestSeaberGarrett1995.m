@@ -91,7 +91,7 @@ plotFolder   = [projectFolders.output_plots_HBSG1995,filesep];
 %%
 %Load the model parameters
 %%
-rabbitStudy = 'hasselman';%'siebert';
+rabbitStudy = 'siebert';%'hasselman';%'siebert';
 files = {[rabbitStudy,'RabbitTibialisAnterior.mat'],[rabbitStudy,'RabbitExtensorDigitorumLongus.mat']};
 structNames = {[rabbitStudy,'RabbitTA'],[rabbitStudy,'RabbitEDL']};
 outputFileEnding = {'TA','EDL'};

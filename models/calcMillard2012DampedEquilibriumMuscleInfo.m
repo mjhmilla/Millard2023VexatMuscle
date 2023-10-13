@@ -2,7 +2,7 @@
 % SPDX-FileCopyrightText: 2015 Matthew Millard <millard.matthew@gmail.com>
 %
 % SPDX-License-Identifier: Apache-2.0
-%
+%er
 %%
 % -------------------------------------------------------------------------- %
 %                OpenSim:  Millard2012EquilibriumMuscle.cpp                  %
@@ -882,8 +882,8 @@ mtInfo.fiberVelocityInfo.fiberForceVelocityMultiplier = fvN;     %force/force   
 pt  = 0;
 ppe = 0;
 
-if(isempty(normMuscleCurves.tendonForceLengthCurve.integral) == 0)
-    if(useElasticTendon == 1)
+if(useElasticTendon == 1)
+    if(isempty(normMuscleCurves.tendonForceLengthCurve.integral) == 0)
        ptN = calcFtDer(ltN, -1); 
        
        tendonStrainAtOneNormForce = ...
@@ -899,7 +899,6 @@ if(isempty(normMuscleCurves.tendonForceLengthCurve.integral) == 0)
                            / tendonStrainAtOneNormForce*1;
 
        pt = ptN*tendonEnergyScaling;
-
     end
 end
 
