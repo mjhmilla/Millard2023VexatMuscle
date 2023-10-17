@@ -61,14 +61,16 @@ projectFolders.output_tables    = fullfile(projectFolders.output,'tables');
 
 projectFolders.output_plots     = fullfile(projectFolders.output,'plots');
 
-projectFolders.output_plots_HL2002        = fullfile(projectFolders.output_plots, 'HerzogLeonard2002'                   );   
-projectFolders.output_plots_KBR1994       = fullfile(projectFolders.output_plots, 'KirschBoskovRymer1994'               ); 
-projectFolders.output_plots_LJH2010       = fullfile(projectFolders.output_plots, 'LeonardJoumaaHerzog2010'             ); 
-projectFolders.output_plots_NDRAN1996     = fullfile(projectFolders.output_plots, 'NettiDamoreRoncaAmbrosioNicolais1996');  
-projectFolders.output_plots_StandardTests = fullfile(projectFolders.output_plots, 'StandardTests'                       );   
+projectFolders.output_plots_HL2002         = fullfile(projectFolders.output_plots, 'HerzogLeonard2002'                   );   
+projectFolders.output_plots_KBR1994        = fullfile(projectFolders.output_plots, 'KirschBoskovRymer1994'               ); 
+projectFolders.output_plots_LJH2010        = fullfile(projectFolders.output_plots, 'LeonardJoumaaHerzog2010'             ); 
+projectFolders.output_plots_NDRAN1996      = fullfile(projectFolders.output_plots, 'NettiDamoreRoncaAmbrosioNicolais1996');  
+projectFolders.output_plots_StandardTests  = fullfile(projectFolders.output_plots, 'StandardTests'                       );   
 projectFolders.output_plots_MuscleCurves   = fullfile(projectFolders.output_plots, 'MuscleCurves'                       );   
 projectFolders.output_plots_Initialization = fullfile(projectFolders.output_plots, 'InitializationBenchmark'            );   
-projectFolders.output_plots_HBSG1995    = fullfile(projectFolders.output_plots, 'HasselmanBestSeaberGarret1995'             ); 
+projectFolders.output_plots_HBSG1995       = fullfile(projectFolders.output_plots, 'HasselmanBestSeaberGarret1995'             ); 
+projectFolders.output_plots_SystemIdentificationExample ...
+                                           = fullfile(projectFolders.output_plots, 'SystemIdentificationExample'             ); 
 
 
 projectFolders.output_tables_KBR1994      = fullfile(projectFolders.output_tables,'KirschBoskovRymer1994');
