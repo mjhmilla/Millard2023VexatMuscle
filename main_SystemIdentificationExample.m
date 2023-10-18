@@ -28,7 +28,7 @@ plotWidth = 7.5;
 plotHeight= 2.0;
 plotHorizMarginCm=1.5;
 plotVertMarginCm = 1.5;
-numberOfVerticalPlotRows = 4;
+numberOfVerticalPlotRows = 7;
 numberOfHorizontalPlotColumns=1;
 
 pageWidth = numberOfHorizontalPlotColumns*(plotWidth+plotHorizMarginCm)...
@@ -147,7 +147,7 @@ subplot('Position',reshape(subPlotPanel(1,1,:),1,4));
 
   limitsX = xlim; 
   limitsY = ylim;
-  title('A. Length perturbation (time domain)', ...
+  title('A. Length perturbation (1.6mm, 35Hz bandwidth)', ...
         'HorizontalAlignment', 'left', 'position', [limitsX(1), limitsY(2)]);
   
   
@@ -156,7 +156,7 @@ subplot('Position',reshape(subPlotPanel(2,1,:),1,4));
   plot(timeVec, yTimeDomain,'-','Color',[1,1,1].*0.,'LineWidth',1);
   xlabel('Time (s)');
   ylabel('Force (N)');
-  title('B. Force response (time domain)');  
+  title('B. Force response of a spring-damper');  
   box off;
   xlim([0,samples/sampleFrequency]);
   xticks([0:0.1:round(samples/sampleFrequency)]);
@@ -165,71 +165,156 @@ subplot('Position',reshape(subPlotPanel(2,1,:),1,4));
   ylim([-1.01,1.01].*round(max(abs(yTimeDomain)),1))
   limitsX = xlim; 
   limitsY = ylim;
-  title('B. Force response (time domain)', ...
+  title('B. Force response (time-domain)', ...
         'HorizontalAlignment', 'left', 'position', [limitsX(1), limitsY(2)]);  
-% 
-% subplot('Position',reshape(subPlotPanel(3,1,:),1,4));  
-%   sinA = sin(timeVec.*((90/32)*2*pi));
-%   sinB = 1.6.*sin(timeVec.*((90/32)*2*pi)+pi/4 );
-%   plot(timeVec,sinA,'-','Color',[1,1,1].*0.5,'LineWidth',1);
-%   hold on;
-%   plot(timeVec,sinB,'-','Color',[1,1,1].*0,'LineWidth',1);
-%   hold on;
-%   box off
-%   yticks(round([-1.6,-1,0,1,1.6],2));
-% 
-%   xlim([0,samples/sampleFrequency]);
-%   xticks([0:0.1:round(samples/sampleFrequency)]);
-% 
-%   limitsX = xlim; 
-%   limitsY = ylim;
-%   title('C. Gain and phase between two sinusoids', ...
-%         'HorizontalAlignment', 'left', 'position', [limitsX(1), limitsY(2)]);  
-% 
-% subplot('Position',reshape(subPlotPanel(4,1,:),1,4));  
-% 
-% 
-%   limitsX = xlim; 
-%   limitsY = ylim;
-%   title('D. Frequency domain transformation', ...
-%         'HorizontalAlignment', 'left', 'position', [limitsX(1), limitsY(2)]);  
 
 
+fullPanel  =   reshape(subPlotPanel(3,1,:),1,4);
+leftPanel  = [  fullPanel(1,1),...
+                fullPanel(1,2),...
+                fullPanel(1,3)*0.4,...
+                fullPanel(1,4)];
+rightPanel = [fullPanel(1,1)+fullPanel(1,3)*0.6,...
+              fullPanel(1,2),...
+              fullPanel(1,3)*0.4,...
+              fullPanel(1,4)];
 
-subplot('Position',reshape(subPlotPanel(3,1,:),1,4));    
+subplot('Position',leftPanel);  
+  ts = 0.005;
+  timeVecExample = [0:ts:(1-ts)]';
+  n = length(timeVecExample);
+
+  signalExample    = 0.25*sin((2*pi*30).*timeVecExample) ...
+                  + 0.75*sin((2*pi*3).*timeVecExample);
+  plot(timeVecExample,signalExample,'-','Color',[0,0,0],'LineWidth',1),
+  hold on;
+  box off;
+  
+  text(0.05,1.8,'$$y(t)= 0.25 \sin(2\pi \, 30t)$$','FontSize',6);
+  hold on;
+  text(0.205,1.5,'$$+ 0.75 \sin(2\pi \, 3t)$$','FontSize',6);
+  hold on;
+  
+  xticks([0,0.2,0.4,0.6,0.8,1]);
+  ylim([-1.3,2]);
+
+  limitsX = xlim; 
+  limitsY = ylim;
+  xlabel('Time (s)');
+  ylabel('Magnitude');
+
+  title('C. Time-domain signal', ...
+        'HorizontalAlignment', 'left', 'position', [limitsX(1), limitsY(2)]);  
+
+subplot('Position',rightPanel);  
+  fftOfExample = fft(signalExample);
+  fs = 1/ts;
+  freqVec = [0:n-1]'*(fs/n);
+  idxNyquistBandwidth = find(freqVec < (0.5*fs));
+  magnitudeOfExample = abs(fftOfExample(idxNyquistBandwidth,1))./ (n/2);
+
+  %Plot the vertical lines
+  for i=1:1:length(idxNyquistBandwidth)
+    x0 = freqVec(idxNyquistBandwidth(i,1),1);
+    x1 = freqVec(idxNyquistBandwidth(i,1),1);
+    y0 = 0;
+    y1 = magnitudeOfExample(i,1);
+    
+    plot([x0;x1],[y0;y1],'-','Color',[0.5,0.5,1],'LineWidth',1);
+    hold on;
+    plot([x1],[y1],'.','Color',[0.5,0.5,1],'LineWidth',1);
+    hold on;
+  end
+  text(3+1,0.75,'(3 Hz, 0.75)','FontSize',6,'HorizontalAlignment','left',...
+              'VerticalAlignment','top');
+  hold on;
+  text(30+1,0.25,'(30 Hz, 0.25)','FontSize',6,'HorizontalAlignment','left',...
+       'VerticalAlignment','top');
+  hold on;
+
+  box off; 
+  xlabel('Frequency (Hz)');
+  ylabel('Magnitude');
+  xticks([0:0.25:1].*(fs/2));
+  xlim([0,fs*0.5].*1.01);
+
+  yticks([0.25, 0.75]);
+  ylim([0,max(magnitudeOfExample)]);
+  limitsX = xlim; 
+  limitsY = ylim;
+
+  title('D. Freq.-domain signal', ...
+        'HorizontalAlignment', 'left', 'position', [limitsX(1), limitsY(2)]);  
+
+
+subplot('Position',reshape(subPlotPanel(4,1,:),1,4));  
+  sinA = 0.8.*sin(timeVec.*((90/32)*2*pi));
+  sinB = 1.6.*sin(timeVec.*((90/32)*2*pi)+pi/3 );
+  plot(timeVec,sinA,'-','Color',[1,1,1].*0.5,'LineWidth',1);
+  hold on;
+  plot(timeVec,sinB,'-','Color',[1,1,1].*0,'LineWidth',1);
+  hold on;
+
+  text( 0.2,1.6,'Gain: 2','FontSize',6);
+  hold on;
+  text( 0.35,-1.6,'Phase: $\pi/3$','FontSize',6);
+  hold on;
+  
+  box off
+  yticks(round([-1.6,-0.8,0,0.8,1.6],2));
+
+  xlim([0,samples/sampleFrequency]);
+  xticks([0:0.1:round(samples/sampleFrequency)]);
+  limitsX = xlim; 
+  limitsY = ylim;
+  title('E. Gain and phase between two sinusoids', ...
+        'HorizontalAlignment', 'left', 'position', [limitsX(1), limitsY(2)]);  
+
+
+subplot('Position',reshape(subPlotPanel(5,1,:),1,4));    
 %subplot(2,3,4); 
   plot(frequencyConvHz(idxFreqInBandwidth,1),...
-       gain(idxFreqInBandwidth,1),'-','Color',[0,0,0],'LineWidth',1);
+       gain(idxFreqInBandwidth,1),'-','Color',[.5,0.5,1],'LineWidth',1);
+  hold on;
+  plot(max(frequencyConvHz(idxFreqInBandwidth,1)),...
+       max(gain(idxFreqInBandwidth,1)),'.','Color',[.5,0.5,1]);
+  hold on;
+  text(max(frequencyConvHz(idxFreqInBandwidth,1)),...
+       max(gain(idxFreqInBandwidth,1)), ...
+       sprintf('%1.1f',max(gain(idxFreqInBandwidth,1))),...
+       'HorizontalAlignment','right',...
+       'VerticalAlignment','top');
+  hold on;
+  xlim([0,bandwidth]);
+  xticks([0:5:bandwidth]);
   xlabel('Frequency (Hz)');
   ylabel('Gain (N/mm)');
 
   limitsX = xlim; 
   limitsY = ylim;
-  title('E. Gain response (frequency domain)', ...
+  title('F. Gain response (frequency-domain)', ...
         'HorizontalAlignment', 'left', 'position', [limitsX(1), limitsY(2)]);  
   
   box off;
-  xlim([0,bandwidth]);  
-  xticks([0:10:bandwidth]);
-  xticklabels({'','','','','','','','','',''});
-  yticks(round([0,k,max(gain(idxFreqInBandwidth,1))],1));
+  %xticklabels({'','','','','','','','','',''});
+  yticks(round([0,k],1));
   ylim([0,1.01*max(gain(idxFreqInBandwidth,1))]);
 
-subplot('Position',reshape(subPlotPanel(4,1,:),1,4));    
+subplot('Position',reshape(subPlotPanel(6,1,:),1,4));    
 %subplot(2,3,5); 
   plot(frequencyConvHz(idxFreqInBandwidth,1),...
-       phase(idxFreqInBandwidth,1).*(180/pi),'-','Color',[0,0,0],'LineWidth',1);
+       phase(idxFreqInBandwidth,1).*(180/pi),'-','Color',[.5,0.5,1],'LineWidth',1);
   xlabel('Frequency (Hz)');
   ylabel('Phase (degrees)');
   xlim([0,bandwidth]);
-  xticks([0:10:bandwidth]);
+  xticks([0:5:bandwidth]);
   yticks(round([0,max(phase(idxFreqInBandwidth,1).*(180/pi))],0));
   ylim([0,1.01*round(max(phase(idxFreqInBandwidth,1).*(180/pi)),0)]);
   box off;
 
   limitsX = xlim; 
   limitsY = ylim;
-  title('F. Phase response (frequency domain)', ...
+  title('G. Phase response (frequency-domain)', ...
         'HorizontalAlignment', 'left', 'position', [limitsX(1), limitsY(2)]);  
 
 
