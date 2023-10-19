@@ -134,42 +134,51 @@ ax=axes(fig);
 set(ax,'TitleHorizontalAlignment','Left');
 subplot('Position',reshape(subPlotPanel(1,1,:),1,4));
 %subplot(2,3,1); 
-  plot(timeVec, xTimeDomain,'-','Color',[1,1,1].*0.5,'LineWidth',1);
-  xlabel('Time (s)');
-  ylabel('Length(mm)');
-  box off;
+
+  yyaxis right;
+  plot(timeVec, yTimeDomain,'-','Color',[1,1,1].*0.,'LineWidth',1,...
+       'DisplayName','Output');
+  hold on;
+  ylabel('Output Amplitude');  
+  yticks([-1,0,1].*round(max(abs(yTimeDomain)),1));
+  ylim([-1.01,1.01].*round(max(abs(yTimeDomain)),1));
+
+  yyaxis left;
+  plot(timeVec, xTimeDomain,'-','Color',[1,1,1],'LineWidth',2,...
+       'DisplayName','');
+  hold on;
+  plot(timeVec, xTimeDomain,'-','Color',[1,1,1].*0.5,'LineWidth',1,...
+       'DisplayName','Input');
+  hold on;
+  ylim([-1.01,1.01].*round(max(abs(yTimeDomain)),1));
+  ylabel('Input Amplitude');
+
+  yticks([-1,0,1].*round(max(abs(xTimeDomain)),1));
+  ylim([-1.01,1.01].*round(max(abs(yTimeDomain)),1));
+  
+%  yticks([-1,0,1].*round(max(abs(xTimeDomain)),2));
+%  ylim([-1.01,1.01].*round(max(abs(xTimeDomain)),1))
+%  ylim([-1.01,1.01].*round(max(abs(yTimeDomain)),1))
+
+
+  xlabel('Time (s)');  
   xlim([0,samples/sampleFrequency]);
   xticks([0:0.1:round(samples/sampleFrequency)]);
-  xticklabels({'','','','','','','','','',''});
-  yticks([-1,0,1].*round(max(abs(xTimeDomain)),2));
-  ylim([-1.01,1.01].*round(max(abs(xTimeDomain)),1))
-%  ylim([-1.01,1.01].*round(max(abs(yTimeDomain)),1))
 
   limitsX = xlim; 
   limitsY = ylim;
-  title('A. Length perturbation (1.6mm, 35Hz bandwidth)', ...
+
+  box off;
+
+  title('A. Input and output signal time-domain data', ...
         'HorizontalAlignment', 'left', 'position', [limitsX(1), limitsY(2)]);
   
   
-subplot('Position',reshape(subPlotPanel(2,1,:),1,4));  
+%subplot('Position',reshape(subPlotPanel(2,1,:),1,4));  
 %subplot(2,3,2); 
-  plot(timeVec, yTimeDomain,'-','Color',[1,1,1].*0.,'LineWidth',1);
-  xlabel('Time (s)');
-  ylabel('Force (N)');
-  title('B. Force response of a spring-damper');  
-  box off;
-  xlim([0,samples/sampleFrequency]);
-  xticks([0:0.1:round(samples/sampleFrequency)]);
-
-  yticks([-1,0,1].*round(max(abs(yTimeDomain)),1));
-  ylim([-1.01,1.01].*round(max(abs(yTimeDomain)),1))
-  limitsX = xlim; 
-  limitsY = ylim;
-  title('B. Force response (time-domain)', ...
-        'HorizontalAlignment', 'left', 'position', [limitsX(1), limitsY(2)]);  
 
 
-fullPanel  =   reshape(subPlotPanel(3,1,:),1,4);
+fullPanel  =   reshape(subPlotPanel(2,1,:),1,4);
 leftPanel  = [  fullPanel(1,1),...
                 fullPanel(1,2),...
                 fullPanel(1,3)*0.4,...
@@ -203,7 +212,7 @@ subplot('Position',leftPanel);
   xlabel('Time (s)');
   ylabel('Magnitude');
 
-  title('C. Time-domain signal', ...
+  title('B. Time-domain signal', ...
         'HorizontalAlignment', 'left', 'position', [limitsX(1), limitsY(2)]);  
 
 subplot('Position',rightPanel);  
@@ -243,11 +252,11 @@ subplot('Position',rightPanel);
   limitsX = xlim; 
   limitsY = ylim;
 
-  title('D. Freq.-domain signal', ...
+  title('C. Freq.-domain signal', ...
         'HorizontalAlignment', 'left', 'position', [limitsX(1), limitsY(2)]);  
 
 
-subplot('Position',reshape(subPlotPanel(4,1,:),1,4));  
+subplot('Position',reshape(subPlotPanel(3,1,:),1,4));  
   sinA = 0.8.*sin(timeVec.*((90/32)*2*pi));
   sinB = 1.6.*sin(timeVec.*((90/32)*2*pi)+pi/3 );
   plot(timeVec,sinA,'-','Color',[1,1,1].*0.5,'LineWidth',1);
@@ -267,11 +276,11 @@ subplot('Position',reshape(subPlotPanel(4,1,:),1,4));
   xticks([0:0.1:round(samples/sampleFrequency)]);
   limitsX = xlim; 
   limitsY = ylim;
-  title('E. Gain and phase between two sinusoids', ...
+  title('D. Gain and phase between two sinusoids', ...
         'HorizontalAlignment', 'left', 'position', [limitsX(1), limitsY(2)]);  
 
 
-subplot('Position',reshape(subPlotPanel(5,1,:),1,4));    
+subplot('Position',reshape(subPlotPanel(4,1,:),1,4));    
 %subplot(2,3,4); 
   plot(frequencyConvHz(idxFreqInBandwidth,1),...
        gain(idxFreqInBandwidth,1),'-','Color',[.5,0.5,1],'LineWidth',1);
@@ -292,7 +301,7 @@ subplot('Position',reshape(subPlotPanel(5,1,:),1,4));
 
   limitsX = xlim; 
   limitsY = ylim;
-  title('F. Gain response (frequency-domain)', ...
+  title('E. Gain response (frequency-domain)', ...
         'HorizontalAlignment', 'left', 'position', [limitsX(1), limitsY(2)]);  
   
   box off;
@@ -300,7 +309,7 @@ subplot('Position',reshape(subPlotPanel(5,1,:),1,4));
   yticks(round([0,k],1));
   ylim([0,1.01*max(gain(idxFreqInBandwidth,1))]);
 
-subplot('Position',reshape(subPlotPanel(6,1,:),1,4));    
+subplot('Position',reshape(subPlotPanel(5,1,:),1,4));    
 %subplot(2,3,5); 
   plot(frequencyConvHz(idxFreqInBandwidth,1),...
        phase(idxFreqInBandwidth,1).*(180/pi),'-','Color',[.5,0.5,1],'LineWidth',1);
@@ -314,7 +323,7 @@ subplot('Position',reshape(subPlotPanel(6,1,:),1,4));
 
   limitsX = xlim; 
   limitsY = ylim;
-  title('G. Phase response (frequency-domain)', ...
+  title('F. Phase response (frequency-domain)', ...
         'HorizontalAlignment', 'left', 'position', [limitsX(1), limitsY(2)]);  
 
 
