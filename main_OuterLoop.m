@@ -35,9 +35,9 @@ close all;
 clear all;
 
 
-timeStart = tic;
-main_CreateModels_OuterLoop;
-secondsElapsed = toc(timeStart);
+ timeStart = tic;
+% main_CreateModels_OuterLoop;
+ secondsElapsed = toc(timeStart);
 
 rootDir         = getRootProjectDirectory();
 cd(rootDir);

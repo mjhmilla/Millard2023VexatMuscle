@@ -75,6 +75,9 @@ function [felineSoleusMusculotendonProperties, ...
     [],...
     projectFolders);
 
+felineSoleusSarcomereProperties.activationTimeConstant  =0.113;
+felineSoleusSarcomereProperties.deactivationTimeConstant=0.142;
+
 % From Scott et al. pg 211, column 2, 2nd last paragraph. Note that Scott et al.
 % did their experiment on a cat soleus and that the experiments were done at
 % normal body temperature.
@@ -82,18 +85,12 @@ function [felineSoleusMusculotendonProperties, ...
 % Scott SH, Brown IE, Loeb GE. Mechanics of feline soleus: I. Effect of 
 % fascicle length and velocity on force output. Journal of Muscle Research & 
 % Cell Motility. 1996 Apr 1;17(2):207-19.
-maximumNormalizedFiberVelocity = 4.5; % in units of norm fiber lengths/second
 
-% The slow-twitch fibers plotted in Fig. 3 of Ranatunga 1984 develop a 
-% normalized force of 0.1 at half the maximum contraction velocity. I am
-% assuming that the rats slow-twich normalized force-velocity curve will also
-% fit that of a feline. Given that both a rat and a cat are mammals they should 
-% be similar.
-%
-% Ranatunga KW. The force‐velocity relation of rat fast‐and slow‐twitch muscles 
-% examined at different temperatures. The Journal of physiology. 1984 Jun 1;
-% 351(1):517-29.
-forceVelocityMultiplierAtHalfMaximumFiberVelocity = 0.1;  
+% Graphically measured from Figure 4 of Scott, Brown, Loeb
+maximumNormalizedFiberVelocity = 4.65; % in units of norm fiber lengths/second
+
+% Graphically measured from Figure 4 of Scott, Brown, Loeb
+forceVelocityMultiplierAtHalfMaximumFiberVelocity = 0.126;  
 
 
 % From Scott et al. pg 211 column 2, 2nd last paragraph
