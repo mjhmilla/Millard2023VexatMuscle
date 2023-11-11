@@ -125,9 +125,9 @@ for idxParam=1:1:2
                         flag_plot,...
                         flag_useOctave);
 
-    %Will get us within 2% of the best parameter value, as these parameters
+    %Will get us within 0.5% of the best parameter value, as these parameters
     %are relatively independent
-    for idxBisection=1:1:6
+    for idxBisection=1:1:8
         biParamL = biParam;
         biParamL(idxParam,1) = biParamL(idxParam,1) - biDelta(idxParam,1); 
         errL = errorFcn(biParamL);

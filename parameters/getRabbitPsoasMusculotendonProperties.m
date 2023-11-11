@@ -36,7 +36,7 @@ disp('  values for the rabbit psoas; second, the rabbit psoas model is ');
 disp('  evaluated in a normalized space so the values of its architectural');
 disp('  properties are not important.');
 
-lceOpt   = 0.1*scaleOptimalFiberLength;
+lceOpt   = 0.001*scaleOptimalFiberLength;
 alphaOpt = 0; 
 fiso     = 1;
 

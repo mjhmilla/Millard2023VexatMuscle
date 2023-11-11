@@ -87,11 +87,11 @@ success = 0;
 
             %Evaluate the passive path length
             ft0 = fpeN0*cos(alpha0);
-            tendonForceLengthCurveInverse = ...
-                createInverseCurve(normMuscleCurves.tendonForceLengthCurve);
-            ltN0    = calcBezierYFcnXDerivative(ft0, tendonForceLengthCurveInverse,0);
-            if(flag_useElasticTendon==0)
-              ltN0 = 1;
+            ltN0 = 1;          
+            if(flag_useElasticTendon==1)
+                tendonForceLengthCurveInverse = ...
+                    createInverseCurve(normMuscleCurves.tendonForceLengthCurve);
+                ltN0    = calcBezierYFcnXDerivative(ft0, tendonForceLengthCurveInverse,0);                
             end            
             ltslk  = musculotendonProperties.tendonSlackLength;
             
@@ -101,11 +101,11 @@ success = 0;
             % Now evaluate the length of the fiber when the muscle is at
             % the beginning of the ramp (stretched by rampStart) and is activated
             %%
-            ft1    = nominalForce/fiso;
-            ltN1   = calcBezierYFcnXDerivative(ft1,...
-                       tendonForceLengthCurveInverse,0);
-            if(flag_useElasticTendon==0)
-              ltN1 = 1;
+            ltN1=1;
+            ft1    = nominalForce/fiso;            
+            if(flag_useElasticTendon==1)
+                ltN1   = calcBezierYFcnXDerivative(ft1,...
+                           tendonForceLengthCurveInverse,0);
             end            
             %lceAT1  = pathStartLength - ltN1*ltslk;
             pathStartLength  = lceAT0+ltN1*ltslk;
@@ -189,11 +189,11 @@ success = 0;
           %%
             benchConfig.npts                  = (timeSpan(1,2)-timeSpan(1,1))*1000;
 
-            numericalTolerance = 1e-6;
-            if(flag_useElasticTendon==0)
-              numericalTolerance = 1e-7;
-              %Surprisingly the rigid tendon simulations are quite a bit
-              %more challenging to simulate than the elastic tendon simulations
+            %Surprisingly the rigid tendon simulations are quite a bit
+            %more challenging to simulate than the elastic tendon simulations            
+            numericalTolerance = 1e-7;            
+            if(flag_useElasticTendon==1)
+              numericalTolerance = 1e-6;
             end
 
             benchConfig.relTol                = numericalTolerance*10;
