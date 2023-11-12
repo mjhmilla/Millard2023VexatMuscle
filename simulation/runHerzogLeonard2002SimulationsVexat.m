@@ -90,12 +90,11 @@ success = 0;
 
             %Evaluate the passive path length
             ft0 = fpeN0*cos(alpha0);
-            ltN0 = 1;          
-            if(flag_useElasticTendon==1)
-                tendonForceLengthCurveInverse = ...
-                    createInverseCurve(normMuscleCurves.tendonForceLengthCurve);
-                ltN0    = calcBezierYFcnXDerivative(ft0, tendonForceLengthCurveInverse,0);                
-            end            
+            %ltN0 = 1;          
+            %if(flag_useElasticTendon==1)
+            ltN0    = calcBezierYFcnXDerivative(ft0, ...
+                        normMuscleCurves.tendonForceLengthInverseCurve,0);                
+            %end            
             ltslk  = musculotendonProperties.tendonSlackLength;
             
             %pathStartLength  = lceAT0+ltN0*ltslk;
@@ -104,12 +103,12 @@ success = 0;
             % Now evaluate the length of the fiber when the muscle is at
             % the beginning of the ramp (stretched by rampStart) and is activated
             %%
-            ltN1=1;
-            if(flag_useElasticTendon==1)
+            %ltN1=1;
+            %if(flag_useElasticTendon==1)
                 ft1    = nominalForce/fiso;                            
                 ltN1   = calcBezierYFcnXDerivative(ft1,...
-                           tendonForceLengthCurveInverse,0);
-            end    
+                           normMuscleCurves.tendonForceLengthInverseCurve,0);
+            %end    
 
 
             %lceAT1  = pathStartLength - ltN1*ltslk;
