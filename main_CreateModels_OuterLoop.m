@@ -37,7 +37,7 @@ disp('----------------------------------------');
 %%
 % Global model parameters
 %%
-flag_loadPreviouslyOptimizedParameters = 0;
+flag_loadPreviouslyOptimizedParameters = 1;
 % 0: A lengthy optimization is done to find the best point within the
 %    PEVK segment to bond to actin. This value is saved to file for later
 %    use.
@@ -47,7 +47,7 @@ flag_loadPreviouslyOptimizedParameters = 0;
 %probably no longer works.
 flag_useOctave            = 0; 
 
-flag_makeAndSavePubPlots  = 0;
+flag_makeAndSavePubPlots  = 1;
 plotOutputFolder          = [projectFolders.output_plots_MuscleCurves,filesep];
 
 normMaxActiveTitinToActinDamping = 65;
@@ -435,7 +435,7 @@ if(flag_fitFelineSoleusActiveTitinProperties==1)
     filePathHL2002ET = fullfile(   projectFolders.output_structs_FittedModels,...
                                     ['fittedFelineSoleus',fittingTag,'_ET']);
     save(filePathHL2002ET,'fittedFelineSoleus');    
-    
+
     flag_useElasticTendon = 0;
     fittedFelineSoleusHL2002_RT = ...
         fitFelineSoleusPevkActinBondLocation( ...
