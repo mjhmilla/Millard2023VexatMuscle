@@ -14,7 +14,7 @@
 
 function [success] = runHerzogLeonard2002SimulationsDampedEquilibrium(...
                           nominalNormalizedFiberLength,...
-                          nominalForce,...                            
+                          nominalForce,...                           
                           timeSpan,...
                           lengthRampKeyPoints,...
                           stimulationKeyTimes,...
@@ -50,8 +50,7 @@ benchRecord = [];
         assert(size(nominalNormalizedFiberLength,1)==1 && ...
                size(nominalNormalizedFiberLength,2)==1);
 
-        assert(size(nominalForce,1)==1 && ...
-               size(nominalForce,2)==1);
+
 
 
         %%
@@ -63,8 +62,11 @@ benchRecord = [];
         rampStartLength = lengthRampKeyPoints(1,2);
         rampEndLength   = lengthRampKeyPoints(2,2);
 
-
-
+        %nominalForce = interp1(expDataPassive.time,...
+        %                                expDataPassive.force,...
+        %                                rampStartTime);
+        %nominalForce=nominalForce;
+        
         alphaOpt  = musculotendonProperties.pennationAngle;
         lceOpt    = musculotendonProperties.optimalFiberLength;
         lce       = nominalNormalizedFiberLength*lceOpt;
@@ -110,12 +112,14 @@ benchRecord = [];
         % Now evaluate the length of the fiber when the muscle is at
         % the beginning of the ramp (stretched by rampStart) and is activated
         %%
-        ft1    = nominalForce/fiso;
-        ltN1   = calcBezierYFcnXDerivative(ft1,...
-                   tendonForceLengthCurveInverse,0);
-        if(flag_useElasticTendon==0)
-          ltN1 = 1;
+
+        ltN1 = 1;                
+        if(flag_useElasticTendon==1)
+            ft1    = nominalForce/fiso;
+            ltN1   = calcBezierYFcnXDerivative(ft1,...
+                       tendonForceLengthCurveInverse,0);
         end
+
         %lceAT1  = pathStartLength - ltN1*ltslk;
         pathStartLength  = lceAT0+ltN1*ltslk;
         dlceAT1 = 0;

@@ -353,7 +353,7 @@ expConfigHerzogLeonard2002 =...
                                     trialNumber,...
                                     projectFolders);
 
-
+%In order active,passive, static
 
 
 if(flag_testVexatDerivativeFunction==1)

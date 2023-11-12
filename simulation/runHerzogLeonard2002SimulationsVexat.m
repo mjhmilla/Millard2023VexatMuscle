@@ -42,8 +42,7 @@ success = 0;
             assert(size(nominalNormalizedFiberLength,1)==1 && ...
                    size(nominalNormalizedFiberLength,2)==1);
 
-            assert(size(nominalForce,1)==1 && ...
-                   size(nominalForce,2)==1);
+
 
             %%
             % Evaluate the model when it is passive and at its nominal length
@@ -55,6 +54,10 @@ success = 0;
             rampEndLength   = lengthRampKeyPoints(2,2);
 
 
+            %nominalForce = interp1(expDataPassive.time,...
+            %                                expDataPassive.force,...
+            %                                rampStartTime);
+            %nominalForce=nominalForce;
 
             alphaOpt  = musculotendonProperties.pennationAngle;
             lceOpt    = musculotendonProperties.optimalFiberLength;
@@ -102,11 +105,13 @@ success = 0;
             % the beginning of the ramp (stretched by rampStart) and is activated
             %%
             ltN1=1;
-            ft1    = nominalForce/fiso;            
             if(flag_useElasticTendon==1)
+                ft1    = nominalForce/fiso;                            
                 ltN1   = calcBezierYFcnXDerivative(ft1,...
                            tendonForceLengthCurveInverse,0);
-            end            
+            end    
+
+
             %lceAT1  = pathStartLength - ltN1*ltslk;
             pathStartLength  = lceAT0+ltN1*ltslk;
             dlceAT1 = 0;
