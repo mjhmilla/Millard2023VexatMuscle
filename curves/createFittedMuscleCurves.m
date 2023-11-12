@@ -31,6 +31,8 @@ function [normMuscleCurves,...
                       smallNumericallyNonZeroNumber,...
                       flag_solveForOptimalFiberLengthOfBestFit,...
                       createMusculoTendonFcn,...
+                      useElasticTendon,...
+                      elasticTendonReferenceModel,...
                       flag_useOctave)
 %%
 % Will create all of the Bezier curves that are needed to simulate both
@@ -205,10 +207,10 @@ if(flag_solveForOptimalFiberLengthOfBestFit==1 ...
 end
 
      
-musculotendonPropertiesUpd = musculotendonProperties;
-sarcomerePropertiesUpd     = sarcomereProperties;   
-dataActiveForceLengthUpd   = dataActiveForceLength;
-dataPassiveForceLengthUpd  = dataPassiveForceLength;
+%musculotendonPropertiesUpd = musculotendonProperties;
+%sarcomerePropertiesUpd     = sarcomereProperties;   
+%dataActiveForceLengthUpd   = dataActiveForceLength;
+%dataPassiveForceLengthUpd  = dataPassiveForceLength;
 
 %%
 % 
@@ -314,71 +316,147 @@ forceLengthCurveSettings = struct('normLengthZero',0,'normLengthToe',0,'fToe',0,
 
 if(isempty(dataPassiveForceLength) == 0)
 
-  normLengthZero           = 1.0; 
-  normLengthToe            = 1.7;
-  kZero           = 0;
-  
-  if(flag_enableNumericallyNonZeroGradients)
-    kZero = smallNumericallyNonZeroNumber;
-  end         
-  
-  kLow            = 0.2;
-  kNum            = 2;
-  kToe            = kNum/(normLengthToe-normLengthZero);
-  curviness       = 0.75;
-  xshift          = min(dataPassiveForceLength(:,1));
-  xwidth          = 0.7;
-  problemScaling  = 1000;
-  params0         = [xshift  , xwidth].*problemScaling;
-  paramsLB        = [0.8*xshift    ;    0.5].*problemScaling;
-  paramsUB        = [2.0     ;   2.0].*problemScaling;
-  
-  fixedParams = [kLow,kNum,kZero,curviness];
+  %Fit the passive curve so that it has the same force-path-length curve
+  %as the elastic tendon MTU. 
+  if(useElasticTendon == 0 && isempty(elasticTendonReferenceModel)==0 )
+      normLengthZero           = 1.0; 
+      normLengthToe            = 1.7;
+      kZero           = 0;
+      
+      if(flag_enableNumericallyNonZeroGradients)
+        kZero = smallNumericallyNonZeroNumber;
+      end         
+      
+      kLow            = 0.2;
+      kNum            = 2;
+      kToe            = kNum/(normLengthToe-normLengthZero);
+      curviness       = 0.75;
+      xshift          = min(dataPassiveForceLength(:,1));
+      xwidth          = 0.7;
+      problemScaling  = 1000;
+      params0         = [xshift  , xwidth].*problemScaling;
+      paramsLB        = [0.8*xshift    ;    0.5].*problemScaling;
+      paramsUB        = [2.0     ;   2.0].*problemScaling;
+      
+      fixedParams = [kLow,kNum,kZero,curviness];
 
-  errFcn = @(argX)calcFittedFiberForceLengthCurveError(argX,...
-                   dataPassiveForceLength,problemScaling,...
-                   fixedParams,flag_useOctave);
-  
-               
-  err0 = errFcn(params0);
-  lsqOptions = optimoptions('lsqnonlin','Display','off',...
-      'FinDiffType','central');
-  x    = lsqnonlin(errFcn,params0,paramsLB,paramsUB,lsqOptions);
-  err1 = errFcn(x);
+      errFcn = @(argX)calcRigidToElasticTendonForceLengthCurveError(argX,...
+                       dataPassiveForceLength,problemScaling,...
+                       fixedParams, elasticTendonReferenceModel,flag_useOctave);  
 
-  fprintf('  forceLengthCurve fitted, error reduced from %1.2e - %1.2e\n',...
-          norm(err0),norm(err1));
-  
-  xshift    = x(1)/problemScaling;
-  xwidth    = x(2)/problemScaling;
-  normLengthZero = xshift;
-  normLengthToe  = xshift + xwidth;
-  kToe      = kNum/(normLengthToe-normLengthZero);
-  fToe      = 1;
-  curviness = 0.75;
+                   
+      err0 = errFcn(params0);
+      lsqOptions = optimoptions('lsqnonlin','Display','off',...
+          'FinDiffType','central');
+      x    = lsqnonlin(errFcn,params0,paramsLB,paramsUB,lsqOptions);
+      err1 = errFcn(x);
+    
+      fprintf('  forceLengthCurve fitted to elastic tendon model, error reduced from %1.2e - %1.2e\n',...
+              norm(err0),norm(err1));
+      
+      xshift    = x(1)/problemScaling;
+      xwidth    = x(2)/problemScaling;
+      normLengthZero = xshift;
+      normLengthToe  = xshift + xwidth;
+      kToe      = kNum/(normLengthToe-normLengthZero);
+      fToe      = 1;
+      curviness = 0.75;
+    
+      assert( kZero < kLow );
+      
+      flag_computeIntegral = 1;
+      normMuscleCurves.fiberForceLengthCurve = ...
+        createFiberForceLengthCurve2021(normLengthZero,...
+                                    normLengthToe,...
+                                    fToe,...
+                                    kZero,...
+                                    kLow,...
+                                    kToe,...
+                                    curviness,...
+                                    flag_computeIntegral,...
+                                    musculotendonProperties.name,...
+                                    flag_useOctave);
+                                  
+      forceLengthCurveSettings.normLengthZero = normLengthZero;
+      forceLengthCurveSettings.normLengthToe  = normLengthToe;
+      forceLengthCurveSettings.fToe           = fToe;
+      forceLengthCurveSettings.kZero = kZero;
+      forceLengthCurveSettings.kLow  = kLow;
+      forceLengthCurveSettings.kToe  = kToe;
+      forceLengthCurveSettings.curviness = curviness;
 
-  assert( kZero < kLow );
-  
-  flag_computeIntegral = 1;
-  normMuscleCurves.fiberForceLengthCurve = ...
-    createFiberForceLengthCurve2021(normLengthZero,...
-                                normLengthToe,...
-                                fToe,...
-                                kZero,...
-                                kLow,...
-                                kToe,...
-                                curviness,...
-                                flag_computeIntegral,...
-                                musculotendonProperties.name,...
-                                flag_useOctave);
-                              
-  forceLengthCurveSettings.normLengthZero = normLengthZero;
-  forceLengthCurveSettings.normLengthToe  = normLengthToe;
-  forceLengthCurveSettings.fToe           = fToe;
-  forceLengthCurveSettings.kZero = kZero;
-  forceLengthCurveSettings.kLow  = kLow;
-  forceLengthCurveSettings.kToe  = kToe;
-  forceLengthCurveSettings.curviness = curviness;
+
+  end
+
+  if(useElasticTendon == 1 || isempty(elasticTendonReferenceModel)==1 )
+
+      normLengthZero           = 1.0; 
+      normLengthToe            = 1.7;
+      kZero           = 0;
+      
+      if(flag_enableNumericallyNonZeroGradients)
+        kZero = smallNumericallyNonZeroNumber;
+      end         
+      
+      kLow            = 0.2;
+      kNum            = 2;
+      kToe            = kNum/(normLengthToe-normLengthZero);
+      curviness       = 0.75;
+      xshift          = min(dataPassiveForceLength(:,1));
+      xwidth          = 0.7;
+      problemScaling  = 1000;
+      params0         = [xshift  , xwidth].*problemScaling;
+      paramsLB        = [0.8*xshift    ;    0.5].*problemScaling;
+      paramsUB        = [2.0     ;   2.0].*problemScaling;
+      
+      fixedParams = [kLow,kNum,kZero,curviness];
+    
+      errFcn = @(argX)calcFittedFiberForceLengthCurveError(argX,...
+                       dataPassiveForceLength,problemScaling,...
+                       fixedParams,flag_useOctave);
+      
+                   
+      err0 = errFcn(params0);
+      lsqOptions = optimoptions('lsqnonlin','Display','off',...
+          'FinDiffType','central');
+      x    = lsqnonlin(errFcn,params0,paramsLB,paramsUB,lsqOptions);
+      err1 = errFcn(x);
+    
+      fprintf('  forceLengthCurve fitted, error reduced from %1.2e - %1.2e\n',...
+              norm(err0),norm(err1));
+      
+      xshift    = x(1)/problemScaling;
+      xwidth    = x(2)/problemScaling;
+      normLengthZero = xshift;
+      normLengthToe  = xshift + xwidth;
+      kToe      = kNum/(normLengthToe-normLengthZero);
+      fToe      = 1;
+      curviness = 0.75;
+    
+      assert( kZero < kLow );
+      
+      flag_computeIntegral = 1;
+      normMuscleCurves.fiberForceLengthCurve = ...
+        createFiberForceLengthCurve2021(normLengthZero,...
+                                    normLengthToe,...
+                                    fToe,...
+                                    kZero,...
+                                    kLow,...
+                                    kToe,...
+                                    curviness,...
+                                    flag_computeIntegral,...
+                                    musculotendonProperties.name,...
+                                    flag_useOctave);
+                                  
+      forceLengthCurveSettings.normLengthZero = normLengthZero;
+      forceLengthCurveSettings.normLengthToe  = normLengthToe;
+      forceLengthCurveSettings.fToe           = fToe;
+      forceLengthCurveSettings.kZero = kZero;
+      forceLengthCurveSettings.kLow  = kLow;
+      forceLengthCurveSettings.kToe  = kToe;
+      forceLengthCurveSettings.curviness = curviness;
+
+  end
     
 else  
 
@@ -422,6 +500,8 @@ fprintf('  fiberForceLengthInverseCurve created\n');
 normMuscleCurves.fiberForceLengthInverseCurve = ...
       createInverseCurve(normMuscleCurves.fiberForceLengthCurve);
 
+
+
 %%
 %
 %   Titin curves and extracellular matrix curves
@@ -433,6 +513,8 @@ normMuscleCurves.fiberForceLengthInverseCurve = ...
 %     2. With curves for the IgP and PEVK regions that are plausible 
 %
 %%
+
+
 fprintf('  ecm & titin curves:\n');
 
 
@@ -573,4 +655,10 @@ normMuscleCurves.compressiveForceLengthCurve = ...
 
   
 fprintf('  compressiveForceLengthCurve created\n');
+
+
+musculotendonPropertiesUpd = musculotendonProperties;
+sarcomerePropertiesUpd     = sarcomereProperties;   
+dataActiveForceLengthUpd   = dataActiveForceLength;
+dataPassiveForceLengthUpd  = dataPassiveForceLength;
 

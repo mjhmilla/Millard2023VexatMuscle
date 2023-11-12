@@ -63,6 +63,8 @@ normPevkToActinAttachmentPointDefault = 0.5;
 
 normFiberLengthAtOneNormPassiveForceDefault = 1.367732948060934e+00;
 
+normFiberLengthAtOneNormPassiveForceDefault_RT = 1.421393259171109e+00;
+
 % This the normalized fiber length at which the passive-force-length curve 
 % used in this work develops 1 maximum isometric force passively when fit to 
 % passive-force length data from Fig. 7 of Herzog & Leonard. This is used as 
@@ -252,7 +254,7 @@ end
 
 fprintf('\n\nCreating: default feline soleus model\n\n');
 
-
+felineSoleusElasticTendonReferenceModel = [];
 useElasticTendon=1;
 [ defaultFelineSoleus,...
   activeForceLengthCurveAnnotationPoints,...
@@ -272,6 +274,7 @@ useElasticTendon=1;
                 scaleOptimalFiberLengthCatSoleus,... 
                 scaleMaximumIsometricTensionCatSoleus,...
                 useElasticTendon,...
+                felineSoleusElasticTendonReferenceModel,...
                 projectFolders,...
                 flag_useOctave);
 
@@ -296,7 +299,7 @@ useElasticTendon=0;
         createFelineSoleusModel(...
                 normPevkToActinAttachmentPointDefault,...
                 normMaxActiveTitinToActinDamping,...
-                normFiberLengthAtOneNormPassiveForceDefault,... 
+                normFiberLengthAtOneNormPassiveForceDefault_RT,... 
                 ecmForceFractionFelineSoleus,...
                 linearTitinModel,...
                 useCalibratedCurves,...
@@ -306,6 +309,7 @@ useElasticTendon=0;
                 scaleOptimalFiberLengthCatSoleus,... 
                 scaleMaximumIsometricTensionCatSoleus,...
                 useElasticTendon,...
+                defaultFelineSoleus,...
                 projectFolders,...
                 flag_useOctave);
 
@@ -327,6 +331,82 @@ filePathDefault = fullfile(   projectFolders.output_structs_FittedModels,...
 save(filePathDefault,'defaultFelineSoleus_RT');  
 
 
+%%
+% Check to make sure the the passive curves of the rigid and elastic 
+% tendon models match
+%%
+flag_examineQualityOfRigidToElasticForceLengthCurveMatch=1;
+if(flag_examineQualityOfRigidToElasticForceLengthCurveMatch == 1)
+    elpe    = [0:0.1:1]';
+    lceN    = zeros(size(elpe));
+    lceRT   = zeros(size(elpe));
+    lceNRT  = zeros(size(elpe));
+    
+    ltN     = zeros(size(elpe));
+    lp      = zeros(size(elpe));
+    
+    fpeNErr = zeros(size(elpe));
+    fpeN    = zeros(size(elpe));
+    fpeNRT  = zeros(size(elpe));
+    
+    
+    lpe0N = defaultFelineSoleus.curves.fiberForceLengthCurve.xEnd(1,1);
+    lpe1N = defaultFelineSoleus.curves.fiberForceLengthCurve.xEnd(1,2);
+    assert(abs(defaultFelineSoleus.curves.fiberForceLengthCurve.yEnd(1,2)-1)<sqrt(eps));
+    
+    assert(abs(defaultFelineSoleus.musculotendon.optimalFiberLength ...
+              -defaultFelineSoleus_RT.musculotendon.optimalFiberLength) < sqrt(eps));
+    assert(abs(defaultFelineSoleus.musculotendon.fiso ...
+              -defaultFelineSoleus_RT.musculotendon.fiso) < sqrt(eps));
+    assert(abs(defaultFelineSoleus.musculotendon.tendonSlackLength ...
+              -defaultFelineSoleus_RT.musculotendon.tendonSlackLength) < sqrt(eps));
+    
+    lopt    = defaultFelineSoleus.musculotendon.optimalFiberLength;
+    fiso    = defaultFelineSoleus.musculotendon.fiso;
+    ltSlk   = defaultFelineSoleus.musculotendon.tendonSlackLength;
+    
+    for i=1:1:length(elpe)
+        lceN(i,1) = (1+elpe(i,1));
+        fpeN(i,1) = calcBezierYFcnXDerivative(lceN(i,1), ...
+                defaultFelineSoleus.curves.fiberForceLengthCurve, 0);
+        ltN(i,1)  = calcBezierYFcnXDerivative(fpeN(i,1), ...
+                defaultFelineSoleus.curves.tendonForceLengthInverseCurve, 0);
+        lp(i,1) = lceN(i,1)*lopt + ltN(i,1)*ltSlk;
+    
+        lceRT(i,1)  = lp(i,1) - ltSlk;
+        lceNRT(i,1) = lceRT(i,1)/lopt;
+    
+        fpeNRT(i,1) = calcBezierYFcnXDerivative(lceNRT(i,1), ...
+                        defaultFelineSoleus_RT.curves.fiberForceLengthCurve, 0);
+    
+        fpeNErr(i,1) = fpeN(i,1)-fpeNRT(i,1);
+    end
+    
+    figFpe = figure;
+    subplot(1,2,1);
+    plot(lp, fpeN,'b','DisplayName','Elastic Tendon');
+    hold on;
+    plot(lp, fpeNRT,'r','DisplayName','Rigid Tendon');
+    xlabel('Path Length ($\ell^{P}$)');
+    ylabel('Norm. Force Error ($f^{PE}$)');
+    legend;
+    box off;
+    title('A. RT \& ET MTU force-length relation');
+    subplot(1,2,2);
+    plot(lp, fpeNErr,'m','DisplayName','fpeN-Err');
+    xlabel('Path Length ($\ell^{P}$)');
+    ylabel('Norm. Force Error ($f^{PE}$)');
+    legend;
+    box off;
+    title('B. RT \& ET MTU force-length error');
+
+    here=1;
+end
+
+%%
+% Fit the titin properties of the soleus to match 1 trial from
+% Herzog & Leonard 2002
+%%
 
 fittedFelineSoleus = [];
 fittingTag = '';
