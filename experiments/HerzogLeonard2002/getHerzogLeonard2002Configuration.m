@@ -307,7 +307,7 @@ rampPassiveSmoothAcceleration = ...
 [maxVal,idxRampPassiveT0] = max(rampPassiveSmoothAcceleration);
 [minVal,idxRampPassiveT1] = min(rampPassiveSmoothAcceleration);
 
-flagPlotFilteredSignals =1;
+flagPlotFilteredSignals =0;
 if(flagPlotFilteredSignals==1)
    figFilt = figure;
    subplot(2,1,1);
