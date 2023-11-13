@@ -14,7 +14,7 @@
 
 %This flag allows us to avoid the memory clearing functions so that
 %this can be timed using tic and tock from within main_OuterLoop
-flag_OuterOuterLoopMode =1;
+flag_OuterOuterLoopMode =0;
 if(flag_OuterOuterLoopMode ==0)
     clc;
     close all;
@@ -337,19 +337,48 @@ save(filePathDefault,'defaultFelineSoleus_RT');
 %%
 flag_examineQualityOfRigidToElasticForceLengthCurveMatch=1;
 if(flag_examineQualityOfRigidToElasticForceLengthCurveMatch == 1)
-    elpe    = [0:0.1:1]';
+    elpe    = [0:0.01:1]';
     lceN    = zeros(size(elpe));
-    lceRT   = zeros(size(elpe));
+
+    l1N    = zeros(size(elpe));
+    l2N    = zeros(size(elpe));
+    fecmN  = zeros(size(elpe));
+    f1N    = zeros(size(elpe));
+    f2N    = zeros(size(elpe));
+    fecm12N= zeros(size(elpe));
+
+    lTitinFixedHN = defaultFelineSoleus.sarcomere.ZLineToT12NormLengthAtOptimalFiberLength ...
+                  + defaultFelineSoleus.sarcomere.IGDFixedNormLengthAtOptimalFiberLength;    
+
+    ecmFrac = defaultFelineSoleus.sarcomere.extraCellularMatrixPassiveForceFraction;
+
+    lceRT   = zeros(size(elpe));    
+    l1NRT   = zeros(size(elpe));
+    l2NRT   = zeros(size(elpe));
+    
     lceNRT  = zeros(size(elpe));
     
     ltN     = zeros(size(elpe));
     lp      = zeros(size(elpe));
     
+    lTitinFixedHN_RT = defaultFelineSoleus_RT.sarcomere.ZLineToT12NormLengthAtOptimalFiberLength ...
+                  + defaultFelineSoleus_RT.sarcomere.IGDFixedNormLengthAtOptimalFiberLength;    
+
+    ecmFrac_RT = defaultFelineSoleus_RT.sarcomere.extraCellularMatrixPassiveForceFraction;
+
     fpeNErr = zeros(size(elpe));
     fpeN    = zeros(size(elpe));
     fpeNRT  = zeros(size(elpe));
     
-    
+    l1NRT    = zeros(size(elpe));
+    l2NRT    = zeros(size(elpe));
+    fecmNRT  = zeros(size(elpe));
+    f1NRT    = zeros(size(elpe));
+    f2NRT    = zeros(size(elpe));
+    fecm12NRT= zeros(size(elpe));
+
+    fecm12NErr = zeros(size(elpe));
+
     lpe0N = defaultFelineSoleus.curves.fiberForceLengthCurve.xEnd(1,1);
     lpe1N = defaultFelineSoleus.curves.fiberForceLengthCurve.xEnd(1,2);
     assert(abs(defaultFelineSoleus.curves.fiberForceLengthCurve.yEnd(1,2)-1)<sqrt(eps));
@@ -366,24 +395,79 @@ if(flag_examineQualityOfRigidToElasticForceLengthCurveMatch == 1)
     ltSlk   = defaultFelineSoleus.musculotendon.tendonSlackLength;
     
     for i=1:1:length(elpe)
+
+        %Set the ce strain of the elastic tendon model
         lceN(i,1) = (1+elpe(i,1));
+
+        %Evaluate the strain of the parallel element (for the Hill model)
         fpeN(i,1) = calcBezierYFcnXDerivative(lceN(i,1), ...
                 defaultFelineSoleus.curves.fiberForceLengthCurve, 0);
-        ltN(i,1)  = calcBezierYFcnXDerivative(fpeN(i,1), ...
+
+        %Evaluate the ECM and titin, assuming the prox and distal 
+        %segments of titin are in a force equilibrium
+        fecmN(i,1) = calcBezierYFcnXDerivative(lceN(i,1)*0.5, ...
+                defaultFelineSoleus.curves.forceLengthECMHalfCurve, 0);
+        l12N = lceN(i,1)*0.5 - lTitinFixedHN;
+        x12  = 0.5*l12N;
+
+        [x1, x2, y12] = calcSeriesSpringStretch(x12, ...
+            defaultFelineSoleus.curves.forceLengthProximalTitinCurve,...
+            defaultFelineSoleus.curves.forceLengthProximalTitinInverseCurve,...
+            defaultFelineSoleus.curves.forceLengthDistalTitinCurve,...
+            defaultFelineSoleus.curves.forceLengthDistalTitinInverseCurve);
+        l1N(i,1)=x1;
+        l2N(i,1)=x2;
+
+        f1N(i,1)= calcBezierYFcnXDerivative(l1N(i,1), ...
+                defaultFelineSoleus.curves.forceLengthProximalTitinCurve, 0);
+        f2N(i,1)= calcBezierYFcnXDerivative(l2N(i,1), ...
+                defaultFelineSoleus.curves.forceLengthDistalTitinCurve, 0);
+        assert((abs(f1N(i,1)-y12) < 1e-4) && (abs(f2N(i,1)-y12)) < 1e-4);
+
+        fecm12N(i,1)= fecmN(i,1) + f2N(i,1);
+
+        %Evaluate the tendon strain
+        ltN(i,1)  = calcBezierYFcnXDerivative(fecm12N(i,1), ...
                 defaultFelineSoleus.curves.tendonForceLengthInverseCurve, 0);
         lp(i,1) = lceN(i,1)*lopt + ltN(i,1)*ltSlk;
     
+        %Evalute the kinematics of the rigid tendon model
         lceRT(i,1)  = lp(i,1) - ltSlk;
         lceNRT(i,1) = lceRT(i,1)/lopt;
     
         fpeNRT(i,1) = calcBezierYFcnXDerivative(lceNRT(i,1), ...
                         defaultFelineSoleus_RT.curves.fiberForceLengthCurve, 0);
+
+        %Evaluate the ECM and titin, assuming the prox and distal 
+        %segments of titin are in a force equilibrium
+        fecmNRT(i,1) = calcBezierYFcnXDerivative(lceNRT(i,1)*0.5, ...
+                defaultFelineSoleus_RT.curves.forceLengthECMHalfCurve, 0);
+        l12NRT = lceNRT(i,1)*0.5 - lTitinFixedHN_RT;
+        x12RT  = 0.5*l12NRT;
+
+        [x1RT, x2RT, y12RT] = calcSeriesSpringStretch(x12RT, ...
+            defaultFelineSoleus_RT.curves.forceLengthProximalTitinCurve,...
+            defaultFelineSoleus_RT.curves.forceLengthProximalTitinInverseCurve,...
+            defaultFelineSoleus_RT.curves.forceLengthDistalTitinCurve,...
+            defaultFelineSoleus_RT.curves.forceLengthDistalTitinInverseCurve);
+        l1NRT(i,1)=x1RT;
+        l2NRT(i,1)=x2RT;
+
+        f1NRT(i,1)= calcBezierYFcnXDerivative(l1NRT(i,1), ...
+                defaultFelineSoleus_RT.curves.forceLengthProximalTitinCurve, 0);
+        f2NRT(i,1)= calcBezierYFcnXDerivative(l2NRT(i,1), ...
+                defaultFelineSoleus_RT.curves.forceLengthDistalTitinCurve, 0);
+        assert((abs(f1NRT(i,1)-y12RT) < 1e-4) && (abs(f2NRT(i,1)-y12RT) < 1e-4) );
+
+        fecm12NRT(i,1)= fecmNRT(i,1) + f2NRT(i,1);
     
         fpeNErr(i,1) = fpeN(i,1)-fpeNRT(i,1);
+        fecm12NErr(i,1) = fecm12N(i,1)-fecm12NRT(i,1);
+        
     end
     
     figFpe = figure;
-    subplot(1,2,1);
+    subplot(2,2,1);
     plot(lp, fpeN,'b','DisplayName','Elastic Tendon');
     hold on;
     plot(lp, fpeNRT,'r','DisplayName','Rigid Tendon');
@@ -392,13 +476,30 @@ if(flag_examineQualityOfRigidToElasticForceLengthCurveMatch == 1)
     legend;
     box off;
     title('A. RT \& ET MTU force-length relation');
-    subplot(1,2,2);
+    subplot(2,2,2);
     plot(lp, fpeNErr,'m','DisplayName','fpeN-Err');
     xlabel('Path Length ($\ell^{P}$)');
     ylabel('Norm. Force Error ($f^{PE}$)');
     legend;
     box off;
     title('B. RT \& ET MTU force-length error');
+
+    subplot(2,2,3);
+    plot(lp, fecm12N,'b','DisplayName','Elastic Tendon');
+    hold on;
+    plot(lp, fecm12NRT,'r','DisplayName','Rigid Tendon');
+    xlabel('Path Length ($\ell^{P}$)');
+    ylabel('Norm. Force Error ($f^{ECM}+f^{2}$)');
+    legend;
+    box off;
+    title('C. RT \& ET MTU ECM and Titin force-length');
+    subplot(2,2,4);
+    plot(lp, fecm12NErr,'m','DisplayName','fecm+f2 Err');
+    xlabel('Path Length ($\ell^{P}$)');
+    ylabel('Norm. Force Error ($f^{ECM}+f^{2}$)');
+    legend;
+    box off;
+    title('D. RT \& ET MTU ECM and Titin force-length error');
 
     here=1;
 end

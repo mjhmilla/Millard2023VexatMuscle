@@ -333,34 +333,39 @@ if(isempty(dataPassiveForceLength) == 0)
       curviness       = 0.75;
       xshift          = min(dataPassiveForceLength(:,1));
       xwidth          = 0.7;
+
+
+
       problemScaling  = 1000;
-      params0         = [xshift  , xwidth].*problemScaling;
-      paramsLB        = [0.8*xshift    ;    0.5].*problemScaling;
-      paramsUB        = [2.0     ;   2.0].*problemScaling;
+      params0         = [xshift  , xwidth, curviness].*problemScaling;
+      paramsLB        = [0.8*xshift    ;    0.5; 0.05].*problemScaling;
+      paramsUB        = [2.0           ;    2.0; 0.95].*problemScaling;
       
-      fixedParams = [kLow,kNum,kZero,curviness];
+      fixedParams = [kLow,kNum,kZero];%,curviness];
 
       errFcn = @(argX)calcRigidToElasticTendonForceLengthCurveError(argX,...
                        dataPassiveForceLength,problemScaling,...
                        fixedParams, elasticTendonReferenceModel,flag_useOctave);  
 
-                   
       err0 = errFcn(params0);
       lsqOptions = optimoptions('lsqnonlin','Display','off',...
-          'FinDiffType','central');
-      x    = lsqnonlin(errFcn,params0,paramsLB,paramsUB,lsqOptions);
+          'FinDiffType','central','FunctionTolerance',1e-8,'MaxIterations',5000);
+      [x,resnorm,residual,exitflag,output,lambda,jacobian]    =...
+          lsqnonlin(errFcn,params0,paramsLB,paramsUB,lsqOptions);
       err1 = errFcn(x);
-    
+
       fprintf('  forceLengthCurve fitted to elastic tendon model, error reduced from %1.2e - %1.2e\n',...
-              norm(err0),norm(err1));
-      
+          norm(err0),norm(err1));  
+
       xshift    = x(1)/problemScaling;
       xwidth    = x(2)/problemScaling;
+      curviness = x(3)/problemScaling;
+
       normLengthZero = xshift;
       normLengthToe  = xshift + xwidth;
       kToe      = kNum/(normLengthToe-normLengthZero);
       fToe      = 1;
-      curviness = 0.75;
+      %curviness = 0.75;
     
       assert( kZero < kLow );
       

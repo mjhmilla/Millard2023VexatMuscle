@@ -26,7 +26,9 @@ fToe  = 1;
 kZero = fixedParams(1,3);
 
 kToe  = kNum/(normLengthToe-normLengthZero);
-curviness= fixedParams(1,4);
+%curviness= fixedParams(1,4);
+curviness = params(3)./scaling;
+%kToe      = params(4)./scaling;
 
 computeIntegral = 0;
 
