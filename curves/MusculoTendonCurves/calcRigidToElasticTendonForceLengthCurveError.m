@@ -18,7 +18,8 @@ function errV = calcRigidToElasticTendonForceLengthCurveError( params, data, sca
 xshift = params(1)./scaling;
 xwidth = params(2)./scaling;
 kLow   = fixedParams(1,1);
-kNum   = fixedParams(1,2);
+%kNum   = fixedParams(1,2);
+kNum   = params(3)./scaling;
 
 normLengthZero = xshift;
 normLengthToe  = xwidth + xshift;
@@ -26,8 +27,8 @@ fToe  = 1;
 kZero = fixedParams(1,3);
 
 kToe  = kNum/(normLengthToe-normLengthZero);
-%curviness= fixedParams(1,4);
-curviness = params(3)./scaling;
+curviness= fixedParams(1,4);
+%curviness = params(3)./scaling;
 %kToe      = params(4)./scaling;
 
 computeIntegral = 0;
@@ -51,12 +52,19 @@ lopt    = elasticTendonReferenceModel.musculotendon.optimalFiberLength;
 penOpt  = elasticTendonReferenceModel.musculotendon.pennationAngle;
 ltSlk   = elasticTendonReferenceModel.musculotendon.tendonSlackLength;
 
-for(i=1:1:size(data,1))
-   lceN_ET = data(i,1);
-   fpeN_ET = calcBezierYFcnXDerivative(data(i,1), ...
+
+lceN0 = elasticTendonReferenceModel.curves.fiberForceLengthCurve.xEnd(1,1);
+lceN1 = elasticTendonReferenceModel.curves.fiberForceLengthCurve.xEnd(1,2);
+
+for(i=1:1:100)
+   n = (i-1)/99;
+   nMin = 0.05;
+
+   lceN_ET =lceN0 + (n*(1-nMin) + nMin)*(lceN1-lceN0);
+   fpeN_ET = calcBezierYFcnXDerivative(lceN_ET, ...
        elasticTendonReferenceModel.curves.fiberForceLengthCurve,0);
 
-   fiberKin = calcFixedWidthPennatedFiberKinematicsAlongTendon(lceN_ET,0,lopt,penOpt);
+   fiberKin = calcFixedWidthPennatedFiberKinematicsAlongTendon(lceN_ET*lopt,0,lopt,penOpt);
    alpha = fiberKin.pennationAngle;
 
    ftN_ET = fpeN_ET*cos(alpha);
@@ -69,11 +77,14 @@ for(i=1:1:size(data,1))
    
    fiberKinRT = calcFixedWidthPennatedFiberKinematics(lceAT_RT,0,lopt,penOpt);
    lce_RT = fiberKinRT.fiberLength;
+   alpha_RT= fiberKinRT.pennationAngle;
 
    lceN_RT = lce_RT/lopt;
 
    fpeN_RT = calcBezierYFcnXDerivative(lceN_RT, fiberForceLengthCurve,0);
 
-   errV(i) = (fpeN_RT - fpeN_ET)*scaling;
+   errV(i) = (fpeN_RT*cos(alpha_RT) - fpeN_ET*cos(alpha))*scaling;
    
 end
+
+here=1;

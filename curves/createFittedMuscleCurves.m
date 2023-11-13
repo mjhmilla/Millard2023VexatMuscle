@@ -314,87 +314,157 @@ fprintf('  fiberForceVelocityCalibratedInverseCurve created\n');
 forceLengthCurveSettings = struct('normLengthZero',0,'normLengthToe',0,'fToe',0,...
                                   'kZero',0,'kToe',0,'curviness',0);
 
-if(isempty(dataPassiveForceLength) == 0)
-
-  %Fit the passive curve so that it has the same force-path-length curve
-  %as the elastic tendon MTU. 
-  if(useElasticTendon == 0 && isempty(elasticTendonReferenceModel)==0 )
-      normLengthZero           = 1.0; 
-      normLengthToe            = 1.7;
-      kZero           = 0;
-      
-      if(flag_enableNumericallyNonZeroGradients)
-        kZero = smallNumericallyNonZeroNumber;
-      end         
-      
-      kLow            = 0.2;
-      kNum            = 2;
-      kToe            = kNum/(normLengthToe-normLengthZero);
-      curviness       = 0.75;
-      xshift          = min(dataPassiveForceLength(:,1));
-      xwidth          = 0.7;
 
 
+flag_passiveCurveFitted=0;    
+%Fit the passive curve so that it has the same force-path-length curve
+%as the elastic tendon MTU. 
+if(useElasticTendon == 0 && ...
+      isempty(elasticTendonReferenceModel)==0 && ...
+      isempty(dataPassiveForceLength) == 0)
+  flag_passiveCurveFitted=1;
+  normLengthZero           = 1.0; 
+  normLengthToe            = 1.7;
+  kZero           = 0;
+  
+  if(flag_enableNumericallyNonZeroGradients)
+    kZero = smallNumericallyNonZeroNumber;
+  end         
+  
+  
+  dataPassiveForceLengthUpd = [dataPassiveForceLength;...
+      sarcomereProperties.normFiberLengthAtOneNormPassiveForce,1];
 
-      problemScaling  = 1000;
-      params0         = [xshift  , xwidth, curviness].*problemScaling;
-      paramsLB        = [0.8*xshift    ;    0.5; 0.05].*problemScaling;
-      paramsUB        = [2.0           ;    2.0; 0.95].*problemScaling;
-      
-      fixedParams = [kLow,kNum,kZero];%,curviness];
+  kLow            = 0.2;
+  kNum            = 2;
+  kToe            = kNum/(normLengthToe-normLengthZero);
+  curviness       = 0.75;
+  xshift          = min(dataPassiveForceLengthUpd(:,1));
+  xwidth          = 0.7;
 
-      errFcn = @(argX)calcRigidToElasticTendonForceLengthCurveError(argX,...
-                       dataPassiveForceLength,problemScaling,...
-                       fixedParams, elasticTendonReferenceModel,flag_useOctave);  
 
-      err0 = errFcn(params0);
-      lsqOptions = optimoptions('lsqnonlin','Display','off',...
-          'FinDiffType','central','FunctionTolerance',1e-8,'MaxIterations',5000);
-      [x,resnorm,residual,exitflag,output,lambda,jacobian]    =...
-          lsqnonlin(errFcn,params0,paramsLB,paramsUB,lsqOptions);
-      err1 = errFcn(x);
 
-      fprintf('  forceLengthCurve fitted to elastic tendon model, error reduced from %1.2e - %1.2e\n',...
-          norm(err0),norm(err1));  
+  problemScaling  = 1000;
+  params0         = [xshift  , xwidth, kNum].*problemScaling;
+  paramsLB        = [0.8*xshift    ;    0.5; 1.05].*problemScaling;
+  paramsUB        = [2.0           ;    2.0; 4].*problemScaling;
+  
+  fixedParams = [kLow,kNum,kZero,curviness];
 
-      xshift    = x(1)/problemScaling;
-      xwidth    = x(2)/problemScaling;
-      curviness = x(3)/problemScaling;
+  errFcn = @(argX)calcRigidToElasticTendonForceLengthCurveError(argX,...
+                   [dataPassiveForceLengthUpd],problemScaling,...
+                   fixedParams, elasticTendonReferenceModel,flag_useOctave);  
 
-      normLengthZero = xshift;
-      normLengthToe  = xshift + xwidth;
-      kToe      = kNum/(normLengthToe-normLengthZero);
-      fToe      = 1;
-      %curviness = 0.75;
+  err0 = errFcn(params0);
+  lsqOptions = optimoptions('lsqnonlin','Display','off',...
+      'FinDiffType','central','FunctionTolerance',1e-8,'MaxIterations',5000);
+  [x,resnorm,residual,exitflag,output,lambda,jacobian]    =...
+      lsqnonlin(errFcn,params0,paramsLB,paramsUB,lsqOptions);
+  err1 = errFcn(x);
+
+  fprintf('  forceLengthCurve fitted to elastic tendon model, error reduced from %1.2e - %1.2e\n',...
+      norm(err0),norm(err1));  
+
+  xshift    = x(1)/problemScaling;
+  xwidth    = x(2)/problemScaling;
+  kNum      = x(3)/problemScaling;
+
+  normLengthZero = xshift;
+  normLengthToe  = xshift + xwidth;
+  kToe      = kNum/(normLengthToe-normLengthZero);
+  fToe      = 1;
+  curviness = 0.75;
+
+  assert( kZero < kLow );
+  
+  flag_computeIntegral = 1;
+  normMuscleCurves.fiberForceLengthCurve = ...
+    createFiberForceLengthCurve2021(normLengthZero,...
+                                normLengthToe,...
+                                fToe,...
+                                kZero,...
+                                kLow,...
+                                kToe,...
+                                curviness,...
+                                flag_computeIntegral,...
+                                musculotendonProperties.name,...
+                                flag_useOctave);
+                              
+  forceLengthCurveSettings.normLengthZero = normLengthZero;
+  forceLengthCurveSettings.normLengthToe  = normLengthToe;
+  forceLengthCurveSettings.fToe           = fToe;
+  forceLengthCurveSettings.kZero = kZero;
+  forceLengthCurveSettings.kLow  = kLow;
+  forceLengthCurveSettings.kToe  = kToe;
+  forceLengthCurveSettings.curviness = curviness;
+
+  flag_debug=0;
+  if(flag_debug==1)
+    figFpeFit =figure;
+    lopt    = elasticTendonReferenceModel.musculotendon.optimalFiberLength;
+    penOpt  = elasticTendonReferenceModel.musculotendon.pennationAngle;
+    ltSlk   = elasticTendonReferenceModel.musculotendon.tendonSlackLength;
     
-      assert( kZero < kLow );
-      
-      flag_computeIntegral = 1;
-      normMuscleCurves.fiberForceLengthCurve = ...
-        createFiberForceLengthCurve2021(normLengthZero,...
-                                    normLengthToe,...
-                                    fToe,...
-                                    kZero,...
-                                    kLow,...
-                                    kToe,...
-                                    curviness,...
-                                    flag_computeIntegral,...
-                                    musculotendonProperties.name,...
-                                    flag_useOctave);
-                                  
-      forceLengthCurveSettings.normLengthZero = normLengthZero;
-      forceLengthCurveSettings.normLengthToe  = normLengthToe;
-      forceLengthCurveSettings.fToe           = fToe;
-      forceLengthCurveSettings.kZero = kZero;
-      forceLengthCurveSettings.kLow  = kLow;
-      forceLengthCurveSettings.kToe  = kToe;
-      forceLengthCurveSettings.curviness = curviness;
-
-
+    
+    lceN0 = elasticTendonReferenceModel.curves.fiberForceLengthCurve.xEnd(1,1);
+    lceN1 = elasticTendonReferenceModel.curves.fiberForceLengthCurve.xEnd(1,2);
+    lpV = zeros(100,1);
+    fpeNATV=zeros(100,1);
+    fpeNRTATV=zeros(100,1);
+    for(i=1:1:100)
+       n = (i-1)/99;
+       nMin = 0.05;
+    
+       lceN_ET =lceN0 + (n*(1-nMin) + nMin)*(lceN1-lceN0);
+       fpeN_ET = calcBezierYFcnXDerivative(lceN_ET, ...
+           elasticTendonReferenceModel.curves.fiberForceLengthCurve,0);
+    
+       fiberKin = calcFixedWidthPennatedFiberKinematicsAlongTendon(lceN_ET*lopt,0,lopt,penOpt);
+       alpha = fiberKin.pennationAngle;
+       fpeNATV(i,1)= fpeN_ET*cos(alpha);
+    
+       ftN_ET = fpeN_ET*cos(alpha);
+    
+       ltN_ET = calcBezierYFcnXDerivative(ftN_ET, ...
+                elasticTendonReferenceModel.curves.tendonForceLengthInverseCurve, 0);
+       lp = (lopt * lceN_ET)*cos(alpha) + ltN_ET*ltSlk;
+       lpV(i,1)=lp;
+    
+       lceAT_RT = lp - ltSlk;
+       
+       fiberKinRT = calcFixedWidthPennatedFiberKinematics(lceAT_RT,0,lopt,penOpt);
+       lce_RT = fiberKinRT.fiberLength;
+       alpha_RT= fiberKinRT.pennationAngle;
+    
+       lceN_RT = lce_RT/lopt;
+    
+       fpeN_RT = calcBezierYFcnXDerivative(lceN_RT, normMuscleCurves.fiberForceLengthCurve,0);
+       fpeNRTATV(i,1)=fpeN_RT*cos(alpha_RT);
+       
+    end        
+    subplot(1,2,1);
+        plot(lpV,fpeNATV,'b');
+        hold on;
+        plot(lpV,fpeNRTATV,'r');
+        box off;
+        xlabel('Path Length (m)');
+        ylabel('Norm. Force');
+        title('Passive force AT: ET vs RT');
+    subplot(1,2,2);
+        plot(lpV,fpeNRTATV-fpeNATV,'m');
+        box off;
+        xlabel('Path Length (m)');
+        ylabel('Norm. Force');
+        title('Passive force AT error: ET vs RT');
+    here=1;
   end
+end
 
-  if(useElasticTendon == 1 || isempty(elasticTendonReferenceModel)==1 )
+if(useElasticTendon == 1 && ...
+          flag_passiveCurveFitted == 0 && ...
+          isempty(dataPassiveForceLength) == 0)
 
+      flag_passiveCurveFitted=1;
       normLengthZero           = 1.0; 
       normLengthToe            = 1.7;
       kZero           = 0;
@@ -461,12 +531,14 @@ if(isempty(dataPassiveForceLength) == 0)
       forceLengthCurveSettings.kToe  = kToe;
       forceLengthCurveSettings.curviness = curviness;
 
-  end
+end
     
-else  
 
+
+if(flag_passiveCurveFitted==0)
+  flag_passiveCurveFitted=1;
   normLengthZero = 1+0; 
-  normLengthToe  = 1+0.6;
+  normLengthToe  = sarcomereProperties.normFiberLengthAtOneNormPassiveForce;
   fToe  = 1;
   kZero = 0;
   if(flag_enableNumericallyNonZeroGradients)
@@ -494,9 +566,7 @@ else
   forceLengthCurveSettings.kZero = kZero;
   forceLengthCurveSettings.kLow  = kLow;
   forceLengthCurveSettings.kToe  = kToe;
-  forceLengthCurveSettings.curviness = curviness;
-                             
-                              
+  forceLengthCurveSettings.curviness = curviness;                                             
 end     
 
 
