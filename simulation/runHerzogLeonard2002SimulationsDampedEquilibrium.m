@@ -112,7 +112,7 @@ benchRecord = [];
         % the beginning of the ramp (stretched by rampStart) and is activated
         %%
 
-        %ltN1 = 1;                
+        ltN1 = 1;                
         %if(flag_useElasticTendon==1)
             ft1    = nominalForce/fiso;
             ltN1   = calcBezierYFcnXDerivative(ft1,...

@@ -376,11 +376,23 @@ if(flag_fitToFig3KirchBoskovRymer1994==1)
   figNameGainPhase = 'Fig3';  
 end
 
-tmp = load([modelStructsDir,'defaultFelineSoleus.mat']);
-musculotendonProperties   = tmp.defaultFelineSoleus.musculotendon;
-sarcomereProperties       = tmp.defaultFelineSoleus.sarcomere;
-normMuscleCurves          = tmp.defaultFelineSoleus.curves;
-normMuscleCurves.useCalibratedCurves=flag_useCalibratedVexatCurves;
+musculotendonProperties   = [];
+sarcomereProperties       = [];
+normMuscleCurves          = [];
+
+if(flag_useElasticTendon == 1)
+    tmp = load([modelStructsDir,'defaultFelineSoleus.mat']);
+    musculotendonProperties   = tmp.defaultFelineSoleus.musculotendon;
+    sarcomereProperties       = tmp.defaultFelineSoleus.sarcomere;
+    normMuscleCurves          = tmp.defaultFelineSoleus.curves;
+    normMuscleCurves.useCalibratedCurves=flag_useCalibratedVexatCurves;
+else
+    tmp = load([modelStructsDir,'defaultFelineSoleus_RT.mat']);
+    musculotendonProperties   = tmp.defaultFelineSoleus_RT.musculotendon;
+    sarcomereProperties       = tmp.defaultFelineSoleus_RT.sarcomere;
+    normMuscleCurves          = tmp.defaultFelineSoleus_RT.curves;
+    normMuscleCurves.useCalibratedCurves=flag_useCalibratedVexatCurves;
+end
 
 tmp=load([modelStructsDir,'fittedFelineSoleusHL2002KBR1994',figNameGainPhase,'_RT.mat']);
 musculotendonPropertiesVexat_RT = tmp.fittedFelineSoleus.musculotendon;

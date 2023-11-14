@@ -134,12 +134,28 @@ plotConfig;
 % Load the latest cat soleus configuration
 %%
 %Basic parameters for the Hill model
-load(fullfile(projectFolders.output_structs_FittedModels,...
-              'defaultFelineSoleus.mat'));
+musculotendonProperties = [];
+sarcomereProperties = [];
+normMuscleCurves = [];
 
-musculotendonProperties   = defaultFelineSoleus.musculotendon;
-sarcomereProperties       = defaultFelineSoleus.sarcomere;
-normMuscleCurves          = defaultFelineSoleus.curves;
+if(flag_useElasticTendon==1)
+    load(fullfile(projectFolders.output_structs_FittedModels,...
+                  'defaultFelineSoleus.mat'));
+    
+    musculotendonProperties   = defaultFelineSoleus.musculotendon;
+    sarcomereProperties       = defaultFelineSoleus.sarcomere;
+    normMuscleCurves          = defaultFelineSoleus.curves;
+
+else
+    load(fullfile(projectFolders.output_structs_FittedModels,...
+                  'defaultFelineSoleus_RT.mat'));
+    
+    musculotendonProperties   = defaultFelineSoleus_RT.musculotendon;
+    sarcomereProperties       = defaultFelineSoleus_RT.sarcomere;
+    normMuscleCurves          = defaultFelineSoleus_RT.curves;
+
+end
+
 
 
 

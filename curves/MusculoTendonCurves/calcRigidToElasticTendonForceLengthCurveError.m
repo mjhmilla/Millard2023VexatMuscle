@@ -12,24 +12,23 @@
 %
 %%
 
-function errV = calcRigidToElasticTendonForceLengthCurveError( params, data, scaling, ...
+function errV = calcRigidToElasticTendonForceLengthCurveError( params, scaling, ...
     fixedParams, elasticTendonReferenceModel, flag_useOctave)
 
 xshift = params(1)./scaling;
 xwidth = params(2)./scaling;
-kLow   = fixedParams(1,1);
-%kNum   = fixedParams(1,2);
 kNum   = params(3)./scaling;
+
+kLow      = fixedParams(1,1);
+kZero     = fixedParams(1,2);
+fToe      = fixedParams(1,3);
+curviness = fixedParams(1,4);
 
 normLengthZero = xshift;
 normLengthToe  = xwidth + xshift;
-fToe  = 1;
-kZero = fixedParams(1,3);
 
 kToe  = kNum/(normLengthToe-normLengthZero);
-curviness= fixedParams(1,4);
-%curviness = params(3)./scaling;
-%kToe      = params(4)./scaling;
+
 
 computeIntegral = 0;
 
@@ -46,7 +45,7 @@ fiberForceLengthCurve = createFiberForceLengthCurve2021(normLengthZero,...
                     'fitted',...
                     flag_useOctave);
                                                 
-errV = zeros(size(data,1),1);
+errV = zeros(100,1);
 
 lopt    = elasticTendonReferenceModel.musculotendon.optimalFiberLength;
 penOpt  = elasticTendonReferenceModel.musculotendon.pennationAngle;

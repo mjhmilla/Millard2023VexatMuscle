@@ -320,40 +320,41 @@ flag_passiveCurveFitted=0;
 %Fit the passive curve so that it has the same force-path-length curve
 %as the elastic tendon MTU. 
 if(useElasticTendon == 0 && ...
-      isempty(elasticTendonReferenceModel)==0 && ...
-      isempty(dataPassiveForceLength) == 0)
+      isempty(elasticTendonReferenceModel)==0)
   flag_passiveCurveFitted=1;
   normLengthZero           = 1.0; 
   normLengthToe            = 1.7;
-  kZero           = 0;
-  
-  if(flag_enableNumericallyNonZeroGradients)
-    kZero = smallNumericallyNonZeroNumber;
-  end         
+
+     
   
   
   dataPassiveForceLengthUpd = [dataPassiveForceLength;...
       sarcomereProperties.normFiberLengthAtOneNormPassiveForce,1];
 
   kLow            = 0.2;
+  kZero           = 0;
+  if(flag_enableNumericallyNonZeroGradients)
+    kZero = smallNumericallyNonZeroNumber;
+  end      
+  fToe            = 1.0;  
+  curviness       = 0.75;
+
   kNum            = 2;
   kToe            = kNum/(normLengthToe-normLengthZero);
-  curviness       = 0.75;
   xshift          = min(dataPassiveForceLengthUpd(:,1));
   xwidth          = 0.7;
 
 
-
   problemScaling  = 1000;
-  params0         = [xshift  , xwidth, kNum].*problemScaling;
+  params0         = [xshift        , xwidth, kNum].*problemScaling;
   paramsLB        = [0.8*xshift    ;    0.5; 1.05].*problemScaling;
-  paramsUB        = [2.0           ;    2.0; 4].*problemScaling;
+  paramsUB        = [2.0           ;    2.0;    4].*problemScaling;
   
-  fixedParams = [kLow,kNum,kZero,curviness];
+  fixedParams = [kLow,kZero,fToe,curviness];
 
   errFcn = @(argX)calcRigidToElasticTendonForceLengthCurveError(argX,...
-                   [dataPassiveForceLengthUpd],problemScaling,...
-                   fixedParams, elasticTendonReferenceModel,flag_useOctave);  
+                   problemScaling,fixedParams, ...
+                   elasticTendonReferenceModel,flag_useOctave);  
 
   err0 = errFcn(params0);
   lsqOptions = optimoptions('lsqnonlin','Display','off',...
@@ -372,7 +373,6 @@ if(useElasticTendon == 0 && ...
   normLengthZero = xshift;
   normLengthToe  = xshift + xwidth;
   kToe      = kNum/(normLengthToe-normLengthZero);
-  fToe      = 1;
   curviness = 0.75;
 
   assert( kZero < kLow );

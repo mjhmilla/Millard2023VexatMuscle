@@ -315,191 +315,7 @@ felineSoleusElasticTendonReferenceModel = defaultFelineSoleus;
                 flag_useOctave);
 
 
-%Adding placeholder tendon curves: these curves get evaluated before the
-%useElasticTendon flag is checked. If there isn't data in place then
-%the code stops.
 
-defaultFelineSoleus_RT.curves.tendonForceLengthCurve=...
-   defaultFelineSoleus.curves.tendonForceLengthCurve;
-defaultFelineSoleus_RT.curves.tendonForceLengthInverseCurve=...
-   defaultFelineSoleus.curves.tendonForceLengthInverseCurve;
-defaultFelineSoleus_RT.curves.tendonStiffnessCurve=...
-   defaultFelineSoleus.curves.tendonStiffnessCurve;
-
-filePathDefault = fullfile(   projectFolders.output_structs_FittedModels,...
-                                    'defaultFelineSoleus_RT.mat');
-
-save(filePathDefault,'defaultFelineSoleus_RT');  
-
-
-%%
-% Check to make sure the the passive curves of the rigid and elastic 
-% tendon models match
-%%
-flag_examineQualityOfRigidToElasticForceLengthCurveMatch=1;
-if(flag_examineQualityOfRigidToElasticForceLengthCurveMatch == 1)
-
-    lopt    = defaultFelineSoleus.musculotendon.optimalFiberLength;
-    penOpt  = defaultFelineSoleus.musculotendon.pennationAngle;
-    ltSlk   = defaultFelineSoleus.musculotendon.tendonSlackLength;
-    
-    
-    lceN0 = defaultFelineSoleus.curves.fiberForceLengthCurve.xEnd(1,1);
-    lceN1 = defaultFelineSoleus.curves.fiberForceLengthCurve.xEnd(1,2);
-
-    lceNV = zeros(100,1);
-    lceNVRT=zeros(100,1);
-
-    lpV = zeros(100,1);
-    fpeNATV=zeros(100,1);
-    fpeNRTATV=zeros(100,1);
-    for(i=1:1:100)
-       n = (i-1)/99;
-       nMin = 0.05;    
-       lceN_ET =lceN0 + (n*(1-nMin) + nMin)*(lceN1-lceN0);
-       fpeN_ET = calcBezierYFcnXDerivative(lceN_ET, ...
-           defaultFelineSoleus.curves.fiberForceLengthCurve,0);
-    
-       fiberKin = calcFixedWidthPennatedFiberKinematicsAlongTendon(lceN_ET*lopt,0,lopt,penOpt);
-       alpha = fiberKin.pennationAngle;
-
-       fpeNATV(i,1)=fpeN_ET*cos(alpha);
-
-    
-       ftN_ET = fpeN_ET*cos(alpha);
-    
-       ltN_ET = calcBezierYFcnXDerivative(ftN_ET, ...
-                defaultFelineSoleus.curves.tendonForceLengthInverseCurve, 0);
-       lp = (lopt * lceN_ET)*cos(alpha) + ltN_ET*ltSlk;
-       lpV(i,1)=lp;
-    
-       lceAT_RT = lp - ltSlk;
-       
-       fiberKinRT = calcFixedWidthPennatedFiberKinematics(lceAT_RT,0,lopt,penOpt);
-       lce_RT = fiberKinRT.fiberLength;
-       alpha_RT = fiberKinRT.pennationAngle;
-    
-       lceN_RT = lce_RT/lopt;
-    
-       fpeN_RT = calcBezierYFcnXDerivative(lceN_RT, ...
-                    defaultFelineSoleus_RT.curves.fiberForceLengthCurve,0);
-       fpeNRTATV(i,1)=fpeN_RT*cos(alpha_RT);
-       
-    end        
-    figFpeETvsRT=figure;
-    subplot(2,2,1);
-        plot(lpV,fpeNATV,'b');
-        hold on;
-        plot(lpV,fpeNRTATV,'r');
-        box off;
-        xlabel('Path Length (m)');
-        ylabel('Norm. Force');
-        title('Passive force length: ET vs RT');
-    subplot(2,2,2);
-        plot(lpV,fpeNRTATV-fpeNATV,'m');
-        box off;
-        xlabel('Path Length (m)');
-        ylabel('Norm. Force');
-        title('Passive force error: ET vs RT');
-    here=1;
-
-
-    lTitinFixedHN = defaultFelineSoleus.sarcomere.ZLineToT12NormLengthAtOptimalFiberLength ...
-                   + defaultFelineSoleus.sarcomere.IGDFixedNormLengthAtOptimalFiberLength;    
-    ecmFrac = defaultFelineSoleus.sarcomere.extraCellularMatrixPassiveForceFraction;
-
-    lTitinFixedHN_RT = defaultFelineSoleus_RT.sarcomere.ZLineToT12NormLengthAtOptimalFiberLength ...
-                  + defaultFelineSoleus_RT.sarcomere.IGDFixedNormLengthAtOptimalFiberLength;    
-
-    ecmFrac_RT = defaultFelineSoleus_RT.sarcomere.extraCellularMatrixPassiveForceFraction;
-
-    fecm12NTiV=zeros(100,1);
-    fecm12NTiV_RT=zeros(100,1);
-    lpTiV = zeros(100,1);
-
-    lceN0 = defaultFelineSoleus.curves.fiberForceLengthCurve.xEnd(1,1);
-    lceN1 = defaultFelineSoleus.curves.fiberForceLengthCurve.xEnd(1,2);    
-
-    for(i=1:1:100)
-       n = (i-1)/99;
-       nMin = 0.1;    
-       lceN_ET =lceN0 + (n*(1-nMin) + nMin)*(lceN1-lceN0);
-        
-        %Evaluate the ECM and titin, assuming the prox and distal 
-        %segments of titin are in a force equilibrium
-        fecmN = calcBezierYFcnXDerivative(lceN_ET*0.5, ...
-                defaultFelineSoleus.curves.forceLengthECMHalfCurve, 0);
-        l12N = lceN_ET*0.5 - lTitinFixedHN;
-        if(i==99)
-            here=1;
-        end
-        [x1, x2, y12] = calcSeriesSpringStretch(l12N, ...
-            defaultFelineSoleus.curves.forceLengthProximalTitinCurve,...
-            defaultFelineSoleus.curves.forceLengthProximalTitinInverseCurve,...
-            defaultFelineSoleus.curves.forceLengthDistalTitinCurve,...
-            defaultFelineSoleus.curves.forceLengthDistalTitinInverseCurve);
-        l1N=x1;
-        l2N=x2;
-        f1N=y12;
-        f2N=y12;        
-        %Set the ce strain of the elastic tendon model
-        fiberKin = calcFixedWidthPennatedFiberKinematicsAlongTendon(lceN_ET*lopt,0,lopt,penOpt);
-        alpha = fiberKin.pennationAngle;    
-
-        if(i==90)
-            here=1;
-        end
-
-        fecm12NTiV(i,1)=(fecmN+f2N)*cos(alpha);
-        %Evaluate the tendon strain
-        ltN  = calcBezierYFcnXDerivative(fecm12NTiV(i,1), ...
-                defaultFelineSoleus.curves.tendonForceLengthInverseCurve, 0);
-        lpTiV(i,1) = (lceN_ET*lopt)*cos(alpha) + ltN*ltSlk;
-
-        %Evaluate the rigid-tendon model fiber kinematics
-        lceAT_RT = lpTiV(i,1) - ltSlk;
-       
-        fiberKinRT = calcFixedWidthPennatedFiberKinematics(lceAT_RT,0,lopt,penOpt);
-        lce_RT = fiberKinRT.fiberLength;
-        alpha_RT= fiberKinRT.pennationAngle;
-    
-        lceN_RT = lce_RT/lopt;
-        fecmN_RT = calcBezierYFcnXDerivative(lceN_RT*0.5, ...
-                defaultFelineSoleus_RT.curves.forceLengthECMHalfCurve, 0);
-        l12N = lceN_RT*0.5 - lTitinFixedHN_RT;
-
-        [x1, x2, y12] = calcSeriesSpringStretch(l12N, ...
-            defaultFelineSoleus_RT.curves.forceLengthProximalTitinCurve,...
-            defaultFelineSoleus_RT.curves.forceLengthProximalTitinInverseCurve,...
-            defaultFelineSoleus_RT.curves.forceLengthDistalTitinCurve,...
-            defaultFelineSoleus_RT.curves.forceLengthDistalTitinInverseCurve);
-        l1N_RT=x1;
-        l2N_RT=x2;
-
-        f1N_RT=y12;
-        f2N_RT=y12;
-
-        fecm12NTiV_RT(i,1)= (fecmN_RT + f2N_RT)*cos(alpha_RT);
-    
-    end
-    subplot(2,2,3);
-        plot(lpTiV,fecm12NTiV,'b');
-        hold on;
-        plot(lpTiV,fecm12NTiV_RT,'r');
-        box off;
-        xlabel('Path Length (m)');
-        ylabel('Norm. Force');
-        title('ECM + Titin force-length: ET vs RT');
-    subplot(2,2,4);
-        plot(lpTiV,fecm12NTiV-fecm12NTiV_RT,'m');
-        box off;
-        xlabel('Path Length (m)');
-        ylabel('Norm. Force');
-        title('ECM + Titin force error: ET vs RT');
-    here=1;
-
-
-end
 
 %%
 % Fit the titin properties of the soleus to match 1 trial from
@@ -548,11 +364,25 @@ if(flag_fitFelineSoleusActiveTitinProperties==1)
                                     ['fittedFelineSoleus',fittingTag,'_RT']);
     save(filePathHL2002RT,'fittedFelineSoleus');
 
-
-
-
-
 end
+
+%Adding placeholder tendon curves: these curves get evaluated before the
+%useElasticTendon flag is checked. If there isn't data in place then
+%the code stops.
+
+defaultFelineSoleus_RT.curves.tendonForceLengthCurve=...
+   defaultFelineSoleus.curves.tendonForceLengthCurve;
+defaultFelineSoleus_RT.curves.tendonForceLengthInverseCurve=...
+   defaultFelineSoleus.curves.tendonForceLengthInverseCurve;
+defaultFelineSoleus_RT.curves.tendonStiffnessCurve=...
+   defaultFelineSoleus.curves.tendonStiffnessCurve;
+
+filePathDefault = fullfile(   projectFolders.output_structs_FittedModels,...
+                                    'defaultFelineSoleus_RT.mat');
+
+save(filePathDefault,'defaultFelineSoleus_RT');  
+
+
 
 if(flag_loadFittedFelineSoleusActiveTitinProperties==1)
     disp([' Loading: elastic and rigid tendon models previously fit using ']);
