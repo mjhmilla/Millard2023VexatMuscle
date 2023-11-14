@@ -41,7 +41,12 @@ kmA = km./nlaA;
 % be fractionally divided among all 6 actin filaments. This assumption
 % will overestimate the stiffness in the case that all crossbridges are 
 % attached to 1 actin filament, or are more heterogeneously distributed
-% in general.
+% in general. Because actin filaments are much stiffer than crossbridges
+% the error caused by this assumption is low. For example, if 3
+% crossbridges attach to 3 actin filaments the stiffness is 0.6582-3.4469
+% pN/nm. If instead the 3 crossbridges attach to 6 actin filaments (by
+% allowing half a crossbridge to join to each actin filament) the stiffness
+% is 0.6591-3.4634 pN/nm.
 
 kx1 = (numAttachedCrossbridges/6).*kx;
 ka1 = kaA;
