@@ -24,7 +24,7 @@
 
 %This flag allows us to avoid the memory clearing functions so that
 %this can be timed using tic and tock from within main_OuterLoop
-flag_OuterOuterLoopMode =1;
+flag_OuterOuterLoopMode =0;
 if(flag_OuterOuterLoopMode ==0)
     clc;
     close all;
@@ -45,7 +45,7 @@ disp('----------------------------------------');
 
 %Parameters that do not change
 flag_simulateHillModel            = 1;  
-flag_simulateVexatModel          = 1;
+flag_simulateVexatModel           = 1;
 
 flag_useSimulatePlotRigidTendon   = 1;
 flag_useSimulatePlotElasticTendon = 1;
