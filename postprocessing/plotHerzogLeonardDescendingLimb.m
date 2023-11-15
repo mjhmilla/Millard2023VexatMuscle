@@ -24,7 +24,7 @@ success=0;
 
 figure(figH);
 
-lineColorExp   = [1,1,1].*0.75;
+lineColorExp   = [0,0,0];
 fillColorExp   = [1,1,1].*0.9;
 
 lineColorModel = [0,0,1];
@@ -36,7 +36,7 @@ lineTypeHill = '-';
 
 flag_addNormFiberLengthLabel = 0;
 
-nameModel = 'Model: ET';
+nameModel = 'VEXAT: ET';
 nameHill  = 'Hill: ET';
 
 if(flag_useElasticTendon==0)
@@ -44,7 +44,7 @@ if(flag_useElasticTendon==0)
   lineColorHill  = lineColorHill.*0.25 + [1,1,1].*0.75;  
   lineWidthModel = 1.5;
   lineWidthHill  = 1.5;  
-  nameModel = 'Model: RT';
+  nameModel = 'VEXAT: RT';
   nameHill  = 'Hill: RT';  
   lineTypeModel = '-';
   lineTypeHill = '-';
@@ -243,9 +243,14 @@ lineHill    = [];
 
 if(flag_useElasticTendon==0)
 
-  fill( expConfigHerzogLeonard2002.dataStatic.time,...
+%   fill( expConfigHerzogLeonard2002.dataStatic.time,...
+%         expConfigHerzogLeonard2002.dataStatic.force,...
+%         fillColorExp,'EdgeColor','none');%);%,'DisplayName',[]);
+%   hold on;
+
+  plot( expConfigHerzogLeonard2002.dataStatic.time,...
         expConfigHerzogLeonard2002.dataStatic.force,...
-        fillColorExp,'EdgeColor','none');%);%,'DisplayName',[]);
+        '--','Color',lineColorExp,'LineWidth',expLineWidth);%);%,'DisplayName',[]);
   hold on;
 
   text( ta1-0.1,fr0*0.95,...
@@ -479,7 +484,7 @@ kDelta = max([abs(kMax-kMin).*0.05, abs(kMax)*0.1 ]);
 
 if(flag_useElasticTendon==0)
   ylim([(kMin-kDelta),(kMax+kDelta)]);
-  yticks(kvec);
+  yticks(round(kvec,1));
 else
   yt = yticks;
   %yts = sort([yt(:);round(kMax,1)]);
@@ -630,6 +635,9 @@ end
 %%
 if(flag_useElasticTendon==1)
   figure(figH);
+  pause(0.1); %Sometimes Matlab doesn't seem to select the correct figure
+              %but a small pause helps (I hope).
+  
   set(figH,'Units','centimeters',...
   'PaperUnits','centimeters',...
   'PaperSize',[pageWidth pageHeight],...
@@ -640,8 +648,8 @@ if(flag_useElasticTendon==1)
   set(gcf,'InvertHardCopy','off')
 
 
-
   print('-dpdf', fullfile(outputFolder,fileName));                     
+  here=1;
   %benchRecord.musculotendonStiffness
   %benchRecord.musculotendonDamping
 end

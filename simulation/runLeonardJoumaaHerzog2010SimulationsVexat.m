@@ -23,6 +23,7 @@ function [success] = runLeonardJoumaaHerzog2010SimulationsVexat(...
                           musculotendonProperties,...
                           sarcomereProperties,...
                           normMuscleCurves,...
+                          flag_fitTitinModel,...
                           outputFileEndingVexat, ...
                           outputFolder,...
                           flag_simulateActiveStretch,...
@@ -51,8 +52,6 @@ disp('Running Opus 31 Leonard, Joumaa, and Herzog 2010 Simulations');
             %       passive-force-length curve. Thus we can more
             %       conveniently evaluate the passive force produced by 
             %       Opus 31 by evaluting the passive curve.
-
-    
             lTitinFixedHN = sarcomereProperties.ZLineToT12NormLengthAtOptimalFiberLength ...
                           + sarcomereProperties.IGDFixedNormLengthAtOptimalFiberLength;
 
@@ -62,13 +61,22 @@ disp('Running Opus 31 Leonard, Joumaa, and Herzog 2010 Simulations');
             
             %Fit the titin forces to a point n between lopt and the passive
             %breaking point
-            n = 0.75;
+            n = 0.6;
             passiveForceMidKeyPoint = zeros(1,2);
             passiveForceMidKeyPoint(1,1) = passiveForceKeyPoints(1,1) ...
               +n*(passiveForceKeyPoints(2,1)-passiveForceKeyPoints(1,1));
             passiveForceMidKeyPoint(1,2) = passiveForceKeyPoints(1,2) ...
               +n*(passiveForceKeyPoints(2,2)-passiveForceKeyPoints(1,2));
 
+            passiveForceKeyPoints = [1.0,    0;...
+                                     2.86,1.31];  
+            
+             
+            fpeNTarget = 0.5;
+            lceNTarget =...
+                interp1(passiveForceKeyPoints(:,2),passiveForceKeyPoints(:,1),0.5);
+            
+            passiveForceMidKeyPoint = [lceNTarget,fpeNTarget];
 
             while(abs(lerr) > 1e-3 && i < 100)
 
@@ -91,7 +99,7 @@ disp('Running Opus 31 Leonard, Joumaa, and Herzog 2010 Simulations');
                 fTiN = fTiN+dfTiN;
                 i=i+1;
             end
-            
+            assert(abs(lerr)<1e-3);
            
             fTiNRatio = passiveForceMidKeyPoint(1,2)/(fTiN);
             
@@ -106,9 +114,17 @@ disp('Running Opus 31 Leonard, Joumaa, and Herzog 2010 Simulations');
               %  sarcomereProperties.scaleTitinDistal= fTiNRatio*activeScaling;
               %  sarcomereProperties.scaleTitinProximal = fTiNRatio/activeScaling;
               %else
-                sarcomereProperties.scaleECM = 0;
-                sarcomereProperties.scaleTitinProximal = 1;%fTiNRatio;
-                sarcomereProperties.scaleTitinDistal   = 1;%fTiNRatio;
+
+              sarcomereProperties.scaleECM = 0;
+              if(flag_fitTitinModel==1)
+                disp('VEXAT f1 f2 toe value');
+                fprintf('  scaling: %1.3e\n',fTiNRatio);
+                fprintf('  ftoe: %1.3e\n',normMuscleCurves.forceLengthProximalTitinCurve.yEnd(1,2)*fTiNRatio);
+                  
+                
+                sarcomereProperties.scaleTitinProximal = fTiNRatio;
+                sarcomereProperties.scaleTitinDistal   = fTiNRatio;
+              end
               %end
               
 

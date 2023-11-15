@@ -62,6 +62,10 @@ benchRecord = [];
                 0);
         
         scaleFPE = passiveForceKeyPoints(2,2)/fpe1;
+        disp('Hill fpe toe value');
+        fprintf('  scaling: %1.3e\n',scaleFPE);
+        fprintf('ftoe: %1.3e\n',normMuscleCurves.fiberForceLengthCurve.yEnd(1,2)*scaleFPE);
+        
 
         normMuscleCurves.fiberForceLengthCurve.ypts = ...
           normMuscleCurves.fiberForceLengthCurve.ypts.*scaleFPE; 

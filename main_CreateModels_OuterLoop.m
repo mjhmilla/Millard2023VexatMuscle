@@ -14,7 +14,7 @@
 
 %This flag allows us to avoid the memory clearing functions so that
 %this can be timed using tic and tock from within main_OuterLoop
-flag_OuterOuterLoopMode =1;
+flag_OuterOuterLoopMode =0;
 if(flag_OuterOuterLoopMode ==0)
     clc;
     close all;
@@ -37,7 +37,7 @@ disp('----------------------------------------');
 %%
 % Global model parameters
 %%
-flag_loadPreviouslyOptimizedParameters = 0;
+flag_loadPreviouslyOptimizedParameters = 1;
 % 0: A lengthy optimization is done to find the best point within the
 %    PEVK segment to bond to actin. This value is saved to file for later
 %    use.
@@ -548,6 +548,10 @@ end
 
 fprintf('\n\nCreating: default rabbit psoas fibril model\n');
 fprintf('  used to simulate Leonard, Joumaa, Herzog 2010.\n\n');
+%From Fig. 2 Leonard, Joumaa, Herzog, 2010
+
+
+
 
 normCrossBridgeStiffness    = fittedFelineSoleusKBR1994Fig12_RT.sarcomere.normCrossBridgeStiffness;
 normCrossBridgeDamping      = fittedFelineSoleusKBR1994Fig12_RT.sarcomere.normCrossBridgeDamping;
@@ -555,14 +559,25 @@ normCrossBridgeDamping      = fittedFelineSoleusKBR1994Fig12_RT.sarcomere.normCr
 titinMolecularWeightInkDDefault =[];
 
 
+%For now this is being set to a length at which the passive force of titin
+%reaches 0.5 fiso. To compensate, the ecm fraction is set to 0.5 thereby
+%achieving the desired effect: titin reaches a force of 0.5 iso at
+% normFiberLengthAtOneNormPassiveForce.
+%
+%This work around has to be done because, by default, I assume that the
+% toe force of the passive curve has a value of 1. Since rabbit titin is so 
+% stiff and short and its contour length is shorter than the length at 
+% which the fibrils reach 1 fiso ... and this causes the functions
+% charged with making the titin curves to fail.
+passiveForceKeyPoints = [1.0,    0;...
+                         2.86,1.31];  
 
-% An adjusted value to bring the simulation data closer to the 
-% experiments of Leonard, Joumaa, and Herzog 2010
+normFiberLengthAtOneNormPassiveForceRabbitFibril = ...
+    interp1(passiveForceKeyPoints(:,2),passiveForceKeyPoints(:,1),0.5);
 
-ecmForceFractionRabbitPsoasFitted = 7.482620034367735e-01;
-%titinMolecularWeightInkDLong = -1; 
-%This is a long titin molecule at 3700 kD, equivalent to the titin
-%that's found in human soleus.
+% Now we adjust how much of the passive force is comprised of the ECM in
+% order to make the titin force-length curve more compliant.
+ecmForceFractionRabbitPsoasFitted = 0.675;% 
 
 normPevkToActinAttachmentPointRabbitPsoasFitted=0.675;
 
@@ -572,7 +587,7 @@ rabbitPsoasFibrilWLC = createRabbitPsoasFibrilModel(...
                               normCrossBridgeDamping,...
                               normPevkToActinAttachmentPointRabbitPsoasFitted,...
                               normMaxActiveTitinToActinDamping,...
-                              normFiberLengthAtOneNormPassiveForceDefault,...
+                              normFiberLengthAtOneNormPassiveForceRabbitFibril,...
                               ecmForceFractionRabbitPsoasFitted,...
                               titinMolecularWeightInkDDefault,...
                               wlcTitinModel,...
@@ -607,7 +622,7 @@ tunedRabbitPsoasFibril = createRabbitPsoasFibrilModel(...
                               normCrossBridgeDamping,...
                               normPevkToActinAttachmentPointRabbitPsoasFitted,...
                               normMaxActiveTitinToActinDamping,...
-                              normFiberLengthAtOneNormPassiveForceDefault,...
+                              normFiberLengthAtOneNormPassiveForceRabbitFibril,...
                               ecmForceFractionRabbitPsoasFitted,...
                               titinMolecularWeightInkDDefault,...
                               linearTitinModel,...
@@ -621,7 +636,7 @@ tunedRabbitPsoasFibril = createRabbitPsoasFibrilModel(...
                               flag_useOctave);
 
 tunedRabbitPsoasFibril.sarcomere.normMaxActiveTitinToActinDamping = ...
-    tunedRabbitPsoasFibril.sarcomere.normMaxActiveTitinToActinDamping*10;
+    tunedRabbitPsoasFibril.sarcomere.normMaxActiveTitinToActinDamping*15;
 
 filePathTunedRabbitPsoas = fullfile(projectFolders.output_structs_FittedModels,...
                                 'tunedRabbitPsoasFibril.mat');

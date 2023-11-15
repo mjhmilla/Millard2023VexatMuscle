@@ -55,7 +55,7 @@ flag_simulateActiveStretch  = 1;
 flag_simulatePassiveStretch = 1;
 flag_simulateStatic         = 1;
 
-flag_simulateHillModel        = 1; 
+flag_simulateHillModel       = 1; 
 flag_simulateVexatModel      = 1;
 flag_useCalibratedVexatCurves= 1;
 flag_useTitinCurvesWithRigidIgDSegment   = 0;

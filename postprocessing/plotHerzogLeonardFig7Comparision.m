@@ -32,7 +32,7 @@ subplot('Position',reshape(subPlotPairPanel(idxSubplot,1,:),1,4));
 
 plot( expConfigHerzogLeonard2002.dataRamp.time,...
       expConfigHerzogLeonard2002.dataRamp.length,...
-      'Color',[1,1,1].*0.75,'LineWidth',2);
+      'Color',[0,0,0],'LineWidth',2);
 hold on;
 
 box off;
@@ -129,7 +129,7 @@ if(isempty(dataDampedEq.benchRecord)==0)
     end
 end
 if(trialNumber == 3)
-  legend([lineVexat,lineHill],'Model', 'Hill-type');
+  legend([lineVexat,lineHill],'VEXAT', 'Hill Model');
   legend boxoff;
 end
 
