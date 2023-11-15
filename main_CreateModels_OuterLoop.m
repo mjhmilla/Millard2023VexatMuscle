@@ -37,7 +37,7 @@ disp('----------------------------------------');
 %%
 % Global model parameters
 %%
-flag_loadPreviouslyOptimizedParameters = 1;
+flag_loadPreviouslyOptimizedParameters = 0;
 % 0: A lengthy optimization is done to find the best point within the
 %    PEVK segment to bond to actin. This value is saved to file for later
 %    use.
