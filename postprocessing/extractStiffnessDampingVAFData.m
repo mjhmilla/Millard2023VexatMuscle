@@ -20,7 +20,8 @@ function [kbr1994Table,opus31Table,hillTable] ...
                                       dataKBR1994Fig10,...
                                       dataKBR1994Fig12K,...
                                       dataKBR1994Fig12D,...
-                                      inputFunctions)
+                                      inputFunctions,...
+                                      coherenceSqThreshold)
 
 
 noDataCode = nan;
@@ -54,7 +55,11 @@ modelData(9) = struct(  'amplitude',      0,...
                         'damping_x',      [],...
                         'damping_y',      [],...
                         'vaf_x',          [],...
-                        'vaf_y',          []);
+                        'vaf_y',          [],...
+                        'coherenceSqFreqLb_x',[],...
+                        'coherenceSqFreqLb_y',[],...
+                        'coherenceSqFreqUb_x',[],...
+                        'coherenceSqFreqUb_y',[]);
                       
 modelStiffness(9) = struct(  'fo', [],...
                               'g', [],...
@@ -69,6 +74,12 @@ modelDamping(9)   = struct(  'fo', [],...
                               'yN',[]);
                             
 modelVaf(9)   = struct(  'fo',[],...
+                         'g', [], ...
+                         'x', [],...
+                         'y', [],...
+                         'yN',[]);
+
+modelCoherenceSqFreq(9) = struct(  'fo',[],...
                          'g', [], ...
                          'x', [],...
                          'y', [],...
@@ -104,6 +115,8 @@ for z=1:1:length(freqSeriesFiles)
   currStiffness = modelStiffness;
   currDamping   = modelDamping;
   currVaf       = modelVaf;
+  currCoherenceSqFreqLb = modelCoherenceSqFreq;
+  currCoherenceSqFreqUb = modelCoherenceSqFreq;
 
  
 
@@ -136,9 +149,41 @@ for z=1:1:length(freqSeriesFiles)
                            freqSimData.nominalForce(1,i)];
     rawData(idx).vaf_y = [rawData(idx).vaf_y;...
                            freqSimData.vafTime(1,i)];
+
+    idxLb = find(freqSimData.coherenceSq(:,i)>=coherenceSqThreshold, 1 );
+
+%     %linearly interpolate to get the frequency at which the threshold is
+%     %crossed
+%     idxLbSpan = [idxLb-1;idxLb;idxLb+1];
+%     freqLb = interp1(freqSimData.coherenceSq(idxLbSpan,i),...
+%                      freqSimData.coherenceSqFrequency(idxLbSpan,i),...
+%                      coherenceSqThreshold);
+% 
+    rawData(idx).coherenceSqFreqLb_x=[rawData(idx).coherenceSqFreqLb_x;...
+                                      freqSimData.nominalForce(1,i)];    
+    rawData(idx).coherenceSqFreqLb_y=[rawData(idx).coherenceSqFreqLb_y;...
+                                      freqSimData.bandwidthLinear(1,i)];
+% 
+%     idxUb = find(freqSimData.coherenceSq(:,i)>=coherenceSqThreshold, 1, 'last' );
+% 
+%     %linearly interpolate to get the frequency at which the threshold is
+%     %crossed
+%     idxUbSpan = [idxUb-1;idxUb;idxUb+1];
+%     freqUb = interp1(freqSimData.coherenceSq(idxUbSpan,i),...
+%                      freqSimData.coherenceSqFrequency(idxUbSpan,i),...
+%                      coherenceSqThreshold);
+
+    rawData(idx).coherenceSqFreqUb_x=[rawData(idx).coherenceSqFreqUb_x;...
+                                      freqSimData.nominalForce(1,i)];    
+    rawData(idx).coherenceSqFreqUb_y=[rawData(idx).coherenceSqFreqUb_y;...
+                                      freqSimData.bandwidthLinear(2,i)];
+    
+    
   end
   
   %Order the data and fit a line to it
+  %This line isn't useful for every quantity, but it makes it possible
+  %to treat these different data structures uniformly later.
   for idx=1:1:length(rawData)
     % Stiffness
     data_x = rawData(idx).stiffness_x;
@@ -171,15 +216,14 @@ for z=1:1:length(freqSeriesFiles)
     currDamping(idx).x = d_x;
     currDamping(idx).y = d_y;
     currDamping(idx).yN = d_y./d_x;
+
     %VAF
     data_x = rawData(idx).vaf_x;
     data_y = rawData(idx).vaf_y;
     
     [vaf_x,map] = sort(data_x);
     vaf_y       = data_y(map);    
-    
- 
-    
+   
     [fo, g] = fit(vaf_x,vaf_y,'poly1');
     currVaf(idx).fo = fo;
     currVaf(idx).g = g;
@@ -187,12 +231,31 @@ for z=1:1:length(freqSeriesFiles)
     currVaf(idx).y = vaf_y;
     currVaf(idx).yN=noDataCode;
     
-%     currVaf(idx).mean = mean(vaf_y);
-%     currVaf(idx).std = std(vaf_y);
-%     currVaf(idx).min = min(vaf_y);
-%     currVaf(idx).max = max(vaf_y);
-%     currVaf(idx).frequency = freq;
-%     currVaf(idx).amplitude = amp;
+    %Coherence sq lower bound threshold frequency
+    data_x = rawData(idx).coherenceSqFreqLb_x;
+    data_y = rawData(idx).coherenceSqFreqLb_y;
+    [coherenceSqFreqLb_x,map] = sort(data_x);
+    coherenceSqFreqLb_y       = data_y(map);    
+   
+    [fo, g] = fit(coherenceSqFreqLb_x,coherenceSqFreqLb_y,'poly1');    
+    currCoherenceSqFreqLb(idx).fo = fo;
+    currCoherenceSqFreqLb(idx).g = g;
+    currCoherenceSqFreqLb(idx).x = coherenceSqFreqLb_x;
+    currCoherenceSqFreqLb(idx).y = coherenceSqFreqLb_y;
+    currCoherenceSqFreqLb(idx).yN=noDataCode;  
+
+    %Coherence sq upper bound threshold frequency
+    data_x = rawData(idx).coherenceSqFreqUb_x;
+    data_y = rawData(idx).coherenceSqFreqUb_y;
+    [coherenceSqFreqUb_x,map] = sort(data_x);
+    coherenceSqFreqUb_y       = data_y(map);    
+   
+    [fo, g] = fit(coherenceSqFreqUb_x,coherenceSqFreqUb_y,'poly1');    
+    currCoherenceSqFreqUb(idx).fo = fo;
+    currCoherenceSqFreqUb(idx).g = g;
+    currCoherenceSqFreqUb(idx).x = coherenceSqFreqUb_x;
+    currCoherenceSqFreqUb(idx).y = coherenceSqFreqUb_y;
+    currCoherenceSqFreqUb(idx).yN=noDataCode;     
   end
   
   %Re-arrange the data into tables
@@ -202,6 +265,10 @@ for z=1:1:length(freqSeriesFiles)
                             currDamping, noDataCode); 
   vaf = extractTablesOfFittedParameters(...
                             currVaf, noDataCode); 
+  coherenceSqFreqLb = extractTablesOfFittedParameters(...
+                            currCoherenceSqFreqLb, noDataCode);
+  coherenceSqFreqUb = extractTablesOfFittedParameters(...
+                            currCoherenceSqFreqUb, noDataCode);
   
   fName = freqSeriesFiles{1,z};
   i = strfind(fName,'freqResponse');
@@ -209,16 +276,21 @@ for z=1:1:length(freqSeriesFiles)
   %dataFolder,
   
   vafData = currVaf;
-  save([dataFolder,fNameTable],'stiffness','damping','vaf');
+  save([dataFolder,fNameTable],...
+      'stiffness','damping','vaf','coherenceSqFreqLb','coherenceSqFreqUb');
   
   if(flag_Hill ==1)
     hillTable.stiffness     = stiffness;
     hillTable.damping       = damping;
     hillTable.vaf           = vaf;
+    hillTable.coherenceSqFreqLb = coherenceSqFreqLb;
+    hillTable.coherenceSqFreqUb = coherenceSqFreqUb;
   else
     opus31Table.stiffness   = stiffness;
     opus31Table.damping     = damping;
     opus31Table.vaf         = vaf;  
+    opus31Table.coherenceSqFreqLb = coherenceSqFreqLb;
+    opus31Table.coherenceSqFreqUb = coherenceSqFreqUb;    
   end
                            
 end
@@ -432,7 +504,8 @@ end
 % Arrange the fitting information into a tabular form
 %%
 
-kbr1994Table = struct('stiffness',[],'damping',[],'vaf',[],'vafData',[]);
+kbr1994Table = struct('stiffness',[],'damping',[],'vaf',[],'vafData',[],...
+    'coherenceSqFreqLb',[],'coherenceSqFreqUb',[]);
 
 
 kbr1994Table.stiffness = extractTablesOfFittedParameters(...
@@ -441,18 +514,47 @@ kbr1994Table.stiffness = extractTablesOfFittedParameters(...
 kbr1994Table.damping = extractTablesOfFittedParameters(...
                           kbr1994Damping, noDataCode);
 
+%We only know the range of VAF, not the individual values.
 kbr1994Table.vaf = opus31Table.vaf;
-
 kbr1994Table.vaf.pMean = ones(size(kbr1994Table.vaf.pMean)).*(0.5*(0.88+0.99));
-kbr1994Table.vaf.pMean(:,:,1)=ones(size(kbr1994Table.vaf.pMean(:,:,1))).*noDataCode;
+kbr1994Table.vaf.pMean(:,1)=ones(size(kbr1994Table.vaf.pMean(:,1))).*noDataCode;
 
 kbr1994Table.vaf.p95CIMin = ones(size(kbr1994Table.vaf.p95CIMin)).*noDataCode;
-kbr1994Table.vaf.p95CIMin(:,:,1)=ones(size(kbr1994Table.vaf.p95CIMin(:,:,1))).*noDataCode;
+kbr1994Table.vaf.p95CIMin(:,1)=ones(size(kbr1994Table.vaf.p95CIMin(:,1))).*noDataCode;
 
 kbr1994Table.vaf.p95CIMax = ones(size(kbr1994Table.vaf.p95CIMax)).*noDataCode;
-kbr1994Table.vaf.p95CIMax(:,:,1)=ones(size(kbr1994Table.vaf.p95CIMax(:,:,1))).*noDataCode;
+kbr1994Table.vaf.p95CIMax(:,1)=ones(size(kbr1994Table.vaf.p95CIMax(:,1))).*noDataCode;
 
 kbr1994Table.vaf.rmse = ones(size(kbr1994Table.vaf.rmse)).*noDataCode;
+
+
+%We don't really know the frequency at which KBR's data crossed the
+%threshold set above. We do know the lowest frequency analyzed was 4 Hz
+kbr1994Table.coherenceSqFreqLb = opus31Table.vaf;
+kbr1994Table.coherenceSqFreqLb.pMean = ones(size(kbr1994Table.vaf.pMean)).*4;
+kbr1994Table.coherenceSqFreqLb.pMean(:,1)=ones(size(kbr1994Table.vaf.pMean(:,1))).*noDataCode;
+
+kbr1994Table.coherenceSqFreqLb.p95CIMin = ones(size(kbr1994Table.vaf.p95CIMin)).*noDataCode;
+kbr1994Table.coherenceSqFreqLb.p95CIMin(:,1)=ones(size(kbr1994Table.vaf.p95CIMin(:,1))).*noDataCode;
+
+kbr1994Table.coherenceSqFreqLb.p95CIMax = ones(size(kbr1994Table.vaf.p95CIMax)).*noDataCode;
+kbr1994Table.coherenceSqFreqLb.p95CIMax(:,1)=ones(size(kbr1994Table.vaf.p95CIMax(:,1))).*noDataCode;
+kbr1994Table.coherenceSqFreqLb.rmse = ones(size(kbr1994Table.vaf.rmse)).*noDataCode;
+
+%We don't really know the highest frequency at which KBR's data crossed the
+%threshold set above. We do know the highest frequency analyzed was the
+%filter bandwidth. Here we'll just set something high above that value
+kbr1994Table.coherenceSqFreqUb = opus31Table.vaf;
+kbr1994Table.coherenceSqFreqUb.pMean = ones(size(kbr1994Table.vaf.pMean)).*100;
+kbr1994Table.coherenceSqFreqUb.pMean(:,1)=ones(size(kbr1994Table.vaf.pMean(:,1))).*noDataCode;
+
+kbr1994Table.coherenceSqFreqUb.p95CIMin = ones(size(kbr1994Table.vaf.p95CIMin)).*noDataCode;
+kbr1994Table.coherenceSqFreqUb.p95CIMin(:,1)=ones(size(kbr1994Table.vaf.p95CIMin(:,1))).*noDataCode;
+
+kbr1994Table.coherenceSqFreqUb.p95CIMax = ones(size(kbr1994Table.vaf.p95CIMax)).*noDataCode;
+kbr1994Table.coherenceSqFreqUb.p95CIMax(:,1)=ones(size(kbr1994Table.vaf.p95CIMax(:,1))).*noDataCode;
+kbr1994Table.coherenceSqFreqUb.rmse = ones(size(kbr1994Table.vaf.rmse)).*noDataCode;
+
 
 for i=1:1:length(kbr1994Table.vaf.data)
     kbr1994Table.vaf.data(i).x = [1,1].*noDataCode;
@@ -460,6 +562,17 @@ for i=1:1:length(kbr1994Table.vaf.data)
     kbr1994Table.vaf.data(i).yN = [1,1].*noDataCode;
 end
 
+for i=1:1:length(kbr1994Table.coherenceSqFreqLb.data)
+    kbr1994Table.coherenceSqFreqLb.data(i).x = [1,1].*noDataCode;
+    kbr1994Table.coherenceSqFreqLb.data(i).y = [4,inputFunctions.bandwidthHz(1,i)];
+    kbr1994Table.coherenceSqFreqLb.data(i).yN = [1,1].*noDataCode;
+end
+
+for i=1:1:length(kbr1994Table.coherenceSqFreqUb.data)
+    kbr1994Table.coherenceSqFreqUb.data(i).x = [1,1].*noDataCode;
+    kbr1994Table.coherenceSqFreqUb.data(i).y = [4,inputFunctions.bandwidthHz(1,i)];
+    kbr1994Table.coherenceSqFreqUb.data(i).yN = [1,1].*noDataCode;
+end
 here=1;
 
 

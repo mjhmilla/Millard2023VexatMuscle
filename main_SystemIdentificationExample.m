@@ -19,6 +19,10 @@ clear all;
 rootDir         = getRootProjectDirectory();
 projectFolders  = getProjectFolders(rootDir);
 
+flag_addTimeVaryingNoise = 1;
+freqTimeVaryingNoiseHz = 5; %Hz
+
+
 addpath( genpath(projectFolders.postprocessing) );
 %%
 %Publication configuration
@@ -47,6 +51,7 @@ bandwidth         = 35;
 sampleFrequency   = 1/0.002;
 nyquistFrequency  = sampleFrequency*0.5;
 
+timeVec           = [0:(1/(samples-1)):1]'.*(samples/sampleFrequency);
 
 
 [b,a]             =butter(2,bandwidth/nyquistFrequency);
@@ -55,11 +60,11 @@ xRandom = xRandom-mean(xRandom);
 xRandom(1:paddingWidth)=0;
 xRandom((samples-paddingWidth):1:samples) = 0;
 
+
 %xTimeDomain is the length change: the nominal length has been removed
 xTimeDomain       = filter(b,a,xRandom);
 xTimeDomainScale  = perturbationLength/ (max(abs(xTimeDomain)));
 xTimeDomain = xTimeDomain.*xTimeDomainScale;
-timeVec           = [0:(1/(samples-1)):1].*(samples/sampleFrequency);
 
 %%
 %Make some synthetic force data: 
@@ -83,18 +88,25 @@ xDotTimeDomain = ifft(xDotFreqDomain,'symmetric');
 %the simulated (or measured) force with the nominal value subracted off.
 yTimeDomain = k.*xTimeDomain - d.*xDotTimeDomain;
 
+%Add some time variant noise
+if(flag_addTimeVaryingNoise==1)
+    yTimeDomain = yTimeDomain + sin((2*pi*freqTimeVaryingNoiseHz).*timeVec).*0.5;
+end
+
 %%
 %Use these two signals to evaluate the gain and phase shift between
 %the length and force perturbation
 %%
-
+ 
 frequencyConvHz = [0:1/(samples*2):( 1-(1/(samples*2)) )]' .* (sampleFrequency);
 frequencyConvRadians = frequencyConvHz.*(2*pi);
 
 %We only analyze the frequency spectrum that is within the bandwith of the
 %perturbation signal: everything else will be too weak to produce coherent
 %data
-idxFreqInBandwidth = find(frequencyConvHz <= bandwidth);
+idxFreqBWLow        = find(frequencyHz <= max(bandwidth));
+idxFreqConvBW       = find(frequencyConvHz <= bandwidth);
+idxFreqConvBWLow    = [2:1:max(idxFreqConvBW)]';
 
 xyTimeDomain = conv(xTimeDomain,yTimeDomain);
 xxTimeDomain = conv(xTimeDomain,xTimeDomain);
@@ -109,9 +121,86 @@ yFreqDomain = fft(yTimeDomain);
 
 gain = abs(xyFreqDomain./xxFreqDomain);
 phase=-angle(xyFreqDomain./xxFreqDomain);
-coherenceSq = (xyFreqDomain.*xyFreqDomain) ...
-  ./ (xxFreqDomain.*yyFreqDomain);
 
+%Evaluate the cross-spectral density between x and y using Welch's method
+[cpsd_Gxy,cpsd_Fxy] = cpsd(xTimeDomain,yTimeDomain,[],[],[],sampleFrequency,'onesided');
+[cpsd_Gxx,cpsd_Fxx] = cpsd(xTimeDomain,xTimeDomain,[],[],[],sampleFrequency,'onesided');
+[cpsd_Gyy,cpsd_Fyy] = cpsd(yTimeDomain,yTimeDomain,[],[],[],sampleFrequency,'onesided');
+
+coherenceSq     = ( abs(cpsd_Gxy).*abs(cpsd_Gxy) ) ./ (cpsd_Gxx.*cpsd_Gyy) ;
+freqCoherenceSq = cpsd_Fxy;
+idxFreqConvSq   = find(freqCoherenceSq <= max(bandwidth));
+
+%Check this evaluation with Matlab's own internal function
+[coherenceSqCheck,freqCoherenceSqCheck] = mscohere(xTimeDomain,yTimeDomain,[],[],[],sampleFrequency);
+assert( max(abs(coherenceSqCheck-coherenceSq)) < 1e-6);
+
+
+
+figRough = figure;
+subplot(3,1,1);
+    yyaxis left;
+    plot(timeVec, xTimeDomain,'b','DisplayName','x(t)'); 
+    hold on;
+    ylabel('Length (m)');
+
+    yyaxis right
+    plot(timeVec, yTimeDomain,'r','DisplayName','y(t)'); 
+    hold on;
+    ylabel('Force (N)');
+    
+    xlabel('Time (s)');
+    legend;
+    box off;
+
+    title('Time domain signals');
+subplot(3,1,2);
+    yyaxis left;
+    plot(frequencyConvHz(idxFreqConvBWLow,1),...
+         gain(idxFreqConvBWLow,1),'b',...
+         'DisplayName','gain');
+    ylabel('Gain (N/m)');
+
+    yyaxis right;
+    plot(frequencyConvHz(idxFreqConvBWLow,1),...
+         phase(idxFreqConvBWLow,1).*(180/pi),'r',...
+         'DisplayName','phase');
+    ylabel('Phase (deg)');
+
+    xlabel('Frequency (Hz)');
+    legend; 
+    box off;
+
+    title('Frequency domain response');
+
+subplot(3,1,3);
+    plot(freqCoherenceSq(idxFreqConvSq,1),...
+         coherenceSq(idxFreqConvSq,1),'k');
+    hold on;
+
+    [d, idx] = min(abs(freqCoherenceSq-freqTimeVaryingNoiseHz));
+    
+    plot(freqCoherenceSq(idx,1),...
+         coherenceSq(idx,1),'xb');
+    hold on;
+    
+    if(flag_addTimeVaryingNoise==1)
+        plot([freqCoherenceSq(idx,1),freqCoherenceSq(idx,1)+4],...
+             [coherenceSq(idx,1),coherenceSq(idx,1)+0.05],'b');
+        hold on;
+    
+        text(freqTimeVaryingNoiseHz+5,coherenceSq(idx,1)+0.05,'Frequency of time-varying noise',...
+             'HorizontalAlignment','left');
+        hold on;
+    end
+  
+    yticks([0:0.25:1]');
+    ylim([-0.01,1.01])
+
+    box off;
+    xlabel('Frequency (Hz)');
+    ylabel('Coherence$$^2$$');
+    title('Coherence between input and output signals');
 
 disp('Given the gain and phase profiles you can identify');
 disp('what topology fits the data usually by inspection.');
@@ -129,8 +218,8 @@ disp('experimental data.');
 %Plot the results
 %%
 
-fig=figure;
-ax=axes(fig);
+figPub=figure;
+ax=axes(figPub);
 set(ax,'TitleHorizontalAlignment','Left');
 subplot('Position',reshape(subPlotPanel(1,1,:),1,4));
 %subplot(2,3,1); 
@@ -282,15 +371,15 @@ subplot('Position',reshape(subPlotPanel(3,1,:),1,4));
 
 subplot('Position',reshape(subPlotPanel(4,1,:),1,4));    
 %subplot(2,3,4); 
-  plot(frequencyConvHz(idxFreqInBandwidth,1),...
-       gain(idxFreqInBandwidth,1),'-','Color',[.5,0.5,1],'LineWidth',1);
+  plot(frequencyConvHz(idxFreqConvBW,1),...
+       gain(idxFreqConvBW,1),'-','Color',[.5,0.5,1],'LineWidth',1);
   hold on;
-  plot(max(frequencyConvHz(idxFreqInBandwidth,1)),...
-       max(gain(idxFreqInBandwidth,1)),'.','Color',[.5,0.5,1]);
+  plot(max(frequencyConvHz(idxFreqConvBW,1)),...
+       max(gain(idxFreqConvBW,1)),'.','Color',[.5,0.5,1]);
   hold on;
-  text(max(frequencyConvHz(idxFreqInBandwidth,1)),...
-       max(gain(idxFreqInBandwidth,1)), ...
-       sprintf('%1.1f',max(gain(idxFreqInBandwidth,1))),...
+  text(max(frequencyConvHz(idxFreqConvBW,1)),...
+       max(gain(idxFreqConvBW,1)), ...
+       sprintf('%1.1f',max(gain(idxFreqConvBW,1))),...
        'HorizontalAlignment','right',...
        'VerticalAlignment','top');
   hold on;
@@ -307,18 +396,18 @@ subplot('Position',reshape(subPlotPanel(4,1,:),1,4));
   box off;
   %xticklabels({'','','','','','','','','',''});
   yticks(round([0,k],1));
-  ylim([0,1.01*max(gain(idxFreqInBandwidth,1))]);
+  ylim([0,1.01*max(gain(idxFreqConvBW,1))]);
 
 subplot('Position',reshape(subPlotPanel(5,1,:),1,4));    
 %subplot(2,3,5); 
-  plot(frequencyConvHz(idxFreqInBandwidth,1),...
-       phase(idxFreqInBandwidth,1).*(180/pi),'-','Color',[.5,0.5,1],'LineWidth',1);
+  plot(frequencyConvHz(idxFreqConvBW,1),...
+       phase(idxFreqConvBW,1).*(180/pi),'-','Color',[.5,0.5,1],'LineWidth',1);
   xlabel('Frequency (Hz)');
   ylabel('Phase (degrees)');
   xlim([0,bandwidth]);
   xticks([0:5:bandwidth]);
-  yticks(round([0,max(phase(idxFreqInBandwidth,1).*(180/pi))],0));
-  ylim([0,1.01*round(max(phase(idxFreqInBandwidth,1).*(180/pi)),0)]);
+  yticks(round([0,max(phase(idxFreqConvBW,1).*(180/pi))],0));
+  ylim([0,1.01*round(max(phase(idxFreqConvBW,1).*(180/pi)),0)]);
   box off;
 
   limitsX = xlim; 
@@ -331,13 +420,13 @@ subplot('Position',reshape(subPlotPanel(5,1,:),1,4));
 
 
   
-set(fig,'Units','centimeters',...
+set(figPub,'Units','centimeters',...
 'PaperUnits','centimeters',...
 'PaperSize',[pageWidth pageHeight],...
 'PaperPositionMode','manual',...
 'PaperPosition',[0 0 pageWidth pageHeight]);     
 %set(findall(figList(i).h,'-property','FontSize'),'FontSize',10);     
-set(fig,'renderer','painters');     
+set(figPub,'renderer','painters');     
 print('-dpdf', ...
     fullfile(projectFolders.output_plots_SystemIdentificationExample,...
                'fig_Pub_SystemIdentificationExample.pdf')); 
