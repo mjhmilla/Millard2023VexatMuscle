@@ -19,8 +19,15 @@ clear all;
 rootDir         = getRootProjectDirectory();
 projectFolders  = getProjectFolders(rootDir);
 
-flag_addTimeVaryingNoise = 1;
-freqTimeVaryingNoiseHz = 5; %Hz
+flag_addNonlinearityToOutput = 0;
+ampNonlinearity = 0.1;
+
+flag_addTimeVaryingNoiseToOutput = 0;
+freqTimeVaryingNoiseHz   = 0.5; %Hz
+ampTimeVaryingNoiseHz    = 0.5;
+
+flag_addRandomNoiseToOutput = 0;
+randomNoiseAmplitude        = 0.1;
 
 
 addpath( genpath(projectFolders.postprocessing) );
@@ -45,7 +52,7 @@ plotConfigGeneric;
 %Generate a bandwidth limited stochastic signal
 %%
 samples           = 512;
-paddingWidth      = 100;
+paddingWidth      = 50;
 perturbationLength= 1.6;%1.6 mm in units of m
 bandwidth         = 35;    
 sampleFrequency   = 1/0.002;
@@ -57,6 +64,8 @@ timeVec           = [0:(1/(samples-1)):1]'.*(samples/sampleFrequency);
 [b,a]             =butter(2,bandwidth/nyquistFrequency);
 xRandom           = rand(samples,1);
 xRandom = xRandom-mean(xRandom);
+
+%Use a rectangular window to fix the nominal length to zero
 xRandom(1:paddingWidth)=0;
 xRandom((samples-paddingWidth):1:samples) = 0;
 
@@ -74,7 +83,7 @@ xTimeDomain = xTimeDomain.*xTimeDomainScale;
 k=4.46;  %Stiffness: 4.46 N/mm
 d=0.0089;%Damping  : feel free to adjust
 
-%Form the perfect derivative of x
+%Form a nearly perfect derivative of x
 frequencyHz = [0:(1/(samples)): (1-(1/samples)) ]' .* (sampleFrequency);
 frequencyRadians = frequencyHz.*(2*pi);
 s    = complex(0,1).*frequencyRadians;
@@ -86,12 +95,24 @@ xDotTimeDomain = ifft(xDotFreqDomain,'symmetric');
 %where the nominal force has been removed.
 %To test a model (or experimental data) you would replace yTimeDomain with
 %the simulated (or measured) force with the nominal value subracted off.
-yTimeDomain = k.*xTimeDomain - d.*xDotTimeDomain;
+yTimeDomain = k.*xTimeDomain + d.*xDotTimeDomain;
 
-%Add some time variant noise
-if(flag_addTimeVaryingNoise==1)
-    yTimeDomain = yTimeDomain + sin((2*pi*freqTimeVaryingNoiseHz).*timeVec).*0.5;
+
+if(flag_addNonlinearityToOutput==1)
+    yTimeDomain = yTimeDomain + (ampNonlinearity*k).*(xTimeDomain.^2);
 end
+
+%Add some time variant noise: a cosine wave that goes from trough to peak
+%over the time window
+if(flag_addTimeVaryingNoiseToOutput==1)
+    yTimeDomain = yTimeDomain ...
+        + cos((0.5*pi/max(timeVec)).*timeVec).*ampTimeVaryingNoiseHz;
+end
+
+if(flag_addRandomNoiseToOutput==1)
+    yTimeDomain = yTimeDomain + randomNoiseAmplitude.*randn(length(yTimeDomain),1);
+end    
+
 
 %%
 %Use these two signals to evaluate the gain and phase shift between
@@ -119,20 +140,33 @@ yyFreqDomain = fft(yyTimeDomain);
 xFreqDomain = fft(xTimeDomain);
 yFreqDomain = fft(yTimeDomain);
 
+%These calculations of gain and phase will have a high frequency 
+%resolution but will be sensitive to noise
 gain = abs(xyFreqDomain./xxFreqDomain);
-phase=-angle(xyFreqDomain./xxFreqDomain);
+phase= angle(xyFreqDomain./xxFreqDomain);
+
 
 %Evaluate the cross-spectral density between x and y using Welch's method
+%Welch's method breaks up the time domain signals into overlapping blocks
+%Each block is tranformed into the frequency domain, and the final
+%result is the average of the each block in the frequency domain.
+%The resulting signal has a lower frequency resolution but is not
+%so sensitive to noise
 [cpsd_Gxy,cpsd_Fxy] = cpsd(xTimeDomain,yTimeDomain,[],[],[],sampleFrequency,'onesided');
 [cpsd_Gxx,cpsd_Fxx] = cpsd(xTimeDomain,xTimeDomain,[],[],[],sampleFrequency,'onesided');
 [cpsd_Gyy,cpsd_Fyy] = cpsd(yTimeDomain,yTimeDomain,[],[],[],sampleFrequency,'onesided');
+[cpsd_Gyx,cpsd_Fyx] = cpsd(yTimeDomain,xTimeDomain,[],[],[],sampleFrequency,'onesided');
 
-coherenceSq     = ( abs(cpsd_Gxy).*abs(cpsd_Gxy) ) ./ (cpsd_Gxx.*cpsd_Gyy) ;
-freqCoherenceSq = cpsd_Fxy;
-idxFreqConvSq   = find(freqCoherenceSq <= max(bandwidth));
+coherenceSq   = ( abs(cpsd_Gyx).*abs(cpsd_Gyx) ) ./ (cpsd_Gxx.*cpsd_Gyy) ;
+freqCpsd      = cpsd_Fyx;
+idxFreqCpsd   = find(freqCpsd <= max(bandwidth));
+
+gainCpsd  = abs(cpsd_Gyx./cpsd_Gxx);
+phaseCpsd = angle(cpsd_Gyx./cpsd_Gxx);
+freqCpsd  = cpsd_Fyx;
 
 %Check this evaluation with Matlab's own internal function
-[coherenceSqCheck,freqCoherenceSqCheck] = mscohere(xTimeDomain,yTimeDomain,[],[],[],sampleFrequency);
+[coherenceSqCheck,freqCpsdCheck] = mscohere(xTimeDomain,yTimeDomain,[],[],[],sampleFrequency);
 assert( max(abs(coherenceSqCheck-coherenceSq)) < 1e-6);
 
 
@@ -157,14 +191,32 @@ subplot(3,1,1);
 subplot(3,1,2);
     yyaxis left;
     plot(frequencyConvHz(idxFreqConvBWLow,1),...
-         gain(idxFreqConvBWLow,1),'b',...
+         gain(idxFreqConvBWLow,1),'-','Color',[0.75,0.75,1],'LineWidth',2,...
          'DisplayName','gain');
+    hold on;
+    plot(freqCpsd(idxFreqCpsd,1),...
+         gainCpsd(idxFreqCpsd,1),'-','Color',[0,0,1],'LineWidth',0.5,...
+         'DisplayName','gain (cpsd)'),
+    
+    yGainLim = ylim;
+    if(min(yGainLim)>0)
+        ylim([0,max(yGainLim)]);
+    end
+
     ylabel('Gain (N/m)');
+
 
     yyaxis right;
     plot(frequencyConvHz(idxFreqConvBWLow,1),...
-         phase(idxFreqConvBWLow,1).*(180/pi),'r',...
+         phase(idxFreqConvBWLow,1).*(180/pi),'-',...
+         'Color',[1,0.75,0.75],'LineWidth',2,...
          'DisplayName','phase');
+    hold on;
+    plot(freqCpsd(idxFreqCpsd,1),...
+         phaseCpsd(idxFreqCpsd,1).*(180/pi),'-',...
+         'Color',[1,0,0],'LineWidth',0.5,...
+         'DisplayName','phase (cpsd)'),
+    
     ylabel('Phase (deg)');
 
     xlabel('Frequency (Hz)');
@@ -174,22 +226,22 @@ subplot(3,1,2);
     title('Frequency domain response');
 
 subplot(3,1,3);
-    plot(freqCoherenceSq(idxFreqConvSq,1),...
-         coherenceSq(idxFreqConvSq,1),'k');
+    plot(freqCpsd(idxFreqCpsd,1),...
+         coherenceSq(idxFreqCpsd,1),'k');
     hold on;
 
-    [d, idx] = min(abs(freqCoherenceSq-freqTimeVaryingNoiseHz));
-    
-    plot(freqCoherenceSq(idx,1),...
-         coherenceSq(idx,1),'xb');
-    hold on;
-    
-    if(flag_addTimeVaryingNoise==1)
-        plot([freqCoherenceSq(idx,1),freqCoherenceSq(idx,1)+4],...
-             [coherenceSq(idx,1),coherenceSq(idx,1)+0.05],'b');
+    if(flag_addTimeVaryingNoiseToOutput==1)
+        [d, idx] = min(abs(freqCpsd-freqTimeVaryingNoiseHz));
+        
+        plot(freqCpsd(idx,1),...
+             coherenceSq(idx,1),'xb');
+        hold on;
+        
+        plot([freqCpsd(idx,1),freqCpsd(idx,1)+4],...
+             [coherenceSq(idx,1),coherenceSq(idx,1)-0.05],'b');
         hold on;
     
-        text(freqTimeVaryingNoiseHz+5,coherenceSq(idx,1)+0.05,'Frequency of time-varying noise',...
+        text(freqTimeVaryingNoiseHz+5,coherenceSq(idx,1)-0.05,'Frequency of time-varying noise',...
              'HorizontalAlignment','left');
         hold on;
     end

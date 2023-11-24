@@ -41,10 +41,23 @@ freqSimData = struct('force',  zeros(samplePoints, numberOfSimulations),...
                      'fxx',   zeros(samplePoints*2, numberOfSimulations),...
                      'fxy',   zeros(samplePoints*2, numberOfSimulations),...
                      'fyy',   zeros(samplePoints*2, numberOfSimulations),...
-                     'gain',  zeros(samplePoints*2, numberOfSimulations),...
-                     'phase',         zeros(samplePoints*2, numberOfSimulations),...
+                     'idxFreqRangeW',  zeros(2, numberOfSimulations),...   
+                     'freqW', zeros(samplePoints*2, numberOfSimulations).*nan,...
+                     'freqWHz', zeros(samplePoints*2, numberOfSimulations).*nan,...
+                     'gainW',    zeros(samplePoints*2, numberOfSimulations).*nan,...
+                     'phaseW',   zeros(samplePoints*2, numberOfSimulations).*nan,...
+                     'gainKDW',  zeros(samplePoints*2, numberOfSimulations).*nan,...
+                     'phaseKDW', zeros(samplePoints*2, numberOfSimulations).*nan,...   
+                     'stiffnessW',     zeros(1,numberOfSimulations),...
+                     'dampingW',       zeros(1,numberOfSimulations),...
+                     'vafTimeW',           zeros(1,numberOfSimulations),...
+                     'vafGainW',           zeros(1,numberOfSimulations),...          
+                     'vafPhaseW',          zeros(1,numberOfSimulations),...                               
+                     'forceKDW',       zeros(samplePoints,numberOfSimulations),...                     
+                     'gain',   zeros(samplePoints*2, numberOfSimulations),...
+                     'phase',  zeros(samplePoints*2, numberOfSimulations),...
                      'gainKD',  zeros(samplePoints*2, numberOfSimulations),...
-                     'phaseKD',         zeros(samplePoints*2, numberOfSimulations),...                     
+                     'phaseKD',         zeros(samplePoints*2, numberOfSimulations),...                       
                      'coherenceSq',    zeros(samplePoints, numberOfSimulations),... 
                      'coherenceSqFrequency', zeros(samplePoints, numberOfSimulations),... 
                      'bandwidthLinear',zeros(2, numberOfSimulations),...
@@ -152,8 +165,7 @@ for idxModel = 1:1:length(simSeriesFiles)
           freqSimData.idxFreqRange(1,idx)=idxCorrMinFreq;
           freqSimData.idxFreqRange(2,idx)=idxCorrMaxFreq;
 
-          indexCorrFreqRange = [idxCorrMinFreq:1:idxCorrMaxFreq]';
-          indexCorrFreqRangeFull = [1:1:idxCorrMaxFreq]';
+
 
           x  = inputFunctions.x(   inputFunctions.idxSignal, idxWave)...
                             ./lengthNorm;
@@ -200,34 +212,46 @@ for idxModel = 1:1:length(simSeriesFiles)
           assert(length(freqSimData.fyy(:,idx))==length(freqCorr));
           assert(length(freqSimData.fyy(:,idx))==length(freqHzCorr));
 
+          %Compute the cross-spectrum densities
+            
+
           %Numerically evaluate the gain, phase, and coherence of the synthetic data
           freqSimData.gain(:,idx)   = ...
             abs(  freqSimData.fxy(:,idx)./freqSimData.fxx(:,idx));
           freqSimData.phase(:,idx)  =...
             angle(freqSimData.fxy(:,idx)./freqSimData.fxx(:,idx));
 
-          %When the xcorr operator is used above a negative sign needs
-          %to be used to get the correct sense of the phase.
-          %freqSimData.phase(:,idx)  =...
-          %  -angle(freqSimData.fxy(:,idx)./freqSimData.fxx(:,idx));
 
-          axy                       = abs(  freqSimData.fxy(:,idx));
-          %freqSimData.coherenceSq(:,idx) = ...
-          %    (axy.*axy) ...
-          %    ./ abs( (freqSimData.fxx(:,idx).*freqSimData.fyy(:,idx)) );
-
-          [cpsd_Gxy,cpsd_Fxy] = cpsd(x,y,[],[],[],freqMax,'onesided');
-          [cpsd_Gxx,cpsd_Fxx] = cpsd(x,x,[],[],[],freqMax,'onesided');
-          [cpsd_Gyy,cpsd_Fyy] = cpsd(y,y,[],[],[],freqMax,'onesided');
+          %The previous method to evaluate the gain and phase 
+          %is sensitive to small nonlinearities and noise
+          %A better way
+          [cpsd_Gxy,cpsd_FxyHz] = cpsd(x,y,[],[],[],freqMax,'onesided');
+          [cpsd_Gxx,cpsd_FxxHz] = cpsd(x,x,[],[],[],freqMax,'onesided');
+          [cpsd_Gyy,cpsd_FyyHz] = cpsd(y,y,[],[],[],freqMax,'onesided');
+          [cpsd_Gyx,cpsd_FyxHz] = cpsd(y,x,[],[],[],freqMax,'onesided');
           
+          assert(length(cpsd_FyxHz)==length(cpsd_FxxHz));
+          assert(length(cpsd_FyxHz)==length(cpsd_FyyHz));
+          assert(length(cpsd_FyxHz)==length(cpsd_FxyHz));
+
+          maxIdx = length(cpsd_Gxy);
+          freqWHz = cpsd_FyxHz;
+          freqW   = freqWHz.*(2*pi);
+          freqSimData.freqW(1:maxIdx,idx)   =  cpsd_FyxHz.*(pi/180);
+          freqSimData.freqWHz(1:maxIdx,idx) =  cpsd_FyxHz;          
+          freqSimData.gainW(1:maxIdx,idx)   =  abs(  cpsd_Gyx./ cpsd_Gxx);
+          freqSimData.phaseW(1:maxIdx,idx)  =  angle(cpsd_Gyx./ cpsd_Gxx);
 
           freqSimData.coherenceSq(:,idx) = nan;
           freqSimData.coherenceSqFrequency(:,idx) = nan;
 
-          maxIdx = length(cpsd_Gxy);
+          freqSimData.coherenceSq(1:maxIdx,idx) = ...
+              ( abs(cpsd_Gxy).*abs(cpsd_Gxy) ) ./ (cpsd_Gxx.*cpsd_Gyy) ;
+          freqSimData.coherenceSqFrequency(1:maxIdx,idx) = cpsd_FxyHz;
 
-          freqSimData.coherenceSq(1:maxIdx,idx) = ( abs(cpsd_Gxy).*abs(cpsd_Gxy) ) ./ (cpsd_Gxx.*cpsd_Gyy) ;
-          freqSimData.coherenceSqFrequency(1:maxIdx,idx) = cpsd_Fxy;
+
+
+
 
           %Evaluate the lowest frequency that meets the coherence squared
           %threshold
@@ -247,121 +271,51 @@ for idxModel = 1:1:length(simSeriesFiles)
 
           freqSimData.bandwidthLinear(:,idx)=[freqLb;freqUb];
 
+          %Evaluate the lowest frequency that meets the coherence squared
+          %threshold
+          idxMinFreq = find(freqHzCorr <= max(freqLb,minFreqHz), 1, 'last' );
+          idxMaxFreq = ...
+              find(freqHzCorr <= min(freqUb,inputFunctions.bandwidthHz(1,idxWave)),...
+                  1, 'last' );     
+
+          indexCorrFreqRange = [idxMinFreq:1:idxMaxFreq]';
+          indexCorrFreqRangeFull = [1:1:idxMaxFreq]';
+
+          %Now for the W data
+          idxWMinFreq = find(freqSimData.freqWHz(1:maxIdx,idx) <= max(freqLb,minFreqHz), 1, 'last' );
+          idxWMaxFreq = ...
+            find(freqSimData.freqWHz(1:maxIdx,idx) <= min(freqUb,inputFunctions.bandwidthHz(1,idxWave)),...
+                  1, 'last' );      
+
+          idxFreqRangeW = [idxWMinFreq:1:idxWMaxFreq]';
+          freqSimData.idxFreqRangeW(1,idx)=idxWMinFreq;
+          freqSimData.idxFreqRangeW(2,idx)=idxWMaxFreq;
+
+
           %Get a decent starting solution for the optimization routine
 
           k0 = mean(freqSimData.gain(indexCorrFreqRange,idx));
           d0 = (max(freqSimData.gain(indexCorrFreqRange,idx)) ...
                -min(freqSimData.gain(indexCorrFreqRange,idx))) ...
-               /(max(freqCorr(indexCorrFreqRange)));
+               /(max(freqCorr(indexCorrFreqRange))...
+                -min(freqCorr(indexCorrFreqRange)));
 
-          if(flag_usingOctave == 0)
-            f0 = fit(freqCorr(indexCorrFreqRange,1),...
-                     freqSimData.gain(indexCorrFreqRange,idx),...
-                     'poly1');
+          [stiffness,damping,exitFlag] = ...
+              fitSpringDamperToGainAndPhaseProfiles( ...
+                             freqCorr(indexCorrFreqRange,1),...
+                             freqSimData.gain(indexCorrFreqRange,idx),...
+                             freqSimData.phase(indexCorrFreqRange,idx),...
+                             flag_usingOctave);
 
-            k0 = f0.p2;
-            d0 = f0.p1;
-          end
-
-          if(k0 < 100)
-            k0 = 100;
-          end
-          if(d0 < 1)
-            d0 = 1;
-          end
-
-          %If fmincon is available, then constrain damping to be positive
-          A0 = [0 -1];
-          b0 = [ 0 ];
-          
-          x0 = [1,1];
-          argScaling =[k0,d0];
-          argScalingMin=1;
-          argScaling(argScaling<argScalingMin) = argScalingMin;
-          objScaling = 1;
-
-          err0 = calcFrequencyDomainSquaredError(x0, ...
-                    freqCorr(indexCorrFreqRange,1),...
-                    freqSimData.gain(indexCorrFreqRange,idx),...
-                    freqSimData.phase(indexCorrFreqRange,idx),...
-                    argScaling, ...
-                    objScaling);
-
-          objScaling  = 1/max(abs(err0),sqrt(eps));
-
-          errFcn0 = @(argX)calcFrequencyDomainSquaredError(argX, ...
-                    freqCorr(indexCorrFreqRange,1),...
-                    freqSimData.gain(indexCorrFreqRange,idx),...
-                    freqSimData.phase(indexCorrFreqRange,idx),...
-                    argScaling,objScaling);
-          if(idxModel==1 && idx==16)
-            err0=errFcn0(x0);
-            here=1;
-          end
-
-          paramOpt  = []; 
-          fval      = [];
-          exitFlag  = 0;
-          options   = [];
-          if(flag_usingOctave == 0)               
-            options=optimoptions('fmincon','Display','none','Algorithm','sqp');%optimset('Display','none');
-            [paramOpt, fval, exitFlag] = fmincon(errFcn0, x0,A0,b0,[],[],[],[],[],options);        
-          else
-            options=optimset('Display','none','Algorithm','sqp');%optimset('Display','none');
-            [paramOpt, fval, exitFlag] = fminsearch(errFcn0, x0,options);                        
-          end
-          k0 = paramOpt(1)*argScaling(1);
-          d0 = paramOpt(2)*argScaling(2);
-
-          %Now that we've got a decent initial solution, use it to
-          %adjust the scaling to the inputs and run the optimization 
-          %routine again.
-
-          argScaling = [k0,d0];
-          argScaling(argScaling<argScalingMin) = argScalingMin;
-
-          x1 = [0,0];
-          x1(1,1) = k0/argScaling(1);
-          x1(1,2) = d0/argScaling(2);
-          A1 = [0 -1];
-          b1 = [ 0 ];
-
-
-          err1 = calcFrequencyDomainSquaredError(x1, ...
-                    freqCorr(indexCorrFreqRange,1),...
-                    freqSimData.gain(indexCorrFreqRange,idx),...
-                    freqSimData.phase(indexCorrFreqRange,idx),argScaling,1);
-
-          objScaling = 1/max(sqrt(eps),abs(err1));
-
-          errFcn1 = @(argX)calcFrequencyDomainSquaredError(argX, ...
-                    freqCorr(indexCorrFreqRange,1),...
-                    freqSimData.gain(indexCorrFreqRange,idx),...
-                    freqSimData.phase(indexCorrFreqRange,idx),...
-                    argScaling,...
-                    objScaling);     
-
-          %options=optimset('Display','none');
-          %[paramOpt, fval, exitFlag] = fminsearch(errFcn, [k1, d1],options); 
-
-          if(flag_usingOctave==0)       
-            [paramOpt, fval, exitFlag] = fmincon(errFcn1, x1,A1,b1,[],[],[],[],[],options);        
-          else
-            [paramOpt, fval, exitFlag] = fminsearch(errFcn1, x1,options);
-          end
-
-
-          freqSimData.stiffness(1,idx) = paramOpt(1)*argScaling(1);
-          freqSimData.damping(1,idx)   = paramOpt(2)*argScaling(2);
+          freqSimData.stiffness(1,idx) = stiffness;
+          freqSimData.damping(1,idx)   = damping;
 
           %Evaluate the time-domain response and frequency-domain
           %response of the spring-damper model of best fit.
 
           modelResponseTime = ...
-            (inputFunctions.x(inputFunctions.idxSignal,idxWave)./lengthNorm ...
-             ).*freqSimData.stiffness(1,idx) ...
-            +(inputFunctions.xdot(inputFunctions.idxSignal,idxWave...
-             )./lengthNorm).*freqSimData.damping(1,idx);
+            (inputFunctions.x(inputFunctions.idxSignal,idxWave).*freqSimData.stiffness(1,idx) ...
+            +inputFunctions.xdot(inputFunctions.idxSignal,idxWave).*freqSimData.damping(1,idx))./lengthNorm;
 
           normFactor = forceNorm/lengthNorm;
           freqSimData.forceKD(:,idx) = ...
@@ -401,6 +355,218 @@ for idxModel = 1:1:length(simSeriesFiles)
                      -modelPhase(indexCorrFreqRange,1)); 
 
           freqSimData.vafPhase(1,idx)     = (pVar-pmVar)/pVar;
+
+          %%
+          % Now using the values evaluated using the cspd 
+          %%
+          k0W = mean(freqSimData.gainW(idxFreqRangeW,idx));
+          d0W = (max(freqSimData.gainW(idxFreqRangeW,idx)) ...
+               -min(freqSimData.gainW(idxFreqRangeW))) ...
+               /(max(freqW(idxFreqRangeW,1))...
+                -min(freqW(idxFreqRangeW,1)));
+
+          [stiffnessW,dampingW,exitFlagW] = ...
+              fitSpringDamperToGainAndPhaseProfiles( ...
+                             freqW(idxFreqRangeW,1),...
+                             freqSimData.gainW(idxFreqRangeW,idx),...
+                             freqSimData.phaseW(idxFreqRangeW,idx),...
+                             flag_usingOctave);
+
+          freqSimData.stiffnessW(1,idx) = stiffnessW;
+          freqSimData.dampingW(1,idx)   = dampingW;
+%Evaluate the time-domain response and frequency-domain
+          %response of the spring-damper model of best fit.
+
+          modelResponseTimeW = ...
+            (inputFunctions.x(inputFunctions.idxSignal,idxWave).*freqSimData.stiffnessW(1,idx) ...
+            +inputFunctions.xdot(inputFunctions.idxSignal,idxWave).*freqSimData.dampingW(1,idx))./lengthNorm;
+
+          normFactor = forceNorm/lengthNorm;
+          freqSimData.forceKDW(:,idx) = ...
+             (inputFunctions.x(:,idxWave)   ).*(freqSimData.stiffnessW(1,idx)*normFactor) ...
+            +(inputFunctions.xdot(:,idxWave)).*(freqSimData.dampingW(1,idx)*normFactor);
+
+          modelResponseFreqW = ...
+            calcFrequencyModelResponse( freqSimData.stiffnessW(1,idx),...
+                                        freqSimData.dampingW(1,idx),freqW);
+
+          flag_debugW=1;
+          if(flag_debugW==1)
+              
+              figW = figure;
+
+              subplot(1,2,1);
+              plot(freqHzCorr(indexCorrFreqRange,1),...
+                   freqSimData.gain(indexCorrFreqRange,idx),'Color',[1,0.75,0.75],'LineWidth',2);
+              hold on;              
+              plot(freqHzCorr(indexCorrFreqRange,1),...
+                   abs(modelResponseFreq(indexCorrFreqRange,1)),'Color',[0.75,0.75,0.75],'LineWidth',2);
+              hold on;
+              %xlabel('Frequency (Hz)');
+              %ylabel('Gain (N/m)');
+    
+              plot(freqWHz(idxFreqRangeW,1),...
+                      freqSimData.gainW(idxFreqRangeW,idx),'b');
+              hold on;
+              plot(freqWHz(idxFreqRangeW,1),...
+                   abs(modelResponseFreqW(idxFreqRangeW,1)),'--k');
+              hold on;
+              xlabel('Frequency (Hz)');
+              ylabel('Gain (N/m)');
+
+              subplot(1,2,2);
+              plot(freqHzCorr(indexCorrFreqRange,1),...
+                   freqSimData.phase(indexCorrFreqRange,idx).*(180/pi),'Color',[1,0.75,0.75],'LineWidth',2);
+              hold on;
+              plot(freqHzCorr(indexCorrFreqRange,1),...
+                   angle(modelResponseFreq(indexCorrFreqRange,1)).*(180/pi),'Color',[0.75,0.75,0.75],'LineWidth',2);
+              hold on;              
+              %xlabel('Frequency (Hz)');
+              %ylabel('Phase (degrees)');
+
+              %subplot(2,2,4);
+              plot( freqWHz(idxFreqRangeW,1),...
+                    freqSimData.phaseW(idxFreqRangeW,idx).*(180/pi),'b');
+              hold on;
+              plot(freqWHz(idxFreqRangeW,1),...
+                   angle(modelResponseFreqW(idxFreqRangeW,1)).*(180/pi),'--k');
+              hold on;
+              fprintf('%1.1f\t%1.1f : stiffness\n',stiffness,stiffnessW);
+              fprintf('%1.1f\t%1.1f : damping\n',damping,dampingW);
+              here=1;
+              pause(0.1);
+              close(figW);
+          end
+
+          %Evaluate the VAF or Variance Accounted For in the time
+          %domain. I've also done this in the frequency domain, but
+          %it is less insightful there: the nonlinearity of the model
+          %introduces quite a bit of variance.
+          
+          yVar  = var(y);
+          ymVarW = var(y-modelResponseTimeW);              
+          freqSimData.vafTimeW(1,idx)     = (yVar-ymVarW)/yVar;
+
+          if( idx==82 && contains(simSeriesFiles{idxModel},'benchRecordVexat_ElasticTendon')==1)
+             here=1;
+          end
+
+          modelGainW  =    abs(modelResponseFreqW);
+          modelPhaseW =  angle(modelResponseFreqW);
+
+          freqSimData.gainKDW(1:maxIdx,idx) = modelGainW;
+          freqSimData.phaseKDW(1:maxIdx,idx) = modelPhaseW;
+
+          gVarW  = var(freqSimData.gainW(idxFreqRangeW,idx));
+          gmVarW = var(freqSimData.gainW(idxFreqRangeW,idx) ...
+                     - modelGainW(idxFreqRangeW,1));                                                
+          freqSimData.vafGainW(1,idx)     = (gVarW-gmVarW)/gVarW;
+
+          pVarW  = var(freqSimData.phaseW(idxFreqRangeW,idx));
+          pmVarW = var(freqSimData.phaseW(idxFreqRangeW,idx) ...
+                     -modelPhaseW(idxFreqRangeW,1)); 
+
+          freqSimData.vafPhaseW(1,idx)     = (pVarW-pmVarW)/pVarW;
+
+          here=1;
+%           if(flag_usingOctave == 0)
+%             f0 = fit(freqCorr(indexCorrFreqRange,1),...
+%                      freqSimData.gain(indexCorrFreqRange,idx),...
+%                      'poly1');
+% 
+%             k0 = f0.p2;
+%             d0 = f0.p1;
+%           end
+% 
+%           if(k0 < 100)
+%             k0 = 100;
+%           end
+%           if(d0 < 1)
+%             d0 = 1;
+%           end
+% 
+%           %If fmincon is available, then constrain damping to be positive
+%           A0 = [0 -1];
+%           b0 = [ 0 ];
+%           
+%           x0 = [1,1];
+%           argScaling =[k0,d0];
+%           argScalingMin=1;
+%           argScaling(argScaling<argScalingMin) = argScalingMin;
+%           objScaling = 1;
+% 
+%           err0 = calcFrequencyDomainSquaredError(x0, ...
+%                     freqCorr(indexCorrFreqRange,1),...
+%                     freqSimData.gain(indexCorrFreqRange,idx),...
+%                     freqSimData.phase(indexCorrFreqRange,idx),...
+%                     argScaling, ...
+%                     objScaling);
+% 
+%           objScaling  = 1/max(abs(err0),sqrt(eps));
+% 
+%           errFcn0 = @(argX)calcFrequencyDomainSquaredError(argX, ...
+%                     freqCorr(indexCorrFreqRange,1),...
+%                     freqSimData.gain(indexCorrFreqRange,idx),...
+%                     freqSimData.phase(indexCorrFreqRange,idx),...
+%                     argScaling,objScaling);
+%           if(idxModel==1 && idx==16)
+%             err0=errFcn0(x0);
+%             here=1;
+%           end
+% 
+%           paramOpt  = []; 
+%           fval      = [];
+%           exitFlag  = 0;
+%           options   = [];
+%           if(flag_usingOctave == 0)               
+%             options=optimoptions('fmincon','Display','none','Algorithm','sqp');%optimset('Display','none');
+%             [paramOpt, fval, exitFlag] = fmincon(errFcn0, x0,A0,b0,[],[],[],[],[],options);        
+%           else
+%             options=optimset('Display','none','Algorithm','sqp');%optimset('Display','none');
+%             [paramOpt, fval, exitFlag] = fminsearch(errFcn0, x0,options);                        
+%           end
+%           k0 = paramOpt(1)*argScaling(1);
+%           d0 = paramOpt(2)*argScaling(2);
+% 
+%           %Now that we've got a decent initial solution, use it to
+%           %adjust the scaling to the inputs and run the optimization 
+%           %routine again.
+% 
+%           argScaling = [k0,d0];
+%           argScaling(argScaling<argScalingMin) = argScalingMin;
+% 
+%           x1 = [0,0];
+%           x1(1,1) = k0/argScaling(1);
+%           x1(1,2) = d0/argScaling(2);
+%           A1 = [0 -1];
+%           b1 = [ 0 ];
+% 
+% 
+%           err1 = calcFrequencyDomainSquaredError(x1, ...
+%                     freqCorr(indexCorrFreqRange,1),...
+%                     freqSimData.gain(indexCorrFreqRange,idx),...
+%                     freqSimData.phase(indexCorrFreqRange,idx),argScaling,1);
+% 
+%           objScaling = 1/max(sqrt(eps),abs(err1));
+% 
+%           errFcn1 = @(argX)calcFrequencyDomainSquaredError(argX, ...
+%                     freqCorr(indexCorrFreqRange,1),...
+%                     freqSimData.gain(indexCorrFreqRange,idx),...
+%                     freqSimData.phase(indexCorrFreqRange,idx),...
+%                     argScaling,...
+%                     objScaling);     
+% 
+%           %options=optimset('Display','none');
+%           %[paramOpt, fval, exitFlag] = fminsearch(errFcn, [k1, d1],options); 
+% 
+%           if(flag_usingOctave==0)       
+%             [paramOpt, fval, exitFlag] = fmincon(errFcn1, x1,A1,b1,[],[],[],[],[],options);        
+%           else
+%             [paramOpt, fval, exitFlag] = fminsearch(errFcn1, x1,options);
+%           end
+% 
+
+          
 
           trialLabel = '';
 

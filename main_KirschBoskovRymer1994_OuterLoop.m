@@ -14,7 +14,7 @@
 
 %This flag allows us to avoid the memory clearing functions so that
 %this can be timed using tic and tock from within main_OuterLoop
-flag_OuterOuterLoopMode =1;
+flag_OuterOuterLoopMode =0;
 if(flag_OuterOuterLoopMode ==0)
     clc;
     close all;
@@ -37,7 +37,7 @@ projectFolders  = getProjectFolders(rootDir);
 %Run all of the simulations
 %%
 
-flag_runSimulations     = 1;
+flag_runSimulations     = 0;
 flag_frequencyAnalysis  = 1;
 flag_generatePlots      = 1;
 flag_generateTables     = 1;

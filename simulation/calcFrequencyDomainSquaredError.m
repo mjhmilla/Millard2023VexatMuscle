@@ -12,7 +12,7 @@
 %
 %%
 function sse = calcFrequencyDomainSquaredError(x, dataFreqRadians, dataGain,...
-   dataPhaseRadians, argScaling, objScaling)
+   dataPhaseRadians, argScaling, objScaling, gainScaling, phaseScaling)
 
 sse = 0;
 assert(length(x)==2)
@@ -27,7 +27,8 @@ for i=1:1:length(dataFreqRadians)
   gainError = (abs(modelResponse) - dataGain(i,1))/(dataGain(end,1));
   phaseError= (angle(modelResponse) - dataPhaseRadians(i,1))/(dataPhaseRadians(end,1));
   
-  errorSq = gainError*gainError + phaseError*phaseError;
+  errorSq = (gainError*gainError)*gainScaling ...
+           +(phaseError*phaseError)*phaseScaling;
   
   sse = sse + errorSq/(length(dataFreqRadians));
 end
