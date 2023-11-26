@@ -193,26 +193,32 @@ fig_fig12 = figure;
       flag_Hill = 1;
     end
 
+
     for i=1:1:length(nominalForce)
 
 
-    
-      idxSim = 0;
-      tol = 1e-6;
-      for m=1:1:size(freqSimData.force,2)     
-        if( abs(freqSimData.amplitudeMM(1,m)     - targetAmplitude   ) <= tol && ...
-            abs(freqSimData.bandwidthHz(1,m)     - targetBandwidth   ) <= tol && ...
-            abs(freqSimData.nominalForceDesired(1,m) - nominalForce(1,i) ) <= tol && ...
-            abs(freqSimData.normFiberLength(1,m) - normFiberLength   ) <= tol)
-          if(idxSim == 0)
-            idxSim = m;
-          else
-            assert(0); %Error condition: there should not be 2 simulations with 
-                       %the same configuration
-          end
-        end
-      end
-      
+  
+      idxSim = getFrequencySimulationIndex(targetAmplitude,  ...
+                                           targetBandwidth, ...
+                                           nominalForce(1,i),...
+                                           normFiberLength,...
+                                           freqSimData);          
+%       idxSim = 0;
+%       tol = 1e-6;
+%       for m=1:1:size(freqSimData.force,2)     
+%         if( abs(freqSimData.amplitudeMM(1,m)     - targetAmplitude   ) <= tol && ...
+%             abs(freqSimData.bandwidthHz(1,m)     - targetBandwidth   ) <= tol && ...
+%             abs(freqSimData.nominalForceDesired(1,m) - nominalForce(1,i) ) <= tol && ...
+%             abs(freqSimData.normFiberLength(1,m) - normFiberLength   ) <= tol)
+%           if(idxSim == 0)
+%             idxSim = m;
+%           else
+%             assert(0); %Error condition: there should not be 2 simulations with 
+%                        %the same configuration
+%           end
+%         end
+%       end
+%       
       if(contains(freqSeriesFiles{1,z},'Vexat')==1 ...
               && flag_useElasticTendon == 1 ...
               && i==length(nominalForce))

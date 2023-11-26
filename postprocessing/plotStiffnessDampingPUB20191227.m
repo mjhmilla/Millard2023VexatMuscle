@@ -74,7 +74,7 @@ fig_fig12 = figure;
 
   targetAmplitude   = [0.8];
   targetBandwidth    = [35];
-
+  minFreqHz          = 4;
   expPlotColor      = [0.5,  0.5, 0.5;...
                        0.5,  0.5, 0.5];
   expLineWidth      = [1,1];
@@ -235,6 +235,39 @@ fig_fig12 = figure;
     idxK = 1+freqSeriesSubPlotOffsetIdx(1,z);
     idxD = 2+freqSeriesSubPlotOffsetIdx(1,z);
     
+    %Scan through the data to get the minimum and maximum VAF
+    %and the minimum and maximum bandwidth
+    vafMin = inf;
+    vafMax = -inf; 
+    bwMin = inf;
+    bwMax = -inf;
+    for j=1:1:length(nominalForce)
+
+
+      targetNominalForceN = nominalForce(1,j);
+      
+      idxSim = getFrequencySimulationIndex(targetAmplitude,  ...
+                                           targetBandwidth, ...
+                                           targetNominalForceN,...
+                                           normFiberLength,...
+                                           freqSimData);  
+
+       if(freqSimData.vafTime(1,idxSim) < vafMin)
+           vafMin = freqSimData.vafTime(1,idxSim);
+       end
+       if(freqSimData.vafTime(1,idxSim) > vafMax)
+           vafMax = freqSimData.vafTime(1,idxSim);
+       end
+       freqMin = freqSimData.freqHz(freqSimData.idxFreqRange(1,idxSim),idxSim);
+       freqMax = freqSimData.freqHz(freqSimData.idxFreqRange(2,idxSim),idxSim);
+       if(freqMin < bwMin)
+           bwMin=freqMin;
+       end
+       if(freqMax > bwMax)
+           bwMax = freqMax;
+       end
+    end
+
     for i=1:1:length(nominalForce)
     
       idxSim = 0;
@@ -314,10 +347,28 @@ fig_fig12 = figure;
         end
         
       end
-      text(posTextK(1,1)+textDeltaX,...
-           posTextK(1,2)+textDeltaY,vafText,...
-            'HorizontalAlignment',textAlign,...
-            'FontSize',6);
+      %text(posTextK(1,1)+textDeltaX,...
+      %     posTextK(1,2)+textDeltaY,vafText,...
+      %      'HorizontalAlignment',textAlign,...
+      %      'FontSize',6);
+      if(i==length(nominalForce))
+          vafBWText = '';
+          if(round(bwMin) > round(minFreqHz+1) ...
+                  || round(bwMax) < round(targetBandwidth-1))
+              vafBWText = sprintf('%1.0f%s-%1.0f%s VAF\n%1.0f-%1.0f Hz',...
+                                   round(vafMin*100),'\%',round(vafMax*100),'\%',...
+                                   round(bwMin),round(bwMax));
+          else
+              vafBWText = sprintf('%1.0f%s-%1.0f%s VAF',...
+                                   round(vafMin*100),'\%',round(vafMax*100),'\%');
+          end
+          text(posTextK(1,1),posTextK(1,2)+textDeltaY,...
+               vafBWText,...
+               'HorizontalAlignment','right',...
+               'VerticalAlignment','bottom',...
+               'FontSize',8,...
+               'Color',modelFaceColor);
+      end
       hold on;
 %       if(i==3)
 %          xyText =[sprintf('(%1.2f,%1.2f)',...
@@ -373,11 +424,11 @@ fig_fig12 = figure;
                 freqSimData.damping(1,idxSim)/1000];
               
               
-      text(posTextD(1,1)+textDeltaX,...
-           posTextD(1,2)+textDeltaY,[vafText],...
-            'HorizontalAlignment',textAlign,...
-            'FontSize',6);
-      hold on;
+%       text(posTextD(1,1)+textDeltaX,...
+%            posTextD(1,2)+textDeltaY,[vafText],...
+%             'HorizontalAlignment',textAlign,...
+%             'FontSize',6);
+%      hold on;
 %       if(i==3)
 %          xyText =[sprintf('(%1.2f,%1.2f)',...
 %                 freqSimData.nominalForce(1,idxSim),...

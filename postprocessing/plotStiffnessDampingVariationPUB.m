@@ -186,6 +186,7 @@ for z=1:1:length(freqSeriesFiles)
 
 
   
+  
   for i=1:1:length(mdlAmp9A)
     modelMarkType   = exp9AMarkType{i};
     modelFaceColor  = (1-mdl9APlotColorMod(1,i)).*modelColor ...
@@ -197,7 +198,9 @@ for z=1:1:length(freqSeriesFiles)
     targetAmplitudeMM = mdlAmp9A(1,i);
     targetBandwidthHz = mdlFreq9A(1,i);
     targetNormFiberLength = normFiberLength;
-  
+
+
+
     for j=1:1:length(nominalForce)
       targetNominalForceN = nominalForce(1,j);
       

@@ -38,7 +38,7 @@ projectFolders  = getProjectFolders(rootDir);
 %%
 
 flag_runSimulations     = 0;
-flag_frequencyAnalysis  = 1;
+flag_frequencyAnalysis  = 0;
 flag_generatePlots      = 1;
 flag_generateTables     = 1;
 

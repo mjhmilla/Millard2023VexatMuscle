@@ -152,31 +152,15 @@ for z=1:1:length(freqSeriesFiles)
 
     idxLb = find(freqSimData.coherenceSq(:,i)>=coherenceSqThreshold, 1 );
 
-%     %linearly interpolate to get the frequency at which the threshold is
-%     %crossed
-%     idxLbSpan = [idxLb-1;idxLb;idxLb+1];
-%     freqLb = interp1(freqSimData.coherenceSq(idxLbSpan,i),...
-%                      freqSimData.coherenceSqFrequency(idxLbSpan,i),...
-%                      coherenceSqThreshold);
-% 
     rawData(idx).coherenceSqFreqLb_x=[rawData(idx).coherenceSqFreqLb_x;...
                                       freqSimData.nominalForce(1,i)];    
     rawData(idx).coherenceSqFreqLb_y=[rawData(idx).coherenceSqFreqLb_y;...
-                                      freqSimData.bandwidthLinear(1,i)];
-% 
-%     idxUb = find(freqSimData.coherenceSq(:,i)>=coherenceSqThreshold, 1, 'last' );
-% 
-%     %linearly interpolate to get the frequency at which the threshold is
-%     %crossed
-%     idxUbSpan = [idxUb-1;idxUb;idxUb+1];
-%     freqUb = interp1(freqSimData.coherenceSq(idxUbSpan,i),...
-%                      freqSimData.coherenceSqFrequency(idxUbSpan,i),...
-%                      coherenceSqThreshold);
+                                      freqSimData.freqHz(freqSimData.idxFreqRange(1,i),i)];
 
     rawData(idx).coherenceSqFreqUb_x=[rawData(idx).coherenceSqFreqUb_x;...
                                       freqSimData.nominalForce(1,i)];    
     rawData(idx).coherenceSqFreqUb_y=[rawData(idx).coherenceSqFreqUb_y;...
-                                      freqSimData.bandwidthLinear(2,i)];
+                                      freqSimData.freqHz(freqSimData.idxFreqRange(2,i),i)];
     
     
   end

@@ -102,6 +102,7 @@ switch flag_Mode15Hz90HzBoth
                          1,1,1].*0.;    
     expMarkFaceColor = expPlotColor;
     xTicksVector = [4,15];
+
     
                        
   case 1
@@ -120,6 +121,8 @@ switch flag_Mode15Hz90HzBoth
                          1,1,1].*0.;     
     expMarkFaceColor = expPlotColor;
     xTicksVector = [4,15,90];                       
+
+    
   case 2
     expAmpPlot   = [1.6,1.6];
     expBWPlot    = [15, 90];    
@@ -137,12 +140,17 @@ switch flag_Mode15Hz90HzBoth
                          1,1,1].*0.;      
     expMarkFaceColor = expPlotColor;
     xTicksVector = [4,15,90];
+
     
   otherwise
     assert(0)
 end
 
+expMinimumFrequency = 4; %As in 4 Hz;
 
+kdMarkType = '-';
+kdLineWidth= 1;
+kdWhiteLineWidth = 3;
 
 
 chunkDuration = 0.2;        
@@ -257,9 +265,7 @@ end
 
 
 
-%%
-%Plot model data
-%%
+
 switch flag_Mode15Hz90HzBoth
   case 0
     modelAmpPlot =[1.6];
@@ -294,574 +300,9 @@ vafInput     = zeros(length(freqSeriesFiles),length(modelAmpPlot));
 lineHandlesModelGain = [];
 lineHandlesModelPhase = [];  
 
-for z=1:1:length(freqSeriesFiles)
-
-  modelColor = freqSeriesColor(z,:);
-  springDamperColor = springSeriesColor(z,:);
-  tmp = load([dataInputFolder, freqSeriesFiles{1,z}]);
-  freqSimData = tmp.freqSimData;
-
-  fprintf('%s VAF: %1.1f pm %1.1f, [%1.1f, %1.1f]\n',...
-           freqSeriesName{1,z}, ...
-           mean(freqSimData.vafTime)*100,...
-           std(freqSimData.vafTime)*100,...
-           min(freqSimData.vafTime)*100,...
-           max(freqSimData.vafTime)*100);
-
-  flag_Hill = 0;
-  if(isempty(strfind(freqSeriesFiles{1,z},'Hill'))==0)
-    flag_Hill = 1;
-  end
-
-  modelLineWidth = expLineWidth;
-
-  flagPlotEmpty  = ones(4,1);
-  
-  for k=1:1:length(modelAmpPlot)
-
-    k01                = 0.75*(k-1)/(length(modelAmpPlot));
-    lineColorFull(k,:) = modelColor;
-    lineColorKD(k,:)   = springDamperColor;
-    lineWidthKD        = 1.5;
-
-    idxSim = 0;
-    tol = 1e-6;
-    for m=1:1:size(freqSimData.force,2)     
-      if( abs(freqSimData.amplitudeMM(1,m)     - modelAmpPlot(1,k)        ) <= tol && ...
-          abs(freqSimData.bandwidthHz(1,m)     - modelBWPlot(1,k)         ) <= tol && ...
-          abs(freqSimData.nominalForceDesired(1,m)    - modelForce(1,k)          ) <= tol && ...
-          abs(freqSimData.normFiberLength(1,m) - modelNormFiberLength(1,k)) <= tol)
-
-        if(idxSim == 0)
-          idxSim = m;
-        else
-          assert(0); %Error condition: there should not be 2 simulations with 
-                     %the same configuration
-        end
-      end
-    end
-
-    idxWave = getSignalIndex(modelAmpPlot(1,k),...
-                             modelBWPlot(1,k),...
-                             inputFunctions);                            
-
-    idxForce15 = 6*(z-1)+1;
-    idxGain15  = 6*(z-1)+2;
-    idxPhase15 = 6*(z-1)+3;    
-    idxForce90 = 6*(z-1)+4;    
-    idxGain90  = 6*(z-1)+5;    
-    idxPhase90 = 6*(z-1)+6;
-    
-    %if(flag_Hill)
-    %  idxForce = 2;
-    %  idxGain  = 5;
-    %  idxPhase = 6;
-    %end
-
-    kdLineColor = lineColorKD(k,:);    
-
-    switch expBWPlot(1,k)
-          case 15
-                idxForce     = idxForce15;
-                idxGain      = idxGain15;
-                idxPhase     = idxPhase15;
-                xTicksVector = xTicksVector15;
-
-                %kdLineColor = (kdLineColor).*0.75 ...
-                %          +[1,1,1].*0.25;
-                
-
-          case 90
-                idxForce     = idxForce90;             
-                idxGain      = idxGain90;
-                idxPhase     = idxPhase90;
-                xTicksVector = xTicksVector90;
-                
-          otherwise
-              assert(0,'Invalid frequency selection');
-     end
-   
-                  
-    subplot('Position', [ subPlotList(idxForce,1),...
-                          subPlotList(idxForce,2),...
-                          subPlotList(idxForce,3),...
-                          subPlotList(idxForce,4)]);        
-                        
-%    if(flagPlotEmpty(z,1)==1 && k==length(modelAmpPlot))
-
-      yo = freqSimData.nominalForce(1,idxSim);
-
-      vafInput(z,k) = freqSimData.vafTime(1,idxSim);
-
-      spring = freqSimData.stiffness(1,idxSim)./1000;
-      damper = freqSimData.damping(1,idxSim)./1000;
-      kLabel = sprintf('%1.1f',spring);
-      dLabel = sprintf('%1.3f',damper);
-
-      kdLabel = ['K: ',kLabel,'N/mm, $$\beta$$: ',dLabel,'N/(mm/s)',...
-                 ' VAF ', num2str(round(freqSimData.vafTime(1,idxSim)*100)),'\%'];
-
-      kLabel = ['  K: ',kLabel,'N/mm'];
-      dLabel = ['  $$\beta$$: ',dLabel,'N/(mm/s)'];
-      vafLabel = [' VAF ', num2str(round(freqSimData.vafTime(1,idxSim)*100)),'\%'];
-
-      lineLabel = [ freqSeriesName{z}];
-
-
-
-    
-     
-
-      pidKD = plot( inputFunctions.time(idxChunk,1),...
-             freqSimData.forceKD(idxChunk,idxSim)+yo,...
-             'Color',lineColorKD(k,:),...
-             'LineWidth',lineWidthKD);
-      hold on;
-
-
-      pidMdl = plot( inputFunctions.time(idxChunk,1),...
-            freqSimData.force(idxChunk,idxSim),...
-            'Color',lineColorFull(k,:),...
-            'LineWidth',lineWidthFull(k,1));
-      hold on;  
-
-      simText = [num2str(modelAmpPlot(1,k)),'mm',' ',...
-                 num2str(modelBWPlot(1,k)),'Hz'];
-
-      tlabel = inputFunctions.time(idxChunk(1,1),1) ...
-               + 0.0*(max(inputFunctions.time(idxChunk,1))...
-                     -min(inputFunctions.time(idxChunk,1)));             
-
-      text( tlabel,...
-            plotForceMax*0.9,...
-            simText );        
-      hold on;
-
-      tlabel = inputFunctions.time(idxChunk(1,1),1) ...
-               + 0.1*(max(inputFunctions.time(idxChunk,1))...
-                     -min(inputFunctions.time(idxChunk,1)));
-      text( tlabel,...
-            plotForceMax*0.8,...
-            kLabel);        
-      hold on;
-      text( tlabel,...
-            plotForceMax*0.7,...
-            dLabel);        
-      hold on;
-      text( tlabel,...
-            plotForceMax*0.6,...
-            vafLabel);        
-      hold on;
-
-      box off;
-      set(gca,'color','none')
-
-      %lh = legend([pidMdl,pidKD],lineLabel,kdLabel,'Location','NorthWest');
-      %lh.Position(1,1) = lh.Position(1,1)-0.04;
-      %lh.Position(1,2) = lh.Position(1,2)+0.055;
-
-
-      %legend boxoff;
-      tmin = inputFunctions.time(idxChunk(1),1  )-0.01;
-      tmax = inputFunctions.time(idxChunk(end),1)+0.01;
-      xlim([tmin,...
-            tmax]);
-      ylim([0,plotForceMax]);
-      xticks(timeTicks);
-
-      f0 = freqSimData.force(idxChunk(1),idxSim);
-      fmax =max(freqSimData.force(idxChunk,idxSim));
-      fmin = 0;
-      yticks([0,round(f0,1),round(fmax,1)]);
-      set(gca,'color','none')
-
-      tmin = min(inputFunctions.time(idxChunk,1));
-      tmax = max(inputFunctions.time(idxChunk,1));
-
-      %if(k == 1)
-        idxSubPlot = idxForce;
-        if(idxForce==idxForce15)
-            tc = text(tmin-0.35*(tmax-tmin), 1.1*plotForceMax,...
-                   subPlotLabel{1,idxSubPlot},...
-                   'FontSize',figLabelFontSize,...
-                   'HorizontalAlignment','left');   
-            hold on;
-
-        else
-            tc = text(tmin+0.5*(tmax-tmin), 1.1*plotForceMax,...
-                   subPlotLabel{1,idxSubPlot},...
-                   'FontSize',figLabelFontSize,...
-                   'HorizontalAlignment','center');   
-            hold on;
-        end
-      %end      
-      
-      ylabel('Force (N)');
-      xlabel('Time (s)');
-      
-      if( (idxForce==idxForce15 && z==1) || ...
-          (idxForce==idxForce15 && z==3)    )
-        x0 = subPlotList(idxForce15,1);
-        y0 = subPlotList(idxForce15,2);
-        dx = subPlotList(idxForce15,3);
-        dy = subPlotList(idxForce15,4);
-
-        %text(tmin,plotForceMax*1.2,'Simulation of Kirsch, Boskov, \& Rymer 1994',...
-        %'FontSize',8*1.2,...
-        %'HorizontalAlignment','left',...
-        %'VerticalAlignment','bottom');
-        %hold on;     
-
-      end
-
-%       if(z==3 )
-%         x0 = subPlotList(idxForce90,1);
-%         y0 = subPlotList(idxForce,2);
-%         dx = subPlotList(idxForce,3);
-%         dy = subPlotList(idxForce,4);
-% 
-%         text(tmin,plotForceMax*1.2,'Simulation of Kirsch, Boskov, \& Rymer 1994',...
-%         'FontSize',8*1.2,...
-%         'HorizontalAlignment','left',...
-%         'VerticalAlignment','bottom');
-%         hold on;     
-
-  end        
-%    end
-    
-
- 
-
-
-
 %%
 % Plot the experimental data
 %%
-  for k=1:1:length(expAmpPlot)
-
-    idxSim = 0;
-    tol = 1e-6;
-    for m=1:1:size(freqSimData.force,2)     
-      if( abs(freqSimData.amplitudeMM(1,m) - expAmpPlot(1,k)) <= tol && ...
-          abs(freqSimData.bandwidthHz(1,m) - expBWPlot(1,k))  <= tol && ...
-          abs(freqSimData.nominalForceDesired(1,m)- modelForce(1,k)) <= tol && ...
-          abs(freqSimData.normFiberLength(1,m)-modelNormFiberLength(1,k)) <= tol)
-
-        if(idxSim == 0)
-          idxSim = m;
-        else
-          assert(0); %Error condition: there should not be 2 simulations with 
-                     %the same configuration
-        end
-      end
-    end      
-
-    fprintf('%i. K: %1.3f D: %1.3f\n',idxSim,...
-              freqSimData.stiffness(1,idxSim)./1000,...
-              freqSimData.damping(1,idxSim)./1000);
-
-    %
-    idxRange = [freqSimData.idxFreqRange(1,idxSim):1: ...
-                freqSimData.idxFreqRange(2,idxSim)];
-
-    idxCutoff = freqSimData.idxFreqRange(1,idxSim);
-
-    
-
-    idxForce15 = 6*(z-1)+1;
-    idxGain15  = 6*(z-1)+2;
-    idxPhase15 = 6*(z-1)+3;    
-    idxForce90 = 6*(z-1)+4;    
-    idxGain90  = 6*(z-1)+5;    
-    idxPhase90 = 6*(z-1)+6;
-    
-
-
-    kdLineColor = lineColorKD(k,:);
-
-    switch expBWPlot(1,k)
-        case 15
-            idxForce     = idxForce15;
-            idxGain      = idxGain15;
-            idxPhase     = idxPhase15;
-            xTicksVector = xTicksVector15;
-            %kdLineColor = (kdLineColor).*0.75 ...
-            %              +[1,1,1].*0.25;
-            
-        case 90
-            idxForce     = idxForce90;            
-            idxGain      = idxGain90;
-            idxPhase     = idxPhase90;
-            xTicksVector = xTicksVector90;
-            
-        otherwise
-    end
-
-
-    subplot('Position', subPlotList(idxGain,:));
-
-    markType = '.';
-    markFaceColor = freqSeriesColor(z,:);
-    markSize = 2;
-    lineWidth = 0.5;
-    kdMarkType = '-';
-    kdLineWidth= 1;
-    kdWhiteLineWidth = 3;
-    
-%     if(k==2)        
-%       markType = 'o';
-%       markFaceColor = [1,1,1];
-%       markSize = 3;
-%       lineWidth=0.5;
-%       kdMarkType = '-';
-%       kdLineWidth= 1;
-%       kdWhiteLineWidth = 3;
-%       kdLineColor = freqSeriesColor(z,:).*0.5 + [1,1,1].*0.5;
-% 
-%     end
-
-    trialName = sprintf(': %1.1fmm %1.0fHz',...
-                        freqSimData.amplitudeMM(1,idxSim),...
-                        freqSimData.bandwidthHz(1,idxSim));
-
-    plot(freqSimData.freqHz(idxRange,1), ...
-         freqSimData.gain(idxRange,idxSim)./1000,...
-         markType,'Color',markFaceColor, ...
-         'MarkerFaceColor',markFaceColor,'LineWidth',lineWidth,...
-         'MarkerSize',markSize,'DisplayName',[freqSeriesName{z}]);  
-    hold on;
-
-    pidW=plot(freqSimData.freqHz(idxRange,1), ...
-         freqSimData.gainKD(idxRange,idxSim)./1000,...
-         '-','Color',[1,1,1], ...
-         'LineWidth',kdWhiteLineWidth);  
-    hold on;
-    set(get(get(pidW,'Annotation'),...
-              'LegendInformation'),...
-              'IconDisplayStyle','off');      
-
-    pidL=plot(freqSimData.freqHz(idxRange,1), ...
-         freqSimData.gainKD(idxRange,idxSim)./1000,...
-         kdMarkType,'Color',kdLineColor, ...
-         'LineWidth',kdLineWidth,'DisplayName', [springSeriesName{z}]);
-    hold on;
-
-    
-
-    lineHandlesModelGain = [lineHandlesModelGain,...
-                            pidW,...
-                            pidL];
-
-
-
-    x0 = min(xTicksVector)-0.01;
-    x1 = max(xTicksVector)+0.01;
-    xlim([x0,x1]);
-    xticks(xTicksVector);
-    xtickangle(0);
-
-    gmin = 0.;%min(freqSimData.gain(idxRange,idxSim)./1000);
-    gmax = 8.01;
-    ylim([gmin,gmax]);
-    yticks([0,2,4,6,8]);
-
-    %if(k == 1)
-      idxSubPlot = idxGain;
-      text(x0+0.5*(x1-x0), 1.1*gmax,...
-             subPlotLabel{1,idxSubPlot},...
-             'FontSize',figLabelFontSize,...
-             'HorizontalAlignment','center');   
-      hold on;
-    %end
-
-    %Evaluate the mean squared error between the response of the model
-    %and Kirch et al.'s measurements
-    strAmp = num2str(expAmpPlot(1,k));
-    strFreq= num2str(expBWPlot(1,k));
-    
-    idxExpGain = 0;
-    tol = 1e-6;
-    for m=1:1:length(dataKBR1994Fig3Gain)           
-      if( contains(dataKBR1994Fig3Gain(m).seriesName,strFreq) && ...
-          contains(dataKBR1994Fig3Gain(m).seriesName,strAmp))        
-        if(idxExpGain == 0)
-          idxExpGain = m;
-        else
-          assert(0); %Error condition: there should not be 2 simulations with 
-                     %the same configuration
-        end
-      end
-    end     
-
-    gainSumErrSq = 0;
-    for idxPoint = 1:1:length(idxRange)
-        wPt = freqSimData.freqHz(idxRange(1,idxPoint),1);
-        gPt = interp1(dataKBR1994Fig3Gain(idxExpGain).x,...
-                      dataKBR1994Fig3Gain(idxExpGain).y,...
-                      wPt);
-        err = gPt - freqSimData.gain(idxRange(1,idxPoint),idxSim)/1000;
-        gainSumErrSq = gainSumErrSq + err*err;
-    end
-    gainRMSE = sqrt(gainSumErrSq / length(idxRange));
-    gainRMSEStr = sprintf('RMSE:\n %1.2fN/mm',gainRMSE);
-
-    xPos = 0;
-    yPos = 0;
-    vAlign = 'bottom';
-    hAlign = 'right';
-
-    if(expBWPlot(1,k) == 90)
-        hAlign = 'right';
-        vAlign = 'bottom';
-        xPos = 0.95;
-        yPos = 0.05;
-    else
-        hAlign = 'left';
-        vAlign = 'top';
-        xPos = 0.05;
-        yPos = 0.95;
-    end
-
-    text('Units','normalized','Position',[xPos,yPos],...
-         'String',gainRMSEStr,'FontSize',6,...
-         'HorizontalAlignment',hAlign,...
-         'VerticalAlignment',vAlign,...
-         'BackgroundColor',[1,1,1],...
-         'Margin',0.1);
-    hold on;
-    
-    box off;
-    set(gca,'color','none')        
-
-    hold on;
-
-
-
-
-    %tc0 = text(fmin-0.15*(fmax-fmin), 1.45*(gmax),...
-    %       'C.','FontSize',11);       
-
-    subplot('Position', subPlotList(idxPhase,:));
-
-    plot(freqSimData.freqHz(idxRange,1), ...
-         freqSimData.phase(idxRange,idxSim).*(180/pi),...
-         markType,'Color',markFaceColor, ...
-         'MarkerFaceColor',markFaceColor,'LineWidth',0.5,...
-         'MarkerSize',markSize,...
-         'DisplayName',[freqSeriesName{z}]);   
-    hold on;
-
-    pidW=plot(freqSimData.freqHz(idxRange,1), ...
-         freqSimData.phaseKD(idxRange,idxSim).*(180/pi),...
-         '-','Color',[1,1,1], ...
-         'LineWidth',kdWhiteLineWidth);  
-    hold on;
-    set(get(get(pidW,'Annotation'),...
-              'LegendInformation'),...
-              'IconDisplayStyle','off');      
-
-    pidL=plot(freqSimData.freqHz(idxRange,1), ...
-         freqSimData.phaseKD(idxRange,idxSim).*(180/pi),...
-         kdMarkType,'Color',kdLineColor, ...
-         'LineWidth',kdLineWidth,'DisplayName',[springSeriesName{z}]);  
-    hold on;      
-
-    strAmp = num2str(expAmpPlot(1,k));
-    strFreq= num2str(expBWPlot(1,k));
-    
-    idxExpPhase = 0;
-    tol = 1e-6;
-    for m=1:1:length(dataKBR1994Fig3Phase)           
-      if( contains(dataKBR1994Fig3Phase(m).seriesName,strFreq) && ...
-          contains(dataKBR1994Fig3Phase(m).seriesName,strAmp))        
-        if(idxExpPhase == 0)
-          idxExpPhase = m;
-        else
-          assert(0); %Error condition: there should not be 2 simulations with 
-                     %the same configuration
-        end
-      end
-    end     
-
-    phaseSumErrSq = 0;
-    for idxPoint = 1:1:length(idxRange)
-        wPt = freqSimData.freqHz(idxRange(1,idxPoint),1);
-        pPt = interp1(dataKBR1994Fig3Phase(idxExpPhase).x,...
-                      dataKBR1994Fig3Phase(idxExpPhase).y,...
-                      wPt);
-        err = pPt - freqSimData.phase(idxRange(1,idxPoint),idxSim).*(180/pi);
-        phaseSumErrSq = phaseSumErrSq + err*err;
-    end
-
-
-    phaseRMSE = sqrt(phaseSumErrSq / length(idxRange));
-    phaseRMSEStr = sprintf('RMSE:\n %1.1f%s',phaseRMSE,'$^\circ$');
-
-    xPos = 0;
-    yPos = 0;
-    vAlign = 'bottom';
-    hAlign = 'right';
-    %if(flag_Hill==1)
-        if(expBWPlot(1,k) == 90)
-            hAlign = 'right';
-            vAlign = 'bottom';
-            xPos = 0.95;
-            yPos = 0.05;
-        else
-            hAlign = 'left';
-            vAlign = 'bottom';
-            xPos = 0.05;
-            yPos = 0.05;
-        end
-    %else
-    %    hAlign = 'left';
-    %    vAlign = 'top';
-    %    xPos = 0.05;
-    %    yPos = 0.95;
-    %end
-
-    text('Units','normalized','Position',[xPos,yPos],...
-         'String',phaseRMSEStr,'FontSize',6,...
-         'HorizontalAlignment',hAlign,...
-         'VerticalAlignment',vAlign,...
-         'BackgroundColor',[1,1,1],...
-         'Margin',0.1);
-    hold on;
-
-
-    lineHandlesModelPhase = [lineHandlesModelPhase,...
-                            pidW,...
-                            pidL];
-
-
-    box off;
-    set(gca,'color','none')
-
-    pmin = 0;
-    pmax = 90.01;
-    ylim([pmin,pmax]);
-    yticks([0,45,90]);
-
-    x0 = min(xTicksVector)-0.01;
-    x1 = max(xTicksVector)+0.01;
-    xlim([x0,x1]);
-    xticks(xTicksVector);
-    xtickangle(0);
-
-    %if(k == 1)
-      idxSubPlot = idxPhase;      
-      text(x0+0.5*(x1-x0), 1.1*pmax,...
-             subPlotLabel{1,idxSubPlot},...
-             'FontSize',figLabelFontSize, ...
-             'HorizontalAlignment','center');   
-      hold on;
-    %end
-
-
-  end
-
-end
-
 
 for z=1:1:length(freqSeriesFiles)
 
@@ -1089,8 +530,6 @@ for z=1:1:length(freqSeriesFiles)
   end
 
 
-  %xlabel(dataKBR1994Fig3Phase(idxExp).xName);
-  %ylabel(dataKBR1994Fig3Phase(idxExp).yName);
   x0 = min(xTicksVector)-0.01;
   x1 = max(xTicksVector)+0.01;
   xlim([x0,x1]);
@@ -1098,29 +537,654 @@ for z=1:1:length(freqSeriesFiles)
   set(gca,'color','none')
 
 
-  %if(flag_useElasticTendon==1 )
 
-%  if(z == 4)%length(freqSeriesFiles))
-%    lh = legend('Location','South');    
-%    lh.Position(1,1) = lh.Position(1,1) -0.15625;            
-%    lh.Position(1,2) = lh.Position(1,2) -0.140625;    
-%    lh.NumColumns=3;    
-%    legend boxoff;    
-%  end
+end
+
+%%
+% Plot the model data
+%%
+for z=1:1:length(freqSeriesFiles)
+
+  modelColor = freqSeriesColor(z,:);
+  springDamperColor = springSeriesColor(z,:);
+  tmp = load([dataInputFolder, freqSeriesFiles{1,z}]);
+  freqSimData = tmp.freqSimData;
+
+  fprintf('%s VAF: %1.1f pm %1.1f, [%1.1f, %1.1f]\n',...
+           freqSeriesName{1,z}, ...
+           mean(freqSimData.vafTime)*100,...
+           std(freqSimData.vafTime)*100,...
+           min(freqSimData.vafTime)*100,...
+           max(freqSimData.vafTime)*100);
+
+  flag_Hill = 0;
+  if(isempty(strfind(freqSeriesFiles{1,z},'Hill'))==0)
+    flag_Hill = 1;
+  end
+
+  modelLineWidth = expLineWidth;
+
+  flagPlotEmpty  = ones(4,1);
   
+  for k=1:1:length(modelAmpPlot)
+
+    k01                = 0.75*(k-1)/(length(modelAmpPlot));
+    lineColorFull(k,:) = modelColor;
+    lineColorKD(k,:)   = springDamperColor;
+    lineWidthKD        = 1.5;
+
+    idxSim = 0;
+    tol = 1e-6;
+    for m=1:1:size(freqSimData.force,2)     
+      if( abs(freqSimData.amplitudeMM(1,m)     - modelAmpPlot(1,k)        ) <= tol && ...
+          abs(freqSimData.bandwidthHz(1,m)     - modelBWPlot(1,k)         ) <= tol && ...
+          abs(freqSimData.nominalForceDesired(1,m)    - modelForce(1,k)          ) <= tol && ...
+          abs(freqSimData.normFiberLength(1,m) - modelNormFiberLength(1,k)) <= tol)
+
+        if(idxSim == 0)
+          idxSim = m;
+        else
+          assert(0); %Error condition: there should not be 2 simulations with 
+                     %the same configuration
+        end
+      end
+    end
+
+    idxWave = getSignalIndex(modelAmpPlot(1,k),...
+                             modelBWPlot(1,k),...
+                             inputFunctions);                            
+
+    idxForce15 = 6*(z-1)+1;
+    idxGain15  = 6*(z-1)+2;
+    idxPhase15 = 6*(z-1)+3;    
+    idxForce90 = 6*(z-1)+4;    
+    idxGain90  = 6*(z-1)+5;    
+    idxPhase90 = 6*(z-1)+6;
+    
+    %if(flag_Hill)
+    %  idxForce = 2;
+    %  idxGain  = 5;
+    %  idxPhase = 6;
+    %end
+
+    kdLineColor = lineColorKD(k,:);    
+
+    switch expBWPlot(1,k)
+          case 15
+                idxForce     = idxForce15;
+                idxGain      = idxGain15;
+                idxPhase     = idxPhase15;
+                xTicksVector = xTicksVector15;
+
+                %kdLineColor = (kdLineColor).*0.75 ...
+                %          +[1,1,1].*0.25;
+                
+
+          case 90
+                idxForce     = idxForce90;             
+                idxGain      = idxGain90;
+                idxPhase     = idxPhase90;
+                xTicksVector = xTicksVector90;
+                
+          otherwise
+              assert(0,'Invalid frequency selection');
+     end
+   
+                  
+    subplot('Position', [ subPlotList(idxForce,1),...
+                          subPlotList(idxForce,2),...
+                          subPlotList(idxForce,3),...
+                          subPlotList(idxForce,4)]);        
+                        
+%    if(flagPlotEmpty(z,1)==1 && k==length(modelAmpPlot))
+
+      yo = freqSimData.nominalForce(1,idxSim);
+
+      vafInput(z,k) = freqSimData.vafTime(1,idxSim);
+
+      spring = freqSimData.stiffness(1,idxSim)./1000;
+      damper = freqSimData.damping(1,idxSim)./1000;
+      kLabel = sprintf('%1.1f',spring);
+      dLabel = sprintf('%1.3f',damper);
+
+      kdLabel = ['K: ',kLabel,'N/mm, $$\beta$$: ',dLabel,'N/(mm/s)',...
+                 ' VAF ', num2str(round(freqSimData.vafTime(1,idxSim)*100)),'\%'];
+
+      kLabel = ['  K: ',kLabel,'N/mm'];
+      dLabel = ['  $$\beta$$: ',dLabel,'N/(mm/s)'];
+      vafLabel = [' VAF ', num2str(round(freqSimData.vafTime(1,idxSim)*100)),'\%'];
+
+      lineLabel = [ freqSeriesName{z}];
 
 
 
+    
+     
 
-%     if(flag_useElasticTendon==1)
-%       lh = legend('Location','NorthEast');  
-%       lh.Position(1,1) = lh.Position(1,1)+0.035;    
-%       lh.Position(1,2) = lh.Position(1,2)+0.09;
-%       lh.EdgeColor = lh.Color;
+      pidKD = plot( inputFunctions.time(idxChunk,1),...
+             freqSimData.forceKD(idxChunk,idxSim)+yo,...
+             'Color',lineColorKD(k,:),...
+             'LineWidth',lineWidthKD);
+      hold on;
+
+
+      pidMdl = plot( inputFunctions.time(idxChunk,1),...
+            freqSimData.force(idxChunk,idxSim),...
+            'Color',lineColorFull(k,:),...
+            'LineWidth',lineWidthFull(k,1));
+      hold on;  
+
+      simText = [num2str(modelAmpPlot(1,k)),'mm',' ',...
+                 num2str(modelBWPlot(1,k)),'Hz'];
+
+      tlabel = inputFunctions.time(idxChunk(1,1),1) ...
+               + 0.0*(max(inputFunctions.time(idxChunk,1))...
+                     -min(inputFunctions.time(idxChunk,1)));             
+
+      text( tlabel,...
+            plotForceMax*0.9,...
+            simText );        
+      hold on;
+
+      tlabel = inputFunctions.time(idxChunk(1,1),1) ...
+               + 0.1*(max(inputFunctions.time(idxChunk,1))...
+                     -min(inputFunctions.time(idxChunk,1)));
+      tlabel2 = inputFunctions.time(idxChunk(1,1),1) ...
+               + 0.05*(max(inputFunctions.time(idxChunk,1))...
+                     -min(inputFunctions.time(idxChunk,1)));
+      text( tlabel,...
+            plotForceMax*0.8,...
+            kLabel);        
+      hold on;
+      text( tlabel,...
+            plotForceMax*0.7,...
+            dLabel);        
+      hold on;
+
+      modelLabel = 'VEXAT';
+      if(flag_Hill==1)
+          modelLabel = 'Hill model';
+      end
+
+      text( tlabel,...
+            plotForceMax*0.2,...
+            sprintf('%s\n%s',modelLabel,vafLabel),...
+            'VerticalAlignment','top',...
+            'FontSize',6);        
+      hold on;
+
+
+    
+
+      %Draw the arrows
+      ax0 = tlabel2;
+      ay0 = 0.15*plotForceMax;
+      ax1 = tlabel2;
+      ay1 = yo-0.2;
+
+      plot([ax0;ax1],[ay0;ay1],'Color',lineColorFull(k,:));
+      hold on;
+
+
+      ax0 = tlabel2;
+      ay0 = 0.55*plotForceMax;
+      ax1 = 0.65;
+      ay1 = ay0;
+
+      text( tlabel2,...
+            ay0-0.1,...
+            sprintf('%s\n%s','Spring-damper','of best fit'),...
+            'VerticalAlignment','top',...
+            'FontSize',6);        
+      hold on;
+
+
+      plot([ax0;ax1],[ay0;ay1],'Color',lineColorKD(k,:));
+      hold on;
+
+      box off;
+      set(gca,'color','none')
+
+      %lh = legend([pidMdl,pidKD],lineLabel,kdLabel,'Location','NorthWest');
+      %lh.Position(1,1) = lh.Position(1,1)-0.04;
+      %lh.Position(1,2) = lh.Position(1,2)+0.055;
+
+
+      %legend boxoff;
+      tmin = inputFunctions.time(idxChunk(1),1  )-0.01;
+      tmax = inputFunctions.time(idxChunk(end),1)+0.01;
+      xlim([tmin,...
+            tmax]);
+      ylim([0,plotForceMax]);
+      xticks(timeTicks);
+
+      f0 = freqSimData.force(idxChunk(1),idxSim);
+      fmax =max(freqSimData.force(idxChunk,idxSim));
+      fmin = 0;
+      yticks([0,round(f0,1),round(fmax,1)]);
+      set(gca,'color','none')
+
+      tmin = min(inputFunctions.time(idxChunk,1));
+      tmax = max(inputFunctions.time(idxChunk,1));
+
+      %if(k == 1)
+        idxSubPlot = idxForce;
+        if(idxForce==idxForce15)
+            tc = text(tmin-0.35*(tmax-tmin), 1.1*plotForceMax,...
+                   subPlotLabel{1,idxSubPlot},...
+                   'FontSize',figLabelFontSize,...
+                   'HorizontalAlignment','left');   
+            hold on;
+
+        else
+            tc = text(tmin+0.5*(tmax-tmin), 1.1*plotForceMax,...
+                   subPlotLabel{1,idxSubPlot},...
+                   'FontSize',figLabelFontSize,...
+                   'HorizontalAlignment','center');   
+            hold on;
+        end
+      %end      
+      
+      ylabel('Force (N)');
+      xlabel('Time (s)');
+      
+      if( (idxForce==idxForce15 && z==1) || ...
+          (idxForce==idxForce15 && z==3)    )
+        x0 = subPlotList(idxForce15,1);
+        y0 = subPlotList(idxForce15,2);
+        dx = subPlotList(idxForce15,3);
+        dy = subPlotList(idxForce15,4);
+
+        %text(tmin,plotForceMax*1.2,'Simulation of Kirsch, Boskov, \& Rymer 1994',...
+        %'FontSize',8*1.2,...
+        %'HorizontalAlignment','left',...
+        %'VerticalAlignment','bottom');
+        %hold on;     
+
+      end
+
+%       if(z==3 )
+%         x0 = subPlotList(idxForce90,1);
+%         y0 = subPlotList(idxForce,2);
+%         dx = subPlotList(idxForce,3);
+%         dy = subPlotList(idxForce,4);
+% 
+%         text(tmin,plotForceMax*1.2,'Simulation of Kirsch, Boskov, \& Rymer 1994',...
+%         'FontSize',8*1.2,...
+%         'HorizontalAlignment','left',...
+%         'VerticalAlignment','bottom');
+%         hold on;     
+
+  end        
+%    end
+    
+
+ 
+
+
+
+  for k=1:1:length(expAmpPlot)
+
+    idxSim = 0;
+    tol = 1e-6;
+    for m=1:1:size(freqSimData.force,2)     
+      if( abs(freqSimData.amplitudeMM(1,m) - expAmpPlot(1,k)) <= tol && ...
+          abs(freqSimData.bandwidthHz(1,m) - expBWPlot(1,k))  <= tol && ...
+          abs(freqSimData.nominalForceDesired(1,m)- modelForce(1,k)) <= tol && ...
+          abs(freqSimData.normFiberLength(1,m)-modelNormFiberLength(1,k)) <= tol)
+
+        if(idxSim == 0)
+          idxSim = m;
+        else
+          assert(0); %Error condition: there should not be 2 simulations with 
+                     %the same configuration
+        end
+      end
+    end      
+
+    fprintf('%i. K: %1.3f D: %1.3f\n',idxSim,...
+              freqSimData.stiffness(1,idxSim)./1000,...
+              freqSimData.damping(1,idxSim)./1000);
+
+    %
+    idxRange = [freqSimData.idxFreqRange(1,idxSim):1: ...
+                freqSimData.idxFreqRange(2,idxSim)];
+
+    idxCutoff = freqSimData.idxFreqRange(1,idxSim);
+
+    
+
+    idxForce15 = 6*(z-1)+1;
+    idxGain15  = 6*(z-1)+2;
+    idxPhase15 = 6*(z-1)+3;    
+    idxForce90 = 6*(z-1)+4;    
+    idxGain90  = 6*(z-1)+5;    
+    idxPhase90 = 6*(z-1)+6;
+    
+
+
+    kdLineColor = lineColorKD(k,:);
+
+    switch expBWPlot(1,k)
+        case 15
+            idxForce     = idxForce15;
+            idxGain      = idxGain15;
+            idxPhase     = idxPhase15;
+            xTicksVector = xTicksVector15;
+            %kdLineColor = (kdLineColor).*0.75 ...
+            %              +[1,1,1].*0.25;
+            
+        case 90
+            idxForce     = idxForce90;            
+            idxGain      = idxGain90;
+            idxPhase     = idxPhase90;
+            xTicksVector = xTicksVector90;
+            
+        otherwise
+    end
+
+
+    subplot('Position', subPlotList(idxGain,:));
+
+    markType = '-';
+    markFaceColor = freqSeriesColor(z,:);
+    markSize = 2;
+    lineWidth = 1;
+    whiteLineWidth=3;
+
+    
+%     if(k==2)        
+%       markType = 'o';
+%       markFaceColor = [1,1,1];
+%       markSize = 3;
+%       lineWidth=0.5;
+%       kdMarkType = '-';
+%       kdLineWidth= 1;
+%       kdWhiteLineWidth = 3;
+%       kdLineColor = freqSeriesColor(z,:).*0.5 + [1,1,1].*0.5;
 % 
 %     end
 
+    trialName = sprintf(': %1.1fmm %1.0fHz',...
+                        freqSimData.amplitudeMM(1,idxSim),...
+                        freqSimData.bandwidthHz(1,idxSim));
+
+    plot(freqSimData.freqHz(idxRange,1), ...
+         freqSimData.gain(idxRange,idxSim)./1000,...
+         '-','Color',[1,1,1],'LineWidth',whiteLineWidth,...
+         'DisplayName','');  
+    hold on;
+
+    plot(freqSimData.freqHz(idxRange,1), ...
+         freqSimData.gain(idxRange,idxSim)./1000,...
+         markType,'Color',markFaceColor, ...
+         'MarkerFaceColor',markFaceColor,'LineWidth',lineWidth,...
+         'MarkerSize',markSize,'DisplayName',[freqSeriesName{z}]);  
+    hold on;
+
+    pidW=plot(freqSimData.freqHz(idxRange,1), ...
+         freqSimData.gainKD(idxRange,idxSim)./1000,...
+         '-','Color',[1,1,1], ...
+         'LineWidth',kdWhiteLineWidth,'DisplayName','');  
+    hold on;
+    set(get(get(pidW,'Annotation'),...
+              'LegendInformation'),...
+              'IconDisplayStyle','off');      
+
+    pidL=plot(freqSimData.freqHz(idxRange,1), ...
+         freqSimData.gainKD(idxRange,idxSim)./1000,...
+         kdMarkType,'Color',kdLineColor, ...
+         'LineWidth',kdLineWidth,'DisplayName', [springSeriesName{z}]);
+    hold on;
+
+
+    minFreq = min(freqSimData.freqHz(idxRange,1));
+    maxFreq= max(freqSimData.freqHz(idxRange,1));
+    plotYLim = ylim;
+    yDelta = max(ylim)-min(ylim);   
+
+
+
+    if(round(minFreq) > round(expMinimumFrequency+1))
+        text(freqSimData.freqHz(idxRange(1,1),1), ...
+             yDelta*0.05,...
+             sprintf('*%1.0f Hz',minFreq), ...
+             'FontSize',6,...
+             'VerticalAlignment','top',...
+             'HorizontalAlignment','left');
+        hold on;
+    end
+    if(round(maxFreq) < round(max(expBWPlot(1,k))-1))
+        text(freqSimData.freqHz(idxRange(1,end),1), ...
+             yDelta*0.05,...
+             sprintf('*%1.0f Hz',maxFreq), ...
+             'FontSize',6,...
+             'VerticalAlignment','top',...
+             'HorizontalAlignment','right');
+        hold on;
+    end    
+
+    lineHandlesModelGain = [lineHandlesModelGain,...
+                            pidW,...
+                            pidL];
+
+
+
+    x0 = min(xTicksVector)-0.01;
+    x1 = max(xTicksVector)+0.01;
+    xlim([x0,x1]);
+    xticks(xTicksVector);
+    xtickangle(0);
+
+    gmin = 0.;%min(freqSimData.gain(idxRange,idxSim)./1000);
+    gmax = 8.01;
+    ylim([gmin,gmax]);
+    yticks([0,2,4,6,8]);
+
+    %if(k == 1)
+      idxSubPlot = idxGain;
+      text(x0+0.5*(x1-x0), 1.1*gmax,...
+             subPlotLabel{1,idxSubPlot},...
+             'FontSize',figLabelFontSize,...
+             'HorizontalAlignment','center');   
+      hold on;
+    %end
+
+    %Evaluate the mean squared error between the response of the model
+    %and Kirch et al.'s measurements
+    strAmp = num2str(expAmpPlot(1,k));
+    strFreq= num2str(expBWPlot(1,k));
+    
+    idxExpGain = 0;
+    tol = 1e-6;
+    for m=1:1:length(dataKBR1994Fig3Gain)           
+      if( contains(dataKBR1994Fig3Gain(m).seriesName,strFreq) && ...
+          contains(dataKBR1994Fig3Gain(m).seriesName,strAmp))        
+        if(idxExpGain == 0)
+          idxExpGain = m;
+        else
+          assert(0); %Error condition: there should not be 2 simulations with 
+                     %the same configuration
+        end
+      end
+    end     
+
+    gainSumErrSq = 0;
+    for idxPoint = 1:1:length(idxRange)
+        wPt = freqSimData.freqHz(idxRange(1,idxPoint),1);
+        gPt = interp1(dataKBR1994Fig3Gain(idxExpGain).x,...
+                      dataKBR1994Fig3Gain(idxExpGain).y,...
+                      wPt);
+        err = gPt - freqSimData.gain(idxRange(1,idxPoint),idxSim)/1000;
+        gainSumErrSq = gainSumErrSq + err*err;
+    end
+    gainRMSE = sqrt(gainSumErrSq / length(idxRange));
+    gainRMSEStr = sprintf('RMSE:\n %1.2fN/mm',gainRMSE);
+
+    xPos = 0;
+    yPos = 0;
+    vAlign = 'bottom';
+    hAlign = 'right';
+
+    if(expBWPlot(1,k) == 90)
+        hAlign = 'right';
+        vAlign = 'bottom';
+        xPos = 0.95;
+        yPos = 0.05;
+    else
+        hAlign = 'left';
+        vAlign = 'top';
+        xPos = 0.05;
+        yPos = 0.95;
+    end
+
+    text('Units','normalized','Position',[xPos,yPos],...
+         'String',gainRMSEStr,'FontSize',6,...
+         'HorizontalAlignment',hAlign,...
+         'VerticalAlignment',vAlign,...
+         'BackgroundColor',[1,1,1],...
+         'Margin',0.1);
+    hold on;
+    
+    box off;
+    set(gca,'color','none')        
+
+    hold on;
+
+
+
+
+    %tc0 = text(fmin-0.15*(fmax-fmin), 1.45*(gmax),...
+    %       'C.','FontSize',11);       
+
+    subplot('Position', subPlotList(idxPhase,:));
+
+    plot(freqSimData.freqHz(idxRange,1), ...
+         freqSimData.phase(idxRange,idxSim).*(180/pi),...
+         '-','Color',[1,1,1], ...
+         'LineWidth',whiteLineWidth,'DisplayName','');   
+    hold on;
+
+    plot(freqSimData.freqHz(idxRange,1), ...
+         freqSimData.phase(idxRange,idxSim).*(180/pi),...
+         markType,'Color',markFaceColor, ...
+         'MarkerFaceColor',markFaceColor,'LineWidth',lineWidth,...
+         'MarkerSize',markSize,...
+         'DisplayName',[freqSeriesName{z}]);   
+    hold on;
+
+    pidW=plot(freqSimData.freqHz(idxRange,1), ...
+         freqSimData.phaseKD(idxRange,idxSim).*(180/pi),...
+         '-','Color',[1,1,1], ...
+         'LineWidth',kdWhiteLineWidth,'DisplayName','');  
+    hold on;
+    set(get(get(pidW,'Annotation'),...
+              'LegendInformation'),...
+              'IconDisplayStyle','off');      
+
+    pidL=plot(freqSimData.freqHz(idxRange,1), ...
+         freqSimData.phaseKD(idxRange,idxSim).*(180/pi),...
+         kdMarkType,'Color',kdLineColor, ...
+         'LineWidth',kdLineWidth,'DisplayName',[springSeriesName{z}]);  
+    hold on;      
+
+    strAmp = num2str(expAmpPlot(1,k));
+    strFreq= num2str(expBWPlot(1,k));
+    
+    idxExpPhase = 0;
+    tol = 1e-6;
+    for m=1:1:length(dataKBR1994Fig3Phase)           
+      if( contains(dataKBR1994Fig3Phase(m).seriesName,strFreq) && ...
+          contains(dataKBR1994Fig3Phase(m).seriesName,strAmp))        
+        if(idxExpPhase == 0)
+          idxExpPhase = m;
+        else
+          assert(0); %Error condition: there should not be 2 simulations with 
+                     %the same configuration
+        end
+      end
+    end     
+
+    phaseSumErrSq = 0;
+    for idxPoint = 1:1:length(idxRange)
+        wPt = freqSimData.freqHz(idxRange(1,idxPoint),1);
+        pPt = interp1(dataKBR1994Fig3Phase(idxExpPhase).x,...
+                      dataKBR1994Fig3Phase(idxExpPhase).y,...
+                      wPt);
+        err = pPt - freqSimData.phase(idxRange(1,idxPoint),idxSim).*(180/pi);
+        phaseSumErrSq = phaseSumErrSq + err*err;
+    end
+
+
+    phaseRMSE = sqrt(phaseSumErrSq / length(idxRange));
+    phaseRMSEStr = sprintf('RMSE:\n %1.1f%s',phaseRMSE,'$^\circ$');
+
+    xPos = 0;
+    yPos = 0;
+    vAlign = 'bottom';
+    hAlign = 'right';
+    %if(flag_Hill==1)
+        if(expBWPlot(1,k) == 90)
+            hAlign = 'right';
+            vAlign = 'bottom';
+            xPos = 0.95;
+            yPos = 0.05;
+        else
+            hAlign = 'left';
+            vAlign = 'bottom';
+            xPos = 0.05;
+            yPos = 0.05;
+        end
+    %else
+    %    hAlign = 'left';
+    %    vAlign = 'top';
+    %    xPos = 0.05;
+    %    yPos = 0.95;
+    %end
+
+    text('Units','normalized','Position',[xPos,yPos],...
+         'String',phaseRMSEStr,'FontSize',6,...
+         'HorizontalAlignment',hAlign,...
+         'VerticalAlignment',vAlign,...
+         'BackgroundColor',[1,1,1],...
+         'Margin',0.1);
+    hold on;
+
+
+    lineHandlesModelPhase = [lineHandlesModelPhase,...
+                            pidW,...
+                            pidL];
+
+
+    box off;
+    set(gca,'color','none')
+
+    pmin = 0;
+    pmax = 90.01;
+    ylim([pmin,pmax]);
+    yticks([0,45,90]);
+
+    x0 = min(xTicksVector)-0.01;
+    x1 = max(xTicksVector)+0.01;
+    xlim([x0,x1]);
+    xticks(xTicksVector);
+    xtickangle(0);
+
+    %if(k == 1)
+      idxSubPlot = idxPhase;      
+      text(x0+0.5*(x1-x0), 1.1*pmax,...
+             subPlotLabel{1,idxSubPlot},...
+             'FontSize',figLabelFontSize, ...
+             'HorizontalAlignment','center');   
+      hold on;
+    %end
+
+
+  end
+
 end
+
+
 
 %for i=1:1:length(lineHandlesModelPhase)
 %uistack(lineHandlesModelPhase(i),'top');

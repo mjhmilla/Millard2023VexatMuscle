@@ -84,12 +84,17 @@ k=4.46;  %Stiffness: 4.46 N/mm
 d=0.0089;%Damping  : feel free to adjust
 
 %Form a nearly perfect derivative of x
+% Due to numerical error, I presume, the first padding area of xDot is 
+% non-zero even though this padding area in x is exactly zero. This
+% bit of non-zero noise in xDot is the reason why y doesn't start at zero.
 frequencyHz = [0:(1/(samples)): (1-(1/samples)) ]' .* (sampleFrequency);
 frequencyRadians = frequencyHz.*(2*pi);
 s    = complex(0,1).*frequencyRadians;
 xFreqDomain    = fft(xTimeDomain);
 xDotFreqDomain = xFreqDomain.*s;
 xDotTimeDomain = ifft(xDotFreqDomain,'symmetric');
+
+
 
 %Finally evaluate the time domain force response of the spring damper
 %where the nominal force has been removed.
@@ -118,33 +123,6 @@ end
 %Use these two signals to evaluate the gain and phase shift between
 %the length and force perturbation
 %%
- 
-frequencyConvHz = [0:1/(samples*2):( 1-(1/(samples*2)) )]' .* (sampleFrequency);
-frequencyConvRadians = frequencyConvHz.*(2*pi);
-
-%We only analyze the frequency spectrum that is within the bandwith of the
-%perturbation signal: everything else will be too weak to produce coherent
-%data
-idxFreqBWLow        = find(frequencyHz <= max(bandwidth));
-idxFreqConvBW       = find(frequencyConvHz <= bandwidth);
-idxFreqConvBWLow    = [2:1:max(idxFreqConvBW)]';
-
-xyTimeDomain = conv(xTimeDomain,yTimeDomain);
-xxTimeDomain = conv(xTimeDomain,xTimeDomain);
-yyTimeDomain = conv(yTimeDomain,yTimeDomain);
-
-xyFreqDomain = fft(xyTimeDomain);
-xxFreqDomain = fft(xxTimeDomain);
-yyFreqDomain = fft(yyTimeDomain);
-
-xFreqDomain = fft(xTimeDomain);
-yFreqDomain = fft(yTimeDomain);
-
-%These calculations of gain and phase will have a high frequency 
-%resolution but will be sensitive to noise. For this simulated data
-%noise is not a problem.
-gain = abs(xyFreqDomain./xxFreqDomain);
-phase= angle(xyFreqDomain./xxFreqDomain);
 
 
 %Evaluate the cross-spectral density between x and y using Welch's method
@@ -158,13 +136,14 @@ phase= angle(xyFreqDomain./xxFreqDomain);
 [cpsd_Gyy,cpsd_Fyy] = cpsd(yTimeDomain,yTimeDomain,[],[],[],sampleFrequency,'onesided');
 [cpsd_Gyx,cpsd_Fyx] = cpsd(yTimeDomain,xTimeDomain,[],[],[],sampleFrequency,'onesided');
 
-coherenceSq   = ( abs(cpsd_Gyx).*abs(cpsd_Gyx) ) ./ (cpsd_Gxx.*cpsd_Gyy) ;
-freqCpsd      = cpsd_Fyx;
-idxFreqCpsd   = find(freqCpsd <= max(bandwidth));
+coherenceSq     = ( abs(cpsd_Gyx).*abs(cpsd_Gyx) ) ./ (cpsd_Gxx.*cpsd_Gyy) ;
+freqHz          = cpsd_Fyx;
+freqRadians     = freqHz.*(2*pi);
+idxBW         = find(freqHz <= max(bandwidth));
 
-gainCpsd  = abs(cpsd_Gyx./cpsd_Gxx);
-phaseCpsd = angle(cpsd_Gyx./cpsd_Gxx);
-freqCpsd  = cpsd_Fyx;
+gain  = abs(cpsd_Gyx./cpsd_Gxx);
+phase = angle(cpsd_Gyx./cpsd_Gxx);
+
 
 %Check this evaluation with Matlab's own internal function
 [coherenceSqCheck,freqCpsdCheck] = mscohere(xTimeDomain,yTimeDomain,[],[],[],sampleFrequency);
@@ -191,13 +170,9 @@ subplot(3,1,1);
     title('Time domain signals');
 subplot(3,1,2);
     yyaxis left;
-    plot(frequencyConvHz(idxFreqConvBWLow,1),...
-         gain(idxFreqConvBWLow,1),'-','Color',[0.75,0.75,1],'LineWidth',2,...
+    plot(freqHz(idxBW,1),...
+         gain(idxBW,1),'-','Color',[0.75,0.75,1],'LineWidth',2,...
          'DisplayName','gain');
-    hold on;
-    plot(freqCpsd(idxFreqCpsd,1),...
-         gainCpsd(idxFreqCpsd,1),'-','Color',[0,0,1],'LineWidth',0.5,...
-         'DisplayName','gain (cpsd)'),
     
     yGainLim = ylim;
     if(min(yGainLim)>0)
@@ -208,15 +183,10 @@ subplot(3,1,2);
 
 
     yyaxis right;
-    plot(frequencyConvHz(idxFreqConvBWLow,1),...
-         phase(idxFreqConvBWLow,1).*(180/pi),'-',...
+    plot(freqHz(idxBW,1),...
+         phase(idxBW,1).*(180/pi),'-',...
          'Color',[1,0.75,0.75],'LineWidth',2,...
          'DisplayName','phase');
-    hold on;
-    plot(freqCpsd(idxFreqCpsd,1),...
-         phaseCpsd(idxFreqCpsd,1).*(180/pi),'-',...
-         'Color',[1,0,0],'LineWidth',0.5,...
-         'DisplayName','phase (cpsd)'),
     
     ylabel('Phase (deg)');
 
@@ -227,18 +197,18 @@ subplot(3,1,2);
     title('Frequency domain response');
 
 subplot(3,1,3);
-    plot(freqCpsd(idxFreqCpsd,1),...
-         coherenceSq(idxFreqCpsd,1),'k');
+    plot(freqHz(idxBW,1),...
+         coherenceSq(idxBW,1),'k');
     hold on;
 
     if(flag_addTimeVaryingNoiseToOutput==1)
-        [d, idx] = min(abs(freqCpsd-freqTimeVaryingNoiseHz));
+        [d, idx] = min(abs(freqHz-freqTimeVaryingNoiseHz));
         
-        plot(freqCpsd(idx,1),...
+        plot(freqHz(idx,1),...
              coherenceSq(idx,1),'xb');
         hold on;
         
-        plot([freqCpsd(idx,1),freqCpsd(idx,1)+4],...
+        plot([freqHz(idx,1),freqHz(idx,1)+4],...
              [coherenceSq(idx,1),coherenceSq(idx,1)-0.05],'b');
         hold on;
     
@@ -424,15 +394,15 @@ subplot('Position',reshape(subPlotPanel(3,1,:),1,4));
 
 subplot('Position',reshape(subPlotPanel(4,1,:),1,4));    
 %subplot(2,3,4); 
-  plot(frequencyConvHz(idxFreqConvBW,1),...
-       gain(idxFreqConvBW,1),'-','Color',[.5,0.5,1],'LineWidth',1);
+  plot(freqHz(idxBW,1),...
+       gain(idxBW,1),'-','Color',[.5,0.5,1],'LineWidth',1);
   hold on;
-  plot(max(frequencyConvHz(idxFreqConvBW,1)),...
-       max(gain(idxFreqConvBW,1)),'.','Color',[.5,0.5,1]);
+  plot(max(freqHz(idxBW,1)),...
+       max(gain(idxBW,1)),'.','Color',[.5,0.5,1]);
   hold on;
-  text(max(frequencyConvHz(idxFreqConvBW,1)),...
-       max(gain(idxFreqConvBW,1)), ...
-       sprintf('%1.1f',max(gain(idxFreqConvBW,1))),...
+  text(max(freqHz(idxBW,1)),...
+       max(gain(idxBW,1)), ...
+       sprintf('%1.1f',max(gain(idxBW,1))),...
        'HorizontalAlignment','right',...
        'VerticalAlignment','top');
   hold on;
@@ -449,18 +419,18 @@ subplot('Position',reshape(subPlotPanel(4,1,:),1,4));
   box off;
   %xticklabels({'','','','','','','','','',''});
   yticks(round([0,k],1));
-  ylim([0,1.01*max(gain(idxFreqConvBW,1))]);
+  ylim([0,1.01*max(gain(idxBW,1))]);
 
 subplot('Position',reshape(subPlotPanel(5,1,:),1,4));    
 %subplot(2,3,5); 
-  plot(frequencyConvHz(idxFreqConvBW,1),...
-       phase(idxFreqConvBW,1).*(180/pi),'-','Color',[.5,0.5,1],'LineWidth',1);
+  plot(freqHz(idxBW,1),...
+       phase(idxBW,1).*(180/pi),'-','Color',[.5,0.5,1],'LineWidth',1);
   xlabel('Frequency (Hz)');
   ylabel('Phase (degrees)');
   xlim([0,bandwidth]);
   xticks([0:5:bandwidth]);
-  yticks(round([0,max(phase(idxFreqConvBW,1).*(180/pi))],0));
-  ylim([0,1.01*round(max(phase(idxFreqConvBW,1).*(180/pi)),0)]);
+  yticks(round([0,max(phase(idxBW,1).*(180/pi))],0));
+  ylim([0,1.01*round(max(phase(idxBW,1).*(180/pi)),0)]);
   box off;
 
   limitsX = xlim; 
