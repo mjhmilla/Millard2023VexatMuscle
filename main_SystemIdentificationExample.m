@@ -248,7 +248,7 @@ subplot('Position',reshape(subPlotPanel(1,1,:),1,4));
 %subplot(2,3,1); 
 
   yyaxis right;
-  plot(timeVec, yTimeDomain,'-','Color',[1,1,1].*0.,'LineWidth',1,...
+  plot(timeVec, yTimeDomain,'-','Color',[217,81,23]./256,'LineWidth',1,...
        'DisplayName','Output');
   hold on;
   ylabel('Output Amplitude');  
@@ -259,7 +259,7 @@ subplot('Position',reshape(subPlotPanel(1,1,:),1,4));
   plot(timeVec, xTimeDomain,'-','Color',[1,1,1],'LineWidth',2,...
        'DisplayName','');
   hold on;
-  plot(timeVec, xTimeDomain,'-','Color',[1,1,1].*0.5,'LineWidth',1,...
+  plot(timeVec, xTimeDomain,'-','Color',[0,112,189]./256,'LineWidth',1,...
        'DisplayName','Input');
   hold on;
   ylim([-1.01,1.01].*round(max(abs(yTimeDomain)),1));
@@ -442,7 +442,7 @@ subplot('Position',reshape(subPlotPanel(5,1,:),1,4));
 
 
 
-  
+figure(figPub);  
 set(figPub,'Units','centimeters',...
 'PaperUnits','centimeters',...
 'PaperSize',[pageWidth pageHeight],...
