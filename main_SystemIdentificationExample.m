@@ -141,7 +141,8 @@ xFreqDomain = fft(xTimeDomain);
 yFreqDomain = fft(yTimeDomain);
 
 %These calculations of gain and phase will have a high frequency 
-%resolution but will be sensitive to noise
+%resolution but will be sensitive to noise. For this simulated data
+%noise is not a problem.
 gain = abs(xyFreqDomain./xxFreqDomain);
 phase= angle(xyFreqDomain./xxFreqDomain);
 

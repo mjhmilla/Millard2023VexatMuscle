@@ -30,10 +30,10 @@ end
 
 
 %If fmincon is available, then constrain damping to be positive
-A0 = [];%[-1 0; 0 -1];
-b0 = [];%[ 0 ; 0];
+A0 = [-1 0; 0 -1];
+b0 = [ 0 ; 0];
 
-lb = [0;0];
+lb = [];
 ub = [];
 
 x0 = [1,1];
@@ -66,7 +66,7 @@ exitFlag  = 0;
 options   = [];
 if(flag_usingOctave == 0)               
 options=optimoptions('fmincon','Display','none','Algorithm','sqp');%optimset('Display','none');
-[paramOpt, fval, exitFlag] = fmincon(errFcn0, x0,[],[],[],[],lb,ub,[],options);        
+[paramOpt, fval, exitFlag] = fmincon(errFcn0, x0,A0,b0,[],[],[],[],[],options);        
 else
 options=optimset('Display','none','Algorithm','sqp');%optimset('Display','none');
 [paramOpt, fval, exitFlag] = fminsearch(errFcn0, x0,options);                        
@@ -104,9 +104,8 @@ errFcn1 = @(argX)calcFrequencyDomainSquaredError(argX, ...
 
 %options=optimset('Display','none');
 %[paramOpt, fval, exitFlag] = fminsearch(errFcn, [k1, d1],options); 
-
 if(flag_usingOctave==0)       
-[paramOpt, fval, exitFlag] = fmincon(errFcn1, x1,[],[],[],[],lb,ub,[],options);        
+[paramOpt, fval, exitFlag] = fmincon(errFcn1, x1,A0,b0,[],[],[],[],[],options);        
 else
 [paramOpt, fval, exitFlag] = fminsearch(errFcn1, x1,options);
 end

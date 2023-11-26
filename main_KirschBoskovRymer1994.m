@@ -106,7 +106,7 @@ totalPoints     = samplePoints;
 amplitudeMM     = [0.4, 0.8, 1.6]'; %Amplitude scaling in mm
 bandwidthHz     = [ 15,  35,  90]'; %bandwidth in Hz;
 
-coherenceSqThreshold = 0.9;
+coherenceSqThreshold = 0.67;
 
 signalFileEnding = sprintf('_%sHz_%s',num2str(sampleFrequency),...
                                      num2str(samplePoints));
