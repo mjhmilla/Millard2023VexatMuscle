@@ -74,7 +74,7 @@ switch flag_useElasticTendon
         strCaption = 'Mean normalized stiffness coefficients (A.), mean normalized damping coefficients (B.), VAF (C.), and the bandwidth (D.) of linearity (coherence squared $> 0.67$) for models with rigid tendons. All additional details are identical to those of Table \label{tbl:KBR1994Sim_ET} except the tendon of the model is rigid.';
         strLabel = '\label{tbl:KBR1994Sim_RT}';
     case 1
-        strCaption = 'Mean normalized stiffness coefficients (A.), mean normalized damping coefficients (B.), VAF (C.), and the bandwidth (D.) of linearity (coherence squared $> 0.67$) for models with elastic tendons. Here the proposed model has been fitted to Figure 12 of Kirsch et al. \cite{Kirsch1994MuscleImpedance}, while the experimental data from Kirsch et al. \cite{Kirsch1994MuscleImpedance} comes from Figures 9 and 10. Experimental data from Figure 12 from Kirsch et al. has not been included in this table because it would only contribute 1 entry and would overwrite values from Figures 9 and 10. The impedance experiments at each combination of perturbation amplitude and frequncy have been evaluated at 10 different nominal forces linearly spaced betwen 2.5N and 11.5N. The normalized results presented in the table are the mean values of these ten simulations. The VAF is evaluated between the model and the spring-damper of best fit, rather than to the response of biological muscle (which was not published by Kirsch et al. \cite{Kirsch1994MuscleImpedance}. Finally, model values for the VAF (C.) and the bandwidth of linearity (D.) that are worse than those published by Kirsch et al. by at least 10\% appear in bold font.';
+        strCaption = 'Mean normalized stiffness coefficients (A.), mean normalized damping coefficients (B.), VAF (C.), and the bandwidth (D.) of linearity (coherence squared $> 0.67$) for models with elastic tendons. Here the proposed model has been fitted to Figure 12 of Kirsch et al. \cite{Kirsch1994MuscleImpedance}, while the experimental data from Kirsch et al. \cite{Kirsch1994MuscleImpedance} comes from Figures 9 and 10. Experimental data from Figure 12 from Kirsch et al. has not been included in this table because it would only contribute 1 entry and would overwrite values from Figures 9 and 10. The impedance experiments at each combination of perturbation amplitude and frequency have been evaluated at 10 different nominal forces linearly spaced between 2.5N and 11.5N. The normalized results presented in the table are the mean values of these ten simulations. The VAF is evaluated between the model and the spring-damper of best fit, rather than to the response of biological muscle (which was not published by Kirsch et al. \cite{Kirsch1994MuscleImpedance}. Finally, model values for the VAF (C.) and the bandwidth of linearity (D.) that are worse than those published by Kirsch et al. appear in bold font.';
         strLabel = '\label{tbl:KBR1994Sim_ET}';
     otherwise
         assert(0,'flag_useElasticTendon must be 0 or 1');
@@ -199,22 +199,23 @@ for idxTrial=1:1:length(kbr1994Table.vaf.data)
   [val, idxAmp] = min(abs(ampTable-inputFunctions.amplitudeMM(1,idxTrial)));
   [val, idxFreq] = min(abs(freqTable-inputFunctions.bandwidthHz(1,idxTrial)));
 
-  valKbr       = mean(kbr1994Table.vaf.data(idxTrial).y)*100;
+  valKbr       = min(kbr1994Table.vaf.data(idxTrial).y)*100;
   strVal    = sprintf('%1.0f',valKbr);
   kbrVAF(idxAmp,idxFreq) = {strVal};
 
   val           = mean(opus31Table.vaf.data(idxTrial).y)*100;
   valStr = sprintf('%1.0f',val);
-  if(val < valKbr*covarianceSqThreshold)
+  if(round(val) < round(valKbr))
      valStr = sprintf('\\textbf{%1.0f}',val);
   end
   opus31VAF(idxAmp,idxFreq)  = {valStr};
 
   val           = mean(hillTable.vaf.data(idxTrial).y)*100;
   valStr = sprintf('%1.0f',val);
-  if(val < valKbr*covarianceSqThreshold)
+  if(round(val) < round(valKbr))
      valStr = sprintf('\\textbf{%1.0f}',val);
   end
+
   hillVAF(idxAmp,idxFreq)  = {valStr};
   
 end 
@@ -237,7 +238,7 @@ end
  fprintf(fid,'%s & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz & %dHz \\\\ \n',...
              'D. Bandwidth (Hz) s.t. \hfill', 15, 35, 90, 15, 35, 90, 15, 35, 90 );
  fprintf(fid,'%s &  &  &  &  &  &  &  &  &  \\\\ \n',...
-             ['Coherence$^2 > ',covarianceSqThresholdStr,'  \hfill']);
+             ['Coherence$^2$ > ',covarianceSqThresholdStr,'  \hfill']);
  
  firstLineExtra = '\hline ';  
  
@@ -261,12 +262,16 @@ for idxTrial=1:1:length(kbr1994Table.coherenceSqFreqLb.data)
   valUb           = mean(opus31Table.coherenceSqFreqUb.data(idxTrial).y);
   
   valLbStr = sprintf('%1.0f',valLb);
-  if(valLb > valLbKbr*1.1)
+  if(valLb > round(valLbKbr+1))
       valLbStr = sprintf('\\textbf{%1.0f}',valLb);
+  else
+      valLbStr = sprintf('%1.0f',valLbKbr);    
   end
   valUbStr = sprintf('%1.0f',valUb);
-  if(valUb < valUbKbr*covarianceSqThreshold)
+  if(valUb < round( valUbKbr-1))
       valUbStr = sprintf('\\textbf{%1.0f}',valUb);
+  else
+      valUbStr = sprintf('%1.0f',valUbKbr);        
   end
   strVal        = sprintf('%s-%s',valLbStr,valUbStr);
 
@@ -276,15 +281,19 @@ for idxTrial=1:1:length(kbr1994Table.coherenceSqFreqLb.data)
   valUb           = mean(hillTable.coherenceSqFreqUb.data(idxTrial).y);
 
   valLbStr = sprintf('%1.0f',valLb);
-  if(valLb > valLbKbr*1.1)
+  if(valLb > round(valLbKbr+1))
       valLbStr = sprintf('\\textbf{%1.0f}',valLb);
+  else 
+      valLbStr = sprintf('%1.0f',valLbKbr);    
   end
+
   valUbStr = sprintf('%1.0f',valUb);
-  if(valUb < valUbKbr*covarianceSqThreshold)
+  if(valUb < round(valUbKbr-1))
       valUbStr = sprintf('\\textbf{%1.0f}',valUb);
+  else 
+      valUbStr = sprintf('%1.0f',valUbKbr);        
   end
   strVal        = sprintf('%1.0f-%1.0f',valLbStr,valUbStr);
-
 
   strVal        = sprintf('%s-%s',valLbStr,valUbStr);
   hillCoSq(idxAmp,idxFreq)  = {strVal};

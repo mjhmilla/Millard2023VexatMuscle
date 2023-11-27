@@ -500,7 +500,7 @@ kbr1994Table.damping = extractTablesOfFittedParameters(...
 
 %We only know the range of VAF, not the individual values.
 kbr1994Table.vaf = opus31Table.vaf;
-kbr1994Table.vaf.pMean = ones(size(kbr1994Table.vaf.pMean)).*(0.5*(0.88+0.99));
+kbr1994Table.vaf.pMean = ones(size(kbr1994Table.vaf.pMean)).*(0.5*(0.78+0.99));
 kbr1994Table.vaf.pMean(:,1)=ones(size(kbr1994Table.vaf.pMean(:,1))).*noDataCode;
 
 kbr1994Table.vaf.p95CIMin = ones(size(kbr1994Table.vaf.p95CIMin)).*noDataCode;
@@ -542,7 +542,7 @@ kbr1994Table.coherenceSqFreqUb.rmse = ones(size(kbr1994Table.vaf.rmse)).*noDataC
 
 for i=1:1:length(kbr1994Table.vaf.data)
     kbr1994Table.vaf.data(i).x = [1,1].*noDataCode;
-    kbr1994Table.vaf.data(i).y = [0.88,0.99];
+    kbr1994Table.vaf.data(i).y = [0.78,0.99];
     kbr1994Table.vaf.data(i).yN = [1,1].*noDataCode;
 end
 

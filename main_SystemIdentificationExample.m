@@ -139,7 +139,7 @@ end
 coherenceSq     = ( abs(cpsd_Gyx).*abs(cpsd_Gyx) ) ./ (cpsd_Gxx.*cpsd_Gyy) ;
 freqHz          = cpsd_Fyx;
 freqRadians     = freqHz.*(2*pi);
-idxBW         = find(freqHz <= max(bandwidth));
+idxBW         = find(freqHz <= max(bandwidth+1));
 
 gain  = abs(cpsd_Gyx./cpsd_Gxx);
 phase = angle(cpsd_Gyx./cpsd_Gxx);
