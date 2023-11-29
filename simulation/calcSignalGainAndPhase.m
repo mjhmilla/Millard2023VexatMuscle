@@ -15,11 +15,10 @@
 function [success] = calcSignalGainAndPhase(...
                         normFiberLength,...
                         nominalForce,...
-                        activation,...
+                        nominalForceSteps,...
                         amplitudeMM,...
                         bandwidthHz,...
                         numberOfSimulations,...
-                        inputFunctions,...  
                         minFreqHz,...
                         coherenceSqThreshold,...
                         simSeriesFiles,...   
@@ -31,6 +30,17 @@ function [success] = calcSignalGainAndPhase(...
                         flag_zeroPaddingData,...
                         flag_usingOctave)
 success = 0;
+
+%All of the inputFunctions should be identical across the benchRecord
+%structs. Here we load one as a reference and later check that all others
+%match.
+benchRecordSet = load([outputFolder,simSeriesFiles{1}]);
+inputFunctions = benchRecordSet.inputFunctions;
+
+assert(max(abs(amplitudeMM-benchRecordSet.amplitudeMM))<1e-10,...
+    'Error: amplitudeMM does not match benchRecord.amplitudeMM');
+assert(max(abs(bandwidthHz-benchRecordSet.bandwidthHz))<1e-10,...
+    'Error: bandwidthHz does not match benchRecord.bandwidthHz');
 
 samplePoints=inputFunctions.samples;
 
@@ -78,13 +88,19 @@ end
 
 freqMax = inputFunctions.sampleFrequency;
 
-lengthNorm = 1;
-forceNorm = 1;
+
+
 
 for idxModel = 1:1:length(simSeriesFiles)
-  tmp = load([outputFolder,simSeriesFiles{idxModel}]);
-  benchRecord = tmp.benchRecord;
+  benchRecordSet = load([outputFolder,simSeriesFiles{idxModel}]);
+  benchRecord = benchRecordSet.benchRecord;
   idx=1;           
+
+  %Check for consistency across all of the benchRecords
+  assert(max(abs(amplitudeMM-benchRecordSet.amplitudeMM))<1e-10,...
+      'Error: amplitudeMM does not match benchRecord.amplitudeMM');
+  assert(max(abs(bandwidthHz-benchRecordSet.bandwidthHz))<1e-10,...
+      'Error: bandwidthHz does not match benchRecord.bandwidthHz');
 
   flag_Hill = 0;
   if(isempty(strfind(simSeriesFiles{idxModel},'Hill'))==0)
@@ -96,9 +112,8 @@ for idxModel = 1:1:length(simSeriesFiles)
   outputFileName = ['freqResponse',...
                     simSeriesFiles{idxModel}(1,(z+length(tag)):end)];
 
-
   for idxNormFiberLength = 1:1:length(normFiberLength)
-    for idxActivation = 1:1:length(activation)      
+    for idxActivation = 1:1:nominalForceSteps     
       for i=1:1:length(amplitudeMM)        
         for j=1:1:length(bandwidthHz)
 
@@ -122,12 +137,19 @@ for idxModel = 1:1:length(simSeriesFiles)
           idxWave = getSignalIndex(amplitudeMM(i),bandwidthHz(j),...
                                     inputFunctions);
 
+          xErr = max(abs(inputFunctions.x( inputFunctions.idxSignal, idxWave) ...
+                 - benchRecordSet.inputFunctions.x( inputFunctions.idxSignal, idxWave)));
 
-          x  = inputFunctions.x(   inputFunctions.idxSignal, idxWave)...
-                            ./lengthNorm;
+          %Check for consistency across all of the benchRecords          
+          assert(xErr<1e-10,...
+              ['Error: inputFunction structure is inconsistent between',...
+               'simulation results. This likely means that some of the ',...
+               'output files are from different incomplete runs of ',...
+               'main_KirschBoskovRymer.m'] );
+
+          x  = inputFunctions.x(   inputFunctions.idxSignal, idxWave);
           
-          y  = benchRecord.tendonForce(inputFunctions.idxSignal, idx)...
-                            ./forceNorm;
+          y  = benchRecord.tendonForce(inputFunctions.idxSignal, idx);
           yo = y(round(inputFunctions.padding*0.5),1);
           y  = y - yo;
           freqSimData.force(:,idx)  =  benchRecord.tendonForce(:, idx);
@@ -176,49 +198,29 @@ for idxModel = 1:1:length(simSeriesFiles)
               ( abs(cpsd_Gxy).*abs(cpsd_Gxy) ) ./ (cpsd_Gxx.*cpsd_Gyy) ;
           freqSimData.coherenceSqFrequency(1:maxIdx,idx) = cpsd_FxyHz;
 
-          %Evaluate the lowest frequency that meets the coherence squared
-          %threshold
-          idxLb = find(freqSimData.coherenceSq(1:maxIdx,idx)>=coherenceSqThreshold, 1 );
-          idxLbSpan = [idxLb-1;idxLb;idxLb+1];
-          if(idxLb == 1)
-            idxLbSpan = [idxLb;idxLb+1];
+          idxKirschMin = find(freqSimData.freqHz(1:maxIdx,idx) >= max(0,max(minFreqHz)-1), 1);
+          idxKirschMax = find(freqSimData.freqHz(1:maxIdx,idx) <= bandwidthHz(j)+1, 1,'last');
+
+
+
+          idxLb = idxKirschMin;
+          while(freqSimData.coherenceSq(idxLb,idx)<coherenceSqThreshold ...
+                  && idxLb < idxKirschMax)
+              idxLb=idxLb+1;
           end
-          
-          freqLb = interp1(freqSimData.coherenceSq(idxLbSpan,idx),...
-                           freqSimData.coherenceSqFrequency(idxLbSpan,idx),...
-                           coherenceSqThreshold);
 
-          %Evaluate the highest frequency that meets the coherence squared
-          %threshold
-          idxUb = find(freqSimData.coherenceSq(1:maxIdx,idx)>=coherenceSqThreshold, 1 ,'last');          
-          idxUbSpan = [idxUb-1;idxUb;idxUb+1];
-          if(idxUb >= maxIdx)
-              idxUbSpan = [idxUb-1;idxUb];          
+          idxUb = idxKirschMax;
+          while(freqSimData.coherenceSq(idxUb,idx)<coherenceSqThreshold ...
+                  && idxUb > idxKirschMin)
+              idxUb=idxUb-1;
           end
-          freqUb = interp1(freqSimData.coherenceSq(idxUbSpan,idx),...
-                           freqSimData.coherenceSqFrequency(idxUbSpan,idx),...
-                           coherenceSqThreshold);
-           
-          %Now identify the lowest frequency that we will analyze, which is
-          %the maximum of Kirsch's lower bound of 4 Hz, and the lower 
-          %bound we've just identified using the coherence squared
-          %threshold
-          idxMinFreqKirsch = find(freqSimData.freqHz(1:maxIdx,idx) >= max(minFreqHz), 1);
-          idxMaxFreqKirsch = ...
-            find(freqSimData.freqHz(1:maxIdx,idx) <= min(inputFunctions.bandwidthHz(1,idxWave)),...
-                  1, 'last' );
+          assert(idxUb > idxLb, 'Error: no part of the bandwidth meets the coherence threshold');
           
-          idxMinFreq = find(freqSimData.freqHz(1:maxIdx,idx) >= max(freqLb,minFreqHz), 1);
-          idxMaxFreq = ...
-            find(freqSimData.freqHz(1:maxIdx,idx) <= min(freqUb,inputFunctions.bandwidthHz(1,idxWave)),...
-                  1, 'last' );
+          idxFreqRange = [idxLb:1:idxUb]';
+          idxFreqRangeFull = [1:1:idxUb]';
 
-
-          idxFreqRange = [idxMinFreq:1:idxMaxFreq]';
-          idxFreqRangeFull = [1:1:idxMaxFreqKirsch]';
-
-          freqSimData.idxFreqRange(1,idx)=idxMinFreq;
-          freqSimData.idxFreqRange(2,idx)=idxMaxFreq;          
+          freqSimData.idxFreqRange(1,idx)=idxLb;
+          freqSimData.idxFreqRange(2,idx)=idxUb;          
 
 
           %Solve for the spring damping coefficients of best fit to the
@@ -238,12 +240,12 @@ for idxModel = 1:1:length(simSeriesFiles)
 
           modelResponseTime = ...
             (inputFunctions.x(inputFunctions.idxSignal,idxWave).*freqSimData.stiffness(1,idx) ...
-            +inputFunctions.xdot(inputFunctions.idxSignal,idxWave).*freqSimData.damping(1,idx))./lengthNorm;
+            +inputFunctions.xdot(inputFunctions.idxSignal,idxWave).*freqSimData.damping(1,idx));
 
-          normFactor = forceNorm/lengthNorm;
+
           freqSimData.forceKD(:,idx) = ...
-             (inputFunctions.x(:,idxWave)   ).*(freqSimData.stiffness(1,idx)*normFactor) ...
-            +(inputFunctions.xdot(:,idxWave)).*(freqSimData.damping(1,idx)*normFactor);
+             (inputFunctions.x(:,idxWave)   ).*(freqSimData.stiffness(1,idx)) ...
+            +(inputFunctions.xdot(:,idxWave)).*(freqSimData.damping(1,idx));
 
           modelResponseFreq = ...
             calcFrequencyModelResponse( freqSimData.stiffness(1,idx),...
@@ -425,7 +427,7 @@ for idxModel = 1:1:length(simSeriesFiles)
                   'Color',dataColor,'LineWidth',2);    
               hold on;
               plot(inputFunctions.time(inputFunctions.idxSignal(1,timeChunk),1), ...
-                   modelResponseTime(timeChunk,:)+yo.*forceNorm,...
+                   modelResponseTime(timeChunk,:)+yo,...
                    '-','Color',[1,1,1],'LineWidth',2);
               hold on;
 

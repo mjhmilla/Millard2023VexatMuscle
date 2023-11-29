@@ -3,3 +3,6 @@ main_KirschBoskovRymer1994_OuterLoop, 124.0min
 main_HerzogLeonard2002_OuterLoop, 30.0min
 main_LeonardJoumaaHerzog2010_OuterLoop, 3.0min
 main_ClassicForceLengthVelocityExperiments_OuterLoop, 17.0min
+main_KirschBoskovRymer1994_OuterLoop, 119.0min
+main_HerzogLeonard2002_OuterLoop, 29.0min
+main_LeonardJoumaaHerzog2010_OuterLoop, 3.0min

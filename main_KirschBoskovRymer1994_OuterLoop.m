@@ -42,11 +42,13 @@ flag_frequencyAnalysis  = 1;
 flag_generatePlots      = 1;
 flag_generateTables     = 1;
 
+flag_useSameRandomPerturbationAsPublication   = 1;
+
 %Parameters that are tuned
 %updSlidingTimeConstant              = 0.0005;
 %updForceVelocityCalibrationFactor    = 0.95;
 
-flag_useCalibratedVexatCurves= 1;
+flag_useCalibratedVexatCurves = 1;
 flag_useTwoSidedTitinCurves   = 0;
 
 if(flag_runSimulations == 1)

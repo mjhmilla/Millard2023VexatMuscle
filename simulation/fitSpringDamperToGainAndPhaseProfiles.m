@@ -16,100 +16,64 @@ function [stiffness,damping,exitFlag] = ...
                                             flag_usingOctave)
 
 
-k0=100;
+k0=1;
 d0=1;
 if(flag_usingOctave == 0)
-f0 = fit(freq,...
-         gain,...
-         'poly1');
-
-k0 = f0.p2;
-d0 = f0.p1;
+    f0 = fit(freq,...
+             gain,...
+             'poly1');
+    
+    k0 = f0.p2;
+    d0 = f0.p1;
 end
 
 
 
 %If fmincon is available, then constrain damping to be positive
-A0 = [-1 0; 0 -1];
-b0 = [ 0 ; 0];
+A0 = [0 -1];
+b0 = [ 0];
 
 lb = [];
 ub = [];
 
-x0 = [1,1];
-argScaling =[k0,d0];
+x0 = [1;1];
+argScaling =[k0;d0];
 argScalingMin=1;
 argScaling(argScaling<argScalingMin) = argScalingMin;
 objScaling = 1;
 
-gainScaling=1;
-phaseScaling=1;
 
 err0 = calcFrequencyDomainSquaredError(x0, ...
         freq,...
         gain,...
         phase,...
-        argScaling,objScaling,gainScaling,phaseScaling);
+        argScaling,objScaling);
 
-objScaling  = 1/max(abs(err0),sqrt(eps));
+objScaling  = 1/max(sum(err0),1);
 
-errFcn0 = @(argX)calcFrequencyDomainSquaredError(argX, ...
+errFcn = @(argX)calcFrequencyDomainSquaredError(argX, ...
         freq,...
         gain,...
         phase,...
-        argScaling,objScaling,gainScaling,phaseScaling);
+        argScaling,objScaling);
 
+errStarting = errFcn(x0);
 
 paramOpt  = []; 
 fval      = [];
 exitFlag  = 0;
 options   = [];
+
 if(flag_usingOctave == 0)               
-options=optimoptions('fmincon','Display','none','Algorithm','sqp');%optimset('Display','none');
-[paramOpt, fval, exitFlag] = fmincon(errFcn0, x0,A0,b0,[],[],[],[],[],options);        
+    options.Algorithm = 'levenberg-marquardt';
+    options.Display='off';
+    [paramOpt, fval,residual,exitflag, output]=...
+        lsqnonlin(errFcn,x0,[],[],options);
+
 else
-options=optimset('Display','none','Algorithm','sqp');%optimset('Display','none');
-[paramOpt, fval, exitFlag] = fminsearch(errFcn0, x0,options);                        
+    options=optimset('Display','off','Algorithm','sqp');
+    [paramOpt, fval, exitFlag] = fminsearch(errFcn0, x0,options);                        
 end
-k0 = paramOpt(1)*argScaling(1);
-d0 = paramOpt(2)*argScaling(2);
-
-%Now that we've got a decent initial solution, use it to
-%adjust the scaling to the inputs and run the optimization 
-%routine again.
-
-argScaling = [k0,d0];
-argScaling(argScaling<argScalingMin) = argScalingMin;
-
-x1 = [0,0];
-x1(1,1) = k0/argScaling(1);
-x1(1,2) = d0/argScaling(2);
-A1 = [0 -1];
-b1 = [ 0 ];
-
-
-err1 = calcFrequencyDomainSquaredError(x1, ...
-        freq,...
-        gain,...
-        phase,...
-        argScaling,1,gainScaling,phaseScaling);
-
-objScaling = 1/max(sqrt(eps),abs(err1));
-
-errFcn1 = @(argX)calcFrequencyDomainSquaredError(argX, ...
-        freq,...
-        gain,...
-        phase,...
-        argScaling,objScaling,gainScaling,phaseScaling);     
-
-%options=optimset('Display','none');
-%[paramOpt, fval, exitFlag] = fminsearch(errFcn, [k1, d1],options); 
-if(flag_usingOctave==0)       
-[paramOpt, fval, exitFlag] = fmincon(errFcn1, x1,A0,b0,[],[],[],[],[],options);        
-else
-[paramOpt, fval, exitFlag] = fminsearch(errFcn1, x1,options);
-end
-
 
 stiffness = paramOpt(1)*argScaling(1);
-damping   = paramOpt(2)*argScaling(2);
+damping = paramOpt(2)*argScaling(2);

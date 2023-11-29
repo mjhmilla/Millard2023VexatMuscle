@@ -100,39 +100,43 @@ if(flag_figureNumberToFitTo==3)
 
   for z=1:1:2
     
-      x0 = [1,1];
-      argScaling =[k0,d0];
+      x0 = [1;1];
+      argScaling =[k0;d0];
       argScalingMin=1;
       argScaling(argScaling<argScalingMin) = argScalingMin;
       objScaling = 1;
 
-      err0 = calcFrequencyDomainSquaredError(x0, ...
-                                            freqRads,...
-                                            gainNm,...
-                                            phaseRads,...
-                                            argScaling, ...
-                                            objScaling);
-
-      objScaling  = 1/max(abs(err0),sqrt(eps));
-
-      errFcn0 = @(argX)calcFrequencyDomainSquaredError(argX, ...
-                          freqRads,...
-                          gainNm,...
-                          phaseRads,...
-                          argScaling,...
-                          objScaling);
-
-      paramOpt  = []; 
-      fval      = [];
-      exitFlag  = 0;
-      options   = [];
-      if(flag_usingOctave == 0)               
-        options=optimoptions('fmincon','Display','none','Algorithm','sqp');
-        [paramOpt, fval, exitFlag] = fmincon(errFcn0, x0,A0,b0,[],[],[],[],[],options);        
-      else
-        options=optimset('Display','none','Algorithm','sqp');%optimset('Display','none');
-        [paramOpt, fval, exitFlag] = fminsearch(errFcn0, x0,options);                        
-      end
+        err0 = calcFrequencyDomainSquaredError(x0, ...
+                freqRads,...
+                gainNm,...
+                phaseRads,...
+                argScaling,objScaling);
+        
+        objScaling  = 1/max(sum(err0),1);
+        
+        errFcn = @(argX)calcFrequencyDomainSquaredError(argX, ...
+                freqRads,...
+                gainNm,...
+                phaseRads,...
+                argScaling,objScaling);
+        
+        errStarting = errFcn(x0);
+        
+        paramOpt  = []; 
+        fval      = [];
+        exitFlag  = 0;
+        options   = [];
+        
+        if(flag_usingOctave == 0)               
+            options.Algorithm = 'levenberg-marquardt';
+            options.Display='off';
+            [paramOpt, fval,residual,exitflag, output]=...
+                lsqnonlin(errFcn,x0,[],[],options);
+        
+        else
+            options=optimset('Display','off','Algorithm','sqp');
+            [paramOpt, fval, exitFlag] = fminsearch(errFcn0, x0,options);                        
+        end
       k0 = paramOpt(1)*argScaling(1);
       d0 = paramOpt(2)*argScaling(2);
           
@@ -480,7 +484,6 @@ assert( kf > (ke+ktitin), ...
 assert( df > (de+dtitin), ...
   [ 'Something is wrong: damping ECM and Titin',...
     ' exceed desired active damping']);
-
   
 kx = kf-(ktitin+ke);
 dx = df-(dtitin+de);

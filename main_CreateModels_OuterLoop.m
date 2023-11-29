@@ -204,8 +204,11 @@ flag_loadFittedFelineCrossbridgeProperties              = nan;
 if(flag_loadPreviouslyOptimizedParameters==1)
     flag_fitFelineSoleusActiveTitinProperties               = 0; 
     flag_loadFittedFelineSoleusActiveTitinProperties        = 1;
-    flag_fitFelineCrossbridgeProperties                     = 0;
-    flag_loadFittedFelineCrossbridgeProperties              = 1;
+    
+    %Fitting the crossbridge parameters is quite fast, so by
+    %default these are always fitted
+    flag_fitFelineCrossbridgeProperties                     = 1;
+    flag_loadFittedFelineCrossbridgeProperties              = 0;
 
 else
     flag_fitFelineSoleusActiveTitinProperties               = 1; 

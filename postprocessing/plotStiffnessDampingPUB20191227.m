@@ -90,14 +90,19 @@ fig_fig12 = figure;
 
   ySpace = 0.075;
   xSpace = 0.075;
-  
-  kMin = -0.01;
+
   kMax = 15.01;
-  dMin = -0.001;
-  dMax = 0.1501;
-  
+  kMin = -0.01;
+
+  kTicks = [0,5,10,15];
+
+  dMax = 0.1501;  
+  dMin = 0;
+  dTicks = [0,0.05,0.10,0.15];
+
   fMin = -0.01;
   fMax = 12.51;
+  fTicks =[0:2:12];
   
   %%
   % Gain
@@ -163,6 +168,8 @@ fig_fig12 = figure;
                             subPlotList(idxK,2),...
                             subPlotList(idxK,3),...
                             subPlotList(idxK,4)]);
+      plot([fMin,fMax],[0,0],'-k','HandleVisibility','off'); 
+      hold on;
       plot(dataKBR1994Fig12K(i).x,...
            dataKBR1994Fig12K(i).y,...
            expMarkType{i},...
@@ -185,7 +192,8 @@ fig_fig12 = figure;
                             subPlotList(idxD,2),...
                             subPlotList(idxD,3),...
                             subPlotList(idxD,4)]);
-
+      plot([fMin,fMax],[0,0],'-k','HandleVisibility','off');  
+      hold on;
       plot(dataKBR1994Fig12D(i).x,...
            dataKBR1994Fig12D(i).y,...
            expMarkType{i},...
@@ -366,7 +374,7 @@ fig_fig12 = figure;
                vafBWText,...
                'HorizontalAlignment','right',...
                'VerticalAlignment','bottom',...
-               'FontSize',8,...
+               'FontSize',6,...
                'Color',modelFaceColor);
       end
       hold on;
@@ -379,8 +387,31 @@ fig_fig12 = figure;
 %                 'HorizontalAlignment',textAlign);
 %          
 %       end
-      xlim([fMin,fMax]);
-      ylim([kMin,kMax]);      
+
+        if(i==length(nominalForce))
+
+          xlim([fMin,fMax]);
+          xticks(fTicks);
+          kMinData = min(freqSimData.stiffness(1,idxSim)/1000);
+          if(kMin < kMinData)
+            ylim([kMin,kMax]);   
+            yticks(kTicks);
+          else
+            text(freqSimData.nominalForce(1,idxSim),...
+                 freqSimData.stiffness(1,idxSim)/1000+0.25,...
+                 sprintf('%1.2f N/mm',freqSimData.stiffness(1,idxSim)/1000),...
+                 'HorizontalAlignment','left',...
+                 'VerticalAlignment','bottom',...
+                 'FontSize',6);
+            hold on;
+            ylim([kMinData-0.01,kMax]);                     
+            yticks(round([kMinData,kTicks],2));
+          end
+        end
+
+      
+
+      
 
       if(i == 1 && z==1 || i==1 && z==2)
 
@@ -446,7 +477,28 @@ fig_fig12 = figure;
                   'IconDisplayStyle','off'); 
       end 
       xlim([fMin,fMax]);
+      xticks(fTicks);
       ylim([dMin,dMax]);
+      yticks(dTicks);
+
+      if(i==length(nominalForce))
+          dMinData = min(freqSimData.damping(1,idxSim)/1000);
+    
+          if(dMin < dMinData)
+            ylim([dMin,dMax]);   
+            yticks(dTicks);
+          else
+            text(freqSimData.nominalForce(1,idxSim),...
+                 freqSimData.damping(1,idxSim)/1000+0.015,...
+                 sprintf('%1.2f N/(mm/s)',freqSimData.damping(1,idxSim)/1000),...
+                 'HorizontalAlignment','left',...
+                 'VerticalAlignment','bottom',...
+                 'FontSize',6);
+            hold on;            
+            ylim([dMinData-0.01,dMax]);                     
+            yticks(round([dMinData,dTicks],2));
+          end
+      end
 
       if(i == 1 && z==1 || i==1 && z==2)
         tc = text(fMin-0.1*(fMax-fMin), 1.1*dMax,...
