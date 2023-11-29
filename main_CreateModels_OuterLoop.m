@@ -60,7 +60,6 @@ normPevkToActinAttachmentPointDefault = 0.5;
 % be the distal end of the PEVK segment (at the PEVK/distal Ig border).
 
 
-
 normFiberLengthAtOneNormPassiveForceDefault = 1.367732948060934e+00;
 
 normFiberLengthAtOneNormPassiveForceDefault_RT = 1.421393259171109e+00;

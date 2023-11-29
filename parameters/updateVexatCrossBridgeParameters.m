@@ -94,10 +94,6 @@ if(flag_figureNumberToFitTo==3)
   gainNm   = gain .* 1000;
   phaseRads= phase .* (pi/180);
 
-  %If fmincon is available, then constrain damping to be positive
-  A0 = [0 -1];
-  b0 = [ 0 ];
-
   for z=1:1:2
     
       x0 = [1;1];
@@ -151,20 +147,42 @@ end
 
 if(flag_figureNumberToFitTo==12)
 
-  dataF = dataKBR1994Fig12K(1:1:end).x;
+  dataKF = dataKBR1994Fig12K(1:1:end).x;
   dataK = dataKBR1994Fig12K(1:1:end).y;
-  fitK = fit(dataF,dataK,'poly1');
+  fitK = polyfit(dataKF,dataK,1);
 
   %Ignore the small constant offset
-  kmt = (fitK.p1*nominalForceN + fitK.p2)*1000;
+  kmt = (fitK(1)*nominalForceN + fitK(2))*1000;
 
 
-  dataF = dataKBR1994Fig12D(1:1:end).x;
+  dataDF = dataKBR1994Fig12D(1:1:end).x;
   dataD = dataKBR1994Fig12D(1:1:end).y;
-  fitD = fit(dataF,dataD,'poly1');
+  fitD = polyfit(dataDF,dataD,1);
 
   %Ignore the small constant offset
-  dmt = (fitD.p1*nominalForceN + fitD.p2)*1000;
+  dmt = (fitD(1)*nominalForceN + fitD(2))*1000;
+  here=1;
+  fig_testFit=0;
+  if(fig_testFit==1)
+      figTestFit=figure;
+      subplot(1,2,1);
+          plot(dataKF,dataK,'o','MarkerFaceColor',[1,1,1].*0.5);
+          hold on;
+          plot(dataKF, fitK(1).*dataKF + fitK(2).*ones(size(dataKF)),'-r');
+          hold on;
+          plot(nominalForceN,kmt/1000,'x','MarkerFaceColor',[0,0,0]);
+          xlabel('Force (N)');
+          ylabel('Stiffness (N/mm)');
+      subplot(1,2,2);
+          plot(dataDF,dataD,'o','MarkerFaceColor',[1,1,1].*0.5);
+          hold on;
+          plot(dataDF, fitD(1).*dataDF + fitD(2).*ones(size(dataDF)),'-r');
+          hold on;
+          plot(nominalForceN,dmt/1000,'x','MarkerFaceColor',[0,0,0]);
+          xlabel('Force (N)');
+          ylabel('Damping (N/(mm/s))');
+      here=1;
+  end
 end
 
 if(flag_figureNumberToFitTo ~= 3 && flag_figureNumberToFitTo ~= 12)
