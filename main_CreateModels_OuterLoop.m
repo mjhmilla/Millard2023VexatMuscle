@@ -37,7 +37,7 @@ disp('----------------------------------------');
 %%
 % Global model parameters
 %%
-flag_loadPreviouslyOptimizedParameters = 0;
+flag_loadPreviouslyOptimizedParameters = 1;
 % 0: A lengthy optimization is done to find the best point within the
 %    PEVK segment to bond to actin. This value is saved to file for later
 %    use.
@@ -456,7 +456,11 @@ gainPhaseTypeValues   = [3,12];
 tendonTypeNames       = {'_RT','_ET'};
 tendonTypeValues      = [0,1];
 
-fig12SimulatedStiffnessNpMM = 1.5064;
+% A better fit to Figure 12 can be obtained using the commented out
+% scaling factors below. The downside is that the VAF for the low frequency
+% simulations drops quite a bit.
+fig12SimulatedStiffnessNpMM = [];%1.5064;
+fig12SimulatedDampingNpMMpS = [];%0.030283;
 
 for indexGainPhase = 1:1:length(gainPhaseTypeNames)
 
@@ -497,6 +501,7 @@ for indexGainPhase = 1:1:length(gainPhaseTypeNames)
                         felineSoleusActiveForceLengthDataDefault_RT,...
                         felineSoleusPassiveForceLengthCurveSettings_RT,...
                         fig12SimulatedStiffnessNpMM,...
+                        fig12SimulatedDampingNpMMpS,...
                         flag_useOctave,...
                         projectFolders);                
             case 2
@@ -510,6 +515,7 @@ for indexGainPhase = 1:1:length(gainPhaseTypeNames)
                         felineSoleusActiveForceLengthDataDefault,...
                         felineSoleusPassiveForceLengthCurveSettings,...
                         fig12SimulatedStiffnessNpMM,...
+                        fig12SimulatedDampingNpMMpS,...
                         flag_useOctave,...
                         projectFolders);                
             otherwise

@@ -21,7 +21,8 @@ function [muscleArchitectureUpd,sarcomerePropertiesUpd] = ...
                                     dataKBR1994Fig3Phase,...
                                     dataKBR1994Fig12K,...
                                     dataKBR1994Fig12D,...
-                                    fig12SimulatedStiffnessNpMM,...                                    
+                                    fig12SimulatedStiffnessNpMM,...   
+                                    fig12SimulatedDampingNpMMpS,...
                                     normTendonDampingConstant,...
                                     normTendonDampingLinear,...
                                     scaleSlidingTimeConstant,...
@@ -155,16 +156,21 @@ if(flag_figureNumberToFitTo==12)
   %Ignore the small constant offset
   kmt = (fitK(1)*nominalForceN + fitK(2))*1000;
 
-  kmt = kmt *(kmt/(fig12SimulatedStiffnessNpMM*1000));
+  if(isempty(fig12SimulatedStiffnessNpMM)==0)
+    kmt = kmt *(kmt/(fig12SimulatedStiffnessNpMM*1000));
+  end
 
   dataDF = dataKBR1994Fig12D(1:1:end).x;
   dataD = dataKBR1994Fig12D(1:1:end).y;
   fitD = polyfit(dataDF,dataD,1);
 
-
-
   %Ignore the small constant offset
   dmt = (fitD(1)*nominalForceN + fitD(2))*1000;
+
+  if(isempty(fig12SimulatedDampingNpMMpS)==0)
+    dmt = dmt*(dmt/(fig12SimulatedDampingNpMMpS*1000));
+  end
+
   here=1;
   fig_testFit=0;
   if(fig_testFit==1)
