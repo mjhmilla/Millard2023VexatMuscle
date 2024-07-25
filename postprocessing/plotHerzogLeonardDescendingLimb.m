@@ -101,6 +101,7 @@ fvec = unique(round([f0,fp1,f1,fr0,fr1],1));
 %%
 
 idxSubplot = 1;
+
 subplot('Position',reshape(subPlotPosition(idxSubplot,1,:),1,4));  
 
 
@@ -235,8 +236,7 @@ end
       
       
 idxSubplot = idxSubplot+1;
-subplot('Position',reshape(subPlotPosition(idxSubplot,1,:),1,4));        
-
+subplot('Position',reshape(subPlotPosition(idxSubplot,1,:),1,4));       
 lineExp     = [];
 lineVexat  = [];
 lineHill    = [];

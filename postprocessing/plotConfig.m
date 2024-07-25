@@ -190,8 +190,7 @@ for(ai=1:1:numberOfVerticalPlotRows)
   end
 end
 
-subPlotHerzogLeonard2000Stability = zeros(4,4);
-
+subPlotHerzogLeonard2000Stability    = zeros(4,4);
 prevCorner = topLeft + [oneCmHorizontal*3, -oneCmVertical*2];
 
 rowIdx=1;
@@ -233,6 +232,57 @@ subPlotHerzogLeonard2000Stability(rowIdx,colIdx,2) = prevCorner(2) - plotHeight-
 subPlotHerzogLeonard2000Stability(rowIdx,colIdx,3) = (plotWidth);
 subPlotHerzogLeonard2000Stability(rowIdx,colIdx,4) = (plotHeight); 
 
+% Row
+
+subPlotHerzogLeonard2000StabilityRow    = zeros(4,4);
+prevCorner = topLeft + [oneCmHorizontal*3, -oneCmVertical*2];
+plotWidthRow = plotWidth*0.7;
+plotHeightRow= plotWidthRow*0.7;
+
+rowIdx=1;
+colIdx=1;
+plotBigVertMargin    = 1.25/pageHeight;
+plotBigHorizMargin   = 1.25/pageWidth;
+
+subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,1) = prevCorner(1);
+subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,2) = prevCorner(2) ...
+                                    - 0.25*plotHeightRow-plotBigVertMargin;
+subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,3) = (plotWidthRow);
+subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,4) = (plotHeightRow*0.25); 
+
+prevCorner = [subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,1),...
+              subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,2)];
+
+rowIdx=rowIdx+1;
+colIdx=1;
+subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,1) = prevCorner(1);
+subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,2) = prevCorner(2) ...
+                                      - plotHeightRow - plotBigVertMargin;
+subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,3) = (plotWidthRow);
+subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,4) = (plotHeightRow); 
+
+prevCorner = [subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,1),...
+              subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,2)];
+
+rowIdx=rowIdx+1;
+colIdx=1;
+subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,1) = prevCorner(1) ...
+                                     +plotWidthRow + plotBigHorizMargin;
+subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,2) = prevCorner(2);
+                                        
+subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,3) = (plotWidthRow);
+subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,4) = (plotHeightRow); 
+
+prevCorner = [subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,1),...
+              subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,2)];
+            
+rowIdx=rowIdx+1;
+colIdx=1;
+subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,1) = prevCorner(1) ...
+                                     +plotWidthRow + plotBigHorizMargin;    
+subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,2) = prevCorner(2);
+subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,3) = (plotWidthRow);
+subPlotHerzogLeonard2000StabilityRow(rowIdx,colIdx,4) = (plotHeightRow); 
 
 
 %%

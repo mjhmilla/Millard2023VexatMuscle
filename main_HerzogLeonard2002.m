@@ -60,6 +60,7 @@ if(flag_outerLoopMode == 0)% && flag_buildCombinedPlot == 1)
   flag_savePlotsToFile=1;
   pubOutputFolder = '';       
   
+  flag_useHorizontalPlotLayout=0;
 
   figureNumber       = 7;
   subFigureNumber    = 1;
@@ -499,13 +500,19 @@ if(flag_plotData == 1)
           && isempty(dataVexat.benchRecord)==0 ...
           && isempty(dataDampedEq.benchRecord)==0)
     
-    
+    plotLayoutHL2002 = [];
+    if(flag_useHorizontalPlotLayout==1)
+        plotLayoutHL2002 = subPlotHerzogLeonard2000StabilityRow;
+    else
+        plotLayoutHL2002 = subPlotHerzogLeonard2000Stability;
+    end
+
     figDescendingCombined = ...
       plotHerzogLeonardDescendingLimb(figDescendingCombined,...
                       expConfigHerzogLeonard2002,dataVexat, dataDampedEq,  ...
                       nominalNormalizedFiberLength,flag_useElasticTendon,...
                       figureNumber,subFigureNumber,trialNumber,...
-                      subPlotHerzogLeonard2000Stability,...
+                      plotLayoutHL2002,...
                       projectFolders.output_plots_HL2002,...
                       figDesLimbName,pageWidth,pageHeight);
   end
