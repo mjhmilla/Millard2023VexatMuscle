@@ -61,7 +61,7 @@ flag_useCalibratedVexatCurves= 1;
 flag_useTitinCurvesWithRigidIgDSegment   = 0;
 flag_useTwoSidedTitinCurves   = 0;
 flag_plotDataComparison       = 1;
-
+flag_useHorizontalPlotLayout  = 0;
 
 simParamsHL2002File = fullfile( projectFolders.experiments_HL2002,...
                                 'simulationParametersHerzogLeonard2002.csv');
