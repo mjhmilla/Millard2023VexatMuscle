@@ -52,6 +52,8 @@ projectFolders.experiments_NDRAN1996     = fullfile(projectFolders.experiments, 
 projectFolders.experiments_StandardTests = fullfile(projectFolders.experiments, 'StandardTests'                       );   
 projectFolders.experiments_TGFG1998      = fullfile(projectFolders.experiments, 'TrombitasGreaserFrenchGranzier1998'  );
 projectFolders.experiments_HBSG1995      = fullfile(projectFolders.experiments, 'HasselmanBestSeaberGarret1995'       ); 
+projectFolders.experiments_SW1982        = fullfile(projectFolders.experiments, 'StephensonWilliams1982'              ); 
+projectFolders.experiments_TWHSS2021     = fullfile(projectFolders.experiments, 'TomalkaWeidnerHahnSieberlSiebert2021'); 
 
 
 projectFolders.output_plots     = fullfile(projectFolders.output,'plots');
@@ -61,16 +63,18 @@ projectFolders.output_tables    = fullfile(projectFolders.output,'tables');
 
 projectFolders.output_plots     = fullfile(projectFolders.output,'plots');
 
-projectFolders.output_plots_HL2002         = fullfile(projectFolders.output_plots, 'HerzogLeonard2002'                   );   
-projectFolders.output_plots_KBR1994        = fullfile(projectFolders.output_plots, 'KirschBoskovRymer1994'               ); 
-projectFolders.output_plots_LJH2010        = fullfile(projectFolders.output_plots, 'LeonardJoumaaHerzog2010'             ); 
-projectFolders.output_plots_NDRAN1996      = fullfile(projectFolders.output_plots, 'NettiDamoreRoncaAmbrosioNicolais1996');  
-projectFolders.output_plots_StandardTests  = fullfile(projectFolders.output_plots, 'StandardTests'                       );   
-projectFolders.output_plots_MuscleCurves   = fullfile(projectFolders.output_plots, 'MuscleCurves'                       );   
-projectFolders.output_plots_Initialization = fullfile(projectFolders.output_plots, 'InitializationBenchmark'            );   
-projectFolders.output_plots_HBSG1995       = fullfile(projectFolders.output_plots, 'HasselmanBestSeaberGarret1995'             ); 
+projectFolders.output_plots_HL2002         = fullfile(projectFolders.output_plots, 'HerzogLeonard2002'                    );   
+projectFolders.output_plots_KBR1994        = fullfile(projectFolders.output_plots, 'KirschBoskovRymer1994'                ); 
+projectFolders.output_plots_LJH2010        = fullfile(projectFolders.output_plots, 'LeonardJoumaaHerzog2010'              ); 
+projectFolders.output_plots_NDRAN1996      = fullfile(projectFolders.output_plots, 'NettiDamoreRoncaAmbrosioNicolais1996' );  
+projectFolders.output_plots_StandardTests  = fullfile(projectFolders.output_plots, 'StandardTests'                        );   
+projectFolders.output_plots_MuscleCurves   = fullfile(projectFolders.output_plots, 'MuscleCurves'                         );   
+projectFolders.output_plots_Initialization = fullfile(projectFolders.output_plots, 'InitializationBenchmark'              );   
+projectFolders.output_plots_HBSG1995       = fullfile(projectFolders.output_plots, 'HasselmanBestSeaberGarret1995'        ); 
 projectFolders.output_plots_SystemIdentificationExample ...
-                                           = fullfile(projectFolders.output_plots, 'SystemIdentificationExample'             ); 
+                                           = fullfile(projectFolders.output_plots, 'SystemIdentificationExample'          ); 
+projectFolders.output_plots_SW1982         = fullfile(projectFolders.output_plots,  'StephensonWilliams1982'              ); 
+projectFolders.output_plots_TWHSS2021      = fullfile(projectFolders.output_plots,  'TomalkaWeidnerHahnSieberlSiebert2021'); 
 
 
 projectFolders.output_tables_KBR1994      = fullfile(projectFolders.output_tables,'KirschBoskovRymer1994');
@@ -83,9 +87,11 @@ projectFolders.output_structs_KBR1994        = fullfile(projectFolders.output_st
 projectFolders.output_structs_LJH2010        = fullfile(projectFolders.output_structs, 'LeonardJoumaaHerzog2010'             ); 
 projectFolders.output_structs_NDRAN1996      = fullfile(projectFolders.output_structs, 'NettiDamoreRoncaAmbrosioNicolais1996');  
 projectFolders.output_structs_StandardTests  = fullfile(projectFolders.output_structs, 'StandardTests'                       );   
-projectFolders.output_structs_MuscleCurves   = fullfile(projectFolders.output_structs, 'MuscleCurves'                       );   
-projectFolders.output_structs_Initialization = fullfile(projectFolders.output_structs, 'InitializationBenchmark'            );   
+projectFolders.output_structs_MuscleCurves   = fullfile(projectFolders.output_structs, 'MuscleCurves'                        );   
+projectFolders.output_structs_Initialization = fullfile(projectFolders.output_structs, 'InitializationBenchmark'             );   
+projectFolders.output_structs_HBSG1995       = fullfile(projectFolders.output_structs, 'HasselmanBestSeaberGarret1995'       ); 
 
-projectFolders.output_structs_HBSG1995  = fullfile(projectFolders.output_structs, 'HasselmanBestSeaberGarret1995'             ); 
+projectFolders.output_structs_SW1982         = fullfile(projectFolders.output_structs, 'StephensonWilliams1982'              ); 
+projectFolders.output_structs_TWHSS2021      = fullfile(projectFolders.output_structs, 'TomalkaWeidnerHahnSieberlSiebert2021'); 
 
 
