@@ -46,7 +46,7 @@ if(isempty(normPevkToActinAttachmentPoint))
 end
 
 if(isempty(normFiberLengthAtOneNormPassiveForce))
-  normFiberLengthAtOneNormPassiveForce        = 1.367732948060934e+00;
+  normFiberLengthAtOneNormPassiveForce        = 1.696;
 
   disp('normFiberLengthAtOneNormPassiveForce empty using default');
   fprintf('\t%f\n',normFiberLengthAtOneNormPassiveForce);

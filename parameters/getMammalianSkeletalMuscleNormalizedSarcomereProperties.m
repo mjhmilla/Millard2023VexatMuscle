@@ -95,6 +95,8 @@ elseif(strcmp(animalName,'rabbitTA')==1)
   animalId = 5;
 elseif(strcmp(animalName,'rabbitEDL')==1)
   animalId = 6;
+elseif(strcmp(animalName,'ratSOL')==1)
+  animalId = 7;
 else  
   assert(0,'animalName must be cat, human, frog, or rabbit');
 end
@@ -385,7 +387,19 @@ else
          numResiduesPevk = numResiduesPevk3400kD;    
          numDomainsIgD   = numDomainsIgD3400kD;  
 
-         
+      case 7
+         % 
+         %
+         % Linke WA. Stretching molecular springs: elasticity of titin filaments 
+         % in vertebrate striated muscle. Histology and Histopathology. 2000 
+         % Jul 1;15(3):799-811.
+         %
+         % (pg 803), column 1, paragraph 2 ("To obtain an ...")
+         %
+         numDomainsIgP   = 50;   
+         numResiduesPevk = 1400;    
+         numDomainsIgD   = 22;  
+
       otherwise
         assert(0,['Error: animalId ',num2str(animalId),' not recognized']);
     end

@@ -15,55 +15,121 @@ projectFolders  = getProjectFolders(rootDir);
 
 fprintf('\n\nCreating: default rat soleus fibril model\n');
 fprintf('  used to simulate Tomalka, Weider, Hahn, Seiberl, Siebert 2020.\n\n');
-%From Fig. 2 Leonard, Joumaa, Herzog, 2010
 
 
+%%%
+%
+% XE default parameters from the rabbit fibril (Appendix 8-table 1)
+%
+% Matthew Millard, David W Franklin, Walter Herzog (2024) 
+% A three filament mechanistic model of musculotendon force and impedance 
+% eLife 12:RP88344 https://doi.org/10.7554/eLife.88344.4    
+%
+%%%
+normCrossBridgeStiffness    = 49.1;  %fiso/lopt
+normCrossBridgeDamping      = 0.347; %fiso/(lopt/s)
 
-
-normCrossBridgeStiffness    = fittedFelineSoleusKBR1994Fig12_RT.sarcomere.normCrossBridgeStiffness;
-normCrossBridgeDamping      = fittedFelineSoleusKBR1994Fig12_RT.sarcomere.normCrossBridgeDamping;
 
 titinMolecularWeightInkDDefault =[];
 
-
-%For now this is being set to a length at which the passive force of titin
-%reaches 0.5 fiso. To compensate, the ecm fraction is set to 0.5 thereby
-%achieving the desired effect: titin reaches a force of 0.5 iso at
-% normFiberLengthAtOneNormPassiveForce.
+%%%
 %
-%This work around has to be done because, by default, I assume that the
-% toe force of the passive curve has a value of 1. Since rabbit titin is so 
-% stiff and short and its contour length is shorter than the length at 
-% which the fibrils reach 1 fiso ... and this causes the functions
-% charged with making the titin curves to fail.
-passiveForceKeyPoints = [1.0,    0;...
-                         2.86,1.31];  
+% From Figure 7 of Stephenson & Williams
+%
+% Using theoretical force-length relation:
+%
+%   lopt = 2.5um
+%   fiso = 1
+%
+% Using a (manually identified) better fit to the data
+%
+%   lopt = 2.66 um
+%   fiso = 1
+%
+% The lengths where fpeN = 0 and fpeN = 1 are
+%
+%   lceNFpeNZero  = 4.24um  / 2.5um = 1.696 lo
+%   lceNFpeNOne   = 2.629um / 2.5um = 1.05 lo
+%
+% Using the manually identified lopt
+%
+%   lceNFpeNZero  = 4.24um  / 2.66um = 1.59 lo
+%   lceNFpeNOne   = 2.629um / 2.66um = 0.988 lo
+%
+% Sticking with the theoretical force-length model, at least to start.
+%
+% Stephenson DG, Williams DA. Effects of sarcomere length on the force—pCa 
+% relation in fast‐and slow‐twitch skinned muscle fibres from the rat. 
+% The Journal of Physiology. 1982 Dec 1;333(1):637-53.
+%
+%%%
+passiveForceKeyPoints = [1.05,   0;...
+                         1.696,1.0];  
 
-normFiberLengthAtOneNormPassiveForceRabbitFibril = ...
-    interp1(passiveForceKeyPoints(:,2),passiveForceKeyPoints(:,1),0.5);
+normFiberLengthAtOneNormPassiveForceRatSoleusFibril = passiveForceKeyPoints(2,1);
 
-% Now we adjust how much of the passive force is comprised of the ECM in
-% order to make the titin force-length curve more compliant.
-ecmForceFractionRabbitPsoasFitted = 0.675;% 
+% Since these experiments use skinned fibers, the ECM is assumed to contribute
+% nothing. 
+ecmForceFractionRatSoleusFitted = 0.0;% 
 
-normPevkToActinAttachmentPointRabbitPsoasFitted=0.675;
+normPevkToActinAttachmentPointRatSoleusFitted=0.5;
 
 
-rabbitPsoasFibrilWLC = createRabbitPsoasFibrilModel(...
+%
+% The half relaxation time in Figure 1 of Tomalka et al. (a stretch of ~20%
+% in 0.5 s) is 
+%
+% thalf = 0.0313 s
+%
+% The half relaxation time of the cat soleus in Herzog & Leonard 2002
+% Figure 7C (a stretch of 21% lopt in 0.333 s) is
+% 
+% thalf = 0.111 s
+%
+% Scaling the value of normMaxActiveTitinToActinDamping used to simulate 
+% Herzog & Leonard we have
+% 
+% normMaxActiveTitinToActinDamping = 71.9*(0.0313 / 0.111) 
+%                                  = 20.3
+%
+%
+% Tomalka A, Weidner S, Hahn D, Seiberl W, Siebert T. Power amplification 
+% increases with contraction velocity during stretch-shortening cycles of 
+% skinned muscle fibers. Frontiers in physiology. 2021 Mar 31;12:644981.
+%
+% Herzog W, Leonard TR. Force enhancement following stretching of skeletal 
+% muscle: a new mechanism. Journal of Experimental Biology. 2002 
+% May 1;205(9):1275-83.
+%
+normMaxActiveTitinToActinDamping = 20.3; %fo/(lo/s)
+
+useWlcTitinModel        = 0;
+useCalibratedCurves     = 0;
+useTwoSidedTitinCurves  = 0;
+
+smallNumericallyNonZeroNumber = sqrt(sqrt(eps));
+
+flag_enableNumericallyNonZeroGradients  = 1;
+scaleOptimalFiberLengthRatSoleus        = 1;
+scaleMaximumIsometricTensionRatSoleus   = 1;
+flag_useOctave                          = 0;
+
+
+rabbitPsoasFibrilWLC = createRatSoleusFibrilModel(...
                               normCrossBridgeStiffness,...
                               normCrossBridgeDamping,...
-                              normPevkToActinAttachmentPointRabbitPsoasFitted,...
+                              normPevkToActinAttachmentPointRatSoleusFitted,...
                               normMaxActiveTitinToActinDamping,...
-                              normFiberLengthAtOneNormPassiveForceRabbitFibril,...
-                              ecmForceFractionRabbitPsoasFitted,...
+                              normFiberLengthAtOneNormPassiveForceRatSoleusFibril,...
+                              ecmForceFractionRatSoleusFitted,...
                               titinMolecularWeightInkDDefault,...
-                              wlcTitinModel,...
+                              useWlcTitinModel,...
                               useCalibratedCurves,...
                               useTwoSidedTitinCurves,...
                               smallNumericallyNonZeroNumber,...
                               flag_enableNumericallyNonZeroGradients,...
-                              scaleOptimalFiberLengthRabbitPsoas,...
-                              scaleMaximumIsometricTensionRabbitPsoas, ...
+                              scaleOptimalFiberLengthRatSoleusPsoas,...
+                              scaleMaximumIsometricTensionRatSoleusPsoas, ...
                               projectFolders,...
                               flag_useOctave);
 
