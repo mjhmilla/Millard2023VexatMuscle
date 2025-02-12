@@ -139,9 +139,77 @@ maximumNormalizedFiberVelocity = 1.02; % in units of norm fiber lengths/second
 % doi: 10.3389/fphys.2019.00769. PMID: 31275173; PMCID: PMC6593051.
 %
 
-forceVelocityMultiplierAtHalfMaximumFiberVelocity = 0.0796;  
+% Fitting a linear model to the termperature-curvature data in
+% Ranatunga 1982 (Table 1) to get the soleus curvature at 12 C. Note
+% that this data comes from whole muscle.
+%
+% Ranatunga KW. Temperature‐dependence of shortening velocity and rate of 
+% isometric tension development in rat skeletal muscle. The Journal of 
+% Physiology. 1982 Aug 1;329(1):465-83
 
 
+t=[35, 30, 25, 20]';
+c=[0.212, 0.18, 0.157, 0.137]';
+
+% c0 + c1*t = c
+% A*x = b 
+% [35, 1](c1) = 0.212 
+% [30, 1](c0) = 0.18 
+% [25, 1]     = 0.157 
+% [20, 1]     = 0.137
+
+A = [t , ones(size(t))];
+b = c;
+
+% Ax = b
+% A'Ax = A'b
+% x = (A'A)\(A'b)
+
+x = (A'*A)\(A'*b);
+
+% Expected curvature value at 12 C in whole soleus muscle
+c12 = [12,1]*x;
+
+% Solving for fv at vceMax*0.5
+
+
+% vmax for YF
+%
+% Degens H, Yu F, Li X, Larsson L. Effects of age and gender on shortening 
+% velocity and myosin isoforms in single rat muscle fibres. Acta physiologica 
+% scandinavica. 1998 May;163(1):33-40.
+
+halfMaximumNormalizedFiberVelocity = maximumNormalizedFiberVelocity*0.5
+
+Po = 1;
+c = c12;
+b  = c*halfMaximumNormalizedFiberVelocity;
+
+
+
+
+
+forceVelocityMultiplierAtHalfMaximumFiberVelocity = ...
+  ((1+c)*b - c.*(vHalf+b)) ...
+  ./ (halfMaximumNormalizedFiberVelocity+b);  
+
+flag_debugFv = 1;
+if(flag_debugFv==1)
+  figDebugFv = figure;
+  v = [0.01:0.01:1].*maximumNormalizedFiberVelocity;
+  fv = ((1+c)*b - c.*(v+b)) ./ (v+b);
+  plot(v,fv,'-k');
+  hold on;
+  plot(halfMaximumNormalizedFiberVelocity,...
+       forceVelocityMultiplierAtHalfMaximumFiberVelocity,...
+       'xb');
+  xlabel('Norm. Velocity ($$\ell / \ell^M_o$$');
+  ylabel('Norm. Force ($$f / f^M_o$$)'); 
+  title('Force-velocity curve and curvature'); 
+end
+
+forceVelocityMultiplierAtLowEccentricFiberVelocity     = 1.30;
+forceVelocityMultiplierAtMaximumEccentricFiberVelocity = 1.45;
 
 kisoScott                       = nan;
 tendonStrainAtOneNormForce      = nan;
@@ -151,16 +219,21 @@ useElasticTendonExp = 0;
 normPlateauOffset = ...
   ratSoleusSarcomereProperties.normMyosinBareHalfLength;
 
+useFibrilModel = 1;
+
 %Get the default musculotendon properties for the feline soleus
 [ratSoleusMusculotendonProperties] = ...
   getRatSoleusMusculotendonProperties(...
             maximumNormalizedFiberVelocity,...
             forceVelocityMultiplierAtHalfMaximumFiberVelocity,...
+            forceVelocityMultiplierAtLowEccentricFiberVelocity,...
+            forceVelocityMultiplierAtMaximumEccentricFiberVelocity,...            
             tendonStrainAtOneNormForce,...
             scaleOptimalFiberLength,...                              
             scaleMaximumIsometricTension,...
             normPlateauOffset,...
             useElasticTendonExp,...
+            useFibrilModel,
             flag_useOctave);
           
 

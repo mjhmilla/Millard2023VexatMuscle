@@ -8,6 +8,12 @@
 rootDir         = getRootProjectDirectory();
 projectFolders  = getProjectFolders(rootDir);
 
+addpath( genpath(projectFolders.parameters)     );
+addpath( genpath(projectFolders.curves)         );
+addpath( genpath(projectFolders.experiments)    );
+addpath( genpath(projectFolders.simulation)     );
+addpath( genpath(projectFolders.models)         );
+addpath( genpath(projectFolders.postprocessing) );
 
 %%
 % Rat soleus fibril Model
@@ -16,10 +22,31 @@ projectFolders  = getProjectFolders(rootDir);
 fprintf('\n\nCreating: default rat soleus fibril model\n');
 fprintf('  used to simulate Tomalka, Weider, Hahn, Seiberl, Siebert 2020.\n\n');
 
+fprintf('\n\nTo do:');
+fprintf('\n1. Update createFiberActiveForceLengthCurve:');
+fprintf('\na. Option 1: Add optional parameters to set the coordinates of the');
+fprintf('\n             transition from the steep-to-shallow ascending limb.');
+fprintf('\nb. Option 2: Add a new function that takes the saromere data + exp');
+fprintf('\n             measurements and makes a fit');
+fprintf('\nc. Option 3: Add a new function that takes the saromere data + exp');
+fprintf('\n             uses Guenter and Rockenfellers model and makes a fit');
+fprintf('\nMotivation: Stephenson and Williams present a mean +/- 1sd force-');
+fprintf('\n            length curve that is far below the theoretical curve on');
+fprintf('\n            the shallow ascending limb.');
+fprintf('\n\n2. Look at Prado again: there are a lot of references related to');
+fprintf(  '\n   rat muscle.')
+% Stephenson DG, Williams DA. Effects of sarcomere length on the force—pCa 
+% relation in fast‐and slow‐twitch skinned muscle fibres from the rat. 
+% The Journal of Physiology. 1982 Dec 1;333(1):637-53.
+
+fprintf('\n\n3. Find sources for lopt, fiso, and ltslk beyond Lemaire et al.');
+fprintf(  '\n   for the rat soleus muscle.')
+
 
 %%%
 %
-% XE default parameters from the rabbit fibril (Appendix 8-table 1)
+% XE normalized parameters from the cat soleus with an elastic tendon
+% from Table 1 
 %
 % Matthew Millard, David W Franklin, Walter Herzog (2024) 
 % A three filament mechanistic model of musculotendon force and impedance 
@@ -30,6 +57,10 @@ normCrossBridgeStiffness    = 49.1;  %fiso/lopt
 normCrossBridgeDamping      = 0.347; %fiso/(lopt/s)
 
 
+%
+% I haven't yet found any papers that report the molecular weight of
+% titin from rat soleus titin.
+%
 titinMolecularWeightInkDDefault =[];
 
 %%%
@@ -72,8 +103,10 @@ normFiberLengthAtOneNormPassiveForceRatSoleusFibril = passiveForceKeyPoints(2,1)
 % nothing. 
 ecmForceFractionRatSoleusFitted = 0.0;% 
 
+%
+% default value
+%
 normPevkToActinAttachmentPointRatSoleusFitted=0.5;
-
 
 %
 % The half relaxation time in Figure 1 of Tomalka et al. (a stretch of ~20%
@@ -115,7 +148,7 @@ scaleMaximumIsometricTensionRatSoleus   = 1;
 flag_useOctave                          = 0;
 
 
-rabbitPsoasFibrilWLC = createRatSoleusFibrilModel(...
+ratSoleusFibril = createRatSoleusFibrilModel(...
                               normCrossBridgeStiffness,...
                               normCrossBridgeDamping,...
                               normPevkToActinAttachmentPointRatSoleusFitted,...
@@ -128,12 +161,17 @@ rabbitPsoasFibrilWLC = createRatSoleusFibrilModel(...
                               useTwoSidedTitinCurves,...
                               smallNumericallyNonZeroNumber,...
                               flag_enableNumericallyNonZeroGradients,...
-                              scaleOptimalFiberLengthRatSoleusPsoas,...
-                              scaleMaximumIsometricTensionRatSoleusPsoas, ...
+                              scaleOptimalFiberLengthRatSoleus,...
+                              scaleMaximumIsometricTensionRatSoleus, ...
                               projectFolders,...
                               flag_useOctave);
 
-filePathRabbitPsoas = fullfile(projectFolders.output_structs_FittedModels,...
-                                'rabbitPsoasFibrilWLC.mat');
-
-save(filePathRabbitPsoas,'rabbitPsoasFibrilWLC');
+if(useWlcTitinModel==1)
+    filePathRatSoleus = fullfile(projectFolders.output_structs_FittedModels,...
+                                'ratSoleusFibrilWLC.mat');
+    save(filePathRatSoleus,'ratSoleusFibrilWLC');
+else
+    filePathRatSoleus = fullfile(projectFolders.output_structs_FittedModels,...
+                                'ratSoleusFibrilLinearTitin.mat');
+    save(filePathRatSoleus,'ratSoleusFibrilLinearTitin');
+end

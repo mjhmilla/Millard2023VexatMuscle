@@ -98,7 +98,7 @@ elseif(strcmp(animalName,'rabbitEDL')==1)
 elseif(strcmp(animalName,'ratSOL')==1)
   animalId = 7;
 else  
-  assert(0,'animalName must be cat, human, frog, or rabbit');
+  assert(0,'animalName must be cat, human, frog, rabbit, or rat');
 end
 
 
@@ -575,9 +575,12 @@ extraCellularMatrixPassiveForceFraction = ecmForceFraction; %1-0.5*(0.24+0.57);
 % DuVall MM, Gifford JL, Amrein M, Herzog W. Altered mechanical properties of 
 % titin immunoglobulin domain 27 in the presence of calcium. European Biophysics 
 % Journal. 2013 Apr;42(4):301-7.    
-lContourIGPNorm     = (numDomainsIgP*(maxIgDomainStrain_um))    / optSarcomereLength;
-lContourPEVKNorm    = (numResiduesPevk*(maxPevkResidueStrain_um))/ optSarcomereLength;
-lContourIGDFreeNorm = (numDomainsIgD*(maxIgDomainStrain_um))    / optSarcomereLength; 
+lContourIGPNorm     = (numDomainsIgP*(maxIgDomainStrain_um))  ...
+                      / optSarcomereLength;
+lContourPEVKNorm    = (numResiduesPevk*(maxPevkResidueStrain_um)) ...
+                      / optSarcomereLength;
+lContourIGDFreeNorm = (numDomainsIgD*(maxIgDomainStrain_um)) ...   
+                      / optSarcomereLength; 
 
 lContourTitinNorm = ...
     (lContourIGPNorm+lContourPEVKNorm+lContourIGDFreeNorm...
@@ -615,7 +618,7 @@ titinModelStickySpring      =0;
 %    broken). After talking to Sven about the practicalities of these
 %    experiments he thinks its also possible that the number of sarcomeres
 %    were lost track of and/or the sarcomeres on the boundaries were
-%    perhaps doing somethin odd.
+%    perhaps doing something odd.
 %
 %    Also, part of the odd lengths I observed in my simulations happened because
 %    I did not include a sharp increase in force as the Ig and PEVK elements
