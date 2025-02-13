@@ -23,11 +23,11 @@ myosinLength      = 1.63;
 zLineLength       = 0.07;
 myosinBareLength  = 0.16;
 
-halfMyosinBareLength = myosinBareLength*0.25;
+halfMyosinBareLength = myosinBareLength*0.5;
 halfMyosinLength     = myosinLength*0.5;
 
 lasc  = max(actinLength,myosinLength)    + 2*zLineLength;    
-loptA = 2*actinLength                    + 2*zLineLength;
+loptA = 2*actinLength  -myosinBareLength + 2*zLineLength;
 loptB = 2*actinLength  +myosinBareLength + 2*zLineLength;
 lmax  = 2*actinLength  +myosinLength     + 2*zLineLength;
 
@@ -40,11 +40,17 @@ if(flag_debug==1)
     halfMyosinBareLength =     ( activeForceLengthKeyPoints(1,4) ...
                                - activeForceLengthKeyPoints(1,3) )*0.25;
     
+    assert(abs(halfMyosinBareLengthTest-halfMyosinBareLength) < sqrt(eps));
+
     halfMyosinLength      = 0.5*(activeForceLengthKeyPoints(1,5) ...
-                                -activeForceLengthKeyPoints(1,3));                    
+                                -activeForceLengthKeyPoints(1,4)) ...
+                                +halfMyosinBareLength;  
+
+    assert(abs(halfMyosinLengthTest-halfMyosinLength) < sqrt(eps));
                        
     actinLength           = 0.5*( (activeForceLengthKeyPoints(1,5))...
                             -2*halfMyosinLength ...
                             -2*zLineLength); 
+    assert(abs(actinLengthTest-actinLength) < sqrt(eps));
 end
 here=1;

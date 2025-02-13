@@ -69,8 +69,8 @@ function [activeForceLengthKeyPoints, ...
 %length-force relationship of rat muscle fibre bundles. Journal of Biomechanics. 
 %1995 Jan 1;28(1):83-7.
 
-geoRatSW = [1.4914,1.8862,2.516,2.63,4.0]./; 
-loSW   = 0.5*(geoRat(1,3)+geoRat(1,4));
+geoRatSW = [1.4914,1.8862,2.516,2.63,4.0]; 
+loSW   = 0.5*(geoRatSW(1,3)+geoRatSW(1,4));
 geoRatSW = geoRatSW ./ loSW;
 
 
@@ -80,13 +80,13 @@ geoRatSW = geoRatSW ./ loSW;
 % zLineLength       = 0.07;
 % myosinBareLength  = 0.16;
 
-actinLength      = 1.13; %ter Keurs et al.
-myosinLength     = 1.63; %Higuchi et al.
-myosinBareLength = 0.125 %Higuchi et al.
-zLineLength      = 0.07; %From Higuchi et al. (cat)
-lzero            = 1.2939; %From Zuurbier et al.
+actinLength      = 1.13;    %ter Keurs et al.
+myosinLength     = 1.63;    %Higuchi et al.
+myosinBareLength = 0.125;   %Higuchi et al.
+zLineLength      = 0.07;    %From Higuchi et al. (cat)
+lzero            = 1.2939;  %From Zuurbier et al.
 
-halfMyosinBareLength = myosinBareLength*0.25;
+halfMyosinBareLength = myosinBareLength*0.5;
 halfMyosinLength     = myosinLength*0.5;
 
 lasc  = max(actinLength,myosinLength)    + 2*zLineLength;    
@@ -101,14 +101,23 @@ activeForceLengthKeyPoints = geoRat;
 
 flag_debug=1;
 if(flag_debug==1)
-    halfMyosinBareLength =     ( activeForceLengthKeyPoints(1,4) ...
+    halfMyosinBareLengthTest = ( activeForceLengthKeyPoints(1,4) ...
                                - activeForceLengthKeyPoints(1,3) )*0.25;
-    
-    halfMyosinLength      = 0.5*(activeForceLengthKeyPoints(1,5) ...
-                                -activeForceLengthKeyPoints(1,3));                    
+
+    assert(abs(halfMyosinBareLengthTest-halfMyosinBareLength) < sqrt(eps));
+
+    halfMyosinLengthTest = 0.5*( activeForceLengthKeyPoints(1,5) ...
+                                -activeForceLengthKeyPoints(1,4)) ...
+                                +halfMyosinBareLength;                    
+
+    assert(abs(halfMyosinLengthTest-halfMyosinLength) < sqrt(eps));
                        
-    actinLength           = 0.5*( (activeForceLengthKeyPoints(1,5))...
+    actinLengthTest = 0.5*( (activeForceLengthKeyPoints(1,5))...
                             -2*halfMyosinLength ...
                             -2*zLineLength); 
+
+    assert(abs(actinLengthTest-actinLength) < sqrt(eps));
+    
+    here=1;
 end
 here=1;

@@ -54,6 +54,7 @@ projectFolders.experiments_TGFG1998      = fullfile(projectFolders.experiments, 
 projectFolders.experiments_HBSG1995      = fullfile(projectFolders.experiments, 'HasselmanBestSeaberGarret1995'       ); 
 projectFolders.experiments_SW1982        = fullfile(projectFolders.experiments, 'StephensonWilliams1982'              ); 
 projectFolders.experiments_TWHSS2021     = fullfile(projectFolders.experiments, 'TomalkaWeidnerHahnSieberlSiebert2021'); 
+projectFolders.experiments_ZHGL1995      = fullfile(projectFolders.experiments, 'ZuurbierHeslingaGrootLaarse1995'); 
 
 
 projectFolders.output_plots     = fullfile(projectFolders.output,'plots');
@@ -75,11 +76,10 @@ projectFolders.output_plots_SystemIdentificationExample ...
                                            = fullfile(projectFolders.output_plots, 'SystemIdentificationExample'          ); 
 projectFolders.output_plots_SW1982         = fullfile(projectFolders.output_plots,  'StephensonWilliams1982'              ); 
 projectFolders.output_plots_TWHSS2021      = fullfile(projectFolders.output_plots,  'TomalkaWeidnerHahnSieberlSiebert2021'); 
-
+projectFolders.output_plots_ZHGL1995       = fullfile(projectFolders.output_plots, 'ZuurbierHeslingaGrootLaarse1995'); 
 
 projectFolders.output_tables_KBR1994      = fullfile(projectFolders.output_tables,'KirschBoskovRymer1994');
 projectFolders.output_tables_MuscleCurves = fullfile(projectFolders.output_tables,'MuscleCurves');
-
 
 projectFolders.output_structs_FittedModels   = fullfile(projectFolders.output_structs, 'FittedModels'                        );
 projectFolders.output_structs_HL2002         = fullfile(projectFolders.output_structs, 'HerzogLeonard2002'                   );   
@@ -93,5 +93,6 @@ projectFolders.output_structs_HBSG1995       = fullfile(projectFolders.output_st
 
 projectFolders.output_structs_SW1982         = fullfile(projectFolders.output_structs, 'StephensonWilliams1982'              ); 
 projectFolders.output_structs_TWHSS2021      = fullfile(projectFolders.output_structs, 'TomalkaWeidnerHahnSieberlSiebert2021'); 
+projectFolders.output_structs_ZHGL1995       = fullfile(projectFolders.output_structs, 'ZuurbierHeslingaGrootLaarse1995'); 
 
 

@@ -179,7 +179,7 @@ c12 = [12,1]*x;
 % velocity and myosin isoforms in single rat muscle fibres. Acta physiologica 
 % scandinavica. 1998 May;163(1):33-40.
 
-halfMaximumNormalizedFiberVelocity = maximumNormalizedFiberVelocity*0.5
+halfMaximumNormalizedFiberVelocity = maximumNormalizedFiberVelocity*0.5;
 
 Po = 1;
 c = c12;
@@ -233,7 +233,7 @@ useFibrilModel = 1;
             scaleMaximumIsometricTension,...
             normPlateauOffset,...
             useElasticTendonExp,...
-            useFibrilModel,
+            useFibrilModel,...
             flag_useOctave);
           
 
