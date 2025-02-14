@@ -16,6 +16,21 @@ addpath( genpath(projectFolders.models)         );
 addpath( genpath(projectFolders.postprocessing) );
 
 %%
+% Parameters
+%%
+
+makeFibrilModel         = 1;
+useElasticTendon        = 1 && ~makeFibrilModel;
+useWlcTitinModel        = 0;
+useCalibratedCurves     = 0;
+useTwoSidedTitinCurves  = 0;
+
+flag_enableNumericallyNonZeroGradients  = 1;
+scaleOptimalFiberLengthRatSoleus        = 1;
+scaleMaximumIsometricTensionRatSoleus   = 1;
+flag_useOctave                          = 0;
+
+%%
 % Rat soleus fibril Model
 %%
 
@@ -42,6 +57,33 @@ fprintf(  '\n   rat muscle.')
 fprintf('\n\n3. Find sources for lopt, fiso, and ltslk beyond Lemaire et al.');
 fprintf(  '\n   for the rat soleus muscle.')
 
+%%
+% Plot configuration
+%%
+plotLayoutSettings = struct('numberOfHorizontalPlotColumns',  4,...
+                            'numberOfVerticalPlotRows',       2,...
+                            'flag_fixedPlotWidth',            1,...
+                            'plotWidth',                      7,...
+                            'plotHeight',                     7,...
+                            'flag_usingOctave',               0);
+
+numberOfHorizontalPlotColumns = plotLayoutSettings.numberOfHorizontalPlotColumns;
+numberOfVerticalPlotRows      = plotLayoutSettings.numberOfVerticalPlotRows;
+flag_fixedPlotWidth           = plotLayoutSettings.flag_fixedPlotWidth;
+plotWidth                     = plotLayoutSettings.plotWidth;
+plotHeight                    = plotLayoutSettings.plotHeight;
+flag_usingOctave              = plotLayoutSettings.flag_usingOctave;
+
+plotHorizMarginCm = 2;
+plotVertMarginCm  = 2;
+
+pageWidth   = (plotWidth+plotHorizMarginCm)*numberOfHorizontalPlotColumns...
+                +plotHorizMarginCm;
+
+pageHeight  = (plotHeight+plotVertMarginCm)*numberOfVerticalPlotRows...
+                +plotVertMarginCm;
+
+plotConfigGeneric;
 
 %%%
 %
@@ -136,19 +178,11 @@ normPevkToActinAttachmentPointRatSoleusFitted=0.5;
 %
 normMaxActiveTitinToActinDamping = 20.3; %fo/(lo/s)
 
-useWlcTitinModel        = 0;
-useCalibratedCurves     = 0;
-useTwoSidedTitinCurves  = 0;
 
 smallNumericallyNonZeroNumber = sqrt(sqrt(eps));
 
-flag_enableNumericallyNonZeroGradients  = 1;
-scaleOptimalFiberLengthRatSoleus        = 1;
-scaleMaximumIsometricTensionRatSoleus   = 1;
-flag_useOctave                          = 0;
 
-
-ratSoleusFibril = createRatSoleusFibrilModel(...
+ratSoleusFibril = createRatSoleusModel(...
                               normCrossBridgeStiffness,...
                               normCrossBridgeDamping,...
                               normPevkToActinAttachmentPointRatSoleusFitted,...
@@ -163,15 +197,17 @@ ratSoleusFibril = createRatSoleusFibrilModel(...
                               flag_enableNumericallyNonZeroGradients,...
                               scaleOptimalFiberLengthRatSoleus,...
                               scaleMaximumIsometricTensionRatSoleus, ...
+                              useElasticTendon,...
+                              makeFibrilModel,...
                               projectFolders,...
                               flag_useOctave);
 
 if(useWlcTitinModel==1)
     filePathRatSoleus = fullfile(projectFolders.output_structs_FittedModels,...
                                 'ratSoleusFibrilWLC.mat');
-    save(filePathRatSoleus,'ratSoleusFibrilWLC');
+    save(filePathRatSoleus,'ratSoleusFibril');
 else
     filePathRatSoleus = fullfile(projectFolders.output_structs_FittedModels,...
                                 'ratSoleusFibrilLinearTitin.mat');
-    save(filePathRatSoleus,'ratSoleusFibrilLinearTitin');
+    save(filePathRatSoleus,'ratSoleusFibril');
 end

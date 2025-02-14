@@ -14,7 +14,7 @@
 
 %This flag allows us to avoid the memory clearing functions so that
 %this can be timed using tic and tock from within main_OuterLoop
-flag_OuterOuterLoopMode =1;
+flag_OuterOuterLoopMode =0;
 if(flag_OuterOuterLoopMode ==0)
     clc;
     close all;
@@ -164,7 +164,7 @@ flag_plotAllTunedRabbitPsoasFibrilCurves= 0;
 %%
 % Rabbit Tibialis Anterior Model parameters
 %%
-flag_plotAllRabbitTACurves           = 1;
+flag_plotAllRabbitTACurves           = 0;
 
 scalePathLengthRabbitTA      = 1;
 scaleMaximumIsometricTensionRabbitTA = 1;
@@ -174,7 +174,7 @@ elasticTendonReferenceModelRabbitTA    = [];
 %%
 % Rabbit Extensor Digitorum Longius Model parameters
 %%
-flag_plotAllRabbitEDLCurves           = 1;
+flag_plotAllRabbitEDLCurves           = 0;
 
 scalePathLengthRabbitEDL      = 1;
 scaleMaximumIsometricTensionRabbitEDL = 1;
