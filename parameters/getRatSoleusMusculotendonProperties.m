@@ -20,7 +20,7 @@ function [musculotendonProperties] = ...
               useFibrilModel,...
               flag_useOctave)
 
-disp('getRatSoleusMusculotendonProperties:');
+%disp('getRatSoleusMusculotendonProperties:');
 
 lceOpt   = nan;
 alphaOpt = nan; 

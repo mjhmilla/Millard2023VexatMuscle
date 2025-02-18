@@ -17,16 +17,18 @@ function errV = calcFittedFiberForceLengthCurveError( params, data, scaling, ...
 
 xshift = params(1)./scaling;
 xwidth = params(2)./scaling;
-kLow   = fixedParams(1,1);
-kNum   = fixedParams(1,2);
+
+kLow        = fixedParams(1,1);
+kZero       = fixedParams(1,2);
+kNum        = fixedParams(1,3);
+curviness   = fixedParams(1,4);
 
 normLengthZero = xshift;
 normLengthToe  = xwidth + xshift;
 fToe  = 1;
-kZero = fixedParams(1,3);
+
 
 kToe  = kNum/(normLengthToe-normLengthZero);
-curviness= fixedParams(1,4);
 
 computeIntegral = 0;
 

@@ -179,11 +179,15 @@ curvinessActiveForceLength = 1.;
 if(flag_solveForOptimalFiberLengthOfBestFit==1 ...
       && isempty(createMusculoTendonFcn)==0)
   x0 = [1.];
-  errFcn = @(argX)calcScalingError(argX,createMusculoTendonFcn,...
-                                        curvinessActiveForceLength,...
-                                        flag_enableNumericallyNonZeroGradients,...
-                                        smallNumericallyNonZeroNumber,...                                        
-                                        flag_useOctave);
+  errFcn = @(argX)calcScalingError(...
+                    argX,...
+                    createMusculoTendonFcn,...
+                    curvinessActiveForceLength,...
+                    shiftLengthActiveForceLengthCurveDescendingCurve,...
+                    flag_enableNumericallyNonZeroGradients,...
+                    smallNumericallyNonZeroNumber,...                                        
+                    flag_useOctave);
+  fvalStart = errFcn(1.0);
   A   = [];
   B   = [];
   Aeq = [];
@@ -193,7 +197,7 @@ if(flag_solveForOptimalFiberLengthOfBestFit==1 ...
                                       
   [x,fval,exitflag]=fmincon( errFcn, x0, A,B,Aeq,Beq,lb,ub);
 
-  assert(exitflag==1);
+  assert(fval <= fvalStart, 'Error: fitting of lopt produced a worse result');
     
   scaleOptimalFiberLength       = x(1,1);
   scaleMaximumIsometricTension  = 1;
@@ -323,12 +327,10 @@ flag_passiveCurveFitted=0;
 if(useElasticTendon == 0 && ...
       isempty(elasticTendonReferenceModel)==0)
   flag_passiveCurveFitted=1;
-  normLengthZero           = 1.0; 
-  normLengthToe            = 1.7;
+  normLengthZero           = sarcomereProperties.normFiberLengthAtZeroForce; 
+  normLengthToe            = sarcomereProperties.normFiberLengthAtOneNormPassiveForce;
 
      
-  
-  
   dataPassiveForceLengthNormalized = [dataPassiveForceLengthNormalized;...
       sarcomereProperties.normFiberLengthAtOneNormPassiveForce,1];
 
@@ -338,7 +340,7 @@ if(useElasticTendon == 0 && ...
     kZero = smallNumericallyNonZeroNumber;
   end      
   fToe            = 1.0;  
-  curviness       = 0.75;
+  curviness       = 0.5;
 
   kNum            = 2;
   kToe            = kNum/(normLengthToe-normLengthZero);
@@ -461,13 +463,13 @@ if(useElasticTendon == 0 && ...
   end
 end
 
-if(useElasticTendon == 1 && ...
-          flag_passiveCurveFitted == 0 && ...
-          isempty(dataPassiveForceLengthNormalized) == 0)
+if(flag_passiveCurveFitted == 0 && ...
+   isempty(dataPassiveForceLengthNormalized) == 0)
 
       flag_passiveCurveFitted=1;
-      normLengthZero           = 1.0; 
-      normLengthToe            = 1.7;
+      normLengthZero  = min(1.0,sarcomereProperties.normFiberLengthAtOneNormPassiveForce-0.6); 
+      normLengthToe   = sarcomereProperties.normFiberLengthAtOneNormPassiveForce;
+
       kZero           = 0;
       
       if(flag_enableNumericallyNonZeroGradients)
@@ -483,9 +485,9 @@ if(useElasticTendon == 1 && ...
       problemScaling  = 1000;
       params0         = [xshift  , xwidth].*problemScaling;
       paramsLB        = [0.8*xshift    ;    0.5].*problemScaling;
-      paramsUB        = [2.0     ;   2.0].*problemScaling;
+      paramsUB        = [2.0           ;    2.0].*problemScaling;
       
-      fixedParams = [kLow,kNum,kZero,curviness];
+      fixedParams = [kLow,kZero,kNum,curviness];
     
       errFcn = @(argX)calcFittedFiberForceLengthCurveError(argX,...
                        dataPassiveForceLengthNormalized,problemScaling,...
@@ -495,7 +497,9 @@ if(useElasticTendon == 1 && ...
       err0 = errFcn(params0);
       lsqOptions = optimoptions('lsqnonlin','Display','off',...
           'FinDiffType','central');
-      x    = lsqnonlin(errFcn,params0,paramsLB,paramsUB,lsqOptions);
+      [x,resnorm,residual,exitflag]  = ...
+          lsqnonlin(errFcn,params0,paramsLB,paramsUB,lsqOptions);
+      
       err1 = errFcn(x);
     
       fprintf('  forceLengthCurve fitted, error reduced from %1.2e - %1.2e\n',...
@@ -503,6 +507,7 @@ if(useElasticTendon == 1 && ...
       
       xshift    = x(1)/problemScaling;
       xwidth    = x(2)/problemScaling;
+
       normLengthZero = xshift;
       normLengthToe  = xshift + xwidth;
       kToe      = kNum/(normLengthToe-normLengthZero);
@@ -538,7 +543,7 @@ end
 
 if(flag_passiveCurveFitted==0)
   flag_passiveCurveFitted=1;
-  normLengthZero = 1+0; 
+  normLengthZero = sarcomereProperties.normFiberLengthAtZeroForce; 
   normLengthToe  = sarcomereProperties.normFiberLengthAtOneNormPassiveForce;
   fToe  = 1;
   kZero = 0;

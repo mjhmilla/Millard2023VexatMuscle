@@ -43,242 +43,10 @@ flag_useOctave                          = 0;
 % Plot configuration and data structs
 %%
 
-plotSettings(2) = ...
-    struct('row',0,...
-           'col',0,...
-           'xlabel','',...
-           'ylabel','',...
-           'xlim',[],...
-           'ylim',[],...
-           'title','');
-idx=1;
-plotSettings(idx).row = 1;
-plotSettings(idx).col = 1;
-plotSettings(idx).xlim = [1.3,4.5];
-plotSettings(idx).ylim = [0,1.6];
-plotSettings(idx).xlabel = 'Length ($$\mu$$m)';
-plotSettings(idx).ylabel = 'Norm. Force ($$f/f_o^M$$)';
-plotSettings(idx).title = {'Rat Soleus $$f^L(\ell^M)$$'};
-plotSettings(idx).legendLocation = 'NorthWest';
+[dataToPlot,...
+ dataIndexes,... 
+ plotSettings] = getRatSoleusModelPlottingStructures();
 
-% idx=idx+1;
-% plotSettings(idx).row = 1;
-% plotSettings(idx).col = 2;
-% plotSettings(idx).xlim = [1.3,4.5];
-% plotSettings(idx).ylim = [0,1.1];
-% plotSettings(idx).xlabel = 'Length ($$\mu$$m)';
-% plotSettings(idx).ylabel = 'Norm. Force ($$f/f_o^M$$)';
-% plotSettings(idx).title = {'Rat Soleus $$f^{PE}(\ell^M)$$'};
-
-idx=idx+1;
-plotSettings(idx).row = 1;
-plotSettings(idx).col = 2;
-plotSettings(idx).xlim = [-1,1];
-plotSettings(idx).ylim = [0,1.6];
-plotSettings(idx).xlabel = 'Velocity ($$\ell^M/\ell_o^M$$)';
-plotSettings(idx).ylabel = 'Norm. Force ($$f/f_o^M$$)';
-plotSettings(idx).title = {'Rat Soleus $$f^{V}(v^M/v^M_{max})$$'};
-plotSettings(idx).legendLocation = 'SouthEast';
-
-% 1. Tomalka et al. (fl & fpe)
-% 2. Zuurbier et al. (fl)
-% 3. Stephenson and Williams (fl & fpe)
-dataToPlot(9)=...
-    struct('x',[],...
-           'y',[],...
-           'row',0,...
-           'col',0,...
-           'type','Exp',...
-           'LineColor',[0,0,0],...
-           'Mark','-',...
-           'MarkerFaceColor',[0,0,0],...
-           'MarkerEdgeColor',[0,0,0],...
-           'MarkerSize',5,...
-           'DisplayName','',...
-           'HandleVisibility','off');
-
-%1. SW1992 fl
-%2. SW1992 fpe
-%3. ZHGL1995 fl
-%4. TRSS2017 fl
-%5. TRSS2017 fpe
-%6. fl (model)
-%7. fpe (model)
-%8. ft passive (model)
-%9. fv (model)
-
-modelColors = getPaulTolColourSchemes('vibrant');
-colorTRSS2017   = [1,1,1].*0.25;
-colorZHGL1995   = [1,1,1].*0.5;
-colorSW1992     = [1,1,1].*0.75;
-
-
-
-
-indexPlot.SW1982_fl           = 1;
-indexPlot.SW1982_fpe          = 2;
-indexPlot.ZHGL1995_fl         = 3;
-indexPlot.TRSS2017_fl         = 4;
-indexPlot.TRSS2017_fpe        = 5;
-indexPlot.model_fl            = 6;
-%indexPlot.model_fpe           = 6;
-indexPlot.model_titinPassive  = 7;
-indexPlot.model_titinActive   = 8;
-indexPlot.model_fv            = 9;
-
-
-%SW1992 fl
-idx=1;
-dataToPlot(idx).row=1;
-dataToPlot(idx).col=1;
-dataToPlot(idx).x = [];
-dataToPlot(idx).y = [];
-dataToPlot(idx).type = 'Exp';
-dataToPlot(idx).LineColor=colorSW1992;
-dataToPlot(idx).Mark='o';
-dataToPlot(idx).MarkerFaceColor=[1,1,1];
-dataToPlot(idx).MarkerEdgeColor=colorSW1992;
-dataToPlot(idx).MarkerSize=5;
-dataToPlot(idx).DisplayName='SW1992 (F)';
-dataToPlot(idx).HandleVisibility = 'on';
-
-%SW1992 fpe
-idx=idx+1;
-dataToPlot(idx).row=1;
-dataToPlot(idx).col=1;
-dataToPlot(idx).x = [];
-dataToPlot(idx).y = [];
-dataToPlot(idx).type = 'Exp';
-dataToPlot(idx).LineColor=colorSW1992;
-dataToPlot(idx).Mark='o';
-dataToPlot(idx).MarkerFaceColor=[1,1,1];
-dataToPlot(idx).MarkerEdgeColor=colorSW1992;
-dataToPlot(idx).MarkerSize=5;
-dataToPlot(idx).DisplayName='SW1992 (F)';
-dataToPlot(idx).HandleVisibility = 'off';
-
-%ZHGL1995 fl
-idx=idx+1;
-dataToPlot(idx).row=1;
-dataToPlot(idx).col=1;
-dataToPlot(idx).x = [];
-dataToPlot(idx).y = [];
-dataToPlot(idx).type = 'Exp';
-dataToPlot(idx).LineColor=colorZHGL1995;
-dataToPlot(idx).Mark='o';
-dataToPlot(idx).MarkerFaceColor=colorZHGL1995;
-dataToPlot(idx).MarkerEdgeColor=colorZHGL1995;
-dataToPlot(idx).MarkerSize=5;
-dataToPlot(idx).DisplayName='ZHGL1995 (B)';
-dataToPlot(idx).HandleVisibility = 'on';
-
-
-%TRSS2017 fl
-idx=idx+1;
-dataToPlot(idx).row=1;
-dataToPlot(idx).col=1;
-dataToPlot(idx).x = [];
-dataToPlot(idx).y = [];
-dataToPlot(idx).type = 'Exp';
-dataToPlot(idx).LineColor=colorTRSS2017;
-dataToPlot(idx).Mark='.';
-dataToPlot(idx).MarkerFaceColor=colorTRSS2017;
-dataToPlot(idx).MarkerEdgeColor=colorTRSS2017;
-dataToPlot(idx).MarkerSize=5;
-dataToPlot(idx).DisplayName='TRSS2017 (F)';
-dataToPlot(idx).HandleVisibility = 'on';
-
-
-%TRSS2017 fpe
-idx=idx+1;
-dataToPlot(idx).row=1;
-dataToPlot(idx).col=1;
-dataToPlot(idx).x = [];
-dataToPlot(idx).y = [];
-dataToPlot(idx).type = 'Exp';
-dataToPlot(idx).LineColor=colorTRSS2017;
-dataToPlot(idx).Mark='.';
-dataToPlot(idx).MarkerFaceColor=colorTRSS2017;
-dataToPlot(idx).MarkerEdgeColor=colorTRSS2017;
-dataToPlot(idx).MarkerSize=5;
-dataToPlot(idx).DisplayName='TRSS2017 (F)';
-dataToPlot(idx).HandleVisibility = 'off';
-
-%fl (model)
-idx=idx+1;
-dataToPlot(idx).row=1;
-dataToPlot(idx).col=1;
-dataToPlot(idx).x = [];
-dataToPlot(idx).y = [];
-dataToPlot(idx).type = 'Mdl';
-dataToPlot(idx).LineColor=modelColors.blue;
-dataToPlot(idx).Mark='-';
-dataToPlot(idx).MarkerFaceColor=modelColors.blue;
-dataToPlot(idx).MarkerEdgeColor=modelColors.blue;
-dataToPlot(idx).MarkerSize=5;
-dataToPlot(idx).DisplayName='$$f^L(\ell^M)$$';
-dataToPlot(idx).HandleVisibility = 'on';
-
-
-%fpe (model)
-% idx=idx+1;
-% dataToPlot(idx).row=1;
-% dataToPlot(idx).col=1;
-% dataToPlot(idx).x = [];
-% dataToPlot(idx).y = [];
-% dataToPlot(idx).type = 'Mdl';
-% dataToPlot(idx).LineColor=colorModel1;
-% dataToPlot(idx).Mark='-';
-% dataToPlot(idx).MarkerFaceColor=colorModel1;
-% dataToPlot(idx).MarkerEdgeColor=colorModel1;
-% dataToPlot(idx).MarkerSize=5;
-% dataToPlot(idx).DisplayName='Model';
-
-%ft passive (model)
-idx=idx+1;
-dataToPlot(idx).row=1;
-dataToPlot(idx).col=1;
-dataToPlot(idx).x = [];
-dataToPlot(idx).y = [];
-dataToPlot(idx).type = 'Mdl';
-dataToPlot(idx).LineColor=modelColors.cyan;
-dataToPlot(idx).Mark='-';
-dataToPlot(idx).MarkerFaceColor=modelColors.cyan;
-dataToPlot(idx).MarkerEdgeColor=modelColors.cyan;
-dataToPlot(idx).MarkerSize=5;
-dataToPlot(idx).DisplayName='$$f^{Ti}(\ell^M)$$ (passive)';
-dataToPlot(idx).HandleVisibility = 'on';
-
-
-%ft active (model)
-idx=idx+1;
-dataToPlot(idx).row=1;
-dataToPlot(idx).col=1;
-dataToPlot(idx).x = [];
-dataToPlot(idx).y = [];
-dataToPlot(idx).type = 'Mdl';
-dataToPlot(idx).LineColor=modelColors.red;
-dataToPlot(idx).Mark='-';
-dataToPlot(idx).MarkerFaceColor=modelColors.red;
-dataToPlot(idx).MarkerEdgeColor=modelColors.red;
-dataToPlot(idx).MarkerSize=5;
-dataToPlot(idx).DisplayName='$$f^{Ti}(\ell^M)$$ (active)';
-dataToPlot(idx).HandleVisibility = 'on';
-
-%fv (model)
-idx=idx+1;
-dataToPlot(idx).row=1;
-dataToPlot(idx).col=2;
-dataToPlot(idx).x = [];
-dataToPlot(idx).y = [];
-dataToPlot(idx).type = 'Mdl';
-dataToPlot(idx).LineColor=modelColors.blue;
-dataToPlot(idx).Mark='-';
-dataToPlot(idx).MarkerFaceColor=modelColors.blue;
-dataToPlot(idx).MarkerEdgeColor=modelColors.blue;
-dataToPlot(idx).MarkerSize=5;
-dataToPlot(idx).DisplayName='$$f^V(v^M/v_o^M)$$';
-dataToPlot(idx).HandleVisibility = 'on';
 
 %%
 % Rat soleus fibril Model
@@ -387,7 +155,7 @@ titinMolecularWeightInkDDefault =[];
 %
 %%%
 passiveForceKeyPoints = [1.05,   0;...
-                         1.696,1.0];  
+                         1.6,1.0];  
 
 normFiberLengthAtOneNormPassiveForceRatSoleusFibril = passiveForceKeyPoints(2,1);
 
@@ -464,14 +232,14 @@ referenceData(1).passiveForceLengthData =...
         {'Exp.'},...
          'Rat fibril (EDL) $$f^{L}$$'); 
 
-dataToPlot(indexPlot.TRSS2017_fl).x =...
+dataToPlot(dataIndexes.TRSS2017_fl).x =...
     referenceData(1).activeForceLengthData.x;
-dataToPlot(indexPlot.TRSS2017_fl).y =...
+dataToPlot(dataIndexes.TRSS2017_fl).y =...
     referenceData(1).activeForceLengthData.y;
 
-dataToPlot(indexPlot.TRSS2017_fpe).x =...
+dataToPlot(dataIndexes.TRSS2017_fpe).x =...
     referenceData(1).passiveForceLengthData.x;
-dataToPlot(indexPlot.TRSS2017_fpe).y =...
+dataToPlot(dataIndexes.TRSS2017_fpe).y =...
     referenceData(1).passiveForceLengthData.y;
 
 %
@@ -504,8 +272,8 @@ end
 
 referenceData(2).passiveForceLengthData = [];
 
-dataToPlot(indexPlot.ZHGL1995_fl).x = xData;
-dataToPlot(indexPlot.ZHGL1995_fl).y = yData;
+dataToPlot(dataIndexes.ZHGL1995_fl).x = xData;
+dataToPlot(dataIndexes.ZHGL1995_fl).y = yData;
 
 
 %
@@ -545,10 +313,10 @@ for i=1:1:length(referenceData(3).passiveForceLengthData)
     yData_fpe= [yData_fpe;referenceData(3).passiveForceLengthData(i).y]; 
 end
 
-dataToPlot(indexPlot.SW1982_fl).x = xData_fl;
-dataToPlot(indexPlot.SW1982_fl).y = yData_fl;
-dataToPlot(indexPlot.SW1982_fpe).x = xData_fpe;
-dataToPlot(indexPlot.SW1982_fpe).y = yData_fpe;
+dataToPlot(dataIndexes.SW1982_fl).x = xData_fl;
+dataToPlot(dataIndexes.SW1982_fl).y = yData_fl;
+dataToPlot(dataIndexes.SW1982_fpe).x = xData_fpe;
+dataToPlot(dataIndexes.SW1982_fpe).y = yData_fpe;
 
 
 %
@@ -607,8 +375,8 @@ activeForceLengthCurveData   = ...
       
 lsOpt = ratSoleusFibril.sarcomere.optimalSarcomereLength;
 
-dataToPlot(indexPlot.model_fl).x = activeForceLengthCurveData.x.*lsOpt;
-dataToPlot(indexPlot.model_fl).y = activeForceLengthCurveData.y;
+dataToPlot(dataIndexes.model_fl).x = activeForceLengthCurveData.x.*lsOpt;
+dataToPlot(dataIndexes.model_fl).y = activeForceLengthCurveData.y;
 
 %
 % fpe
@@ -618,21 +386,24 @@ passiveForceLengthCurveData   = ...
         ratSoleusFibril.curves.fiberForceLengthCurve, ...
         100,[]);
 
+dataToPlot(dataIndexes.model_fpe).x = passiveForceLengthCurveData.x.*lsOpt;
+dataToPlot(dataIndexes.model_fpe).y = passiveForceLengthCurveData.y;
+
 titinCurveSample = ...
   sampleTitinCurves20250217(...
     ratSoleusFibril.curves,...
     ratSoleusFibril.sarcomere,...
     100);
 
-%dataToPlot(indexPlot.model_fpe).x = passiveForceLengthCurveData.x;
-%dataToPlot(indexPlot.model_fpe).y = passiveForceLengthCurveData.y;
+%dataToPlot(dataIndexes.model_fpe).x = passiveForceLengthCurveData.x;
+%dataToPlot(dataIndexes.model_fpe).y = passiveForceLengthCurveData.y;
 
 lambdaECM = ratSoleusFibril.sarcomere.extraCellularMatrixPassiveForceFraction;
 
-% dataToPlot(indexPlot.model_fpe).x = ...
+% dataToPlot(dataIndexes.model_fpe).x = ...
 %     titinCurveSample.curveSampleTitin.x.*(2*lsOpt);
 % 
-% dataToPlot(indexPlot.model_fpe).y = ...
+% dataToPlot(dataIndexes.model_fpe).y = ...
 %     titinCurveSample.curveSampleTitin.y.*(1-lambdaECM) ...
 %    +titinCurveSample.curveSampleECMHalf.y.*(lambdaECM);
 
@@ -645,23 +416,23 @@ forceVelocityCurveData   = ...
         ratSoleusFibril.curves.fiberForceVelocityCurve, ...
         100,[]);
 
-dataToPlot(indexPlot.model_fv).x = forceVelocityCurveData.x;
-dataToPlot(indexPlot.model_fv).y = forceVelocityCurveData.y;
+dataToPlot(dataIndexes.model_fv).x = forceVelocityCurveData.x;
+dataToPlot(dataIndexes.model_fv).y = forceVelocityCurveData.y;
 
 %
 % Titin detail
 %
 
 
-dataToPlot(indexPlot.model_titinPassive).x = ...
+dataToPlot(dataIndexes.model_titinPassive).x = ...
     titinCurveSample.curveSampleTitin.x.*(2*lsOpt);
-dataToPlot(indexPlot.model_titinPassive).y = ...
+dataToPlot(dataIndexes.model_titinPassive).y = ...
     titinCurveSample.curveSampleTitin.y.*(1-lambdaECM) ...
    +titinCurveSample.curveSampleECMHalf.y.*(lambdaECM);
 
-dataToPlot(indexPlot.model_titinActive).x = ...
+dataToPlot(dataIndexes.model_titinActive).x = ...
     titinCurveSample.curveSampleTitinActive.x.*(2*lsOpt);
-dataToPlot(indexPlot.model_titinActive).y = ...
+dataToPlot(dataIndexes.model_titinActive).y = ...
     titinCurveSample.curveSampleTitinActive.y.*(1-lambdaECM) ...
    +titinCurveSample.curveSampleECMHalf.y.*(lambdaECM);
 

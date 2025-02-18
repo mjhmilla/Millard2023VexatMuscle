@@ -15,7 +15,7 @@
 function titinCurveSample = ...
   sampleTitinCurves20250217(curves, sarcomere, npts)
 
-xH0 = curves.fiberForceLengthCurve.xEnd(1,1)*0.5;
+xH0 = 0;
 xH1 = curves.fiberForceLengthCurve.xEnd(1,2)*0.5;  
 dxH = (xH1-xH0)/(npts-1);
 
@@ -64,7 +64,44 @@ curveSampleTitin = struct('x',z0,'y',z0,'dydx',z0,'d2ydx2',z0,...
 curveSampleTitinActive = struct('x',z0,'y',z0,'dydx',z0,'d2ydx2',z0,...
                          'd3ydx3',z0,'intYdx',[]); 
 
-                       
+              
+%
+% Solve for the distal and proximal lengths of titin just when
+% the sarcomere length reaches the minimum length at which titin
+% can bond to actin
+%
+
+f = 0.1;
+df = 0;
+lerr = Inf;
+iter=0;
+iterMax=100;
+
+xH = normLengthTitinActinBondMinimum*0.5;
+
+while(abs(lerr) > 1e-6 && iter < iterMax)
+    lPH   = calcBezierYFcnXDerivative(f,forceLengthProximalTitinInverseCurve,0);
+    dPH  = calcBezierYFcnXDerivative(f,forceLengthProximalTitinInverseCurve,1);
+    
+    lDH   = calcBezierYFcnXDerivative(f,forceLengthDistalTitinInverseCurve,0);
+    dDH  = calcBezierYFcnXDerivative(f,forceLengthDistalTitinInverseCurve,1);
+    
+    lerr = (lPH + lDH + normLengthZToT12 + normLengthIgdFixed)-xH;
+    dlerr= dPH + dDH;
+    df   = -lerr/dlerr;
+    f    = f+df;
+    
+    iter=iter+1;
+end
+assert(abs(lerr)<=1e-6);
+
+maxActiveLengthLPH = lPH;
+
+%
+%
+% Numerically evaluate the 3 and 2 segment titin models
+%
+%
 
 for i=1:1:length(sampleVectorHalfLength)
   xH = sampleVectorHalfLength(i,1);
@@ -205,30 +242,27 @@ for i=1:1:length(sampleVectorHalfLength)
   curveSampleTitin.d3ydx3(i,1) = NaN;
 
   
-  if(xH <= normLengthTitinActinBondMinimum)
-    ligpHSaturated = ligpH;
-  end
 
-  if(xH <= normLengthTitinActinBondMinimum)
-    lpevkHP = lpevkH*normPevkToActinAttachmentPoint;
-  end
-  
-  lpevkHD = lpevkH-lpevkHP;
 
   if(titinModelType==0)
+      lPHa = lPH;
+      if(xH >=  (normLengthTitinActinBondMinimum*0.5))
+        lPHa = maxActiveLengthLPH;
+      end
 
-      curveSampleTitinActive.x(i,1) = ...
-          normLengthZToT12 ...
-          + ligpHSaturated ...
-          + lpevkHP ...
-          + lpevkHD ...
-          + ligdH...
-          + normLengthIgdFixed;
 
-      curveSampleTitinActive.y(i,1)     = curveSamplePevk.y(i,1);
-      curveSampleTitinActive.dydx(i,1)  = curveSamplePevk.dydx(i,1);
-      curveSampleTitinActive.d2ydx2(i,1)= NaN;
-      curveSampleTitinActive.d3ydx3(i,1)= NaN;
+      lDHa = xH-(lPHa + normLengthZToT12 + normLengthIgdFixed);
+
+      curveSampleTitinActive.x(i,1) = xH;
+      curveSampleTitinActive.y(i,1) = ...
+           calcBezierYFcnXDerivative(lDHa,forceLengthDistalTitinCurve,0);
+      curveSampleTitinActive.dydx(i,1) = ...
+           calcBezierYFcnXDerivative(lDHa,forceLengthDistalTitinCurve,1);
+      curveSampleTitinActive.dydx(i,2) = ...
+           calcBezierYFcnXDerivative(lDHa,forceLengthDistalTitinCurve,2);
+      curveSampleTitinActive.dydx(i,3) = ...
+           calcBezierYFcnXDerivative(lDHa,forceLengthDistalTitinCurve,3);
+
   end
   
   assert(titinModelType==0,'Error: Have not updated this function for titinModel 1');

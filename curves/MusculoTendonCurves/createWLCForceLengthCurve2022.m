@@ -111,9 +111,10 @@ assert(kLow > 0.0 && kLow < normForceToe/(normLengthToe-normLengthZero),...
 assert( (curviness>=0 && curviness <= 1),...      
     sprintf('%s: curviness must be between 0.0 and 1.0',...
             fiberForceLengthCurve.name));
+
 assert(normLengthContour > normLengthToe, ...
-       sprintf('%s: normContourLength must be greater than normLengthToe',...
-            fiberForceLengthCurve.name))
+      sprintf('%s: normContourLength must be greater than normLengthToe',...
+           fiberForceLengthCurve.name))
 
 %%
 %Translate the user parameters to quintic Bezier points
@@ -125,6 +126,11 @@ yZero = kZero*xZero;
 
 xIso = normLengthToe;
 yIso = normForceToe;
+
+% if(normLengthContour < normLengthToe)
+%     xIso = normLengthContour*0.9;
+%     yIso = normForceToe;
+% end
 
 deltaX = min(0.2*(normForceToe/kToe), 0.2*(xIso-xZero));
 

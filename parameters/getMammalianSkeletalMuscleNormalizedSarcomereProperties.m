@@ -188,30 +188,30 @@ zLineToT12Length      = 0.1; %I'm assuming this is the same
 
 flag_assumeUniformIgDomainLength = 1;
 
-if(flag_assumeUniformIgDomainLength==1)
-    fprintf('\n\n');
-    disp('Note: the human IgP-PEVK and PEVK-IgD lines will not fit the data');
-    disp('of Trombitas et al. exactly because the strains in the proximal ');
-    disp('and distal Ig sections of the model are assumed to be uniform. ');
-    disp('The data, in contrast, has different strains for the IgP and IgD ');
-    disp('segments assuming that these sections have 68 and 22 domains');
-    disp(' respectively.');
-    fprintf('\n\n');
-
-end
-if(flag_assumeUniformIgDomainLength==0)
-    fprintf('\n\n');
-    disp('Note: the human IgP-PEVK and PEVK-IgD data of Trombitas et al.');
-    disp('have slightly different strains for the IgP and IgD segments ');
-    disp('assuming that these sections have 68 and 22 domains respectively.');
-    disp('Since we are fitting directly to the data, the length functions ');
-    disp('will fit the data. This however results in a strange outcome for ');
-    disp('the model: the distal and proximal Ig domains have different ');
-    disp('stiffnesses. This makes no sense, as these molecules are (most ');
-    disp('likely) identical.');
-    fprintf('\n\n');
-
-end
+%if(flag_assumeUniformIgDomainLength==1)
+%    fprintf('\n\n');
+%    disp('Note: the human IgP-PEVK and PEVK-IgD lines will not fit the data');
+%    disp('of Trombitas et al. exactly because the strains in the proximal ');
+%    disp('and distal Ig sections of the model are assumed to be uniform. ');
+%    disp('The data, in contrast, has different strains for the IgP and IgD ');
+%    disp('segments assuming that these sections have 68 and 22 domains');
+%    disp(' respectively.');
+%    fprintf('\n\n');
+%
+%end
+%if(flag_assumeUniformIgDomainLength==0)
+%    fprintf('\n\n');
+%    disp('Note: the human IgP-PEVK and PEVK-IgD data of Trombitas et al.');
+%    disp('have slightly different strains for the IgP and IgD segments ');
+%    disp('assuming that these sections have 68 and 22 domains respectively.');
+%    disp('Since we are fitting directly to the data, the length functions ');
+%    disp('will fit the data. This however results in a strange outcome for ');
+%    disp('the model: the distal and proximal Ig domains have different ');
+%    disp('stiffnesses. This makes no sense, as these molecules are (most ');
+%    disp('likely) identical.');
+%    fprintf('\n\n');
+%
+%end
 
 fileTrombitas1998Figure5 = ...
   fullfile(projectFolders.experiments_TGFG1998,'Trombitas1998_Figure5.csv');
