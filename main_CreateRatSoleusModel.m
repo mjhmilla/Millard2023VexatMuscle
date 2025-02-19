@@ -408,7 +408,10 @@ forceVelocityCurveData   = ...
         ratSoleusFibrilActiveTitin.curves.fiberForceVelocityCurve, ...
         100,[]);
 
-plotDataConfig(plotIndexes.model_fv).x = forceVelocityCurveData.x;
+scaleVmax = ...
+    ratSoleusFibrilActiveTitin.musculotendon.maximumNormalizedFiberVelocity;
+
+plotDataConfig(plotIndexes.model_fv).x = forceVelocityCurveData.x .* scaleVmax;
 plotDataConfig(plotIndexes.model_fv).y = forceVelocityCurveData.y;
 
 
@@ -416,6 +419,48 @@ plotDataConfig(plotIndexes.model_fv).y = forceVelocityCurveData.y;
 %
 % Plot the overview curves
 %
+
+
+normMaxActiveSarcomereLength = ...
+         ratSoleusFibrilActiveTitin.sarcomere.normZLineLength ...
+        +2*ratSoleusFibrilActiveTitin.sarcomere.normActinLength...
+        +2*ratSoleusFibrilActiveTitin.sarcomere.normMyosinHalfLength;
+
+
+
+plotSettings(1).xticks = [];
+plotSettings(1).yticks = [];
+
+plotSettings(1).xticks = [...
+    ratSoleusFibrilActiveTitin.sarcomere.normSarcomereLengthZeroForce,...
+    1,...
+    normMaxActiveSarcomereLength];
+
+plotSettings(1).xticks =...
+    plotSettings(1).xticks...
+    .*ratSoleusFibrilActiveTitin.sarcomere.optimalSarcomereLength;
+
+plotSettings(1).xticks =...
+    [plotSettings(1).xticks, ...
+     max(plotDataConfig(plotIndexes.SW1982_fpe).x)];
+
+plotSettings(1).yticks = [0,1];
+
+plotSettings(2).xticks = [];
+plotSettings(2).yticks = [];
+
+plotSettings(2).xticks = [...
+    -ratSoleusFibrilActiveTitin.musculotendon.maximumNormalizedFiberVelocity,...
+    -0.5*ratSoleusFibrilActiveTitin.musculotendon.maximumNormalizedFiberVelocity,...
+    0,...
+    ratSoleusFibrilActiveTitin.musculotendon.maximumNormalizedFiberVelocity];
+
+plotSettings(2).yticks = [...
+    0.00,...
+    ratSoleusFibrilActiveTitin.musculotendon.forceVelocityMultiplierAtHalfMaximumFiberVelocity,...
+    1.00,...
+    ratSoleusFibrilActiveTitin.musculotendon.forceVelocityMultiplierAtLowEccentricFiberVelocity,...
+    ratSoleusFibrilActiveTitin.musculotendon.forceVelocityMultiplierAtMaximumEccentricFiberVelocity];
 
 figModelCurves = figure;
     
@@ -444,7 +489,14 @@ for i=1:1:length(plotSettings)
     col = plotSettings(i).col;
     subplot('Position', reshape(subPlotPanel(row,col,:),1,4));
     xlim(plotSettings(i).xlim);
-    ylim(plotSettings(i).ylim);   
+    ylim(plotSettings(i).ylim);
+    if(isempty(plotSettings(i).xticks)==0)
+        xticks(round(plotSettings(i).xticks,2));
+    end
+    if(isempty(plotSettings(i).yticks)==0)
+        yticks(round(plotSettings(i).yticks,2));
+    end
+
     legend('Location',plotSettings(i).legendLocation);
     legend('boxoff');
     box off;

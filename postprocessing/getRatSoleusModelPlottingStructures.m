@@ -15,12 +15,14 @@ plotSettings(2) = ...
 idx=1;
 plotSettings(idx).row = 1;
 plotSettings(idx).col = 1;
-plotSettings(idx).xlim = [1.3,4.5];
+plotSettings(idx).xlim = [1.28,4.44];
 plotSettings(idx).ylim = [0,1.6];
 plotSettings(idx).xlabel = 'Length ($$\mu$$m)';
 plotSettings(idx).ylabel = 'Norm. Force ($$f/f_o^M$$)';
 plotSettings(idx).title = {'Rat Soleus $$f^L(\ell^M)$$'};
 plotSettings(idx).legendLocation = 'NorthWest';
+plotSettings(idx).xticks = [1.28,1.81,2.53];
+plotSettings(idx).yticks = [0.00,0.54,1.00];
 
 % idx=idx+1;
 % plotSettings(idx).row = 1;
@@ -34,13 +36,14 @@ plotSettings(idx).legendLocation = 'NorthWest';
 idx=idx+1;
 plotSettings(idx).row = 1;
 plotSettings(idx).col = 2;
-plotSettings(idx).xlim = [-1,1];
+plotSettings(idx).xlim = [-1.03,1.03];
 plotSettings(idx).ylim = [0,1.6];
 plotSettings(idx).xlabel = 'Velocity ($$\ell^M/\ell_o^M$$)';
 plotSettings(idx).ylabel = 'Norm. Force ($$f/f_o^M$$)';
 plotSettings(idx).title = {'Rat Soleus $$f^{V}(v^M/v^M_{max})$$'};
 plotSettings(idx).legendLocation = 'SouthEast';
-
+plotSettings(idx).xticks = [-1.02,0,1.02];
+plotSettings(idx).yticks = [0,1,1.24,1.44];
 %
 % Index series
 %
@@ -276,7 +279,7 @@ dataToPlot(idx).Mark='-';
 dataToPlot(idx).MarkerFaceColor=modelColors.blue;
 dataToPlot(idx).MarkerEdgeColor=modelColors.blue;
 dataToPlot(idx).MarkerSize=5;
-dataToPlot(idx).DisplayName='$$f^V(v^M/v_o^M)$$';
+dataToPlot(idx).DisplayName='$$f^V(v^M)$$';
 dataToPlot(idx).HandleVisibility = 'on';
 dataToPlot(idx).enablePlot = 1;
 
