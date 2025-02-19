@@ -45,16 +45,17 @@ plotSettings(idx).legendLocation = 'SouthEast';
 % Index series
 %
 
-dataIndexes.SW1982_fl           = 1;
-dataIndexes.SW1982_fpe          = 2;
-dataIndexes.ZHGL1995_fl         = 3;
-dataIndexes.TRSS2017_fl         = 4;
-dataIndexes.TRSS2017_fpe        = 5;
-dataIndexes.model_fl            = 6;
-dataIndexes.model_titinPassive  = 7;
-dataIndexes.model_titinActive   = 8;
-dataIndexes.model_fv            = 9;
-dataIndexes.model_fpe           = 10;
+dataIndexes.SW1982_fl           = nan;
+dataIndexes.SW1982_fpe          = nan;
+dataIndexes.ZHGL1995_fl         = nan;
+dataIndexes.TRSS2017_fl         = nan;
+dataIndexes.TRSS2017_fpe        = nan;
+dataIndexes.model_fl            = nan;
+dataIndexes.model_titinPassive  = nan;
+dataIndexes.model_titinActive   = nan;
+%dataIndexes.model_titinActiveKmax   = nan;
+dataIndexes.model_fv            = nan;
+dataIndexes.model_fpe           = nan;
 
 %
 % Data series
@@ -75,7 +76,8 @@ dataToPlot(10)=...
            'MarkerEdgeColor',[0,0,0],...
            'MarkerSize',5,...
            'DisplayName','',...
-           'HandleVisibility','off');
+           'HandleVisibility','off',...
+           'enablePlot',0);
 
 %1. SW1992 fl
 %2. SW1992 fpe
@@ -106,6 +108,10 @@ dataToPlot(idx).MarkerEdgeColor=colorSW1992;
 dataToPlot(idx).MarkerSize=5;
 dataToPlot(idx).DisplayName='SW1992 (F)';
 dataToPlot(idx).HandleVisibility = 'on';
+dataToPlot(idx).enablePlot = 1;
+
+dataIndexes.SW1982_fl           = idx;
+
 
 %SW1992 fpe
 idx=idx+1;
@@ -121,6 +127,10 @@ dataToPlot(idx).MarkerEdgeColor=colorSW1992;
 dataToPlot(idx).MarkerSize=5;
 dataToPlot(idx).DisplayName='SW1992 (F)';
 dataToPlot(idx).HandleVisibility = 'off';
+dataToPlot(idx).enablePlot = 1;
+
+dataIndexes.SW1982_fpe          = idx;
+
 
 %ZHGL1995 fl
 idx=idx+1;
@@ -136,6 +146,9 @@ dataToPlot(idx).MarkerEdgeColor=colorZHGL1995;
 dataToPlot(idx).MarkerSize=5;
 dataToPlot(idx).DisplayName='ZHGL1995 (B)';
 dataToPlot(idx).HandleVisibility = 'on';
+dataToPlot(idx).enablePlot = 1;
+
+dataIndexes.ZHGL1995_fl         = idx;
 
 
 %TRSS2017 fl
@@ -152,6 +165,10 @@ dataToPlot(idx).MarkerEdgeColor=colorTRSS2017;
 dataToPlot(idx).MarkerSize=5;
 dataToPlot(idx).DisplayName='TRSS2017 (F)';
 dataToPlot(idx).HandleVisibility = 'on';
+dataToPlot(idx).enablePlot = 1;
+
+dataIndexes.TRSS2017_fl         = idx;
+
 
 
 %TRSS2017 fpe
@@ -168,6 +185,10 @@ dataToPlot(idx).MarkerEdgeColor=colorTRSS2017;
 dataToPlot(idx).MarkerSize=5;
 dataToPlot(idx).DisplayName='TRSS2017 (F)';
 dataToPlot(idx).HandleVisibility = 'off';
+dataToPlot(idx).enablePlot = 1;
+
+dataIndexes.TRSS2017_fpe        = idx;
+
 
 %fl (model)
 idx=idx+1;
@@ -183,6 +204,9 @@ dataToPlot(idx).MarkerEdgeColor=modelColors.blue;
 dataToPlot(idx).MarkerSize=5;
 dataToPlot(idx).DisplayName='$$f^L(\ell^M)$$';
 dataToPlot(idx).HandleVisibility = 'on';
+dataToPlot(idx).enablePlot = 1;
+
+dataIndexes.model_fl            = idx;
 
 
 %ft passive (model)
@@ -199,22 +223,46 @@ dataToPlot(idx).MarkerEdgeColor=modelColors.cyan;
 dataToPlot(idx).MarkerSize=5;
 dataToPlot(idx).DisplayName='$$f^{Ti}(\ell^M)$$ (passive)';
 dataToPlot(idx).HandleVisibility = 'on';
+dataToPlot(idx).enablePlot = 1;
+
+dataIndexes.model_titinPassive  = idx;
 
 
-%ft active (model)
+%ft active (model: titin-actin bond at N2A)
 idx=idx+1;
 dataToPlot(idx).row=1;
 dataToPlot(idx).col=1;
 dataToPlot(idx).x = [];
 dataToPlot(idx).y = [];
 dataToPlot(idx).type = 'Mdl';
-dataToPlot(idx).LineColor=modelColors.red;
+dataToPlot(idx).LineColor=modelColors.magenta;
 dataToPlot(idx).Mark='-';
-dataToPlot(idx).MarkerFaceColor=modelColors.red;
-dataToPlot(idx).MarkerEdgeColor=modelColors.red;
+dataToPlot(idx).MarkerFaceColor=modelColors.magenta;
+dataToPlot(idx).MarkerEdgeColor=modelColors.magenta;
 dataToPlot(idx).MarkerSize=5;
 dataToPlot(idx).DisplayName='$$f^{Ti}(\ell^M)$$ (active)';
 dataToPlot(idx).HandleVisibility = 'on';
+dataToPlot(idx).enablePlot = 1;
+
+dataIndexes.model_titinActive   = idx;
+
+% %ft active (model: titin-actin bond at PEVK-IgD)
+% idx=idx+1;
+% dataToPlot(idx).row=1;
+% dataToPlot(idx).col=1;
+% dataToPlot(idx).x = [];
+% dataToPlot(idx).y = [];
+% dataToPlot(idx).type = 'Mdl';
+% dataToPlot(idx).LineColor=modelColors.orange;
+% dataToPlot(idx).Mark='-';
+% dataToPlot(idx).MarkerFaceColor=modelColors.orange;
+% dataToPlot(idx).MarkerEdgeColor=modelColors.orange;
+% dataToPlot(idx).MarkerSize=5;
+% dataToPlot(idx).DisplayName='$$f^{Ti}(\ell^M)$$ (active: $$k_{max}$$)';
+% dataToPlot(idx).HandleVisibility = 'on';
+% 
+% dataIndexes.model_titinActiveKmax   = idx;
+
 
 %fv (model)
 idx=idx+1;
@@ -230,7 +278,9 @@ dataToPlot(idx).MarkerEdgeColor=modelColors.blue;
 dataToPlot(idx).MarkerSize=5;
 dataToPlot(idx).DisplayName='$$f^V(v^M/v_o^M)$$';
 dataToPlot(idx).HandleVisibility = 'on';
+dataToPlot(idx).enablePlot = 1;
 
+dataIndexes.model_fv            = idx;
 
 %fpe (model)
 idx=idx+1;
@@ -245,3 +295,6 @@ dataToPlot(idx).MarkerFaceColor=modelColors.cyan;
 dataToPlot(idx).MarkerEdgeColor=modelColors.cyan;
 dataToPlot(idx).MarkerSize=5;
 dataToPlot(idx).DisplayName='$$f^{PE}(\ell^M)$$';
+dataToPlot(idx).enablePlot = 0;
+
+dataIndexes.model_fpe           = idx;

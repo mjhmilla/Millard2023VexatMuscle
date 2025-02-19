@@ -177,7 +177,8 @@ curvinessActiveForceLength = 1.;
 %%
 
 if(flag_solveForOptimalFiberLengthOfBestFit==1 ...
-      && isempty(createMusculoTendonFcn)==0)
+      && isempty(createMusculoTendonFcn)==0 ...
+      && isempty(dataActiveForceLengthNormalized)==0)
   x0 = [1.];
   errFcn = @(argX)calcScalingError(...
                     argX,...
@@ -325,9 +326,13 @@ flag_passiveCurveFitted=0;
 %Fit the passive curve so that it has the same force-path-length curve
 %as the elastic tendon MTU. 
 if(useElasticTendon == 0 && ...
-      isempty(elasticTendonReferenceModel)==0)
+      isempty(elasticTendonReferenceModel)==0 && ...
+      isempty(dataPassiveForceLengthNormalized) ==0)
   flag_passiveCurveFitted=1;
   normLengthZero           = sarcomereProperties.normFiberLengthAtZeroForce; 
+  if(isfield(sarcomere,'normFiberLengthAtZeroPassiveForce'))
+    normLengthZero = sarcomereProperties.normFiberLengthAtZeroPassiveForce;
+  end   
   normLengthToe            = sarcomereProperties.normFiberLengthAtOneNormPassiveForce;
 
      
@@ -467,7 +472,10 @@ if(flag_passiveCurveFitted == 0 && ...
    isempty(dataPassiveForceLengthNormalized) == 0)
 
       flag_passiveCurveFitted=1;
-      normLengthZero  = min(1.0,sarcomereProperties.normFiberLengthAtOneNormPassiveForce-0.6); 
+      normLengthZero  = min(1.0,sarcomereProperties.normFiberLengthAtOneNormPassiveForce-0.6);
+      if(isfield(sarcomere,'normFiberLengthAtZeroPassiveForce'))
+        normLengthZero = sarcomereProperties.normFiberLengthAtZeroPassiveForce;
+      end      
       normLengthToe   = sarcomereProperties.normFiberLengthAtOneNormPassiveForce;
 
       kZero           = 0;
@@ -480,14 +488,15 @@ if(flag_passiveCurveFitted == 0 && ...
       kNum            = 2;
       kToe            = kNum/(normLengthToe-normLengthZero);
       curviness       = 0.75;
-      xshift          = min(dataPassiveForceLengthNormalized(:,1));
-      xwidth          = 0.7;
-      problemScaling  = 1000;
-      params0         = [xshift  , xwidth].*problemScaling;
-      paramsLB        = [0.8*xshift    ;    0.5].*problemScaling;
-      paramsUB        = [2.0           ;    2.0].*problemScaling;
+      %xshift          = min(dataPassiveForceLengthNormalized(:,1));
+      xshift          = normLengthZero;
+      xwidth          = normLengthToe-normLengthZero;
+      problemScaling  = 1;
+      params0         = [xshift    , xwidth, kNum].*problemScaling;
+      paramsLB        = [0.8*xshift;    0.5; 1.25].*problemScaling;
+      paramsUB        = [2.0       ;    2.0; 3.0].*problemScaling;
       
-      fixedParams = [kLow,kZero,kNum,curviness];
+      fixedParams = [kLow,kZero,curviness];
     
       errFcn = @(argX)calcFittedFiberForceLengthCurveError(argX,...
                        dataPassiveForceLengthNormalized,problemScaling,...
@@ -507,6 +516,7 @@ if(flag_passiveCurveFitted == 0 && ...
       
       xshift    = x(1)/problemScaling;
       xwidth    = x(2)/problemScaling;
+      kNum      = x(3)/problemScaling;
 
       normLengthZero = xshift;
       normLengthToe  = xshift + xwidth;
@@ -543,7 +553,11 @@ end
 
 if(flag_passiveCurveFitted==0)
   flag_passiveCurveFitted=1;
-  normLengthZero = sarcomereProperties.normFiberLengthAtZeroForce; 
+  %normLengthZero = sarcomereProperties.normFiberLengthAtZeroForce; 
+  normLengthZero  = min(0.928,sarcomereProperties.normFiberLengthAtOneNormPassiveForce-0.6);
+  if(isfield(sarcomereProperties,'normFiberLengthAtZeroPassiveForce'))
+    normLengthZero = sarcomereProperties.normFiberLengthAtZeroPassiveForce;
+  end
   normLengthToe  = sarcomereProperties.normFiberLengthAtOneNormPassiveForce;
   fToe  = 1;
   kZero = 0;
@@ -551,8 +565,8 @@ if(flag_passiveCurveFitted==0)
     kZero = smallNumericallyNonZeroNumber;
   end         
   kLow  = 0.2;
-  kToe  = 2/(normLengthToe-normLengthZero);
-  curviness = 0.75;  
+  kToe  = 2.1/(normLengthToe-normLengthZero);
+  curviness = 0.625;  
   flag_computeIntegral = 1;
   normMuscleCurves.fiberForceLengthCurve = ...
     createFiberForceLengthCurve2021(normLengthZero,...

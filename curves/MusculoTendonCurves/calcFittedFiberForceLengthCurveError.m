@@ -17,11 +17,12 @@ function errV = calcFittedFiberForceLengthCurveError( params, data, scaling, ...
 
 xshift = params(1)./scaling;
 xwidth = params(2)./scaling;
+kNum   = params(3)./scaling;
 
 kLow        = fixedParams(1,1);
 kZero       = fixedParams(1,2);
-kNum        = fixedParams(1,3);
-curviness   = fixedParams(1,4);
+%kNum        = fixedParams(1,3);
+curviness   = fixedParams(1,3);
 
 normLengthZero = xshift;
 normLengthToe  = xwidth + xshift;
@@ -44,11 +45,24 @@ fiberForceLengthCurve = createFiberForceLengthCurve2021(normLengthZero,...
                     0,...
                     'fitted',...
                     flag_useOctave);
-                                                
-errV = zeros(size(data,1),1);
 
-for(i=1:1:size(data,1))
-   errV(i) = (calcBezierYFcnXDerivative(data(i,1),fiberForceLengthCurve,0)...
-             - data(i,2))*scaling;
-   
+dataMinForce= 0.0;
+count = 0;
+for i=1:1:length(data)
+    if(data(i,2) >= dataMinForce)
+        count=count+1;
+    end
+end
+
+errV = zeros(count,1);
+
+
+
+j=1;
+for i=1:1:size(data,1)
+    if(data(i,2)>=dataMinForce)        
+       errV(j) = (calcBezierYFcnXDerivative(data(i,1),fiberForceLengthCurve,0)...
+                 - data(i,2))*scaling;
+       j=j+1;
+    end   
 end

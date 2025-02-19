@@ -34,7 +34,7 @@ scaleMaximumIsometricTension = 1;%arg(2,1);
                            scaleMaximumIsometricTension);
 
 assert(isempty(activeForceLengthData)==0);
-assert(isempty(passiveForceLengthData)==0);
+%assert(isempty(passiveForceLengthData)==0);
 
 flag_compensateForCrossbridgeStiffness = 0;
 
