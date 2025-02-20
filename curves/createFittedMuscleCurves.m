@@ -556,7 +556,9 @@ if(flag_passiveCurveFitted==0)
   %normLengthZero = sarcomereProperties.normFiberLengthAtZeroForce; 
   normLengthZero  = min(0.928,sarcomereProperties.normFiberLengthAtOneNormPassiveForce-0.6);
   if(isfield(sarcomereProperties,'normFiberLengthAtZeroPassiveForce'))
-    normLengthZero = sarcomereProperties.normFiberLengthAtZeroPassiveForce;
+      if(isnan(sarcomereProperties.normFiberLengthAtZeroPassiveForce)==0)
+        normLengthZero = sarcomereProperties.normFiberLengthAtZeroPassiveForce;
+      end
   end
   normLengthToe  = sarcomereProperties.normFiberLengthAtOneNormPassiveForce;
   fToe  = 1;
@@ -566,7 +568,13 @@ if(flag_passiveCurveFitted==0)
   end         
   kLow  = 0.2;
   kToe  = 2.1/(normLengthToe-normLengthZero);
-  curviness = 0.625;  
+  if(isfield(sarcomereProperties,'normFiberStiffnessAtOneNormPassiveForce'))
+      if(isnan(sarcomereProperties.normFiberStiffnessAtOneNormPassiveForce)==0)
+        kToe = sarcomereProperties.normFiberStiffnessAtOneNormPassiveForce;
+      end
+  end
+
+  curviness = 0.75;  
   flag_computeIntegral = 1;
   normMuscleCurves.fiberForceLengthCurve = ...
     createFiberForceLengthCurve2021(normLengthZero,...

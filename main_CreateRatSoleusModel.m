@@ -21,13 +21,29 @@ addpath( genpath(projectFolders.postprocessing) );
 %%
 % Parameters
 %%
-fitOptimalLengthToData=1;
-fitPassiveForceLengthRelationToData=0;
+%Least-squares fit of the optimal CE length and the passive-force-length
+%relation
+indexOfDataSetToFitOptCELength          =0;
+indexOfDataSetToPassiveForceLengthCurve =0;
 
-indexReferenceDataSet=3;
+%Sets the initial stiffness and length at which the curve develops
+%one norm force
+indexOfDataSetForPassiveCurveParameters = 3;
 % 1. Tomalka et al. 2017
 % 2. Zuurbier et al. 1995
 % 3. Stephenson & Williams 1982
+
+expDataSetFittingData(3)=struct('optimalSarcomereLength',0,...
+                               'minLengthWhereFpeIsLinear',0);
+
+expDataSetFittingData(1).optimalSarcomereLength=2.525;
+expDataSetFittingData(2).optimalSarcomereLength=2.525;
+expDataSetFittingData(3).optimalSarcomereLength=2.525;
+
+expDataSetFittingData(1).minLengthWhereFpeIsLinear=nan;
+expDataSetFittingData(2).minLengthWhereFpeIsLinear=nan;
+expDataSetFittingData(3).minLengthWhereFpeIsLinear=0.3;
+
 
 makeFibrilModel         = 1;
 useElasticTendon        = 1 && ~makeFibrilModel;
@@ -106,6 +122,41 @@ pageHeight  = (plotHeight+plotVertMarginCm)*numberOfVerticalPlotRows...
 
 plotConfigGeneric;
 
+%
+% Load the reference data
+%
+[ratSoleusData, ratSoleusMetaData] = loadRatSoleusData(projectFolders);
+
+
+%
+% Select the reference data set
+%
+
+activeForceLengthData = [];
+passiveForceLengthData = [];
+
+if(indexOfDataSetToFitOptCELength > 0)
+    referenceActiveForceLengthDataTable = ...
+        ratSoleusData(indexOfDataSetToFitOptCELength).activeForceLengthData;
+    for i=1:1:length(referenceActiveForceLengthDataTable)
+        activeForceLengthData = ...
+            [activeForceLengthData;...
+             referenceActiveForceLengthDataTable(i).x, ...
+             referenceActiveForceLengthDataTable(i).y];
+    end
+end
+
+if(indexOfDataSetToPassiveForceLengthCurve>0)
+    referencePassiveForceLengthDataTable = ...
+        ratSoleusData(indexOfDataSetToPassiveForceLengthCurve).passiveForceLengthData;
+    for i=1:1:length(referencePassiveForceLengthDataTable)
+        passiveForceLengthData = ...
+            [passiveForceLengthData;...
+             referencePassiveForceLengthDataTable(i).x, ...
+             referencePassiveForceLengthDataTable(i).y];            
+    end
+end   
+
 %%%
 %
 % XE normalized parameters from the cat soleus with an elastic tendon
@@ -161,6 +212,49 @@ titinMolecularWeightInkDDefault =[];
 
 normFiberLengthAtZeroPassiveForce     = 0.8;%1.05;
 normFiberLengthAtOneNormPassiveForce  = 1.9;
+normFiberStiffnessAtOneNormPassiveForce = nan;
+
+
+
+if(indexOfDataSetForPassiveCurveParameters>0)
+    
+    referencePassiveForceLengthDataTable = ...
+        ratSoleusData(indexOfDataSetForPassiveCurveParameters).passiveForceLengthData;
+
+    fittingFpeNMinForce = ...
+            expDataSetFittingData(...
+            indexOfDataSetForPassiveCurveParameters).minLengthWhereFpeIsLinear;
+
+    fittingFpeNOptSarcomereLengthInUm = ...
+            expDataSetFittingData(...
+            indexOfDataSetForPassiveCurveParameters).optimalSarcomereLength; 
+
+    fittingDataFpeN=[];
+    for i=1:1:length(referencePassiveForceLengthDataTable)
+        for j=1:1:length(referencePassiveForceLengthDataTable(i).x)
+            if(referencePassiveForceLengthDataTable(i).y(j) > fittingFpeNMinForce)
+                fittingDataFpeN = ...
+                    [fittingDataFpeN;...
+                     referencePassiveForceLengthDataTable(i).x(j), ...
+                     referencePassiveForceLengthDataTable(i).y(j)];            
+            end
+        end
+    end
+    
+    %Fit a line to the data
+    A = [fittingDataFpeN(:,1),ones(size(fittingDataFpeN(:,1)))];
+    b = fittingDataFpeN(:,2);
+    x = (A'*A)\(A'*b);
+    c = x(1,1);
+    y0 = x(2,1);
+    %y = c*x + x0
+    
+    normFiberStiffnessAtOneNormPassiveForce = c/(1/fittingFpeNOptSarcomereLengthInUm);
+    normFiberLengthAtOneNormPassiveForce = ((1-y0)/c)/fittingFpeNOptSarcomereLengthInUm;
+
+    here=1;
+
+end
 
 % Since these experiments use skinned fibers, the ECM is assumed to contribute
 % nothing. 
@@ -205,40 +299,7 @@ smallNumericallyNonZeroNumber = sqrt(sqrt(eps));
 
 
 
-%
-% Load the reference data
-%
-[ratSoleusData, ratSoleusMetaData] = loadRatSoleusData(projectFolders);
 
-
-%
-% Select the reference data set
-%
-
-activeForceLengthData = [];
-passiveForceLengthData = [];
-
-if(fitOptimalLengthToData==1)
-    referenceActiveForceLengthDataTable = ...
-        ratSoleusData(indexReferenceDataSet).activeForceLengthData;
-    for i=1:1:length(referenceActiveForceLengthDataTable)
-        activeForceLengthData = ...
-            [activeForceLengthData;...
-             referenceActiveForceLengthDataTable(i).x, ...
-             referenceActiveForceLengthDataTable(i).y];
-    end
-end
-
-if(fitPassiveForceLengthRelationToData==1)
-    referencePassiveForceLengthDataTable = ...
-        ratSoleusData(indexReferenceDataSet).passiveForceLengthData;
-    for i=1:1:length(referencePassiveForceLengthDataTable)
-        passiveForceLengthData = ...
-            [passiveForceLengthData;...
-             referencePassiveForceLengthDataTable(i).x, ...
-             referencePassiveForceLengthDataTable(i).y];            
-    end
-end   
 
 %
 %
@@ -250,8 +311,9 @@ ratSoleusFibrilActiveTitin = createRatSoleusModel(...
                       normCrossBridgeDamping,...
                       normPevkToActinAttachmentPointRatSoleus,...
                       normMaxActiveTitinToActinDamping,...
-                      normFiberLengthAtZeroPassiveForce,...
+                      normFiberLengthAtZeroPassiveForce,...                      
                       normFiberLengthAtOneNormPassiveForce,...
+                      normFiberStiffnessAtOneNormPassiveForce,...                      
                       ecmForceFractionRatSoleusFitted,...
                       titinMolecularWeightInkDDefault,...
                       useWlcTitinModel,...
@@ -420,31 +482,57 @@ plotDataConfig(plotIndexes.model_fv).y = forceVelocityCurveData.y;
 % Plot the overview curves
 %
 
+%
+% Force-length ticks
+%
+maxActiveSarcomereLengthInUm = ...
+         2*ratSoleusFibrilActiveTitin.sarcomere.zLineLengthInUm ...
+        +2*ratSoleusFibrilActiveTitin.sarcomere.actinLengthInUm...
+        +ratSoleusFibrilActiveTitin.sarcomere.myosinLengthInUm;
 
-normMaxActiveSarcomereLength = ...
-         ratSoleusFibrilActiveTitin.sarcomere.normZLineLength ...
-        +2*ratSoleusFibrilActiveTitin.sarcomere.normActinLength...
-        +2*ratSoleusFibrilActiveTitin.sarcomere.normMyosinHalfLength;
+optimalSarcomereLengthInUm = ...
+         2*ratSoleusFibrilActiveTitin.sarcomere.zLineLengthInUm ...
+        +2*ratSoleusFibrilActiveTitin.sarcomere.actinLengthInUm...
+        +ratSoleusFibrilActiveTitin.sarcomere.myosinBareLengthInUm;
 
+shortSarcomereLengthInUm = ...
+         ratSoleusFibrilActiveTitin.sarcomere.zLineLengthInUm ...
+        +ratSoleusFibrilActiveTitin.sarcomere.myosinLengthInUm;
+
+zeroForceSarcomereLengthInUm = ...
+    ratSoleusFibrilActiveTitin.sarcomere.zeroForceSarcomereLengthInUm;
 
 
 plotSettings(1).xticks = [];
 plotSettings(1).yticks = [];
 
 plotSettings(1).xticks = [...
-    ratSoleusFibrilActiveTitin.sarcomere.normSarcomereLengthZeroForce,...
-    1,...
-    normMaxActiveSarcomereLength];
+    zeroForceSarcomereLengthInUm,...
+    shortSarcomereLengthInUm,...
+    optimalSarcomereLengthInUm,...
+    maxActiveSarcomereLengthInUm];
 
-plotSettings(1).xticks =...
-    plotSettings(1).xticks...
-    .*ratSoleusFibrilActiveTitin.sarcomere.optimalSarcomereLength;
+
 
 plotSettings(1).xticks =...
     [plotSettings(1).xticks, ...
      max(plotDataConfig(plotIndexes.SW1982_fpe).x)];
 
 plotSettings(1).yticks = [0,1];
+if(indexOfDataSetForPassiveCurveParameters>0)
+    fittingFpeNMinForce = ...
+        expDataSetFittingData(...
+        indexOfDataSetForPassiveCurveParameters).minLengthWhereFpeIsLinear;
+    
+    plotSettings(1).yticks = [0,fittingFpeNMinForce,1];
+end
+
+
+
+
+%
+% Force-velocity ticks
+%
 
 plotSettings(2).xticks = [];
 plotSettings(2).yticks = [];
