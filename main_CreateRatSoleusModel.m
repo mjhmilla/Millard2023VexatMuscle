@@ -75,23 +75,19 @@ fprintf('\n\nCreating: default rat soleus fibril model\n');
 fprintf('  used to simulate Tomalka, Weider, Hahn, Seiberl, Siebert 2020.\n\n');
 
 fprintf('\n\nTo do:');
-fprintf('\n1. Update createFiberActiveForceLengthCurve:');
-fprintf('\na. Option 1: Add optional parameters to set the coordinates of the');
-fprintf('\n             transition from the steep-to-shallow ascending limb.');
-fprintf('\nb. Option 2: Add a new function that takes the saromere data + exp');
-fprintf('\n             measurements and makes a fit');
-fprintf('\nc. Option 3: Add a new function that takes the saromere data + exp');
-fprintf('\n             uses Guenter and Rockenfellers model and makes a fit');
-fprintf('\nMotivation: Stephenson and Williams present a mean +/- 1sd force-');
-fprintf('\n            length curve that is far below the theoretical curve on');
-fprintf('\n            the shallow ascending limb.');
-fprintf('\n\n2. Look at Prado again: there are a lot of references related to');
-fprintf(  '\n   rat muscle.')
+fprintf('\n1. Make a routine to solve for the curviness in fpeN, fTiPN, fTiDN');
+fprintf('\n   that minimizes the squared errors w.r.t. the experimental data.');
+fprintf('\n   the fitting method should probably be set explicitly using a flag.');
+fprintf('\n\n2. Update the active-force-length relation to fit the data better?');
+fprintf('\n   Perhaps use Guenter and Rockenfellers model');
+fprintf('\n\n3. Look at Prado again: there are a lot of references related to');
+fprintf(  '\n   rat muscle.');
+fprintf(  '\n');
 % Stephenson DG, Williams DA. Effects of sarcomere length on the force—pCa 
 % relation in fast‐and slow‐twitch skinned muscle fibres from the rat. 
 % The Journal of Physiology. 1982 Dec 1;333(1):637-53.
 
-fprintf('\n\n3. Find sources for lopt, fiso, and ltslk beyond Lemaire et al.');
+fprintf('\n\n4. Find sources for lopt, fiso, and ltslk beyond Lemaire et al.');
 fprintf(  '\n   for the rat soleus muscle.')
 
 %%
@@ -249,8 +245,10 @@ if(indexOfDataSetForPassiveCurveParameters>0)
     y0 = x(2,1);
     %y = c*x + x0
     
-    normFiberStiffnessAtOneNormPassiveForce = c/(1/fittingFpeNOptSarcomereLengthInUm);
-    normFiberLengthAtOneNormPassiveForce = ((1-y0)/c)/fittingFpeNOptSarcomereLengthInUm;
+    normFiberStiffnessAtOneNormPassiveForce = ...
+        c/(1/fittingFpeNOptSarcomereLengthInUm);
+    normFiberLengthAtOneNormPassiveForce = ...
+        ((1-y0)/c)/fittingFpeNOptSarcomereLengthInUm;
 
     here=1;
 
@@ -496,7 +494,7 @@ optimalSarcomereLengthInUm = ...
         +ratSoleusFibrilActiveTitin.sarcomere.myosinBareLengthInUm;
 
 shortSarcomereLengthInUm = ...
-         ratSoleusFibrilActiveTitin.sarcomere.zLineLengthInUm ...
+         2*ratSoleusFibrilActiveTitin.sarcomere.zLineLengthInUm ...
         +ratSoleusFibrilActiveTitin.sarcomere.myosinLengthInUm;
 
 zeroForceSarcomereLengthInUm = ...
@@ -518,13 +516,48 @@ plotSettings(1).xticks =...
     [plotSettings(1).xticks, ...
      max(plotDataConfig(plotIndexes.SW1982_fpe).x)];
 
-plotSettings(1).yticks = [0,1];
+%Evaluate the max. isometric force at the length when the myosin tip
+%touches the z-line. These expressions require a diagram to understand 
+%but I've justed checked them and these expressions are correct.
+
+%The length at which the two actin filaments overlap with
+%the active part of  myosin
+shallowPlateauInterference = ...
+    2*(      ratSoleusFibrilActiveTitin.sarcomere.actinLengthInUm ...
+       - 0.5*ratSoleusFibrilActiveTitin.sarcomere.myosinLengthInUm ...
+       - 0.5*ratSoleusFibrilActiveTitin.sarcomere.myosinBareLengthInUm);
+
+%The length at which the actin filaments can interact with the 
+%active part of myosin without over lap
+shallowPlateauOverlap      = ...
+    2*(ratSoleusFibrilActiveTitin.sarcomere.myosinLengthInUm ...
+     - ratSoleusFibrilActiveTitin.sarcomere.actinLengthInUm);
+
+%The maximum possible length at which myosin and actin can
+% actively interact 
+maxOverlap                 = ...
+    ratSoleusFibrilActiveTitin.sarcomere.myosinLengthInUm ...
+  - ratSoleusFibrilActiveTitin.sarcomere.myosinBareLengthInUm;
+
+%With half of the cross-bridges pulling in one direction and the other half 
+%pulling in the opposite direction the interference section contributes no force
+
+interferenceTension     = 0.0; 
+
+maxNormForceAtShortLength =...
+    ( shallowPlateauInterference*interferenceTension ...
+      + shallowPlateauOverlap )/maxOverlap;
+
+plotSettings(1).yticks = [0,maxNormForceAtShortLength,1];
+
 if(indexOfDataSetForPassiveCurveParameters>0)
     fittingFpeNMinForce = ...
         expDataSetFittingData(...
         indexOfDataSetForPassiveCurveParameters).minLengthWhereFpeIsLinear;
     
-    plotSettings(1).yticks = [0,fittingFpeNMinForce,1];
+    plotSettings(1).yticks = ...
+        [0,fittingFpeNMinForce,maxNormForceAtShortLength,1];
+    plotSettings(1).yticks = sort(plotSettings(1).yticks);
 end
 
 

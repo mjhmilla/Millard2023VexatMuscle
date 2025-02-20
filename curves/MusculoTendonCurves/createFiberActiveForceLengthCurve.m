@@ -158,10 +158,10 @@ normShallowPlateauOverlap      = 2*(normMyosinLength - normActinLength);
 
 normMaxOverlap                 = normMyosinLength - normMyosinBareLength;
 
-%With half of the cross-bridges pulling in one direction and the other half 
+%With all of the cross-bridges pulling in one direction and the other half 
 %pulling in the opposite direction the interference section contributes no force
 
-netNormInterferenceTension     = 0.5; 
+netNormInterferenceTension     = 0.0; 
 
 c1y = ( normShallowPlateauInterference*netNormInterferenceTension ...
       + normShallowPlateauOverlap )/normMaxOverlap;
