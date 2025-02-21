@@ -4,7 +4,7 @@ clc
 
 % Data Import
 
-cd 'C:\Users\bwpc\Documents\Data\F-V-Relation\Fiso'
+%cd 'C:\Users\bwpc\Documents\Data\F-V-Relation\Fiso'
 Data1 = dlmread(['Fiso_018mN_3_exp.dat'],'',4,0);
 
 Data2 = dlmread(['Fiso_028mN_4_exp.dat'],'',4,0);
