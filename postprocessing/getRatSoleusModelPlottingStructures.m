@@ -1,4 +1,5 @@
-function [dataToPlot, dataIndexes, plotSettings] = getRatSoleusModelPlottingStructures()
+function [dataToPlot, dataIndexes, plotSettings] = ...
+    getRatSoleusModelPlottingStructures(mapToEDLModel)
 
 %
 % Layout
@@ -7,11 +8,14 @@ function [dataToPlot, dataIndexes, plotSettings] = getRatSoleusModelPlottingStru
 plotSettings(2) = ...
     struct('row',0,...
            'col',0,...
-           'xlabel','',...
-           'ylabel','',...
            'xlim',[],...
            'ylim',[],...
-           'title','');
+           'xlabel','',...
+           'ylabel','',...
+           'title','',...
+           'legendLocation','',...
+           'xticks',[],...
+           'yticks',[]);
 idx=1;
 plotSettings(idx).row = 1;
 plotSettings(idx).col = 1;
@@ -44,6 +48,12 @@ plotSettings(idx).title = {'Rat Soleus $$f^{V}(v^M/v^M_{max})$$'};
 plotSettings(idx).legendLocation = 'SouthEast';
 plotSettings(idx).xticks = [-1.02,0,1.02];
 plotSettings(idx).yticks = [0,1,1.24,1.44];
+
+if(mapToEDLModel==1)
+    plotSettings(idx).xlim = [-2.26,2.26];
+    plotSettings(idx).xticks = [-2.25,0,2.25];
+end
+
 %
 % Index series
 %
@@ -97,7 +107,7 @@ colorTRSS2017   = [1,1,1].*0;
 colorZHGL1995   = [1,1,1].*0.75;
 colorSW1992     = [1,1,1].*0.5;
 
-%SW1992 fl
+%SW1982 fl
 idx=1;
 dataToPlot(idx).row=1;
 dataToPlot(idx).col=1;
@@ -109,7 +119,7 @@ dataToPlot(idx).Mark='o';
 dataToPlot(idx).MarkerFaceColor=[1,1,1];
 dataToPlot(idx).MarkerEdgeColor=colorSW1992;
 dataToPlot(idx).MarkerSize=5;
-dataToPlot(idx).DisplayName='SW1992 (F)';
+dataToPlot(idx).DisplayName='SW1982 (F)';
 dataToPlot(idx).HandleVisibility = 'on';
 dataToPlot(idx).enablePlot = 1;
 
@@ -128,7 +138,7 @@ dataToPlot(idx).Mark='o';
 dataToPlot(idx).MarkerFaceColor=[1,1,1];
 dataToPlot(idx).MarkerEdgeColor=colorSW1992;
 dataToPlot(idx).MarkerSize=5;
-dataToPlot(idx).DisplayName='SW1992 (F)';
+dataToPlot(idx).DisplayName='SW1982 (F)';
 dataToPlot(idx).HandleVisibility = 'off';
 dataToPlot(idx).enablePlot = 1;
 

@@ -574,7 +574,7 @@ if(flag_passiveCurveFitted==0)
       end
   end
 
-  curviness = 0.4;  
+  curviness = 0.7;  
   flag_computeIntegral = 1;
   normMuscleCurves.fiberForceLengthCurve = ...
     createFiberForceLengthCurve2021(normLengthZero,...

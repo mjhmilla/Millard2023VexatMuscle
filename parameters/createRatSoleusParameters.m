@@ -30,6 +30,7 @@ function [ratSoleusMusculotendonProperties, ...
             titinMolecularWeightInkD,...
             makeFibrilModel,...
             useElasticTendon,...
+            mapToEDLModel,...
             projectFolders,...
             flag_useOctave)
 %%
@@ -68,16 +69,24 @@ function [ratSoleusMusculotendonProperties, ...
 
 
 %Get the default sarcomere properties for a rat soleus          
-                          
+             
+nameSarcomerePropertiers = 'ratSOL';
+if(mapToEDLModel==1)
+    nameSarcomerePropertiers = 'ratEDL';
+end
+
 [ratSoleusSarcomereProperties] =...
   getMammalianSkeletalMuscleNormalizedSarcomereProperties(...
-    'ratSOL',...
+    nameSarcomerePropertiers,...
     normFiberLengthAtOneNormPassiveForce,...
     normPevkToActinAttachmentPoint,...
     normMaxActiveTitinToActinDamping,...
     ecmForceFraction,...
     titinMolecularWeightInkD,...
     projectFolders);
+%
+% Note: ratSol & ratEDL have the same 
+%
 
 %
 % This is a new parameter for sarcomere parameters
@@ -137,6 +146,16 @@ ratSoleusSarcomereProperties.normFiberStiffnessAtOneNormPassiveForce =...
 
 maximumNormalizedFiberVelocity = 1.02; % in units of norm fiber lengths/second
 
+if(mapToEDLModel==1)
+    maximumNormalizedFiberVelocity = 2.25;    
+end
+% 2.25 Lo/s from pg 4, column 1, paragraph 3
+%
+% Tomalka A, Rode C, Schumacher J, Siebert T. The active force–length 
+% relationship is invisible during extensive eccentric contractions in 
+% skinned skeletal muscle fibres. Proceedings of the Royal Society B: 
+% Biological Sciences. 2017 May 17;284(1854):20162497.
+
 %
 % To map curvature to fv-at-half-vceMax
 %
@@ -166,6 +185,11 @@ maximumNormalizedFiberVelocity = 1.02; % in units of norm fiber lengths/second
 
 t=[35, 30, 25, 20]';
 c=[0.212, 0.18, 0.157, 0.137]';
+
+if(mapToEDLModel==1)
+    t=[35, 30, 25, 20]';
+    c=[0.415, 0.429, 0.385, 0.283]';
+end
 
 % c0 + c1*t = c
 % A*x = b 
@@ -200,10 +224,6 @@ halfMaximumNormalizedFiberVelocity = maximumNormalizedFiberVelocity*0.5;
 Po = 1;
 c = c12;
 b  = c*maximumNormalizedFiberVelocity;
-
-
-
-
 
 forceVelocityMultiplierAtHalfMaximumFiberVelocity = ...
   ((1+c)*b - c.*(halfMaximumNormalizedFiberVelocity+b)) ...
@@ -251,6 +271,7 @@ normPlateauOffset = ...
             normPlateauOffset,...
             useElasticTendon,...
             makeFibrilModel,...
+            mapToEDLModel,...
             flag_useOctave);
 
 

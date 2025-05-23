@@ -18,9 +18,13 @@ function [musculotendonProperties] = ...
               normPlateauOffset,...
               useElasticTendon,...
               useFibrilModel,...
+              mapToEDLModel,...
               flag_useOctave)
 
 %disp('getRatSoleusMusculotendonProperties:');
+mm2m    = 0.001;
+g2N     = 9.81/1000;
+deg2rad = pi/180;
 
 lceOpt   = nan;
 alphaOpt = nan; 
@@ -43,17 +47,19 @@ end
 
 if(useFibrilModel==0)
 
+
+
   % Lemaire KK, Baan GC, Jaspers RT, van Soest AK. Comparison of the validity of 
   % Hill and Huxley muscle–tendon complex models using experimental data  
   % obtained from rat m. soleus in situ. Journal of experimental biology. 
   % 2016 Apr 1;219(7):977-87.
 
   table5Lemaire2016.fceMax = [1.27; 1.25; 1.26];          % N
-  table5Lemaire2016.lceOpt = [17.1; 21.6; 18.6].*(0.001); % mm/1000
+  table5Lemaire2016.lceOpt = [17.1; 21.6; 18.6].*(mm2m); % mm/1000
   table5Lemaire2016.cSee   = [1.30; 0.85;  1.5];          % kN/m^2
-  table5Lemaire2016.lSee0  = [19.5; 13.3; 18.6].*(0.001); % mm/1000
-  table5Lemaire2016.cPee   = [0.87; 1.21; 0.68].*(0.001); % mm/1000
-  table5Lemaire2016.lPee0  = [ 9.8; 12.4;  9.7].*(0.001); % mm/1000
+  table5Lemaire2016.lSee0  = [19.5; 13.3; 18.6].*(mm2m); % mm/1000
+  table5Lemaire2016.cPee   = [0.87; 1.21; 0.68].*(mm2m); % mm/1000
+  table5Lemaire2016.lPee0  = [ 9.8; 12.4;  9.7].*(mm2m); % mm/1000
 
   idxRat = 1;
 
@@ -76,6 +82,31 @@ if(useFibrilModel==0)
   end
 
   normTendonLength = 1+etIso;
+
+  if(mapToEDLModel==1)
+      %From: Table II of
+      %
+      %W. L. Johnson, D. L. Jindrich, H. Zhong, R. R. Roy and V. R. Edgerton, 
+      % "Application of a Rat Hindlimb Model: A Prediction of Force Spaces 
+      % Reachable Through Stimulation of Nerve Fascicles," in IEEE 
+      % Transactions on Biomedical Engineering, vol. 58, no. 12, pp. 
+      % 3328-3338, Dec. 2011, doi: 10.1109/TBME.2011.2106784. 
+    
+      fiso     = 225*g2N; %225g 
+      lceOpt   = 13.7*mm2m; 
+      alphaOpt = 10*deg2rad;
+      ltSlk    = 9*mm2m;
+      etIso    = 0.033; % Johnson et al. took the default value from Zajac
+
+      if(isempty(tendonStrainAtOneNormForce)==0 ...
+        || isnan(tendonStrainAtOneNormForce)==1)
+        etIso = tendonStrainAtOneNormForce;
+      end      
+
+
+  end
+
+
 end
 
 lceOpt = lceOpt*scaleOptimalFiberLength;
@@ -92,9 +123,17 @@ minimumFiberLength = sqrt(lcePerp*lcePerp + lceAT*lceAT);
 
 dlceMaxN=maximumNormalizedFiberVelocity;
 
+nameMTU = 'Rat Soleus';
+abbrMTU = 'ratSOL';
+
+if(mapToEDLModel==1)
+    nameMTU = 'Rat EDL (mapped from SOL)';
+    abbrMTU = 'ratSol2EDL';
+end
+
 musculotendonProperties = struct(...
-        'name'                              , 'Rat Soleus',  ... 
-        'abbr'                              , 'ratSOL',     ...
+        'name'                              , nameMTU,  ... 
+        'abbr'                              , abbrMTU,     ...
         'fiso'                              , fiso,         ...  
         'optimalFiberLength'                , lceOpt,       ... 
         'pennationAngle'                    , alphaOpt,     ... 

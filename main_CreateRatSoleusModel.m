@@ -21,6 +21,14 @@ addpath( genpath(projectFolders.postprocessing) );
 %%
 % Parameters
 %%
+mapToEDLModel = 1;
+%Will map the rat soleus model to an EDL model. This option exists
+%specifically for a rat edl fiber model: the literature on rat soleus
+%fiber properties is much more complete than edl fibers. And so, to make
+%an EDL model I use all of the normalized properties of the soleus model
+%and change the fiber velocity to be consistent with an EDL (and also
+%change the muscle name);
+
 %Least-squares fit of the optimal CE length and the passive-force-length
 %relation
 indexOfDataSetToFitOptCELength          =0;
@@ -64,7 +72,7 @@ flag_useOctave                          = 0;
 
 [plotDataConfig,...
  plotIndexes,... 
- plotSettings] = getRatSoleusModelPlottingStructures();
+ plotSettings] = getRatSoleusModelPlottingStructures(mapToEDLModel);
 
 
 %%
@@ -206,8 +214,8 @@ titinMolecularWeightInkDDefault =[];
 %%%
 
 
-normFiberLengthAtZeroPassiveForce     = 0.8;%1.05;
-normFiberLengthAtOneNormPassiveForce  = 1.9;
+normFiberLengthAtZeroPassiveForce       = 0.8;%1.05;
+normFiberLengthAtOneNormPassiveForce    = 1.9;
 normFiberStiffnessAtOneNormPassiveForce = nan;
 
 
@@ -296,13 +304,8 @@ normMaxActiveTitinToActinDamping = 20.3; %fo/(lo/s)
 smallNumericallyNonZeroNumber = sqrt(sqrt(eps));
 
 
-
-
-
-%
 %
 % Rat soleus model with the titin-actin bond at the IgP-PEVK border (N2A)
-%
 %
 ratSoleusFibrilActiveTitin = createRatSoleusModel(...
                       normCrossBridgeStiffness,...
@@ -325,16 +328,25 @@ ratSoleusFibrilActiveTitin = createRatSoleusModel(...
                       makeFibrilModel,...
                       activeForceLengthData,...
                       passiveForceLengthData,...
+                      mapToEDLModel,...
                       projectFolders,...
                       flag_useOctave);
 
 if(useWlcTitinModel==1)
+    fileNameWLC = 'ratSoleusFibrilActiveTitinWLC.mat';
+    if(mapToEDLModel==1)
+        fileNameWLC = 'ratSoleusFibrilActiveTitinWLC_MappedToEDL.mat';
+    end
     filePathRatSoleus = fullfile(projectFolders.output_structs_FittedModels,...
-                                'ratSoleusFibrilActiveTitinWLC.mat');
+                                fileNameWLC);
     save(filePathRatSoleus,'ratSoleusFibrilActiveTitin');
 else
+    fileName = 'ratSoleusFibrilActiveTitinLinearTitin.mat';
+    if(mapToEDLModel==1)
+        fileName = 'ratSoleusFibrilActiveTitinLinearTitin_MappedToEDL.mat';        
+    end
     filePathRatSoleus = fullfile(projectFolders.output_structs_FittedModels,...
-                                'ratSoleusFibrilActiveTitinLinearTitin.mat');
+                                 fileName);
     save(filePathRatSoleus,'ratSoleusFibrilActiveTitin');
 end
 
@@ -622,13 +634,26 @@ for i=1:1:length(plotSettings)
     legend('boxoff');
     box off;
     xlabel(plotSettings(i).xlabel);
-    ylabel(plotSettings(i).ylabel);            
-    title(plotSettings(i).title);            
+    ylabel(plotSettings(i).ylabel);    
+
+    titleStr = plotSettings(i).title{:};
+
+    if(mapToEDLModel==1)
+        idx = strfind(titleStr,'Soleus');
+        titleStr = [titleStr(1,1:(idx-1)),'EDL',titleStr(1,(idx+6):end)];
+    end
+
+    title(titleStr);            
 end
 
 
 figure(figModelCurves);
 configPlotExporter;
+
 filePath = fullfile(projectFolders.output_plots_MuscleCurves,...
                     'fig_Pub_MusleCurves_RatSoleus.pdf');
+if(mapToEDLModel==1)
+    filePath = fullfile(projectFolders.output_plots_MuscleCurves,...
+                        'fig_Pub_MusleCurves_RatSoleusMappedToEDL.pdf');
+end
 print('-dpdf', filePath); 

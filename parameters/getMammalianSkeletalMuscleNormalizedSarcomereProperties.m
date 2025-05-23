@@ -97,6 +97,13 @@ elseif(strcmp(animalName,'rabbitEDL')==1)
   animalId = 6;
 elseif(strcmp(animalName,'ratSOL')==1)
   animalId = 7;
+elseif(strcmp(animalName,'ratEDL')==1)
+  animalId = 7;
+  disp(['getMammalianSkeletalMuscleNormalizedSarcomereProperties: ',...
+        'ratEDL properties taken directly from ratSOL. Actin and ',...
+        'myosin lengths will be the same. Possibly titins geometry ',...
+        'will differ but this does not matter: the only titin data ',...
+        'I have on rat skeletal muscle comes from psoas.']);
 else  
   assert(0,'animalName must be cat, human, frog, rabbit, or rat');
 end
@@ -422,6 +429,9 @@ else
          % Jul 1;15(3):799-811.
          %
          % (pg 803), column 1, paragraph 2 ("To obtain an ...")
+         %
+         % From rat psoas muscle. Fingers crossed that this is a reasonable
+         % approximation of the titin geometry in other skeletal muscles.
          %
          numDomainsIgP   = 50;   
          numResiduesPevk = 1400;    
