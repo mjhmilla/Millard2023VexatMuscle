@@ -6,3 +6,4 @@ timing_main_OuterLoop.txt
 *.tex
 *.asv
 *.~lock*
+*.svg
