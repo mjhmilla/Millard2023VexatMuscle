@@ -66,6 +66,10 @@ function val = calcBezierYFcnXDerivative(x, curveParams, der)
 % @returns y : d^n/dx^n y(x), the n^th derivative of the function y(x)
 %%
 
+if(isnan(x)==1)
+    here=1;
+end
+
 val = NaN;
 
 assert((der >= -1 && der <= 3),'der must be within [0,3]');

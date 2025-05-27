@@ -166,7 +166,13 @@ if(isempty(benchRecord)==1)
   benchRecord.tendonDamping               = zeros(npts,numberOfSimulations);
   
   benchRecord.crossBridgeStiffness        = zeros(npts,numberOfSimulations);
-  benchRecord.crossBridgeDamping          = zeros(npts,numberOfSimulations);   
+  benchRecord.crossBridgeDamping          = zeros(npts,numberOfSimulations); 
+
+  benchRecord.normProximalTitinLength     = zeros(npts,numberOfSimulations);
+  benchRecord.normProximalTitinForce      = zeros(npts,numberOfSimulations);
+  benchRecord.normDistalTitinLength       = zeros(npts,numberOfSimulations);
+  benchRecord.normDistalTitinForce        = zeros(npts,numberOfSimulations);
+
   benchRecord.pathLength                  = zeros(npts,numberOfSimulations);
   benchRecord.pathVelocity                = zeros(npts,numberOfSimulations);
 
@@ -544,6 +550,8 @@ for j=1:1:length(tV)
     dm = mtInfo.muscleDynamicsInfo.musculotendonDamping;
     kf = mtInfo.muscleDynamicsInfo.fiberStiffness;
     df = mtInfo.muscleDynamicsInfo.fiberDamping;
+
+
     
     %kMuscle   = mtInfo.muscleDynamicsInfo.normMuscleStiffness;
 
@@ -568,7 +576,20 @@ for j=1:1:length(tV)
     benchRecord.crossBridgeStiffness(j,idxSim)        = kx;    
     %benchRecord.fiberDampingAlongTendon(j,idxSim)     = dFiberAT;
     benchRecord.crossBridgeDamping(j,idxSim)          = dx;   
-    
+    if(contains(mtInfo.type,'VEXAT')==1)
+        benchRecord.normProximalTitinLength(j,idxSim)     = ...
+            mtInfo.muscleLengthInfo.normTitin1Length;
+
+        benchRecord.normProximalTitinForce(j,idxSim)      = ...
+            mtInfo.muscleDynamicsInfo.normTitin1Force;
+
+        benchRecord.normDistalTitinLength(j,idxSim)       = ...
+            mtInfo.muscleLengthInfo.normTitin2Length;
+
+        benchRecord.normDistalTitinForce(j,idxSim)        = ...
+            mtInfo.muscleDynamicsInfo.normTitin2Force;
+
+    end
     benchRecord.tendonStiffness(j,idxSim)             = kTendon;
     benchRecord.tendonDamping(j,idxSim)               = dTendon;
     

@@ -1,5 +1,5 @@
 %%
-% SPDX-FileCopyrightText: 2023 Matthew Millard <millard.matthew@gmail.com>
+% SPDX-FileCopyrightText: 2025 Matthew Millard <millard.matthew@gmail.com>
 %
 % SPDX-License-Identifier: MIT
 %
@@ -58,6 +58,8 @@ useElasticTendon        = 1 && ~makeFibrilModel;
 useWlcTitinModel        = 0;
 useCalibratedCurves     = 0;
 useTwoSidedTitinCurves  = 0;
+
+specimenTemperature     = 12; %As in 12 degrees centrigrade
 
 flag_enableNumericallyNonZeroGradients  = 1;
 scaleOptimalFiberLengthRatSoleus        = 1;
@@ -129,9 +131,8 @@ plotConfigGeneric;
 %
 % Load the reference data
 %
-[ratSoleusData, ratSoleusMetaData] = loadRatSoleusData(projectFolders);
-
-
+[ratMuscleData, ratMuscleMetaData] = ...
+        loadRatSkeletalMuscleData(projectFolders);
 %
 % Select the reference data set
 %
@@ -141,7 +142,7 @@ passiveForceLengthData = [];
 
 if(indexOfDataSetToFitOptCELength > 0)
     referenceActiveForceLengthDataTable = ...
-        ratSoleusData(indexOfDataSetToFitOptCELength).activeForceLengthData;
+        ratMuscleData(indexOfDataSetToFitOptCELength).activeForceLengthData;
     for i=1:1:length(referenceActiveForceLengthDataTable)
         activeForceLengthData = ...
             [activeForceLengthData;...
@@ -152,7 +153,7 @@ end
 
 if(indexOfDataSetToPassiveForceLengthCurve>0)
     referencePassiveForceLengthDataTable = ...
-        ratSoleusData(indexOfDataSetToPassiveForceLengthCurve).passiveForceLengthData;
+        ratMuscleData(indexOfDataSetToPassiveForceLengthCurve).passiveForceLengthData;
     for i=1:1:length(referencePassiveForceLengthDataTable)
         passiveForceLengthData = ...
             [passiveForceLengthData;...
@@ -171,8 +172,8 @@ end
 % eLife 12:RP88344 https://doi.org/10.7554/eLife.88344.4    
 %
 %%%
-normCrossBridgeStiffness    = 49.1;  %fiso/lopt
-normCrossBridgeDamping      = 0.347; %fiso/(lopt/s)
+normCrossBridgeStiffness    = 75;%49.1;  %fiso/lopt
+normCrossBridgeDamping      = 0.347*(75/49.1); %fiso/(lopt/s)
 
 
 %
@@ -214,7 +215,7 @@ titinMolecularWeightInkDDefault =[];
 %%%
 
 
-normFiberLengthAtZeroPassiveForce       = 0.8;%1.05;
+normFiberLengthAtZeroPassiveForce       = 0.6;%1.05;
 normFiberLengthAtOneNormPassiveForce    = 1.9;
 normFiberStiffnessAtOneNormPassiveForce = nan;
 
@@ -223,7 +224,7 @@ normFiberStiffnessAtOneNormPassiveForce = nan;
 if(indexOfDataSetForPassiveCurveParameters>0)
     
     referencePassiveForceLengthDataTable = ...
-        ratSoleusData(indexOfDataSetForPassiveCurveParameters).passiveForceLengthData;
+        ratMuscleData(indexOfDataSetForPassiveCurveParameters).passiveForceLengthData;
 
     fittingFpeNMinForce = ...
             expDataSetFittingData(...
@@ -269,7 +270,7 @@ ecmForceFractionRatSoleusFitted = 0.0;%
 %
 % default value
 %
-normPevkToActinAttachmentPointRatSoleus=0;
+normPevkToActinAttachmentPointRatSoleus= 0.5;
 
 
 %
@@ -307,7 +308,15 @@ smallNumericallyNonZeroNumber = sqrt(sqrt(eps));
 %
 % Rat soleus model with the titin-actin bond at the IgP-PEVK border (N2A)
 %
-ratSoleusFibrilActiveTitin = createRatSoleusModel(...
+useSharpForceVelocityCurve          = 1;
+%This makes a force-velocity curve that has a slope discontinuity 
+%at vce=0 so that there is a sharp difference between the concentric
+%and eccentric curves. This is useful to match the transient response of
+%muscle during sharp length changes.
+%
+useModifiedPassiveForceLengthCurve  = 1;
+
+ratMuscleModelParameters = createRatSoleusModel(...
                       normCrossBridgeStiffness,...
                       normCrossBridgeDamping,...
                       normPevkToActinAttachmentPointRatSoleus,...
@@ -324,6 +333,9 @@ ratSoleusFibrilActiveTitin = createRatSoleusModel(...
                       flag_enableNumericallyNonZeroGradients,...
                       scaleOptimalFiberLengthRatSoleus,...
                       scaleMaximumIsometricTensionRatSoleus, ...
+                      specimenTemperature,...
+                      useSharpForceVelocityCurve,...
+                      useModifiedPassiveForceLengthCurve,...                      
                       useElasticTendon,...
                       makeFibrilModel,...
                       activeForceLengthData,...
@@ -332,61 +344,62 @@ ratSoleusFibrilActiveTitin = createRatSoleusModel(...
                       projectFolders,...
                       flag_useOctave);
 
+wlcStr = '';
 if(useWlcTitinModel==1)
-    fileNameWLC = 'ratSoleusFibrilActiveTitinWLC.mat';
-    if(mapToEDLModel==1)
-        fileNameWLC = 'ratSoleusFibrilActiveTitinWLC_MappedToEDL.mat';
-    end
-    filePathRatSoleus = fullfile(projectFolders.output_structs_FittedModels,...
-                                fileNameWLC);
-    save(filePathRatSoleus,'ratSoleusFibrilActiveTitin');
-else
-    fileName = 'ratSoleusFibrilActiveTitinLinearTitin.mat';
-    if(mapToEDLModel==1)
-        fileName = 'ratSoleusFibrilActiveTitinLinearTitin_MappedToEDL.mat';        
-    end
-    filePathRatSoleus = fullfile(projectFolders.output_structs_FittedModels,...
-                                 fileName);
-    save(filePathRatSoleus,'ratSoleusFibrilActiveTitin');
+    wlcStr='WLC';
 end
+fibrilStr='';
+if(makeFibrilModel==1)
+    fibrilStr='Fibril';
+end
+muscleStr='Soleus';
+if(mapToEDLModel==1)
+    muscleStr='EDL';
+end
+
+fileName = ['rat',muscleStr,fibrilStr,'ActiveTitin',wlcStr,'.mat'];
+filePathRatMuscle = fullfile(projectFolders.output_structs_FittedModels,...
+                             fileName);
+if(mapToEDLModel==1)
+    save(filePathRatMuscle,'ratMuscleModelParameters');
+else
+    save(filePathRatMuscle,'ratMuscleModelParameters');
+end
+
 
 %
 % Sample the experimental datda
 %
 
-%
-% sample Tomalka et al. 2017
-%
-
-idx =  ratSoleusMetaData.index_TRSS2017;
+idx =  ratMuscleMetaData.index_TRSS2017;
 
 plotDataConfig(plotIndexes.TRSS2017_fl).x =...
-    ratSoleusData(idx).activeForceLengthData.x;
+    ratMuscleData(idx).activeForceLengthData.x;
 plotDataConfig(plotIndexes.TRSS2017_fl).y =...
-    ratSoleusData(idx).activeForceLengthData.y;
+    ratMuscleData(idx).activeForceLengthData.y;
 
 plotDataConfig(plotIndexes.TRSS2017_fpe).x =...
-    ratSoleusData(idx).passiveForceLengthData.x;
+    ratMuscleData(idx).passiveForceLengthData.x;
 plotDataConfig(plotIndexes.TRSS2017_fpe).y =...
-    ratSoleusData(idx).passiveForceLengthData.y;
+    ratMuscleData(idx).passiveForceLengthData.y;
 
 %
 % sample Zuurbier et al.
 %
 
-idx =  ratSoleusMetaData.index_ZHGL1995;
+idx =  ratMuscleMetaData.index_ZHGL1995;
 
 yNorm = 1/100;
 xData=[];
 yData=[];
-for i=1:1:length(ratSoleusData(idx).activeForceLengthData)
-    ratSoleusData(idx).activeForceLengthData(i).y = ...
-        ratSoleusData(idx).activeForceLengthData(i).y.*yNorm;
-    xData = [xData;ratSoleusData(idx).activeForceLengthData(i).x];
-    yData = [yData;ratSoleusData(idx).activeForceLengthData(i).y];    
+for i=1:1:length(ratMuscleData(idx).activeForceLengthData)
+    ratMuscleData(idx).activeForceLengthData(i).y = ...
+        ratMuscleData(idx).activeForceLengthData(i).y.*yNorm;
+    xData = [xData;ratMuscleData(idx).activeForceLengthData(i).x];
+    yData = [yData;ratMuscleData(idx).activeForceLengthData(i).y];    
 end
 
-ratSoleusData(idx).passiveForceLengthData = [];
+ratMuscleData(idx).passiveForceLengthData = [];
 plotDataConfig(plotIndexes.ZHGL1995_fl).x = xData;
 plotDataConfig(plotIndexes.ZHGL1995_fl).y = yData;
 
@@ -395,19 +408,19 @@ plotDataConfig(plotIndexes.ZHGL1995_fl).y = yData;
 % sample Stephenson & Williams 
 %
 
-idx = ratSoleusMetaData.index_SW1982;
+idx = ratMuscleMetaData.index_SW1982;
 
 xData_fl=[];
 yData_fl=[];
 xData_fpe=[];
 yData_fpe=[];
-for i=1:1:length(ratSoleusData(idx).activeForceLengthData)
-    xData_fl = [xData_fl;ratSoleusData(idx).activeForceLengthData(i).x];
-    yData_fl = [yData_fl;ratSoleusData(idx).activeForceLengthData(i).y];       
+for i=1:1:length(ratMuscleData(idx).activeForceLengthData)
+    xData_fl = [xData_fl;ratMuscleData(idx).activeForceLengthData(i).x];
+    yData_fl = [yData_fl;ratMuscleData(idx).activeForceLengthData(i).y];       
 end
-for i=1:1:length(ratSoleusData(idx).passiveForceLengthData)
-    xData_fpe= [xData_fpe;ratSoleusData(idx).passiveForceLengthData(i).x];
-    yData_fpe= [yData_fpe;ratSoleusData(idx).passiveForceLengthData(i).y]; 
+for i=1:1:length(ratMuscleData(idx).passiveForceLengthData)
+    xData_fpe= [xData_fpe;ratMuscleData(idx).passiveForceLengthData(i).x];
+    yData_fpe= [yData_fpe;ratMuscleData(idx).passiveForceLengthData(i).y]; 
 end
 
 plotDataConfig(plotIndexes.SW1982_fl).x = xData_fl;
@@ -426,10 +439,10 @@ plotDataConfig(plotIndexes.SW1982_fpe).y = yData_fpe;
 %
 activeForceLengthCurveData   = ...
     calcBezierYFcnXCurveSampleVector( ...
-        ratSoleusFibrilActiveTitin.curves.activeForceLengthCurve,...
+        ratMuscleModelParameters.curves.activeForceLengthCurve,...
         100,[]);
       
-lsOpt = ratSoleusFibrilActiveTitin.sarcomere.optimalSarcomereLength;
+lsOpt = ratMuscleModelParameters.sarcomere.optimalSarcomereLength;
 
 plotDataConfig(plotIndexes.model_fl).x = activeForceLengthCurveData.x.*lsOpt;
 plotDataConfig(plotIndexes.model_fl).y = activeForceLengthCurveData.y;
@@ -439,7 +452,7 @@ plotDataConfig(plotIndexes.model_fl).y = activeForceLengthCurveData.y;
 %
 passiveForceLengthCurveData   = ...
     calcBezierYFcnXCurveSampleVector( ...
-        ratSoleusFibrilActiveTitin.curves.fiberForceLengthCurve, ...
+        ratMuscleModelParameters.curves.fiberForceLengthCurve, ...
         100,[]);
 
 plotDataConfig(plotIndexes.model_fpe).x = passiveForceLengthCurveData.x.*lsOpt;
@@ -447,14 +460,14 @@ plotDataConfig(plotIndexes.model_fpe).y = passiveForceLengthCurveData.y;
 
 titinCurveSample = ...
   sampleTitinCurves20250217(...
-    ratSoleusFibrilActiveTitin.curves,...
-    ratSoleusFibrilActiveTitin.sarcomere,...
+    ratMuscleModelParameters.curves,...
+    ratMuscleModelParameters.sarcomere,...
     100);
 
 
 
 
-lambdaECM = ratSoleusFibrilActiveTitin.sarcomere.extraCellularMatrixPassiveForceFraction;
+lambdaECM = ratMuscleModelParameters.sarcomere.extraCellularMatrixPassiveForceFraction;
 
 
 plotDataConfig(plotIndexes.model_titinPassive).x = ...
@@ -477,11 +490,11 @@ plotDataConfig(plotIndexes.model_titinActive).y = ...
 
 forceVelocityCurveData   = ...
     calcBezierYFcnXCurveSampleVector( ...
-        ratSoleusFibrilActiveTitin.curves.fiberForceVelocityCurve, ...
+        ratMuscleModelParameters.curves.fiberForceVelocityCurve, ...
         100,[]);
 
 scaleVmax = ...
-    ratSoleusFibrilActiveTitin.musculotendon.maximumNormalizedFiberVelocity;
+    ratMuscleModelParameters.musculotendon.maximumNormalizedFiberVelocity;
 
 plotDataConfig(plotIndexes.model_fv).x = forceVelocityCurveData.x .* scaleVmax;
 plotDataConfig(plotIndexes.model_fv).y = forceVelocityCurveData.y;
@@ -496,21 +509,21 @@ plotDataConfig(plotIndexes.model_fv).y = forceVelocityCurveData.y;
 % Force-length ticks
 %
 maxActiveSarcomereLengthInUm = ...
-         2*ratSoleusFibrilActiveTitin.sarcomere.zLineLengthInUm ...
-        +2*ratSoleusFibrilActiveTitin.sarcomere.actinLengthInUm...
-        +ratSoleusFibrilActiveTitin.sarcomere.myosinLengthInUm;
+         2*ratMuscleModelParameters.sarcomere.zLineLengthInUm ...
+        +2*ratMuscleModelParameters.sarcomere.actinLengthInUm...
+        +ratMuscleModelParameters.sarcomere.myosinLengthInUm;
 
 optimalSarcomereLengthInUm = ...
-         2*ratSoleusFibrilActiveTitin.sarcomere.zLineLengthInUm ...
-        +2*ratSoleusFibrilActiveTitin.sarcomere.actinLengthInUm...
-        +ratSoleusFibrilActiveTitin.sarcomere.myosinBareLengthInUm;
+         2*ratMuscleModelParameters.sarcomere.zLineLengthInUm ...
+        +2*ratMuscleModelParameters.sarcomere.actinLengthInUm...
+        +ratMuscleModelParameters.sarcomere.myosinBareLengthInUm;
 
 shortSarcomereLengthInUm = ...
-         2*ratSoleusFibrilActiveTitin.sarcomere.zLineLengthInUm ...
-        +ratSoleusFibrilActiveTitin.sarcomere.myosinLengthInUm;
+         2*ratMuscleModelParameters.sarcomere.zLineLengthInUm ...
+        +ratMuscleModelParameters.sarcomere.myosinLengthInUm;
 
 zeroForceSarcomereLengthInUm = ...
-    ratSoleusFibrilActiveTitin.sarcomere.zeroForceSarcomereLengthInUm;
+    ratMuscleModelParameters.sarcomere.zeroForceSarcomereLengthInUm;
 
 
 plotSettings(1).xticks = [];
@@ -535,21 +548,21 @@ plotSettings(1).xticks =...
 %The length at which the two actin filaments overlap with
 %the active part of  myosin
 shallowPlateauInterference = ...
-    2*(      ratSoleusFibrilActiveTitin.sarcomere.actinLengthInUm ...
-       - 0.5*ratSoleusFibrilActiveTitin.sarcomere.myosinLengthInUm ...
-       - 0.5*ratSoleusFibrilActiveTitin.sarcomere.myosinBareLengthInUm);
+    2*(      ratMuscleModelParameters.sarcomere.actinLengthInUm ...
+       - 0.5*ratMuscleModelParameters.sarcomere.myosinLengthInUm ...
+       - 0.5*ratMuscleModelParameters.sarcomere.myosinBareLengthInUm);
 
 %The length at which the actin filaments can interact with the 
 %active part of myosin without over lap
 shallowPlateauOverlap      = ...
-    2*(ratSoleusFibrilActiveTitin.sarcomere.myosinLengthInUm ...
-     - ratSoleusFibrilActiveTitin.sarcomere.actinLengthInUm);
+    2*(ratMuscleModelParameters.sarcomere.myosinLengthInUm ...
+     - ratMuscleModelParameters.sarcomere.actinLengthInUm);
 
 %The maximum possible length at which myosin and actin can
 % actively interact 
 maxOverlap                 = ...
-    ratSoleusFibrilActiveTitin.sarcomere.myosinLengthInUm ...
-  - ratSoleusFibrilActiveTitin.sarcomere.myosinBareLengthInUm;
+    ratMuscleModelParameters.sarcomere.myosinLengthInUm ...
+  - ratMuscleModelParameters.sarcomere.myosinBareLengthInUm;
 
 %With half of the cross-bridges pulling in one direction and the other half 
 %pulling in the opposite direction the interference section contributes no force
@@ -583,17 +596,17 @@ plotSettings(2).xticks = [];
 plotSettings(2).yticks = [];
 
 plotSettings(2).xticks = [...
-    -ratSoleusFibrilActiveTitin.musculotendon.maximumNormalizedFiberVelocity,...
-    -0.5*ratSoleusFibrilActiveTitin.musculotendon.maximumNormalizedFiberVelocity,...
+    -ratMuscleModelParameters.musculotendon.maximumNormalizedFiberVelocity,...
+    -0.5*ratMuscleModelParameters.musculotendon.maximumNormalizedFiberVelocity,...
     0,...
-    ratSoleusFibrilActiveTitin.musculotendon.maximumNormalizedFiberVelocity];
+    ratMuscleModelParameters.musculotendon.maximumNormalizedFiberVelocity];
 
 plotSettings(2).yticks = [...
     0.00,...
-    ratSoleusFibrilActiveTitin.musculotendon.forceVelocityMultiplierAtHalfMaximumFiberVelocity,...
+    ratMuscleModelParameters.musculotendon.forceVelocityMultiplierAtHalfMaximumFiberVelocity,...
     1.00,...
-    ratSoleusFibrilActiveTitin.musculotendon.forceVelocityMultiplierAtLowEccentricFiberVelocity,...
-    ratSoleusFibrilActiveTitin.musculotendon.forceVelocityMultiplierAtMaximumEccentricFiberVelocity];
+    ratMuscleModelParameters.musculotendon.forceVelocityMultiplierAtLowEccentricFiberVelocity,...
+    ratMuscleModelParameters.musculotendon.forceVelocityMultiplierAtMaximumEccentricFiberVelocity];
 
 figModelCurves = figure;
     
@@ -648,12 +661,9 @@ end
 
 
 figure(figModelCurves);
-configPlotExporter;
 
-filePath = fullfile(projectFolders.output_plots_MuscleCurves,...
-                    'fig_Pub_MusleCurves_RatSoleus.pdf');
 if(mapToEDLModel==1)
     filePath = fullfile(projectFolders.output_plots_MuscleCurves,...
-                        'fig_Pub_MusleCurves_RatSoleusMappedToEDL.pdf');
+                        'fig_Pub_MuscleCurves_RatSoleusMappedToEDL.pdf');
 end
 print('-dpdf', filePath); 

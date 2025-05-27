@@ -1407,7 +1407,7 @@ end
 %%
 %Position Information
 %%
-
+mtInfo.type = 'VEXAT';
 mtInfo.muscleLengthInfo.tendonLength            = modelCachedValues.lt;        %length        m
 mtInfo.muscleLengthInfo.normTendonLength        = modelCachedValues.ltN;       %length/length m/m        
 mtInfo.muscleLengthInfo.tendonStrain            = modelCachedValues.et;        %length/length m/m        

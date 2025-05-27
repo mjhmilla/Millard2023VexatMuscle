@@ -28,6 +28,7 @@ function [ratSoleusMusculotendonProperties, ...
             normMaxActiveTitinToActinDamping,...
             ecmForceFraction,...
             titinMolecularWeightInkD,...
+            specimenTemperature,...
             makeFibrilModel,...
             useElasticTendon,...
             mapToEDLModel,...
@@ -208,7 +209,7 @@ b = c;
 x = (A'*A)\(A'*b);
 
 % Expected curvature value at 12 C in whole soleus muscle
-c12 = [12,1]*x;
+c12 = [specimenTemperature,1]*x;
 
 % Solving for fv at vceMax*0.5
 
@@ -244,8 +245,8 @@ if(flag_debugFv==1)
   title('Force-velocity curve and curvature'); 
 end
 
-forceVelocityMultiplierAtLowEccentricFiberVelocity     = 1.30;
-forceVelocityMultiplierAtMaximumEccentricFiberVelocity = 1.45;
+forceVelocityMultiplierAtLowEccentricFiberVelocity     = 1.35;
+forceVelocityMultiplierAtMaximumEccentricFiberVelocity = 1.40;
 
 kisoScott                       = nan;
 tendonStrainAtOneNormForce      = nan;
@@ -274,6 +275,8 @@ normPlateauOffset = ...
             mapToEDLModel,...
             flag_useOctave);
 
+
+ratSoleusMusculotendonProperties.temperature=specimenTemperature;
 
 activeForceLengthDataNormalized = [];
 passiveForceLengthDataNormalized = [];
