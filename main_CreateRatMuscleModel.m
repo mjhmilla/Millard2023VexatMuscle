@@ -21,13 +21,8 @@ addpath( genpath(projectFolders.postprocessing) );
 %%
 % Parameters
 %%
-mapToEDLModel = 1;
-%Will map the rat soleus model to an EDL model. This option exists
-%specifically for a rat edl fiber model: the literature on rat soleus
-%fiber properties is much more complete than edl fibers. And so, to make
-%an EDL model I use all of the normalized properties of the soleus model
-%and change the fiber velocity to be consistent with an EDL (and also
-%change the muscle name);
+validMuscles = {'SOL','EDL'};
+muscleName = validMuscles{2};
 
 %Least-squares fit of the optimal CE length and the passive-force-length
 %relation
@@ -53,84 +48,11 @@ expDataSetFittingData(2).minLengthWhereFpeIsLinear=nan;
 expDataSetFittingData(3).minLengthWhereFpeIsLinear=0.3;
 
 
-makeFibrilModel         = 1;
-useElasticTendon        = 1 && ~makeFibrilModel;
-useWlcTitinModel        = 0;
-useCalibratedCurves     = 0;
-useTwoSidedTitinCurves  = 0;
-
-specimenTemperature     = 12; %As in 12 degrees centrigrade
-
-flag_enableNumericallyNonZeroGradients  = 1;
-scaleOptimalFiberLengthRatSoleus        = 1;
-scaleMaximumIsometricTensionRatSoleus   = 1;
-flag_useOctave                          = 0;
-
-
 
 %%
-% Plot configuration and data structs
-%%
-
-[plotDataConfig,...
- plotIndexes,... 
- plotSettings] = getRatSoleusModelPlottingStructures(mapToEDLModel);
-
-
-%%
-% Rat soleus fibril Model
-%%
-
-fprintf('\n\nCreating: default rat soleus fibril model\n');
-fprintf('  used to simulate Tomalka, Weider, Hahn, Seiberl, Siebert 2020.\n\n');
-
-fprintf('\n\nTo do:');
-fprintf('\n1. Make a routine to solve for the curviness in fpeN, fTiPN, fTiDN');
-fprintf('\n   that minimizes the squared errors w.r.t. the experimental data.');
-fprintf('\n   the fitting method should probably be set explicitly using a flag.');
-fprintf('\n\n2. Update the active-force-length relation to fit the data better?');
-fprintf('\n   Perhaps use Guenter and Rockenfellers model');
-fprintf('\n\n3. Look at Prado again: there are a lot of references related to');
-fprintf(  '\n   rat muscle.');
-fprintf(  '\n');
-% Stephenson DG, Williams DA. Effects of sarcomere length on the force—pCa 
-% relation in fast‐and slow‐twitch skinned muscle fibres from the rat. 
-% The Journal of Physiology. 1982 Dec 1;333(1):637-53.
-
-fprintf('\n\n4. Find sources for lopt, fiso, and ltslk beyond Lemaire et al.');
-fprintf(  '\n   for the rat soleus muscle.')
-
-%%
-% Plot configuration
-%%
-plotLayoutSettings = struct('numberOfHorizontalPlotColumns',  2,...
-                            'numberOfVerticalPlotRows',       1,...
-                            'flag_fixedPlotWidth',            1,...
-                            'plotWidth',                      7,...
-                            'plotHeight',                     7,...
-                            'flag_usingOctave',               0);
-
-numberOfHorizontalPlotColumns = plotLayoutSettings.numberOfHorizontalPlotColumns;
-numberOfVerticalPlotRows      = plotLayoutSettings.numberOfVerticalPlotRows;
-flag_fixedPlotWidth           = plotLayoutSettings.flag_fixedPlotWidth;
-plotWidth                     = plotLayoutSettings.plotWidth;
-plotHeight                    = plotLayoutSettings.plotHeight;
-flag_usingOctave              = plotLayoutSettings.flag_usingOctave;
-
-plotHorizMarginCm = 2;
-plotVertMarginCm  = 2;
-
-pageWidth   = (plotWidth+plotHorizMarginCm)*numberOfHorizontalPlotColumns...
-                +plotHorizMarginCm;
-
-pageHeight  = (plotHeight+plotVertMarginCm)*numberOfVerticalPlotRows...
-                +plotVertMarginCm;
-
-plotConfigGeneric;
-
-%
 % Load the reference data
-%
+%%
+
 [ratMuscleData, ratMuscleMetaData] = ...
         loadRatSkeletalMuscleData(projectFolders);
 %
@@ -160,66 +82,155 @@ if(indexOfDataSetToPassiveForceLengthCurve>0)
              referencePassiveForceLengthDataTable(i).x, ...
              referencePassiveForceLengthDataTable(i).y];            
     end
-end   
+end  
 
-%%%
-%
-% XE normalized parameters from the cat soleus with an elastic tendon
-% from Table 1 
-%
-% Matthew Millard, David W Franklin, Walter Herzog (2024) 
-% A three filament mechanistic model of musculotendon force and impedance 
-% eLife 12:RP88344 https://doi.org/10.7554/eLife.88344.4    
-%
-%%%
-normCrossBridgeStiffness    = 75;%49.1;  %fiso/lopt
-normCrossBridgeDamping      = 0.347*(75/49.1); %fiso/(lopt/s)
+%%
+% Manually set sarcomere properties 
+%%
+makeSkinnedFibrilModel = 1;
+
+setSarcomereProperties.normCrossBridgeStiffness         = 75;%49.1;  %fiso/lopt
+setSarcomereProperties.normCrossBridgeDamping           = 0.347*(75/49.1); %fiso/(lopt/s)
+% Manually set to produce the force transient in TRSS2017 Figure 2A
+% at the beginning of lengthening
 
 
-%
-% I haven't yet found any papers that report the molecular weight of
-% titin from rat soleus titin.
-%
-titinMolecularWeightInkDDefault =[];
+setSarcomereProperties.useWLCTitinModel                 = 0;
+% 0: Using a linear titin model
+% 1: Using the WLC titin model
+% As described in Millard, Franklin, Herzog 2024
 
-%%%
+setSarcomereProperties.titinMolecularWeightInkD         = []; 
+% I haven't been able to find a report of the molecular weight of titin
+% in rat skeletal muscle.
+
+setSarcomereProperties.ecmForceFraction                 = (1-makeSkinnedFibrilModel)*0.56;% 
+% No ECM for a skinned fibril
+% Otherwise use 0.56, the average amount of ECM reported in Prado et al.
+% across 5 rabbit skeletal muscles
+
+setSarcomereProperties.normPevkToActinAttachmentPoint   = 0.5; 
+%0 : Prox-Ig/PEVK boundary
+%1 : PEVK/Dist-Ig boundary
+
+setSarcomereProperties.normMaxActiveTitinToActinDamping = 20.3; %fo/(lo/s)
+% setSarcomereProperties.normMaxActiveTitinToActinDamping
 %
-% From Figure 7 of Stephenson & Williams
+% The half relaxation time in Figure 1 of Tomalka et al. (a stretch of ~20%
+% in 0.5 s) is 
 %
-% Using theoretical force-length relation:
+% thalf = 0.0313 s
 %
-%   lopt = 2.5um
-%   fiso = 1
+% The half relaxation time of the cat soleus in Herzog & Leonard 2002
+% Figure 7C (a stretch of 21% lopt in 0.333 s) is
+% 
+% thalf = 0.111 s
 %
-% Using a (manually identified) better fit to the data
+% Scaling the value of normMaxActiveTitinToActinDamping used to simulate 
+% Herzog & Leonard we have
+% 
+% normMaxActiveTitinToActinDamping = 71.9*(0.0313 / 0.111) 
 %
-%   lopt = 2.66 um
-%   fiso = 1
+% Tomalka A, Weidner S, Hahn D, Seiberl W, Siebert T. Power amplification 
+% increases with contraction velocity during stretch-shortening cycles of 
+% skinned muscle fibers. Frontiers in physiology. 2021 Mar 31;12:644981.
 %
-% The lengths where fpeN = 0 and fpeN = 1 are
-%
-%   lceNFpeNZero  = 4.24um  / 2.5um = 1.696 lo
-%   lceNFpeNOne   = 2.629um / 2.5um = 1.05 lo
-%
-% Using the manually identified lopt
-%
-%   lceNFpeNZero  = 4.24um  / 2.66um = 1.59 lo
-%   lceNFpeNOne   = 2.629um / 2.66um = 0.988 lo
-%
-% Sticking with the theoretical force-length model, at least to start.
-%
-% Stephenson DG, Williams DA. Effects of sarcomere length on the force—pCa 
-% relation in fast‐and slow‐twitch skinned muscle fibres from the rat. 
-% The Journal of Physiology. 1982 Dec 1;333(1):637-53.
-%
-%%%
+% Herzog W, Leonard TR. Force enhancement following stretching of skeletal 
+% muscle: a new mechanism. Journal of Experimental Biology. 2002 
+% May 1;205(9):1275-83.
+
+%%
+% Manually set musculotendon properties
+%%
+
+setMusculotendonProperties.normFiberLengthAtZeroPassiveForce        = 0.6;
+setMusculotendonProperties.normFiberLengthAtOneNormPassiveForce     = 1.9;
+setMusculotendonProperties.normFiberStiffnessAtOneNormPassiveForce  = nan;
+setMusculotendonProperties.scaleOptimalFiberLength                  = 1;
+setMusculotendonProperties.scaleMaximumIsometricTension             = 1;
+setMusculotendonProperties.makeSkinnedFibrilModel = makeSkinnedFibrilModel;
+setMusculotendonProperties.useElasticTendon                         = ...
+        1 && ~setMusculotendonProperties.makeSkinnedFibrilModel;
 
 
-normFiberLengthAtZeroPassiveForce       = 0.6;%1.05;
-normFiberLengthAtOneNormPassiveForce    = 1.9;
-normFiberStiffnessAtOneNormPassiveForce = nan;
+%%
+% Manually set curves
+%%
 
 
+setCurveProperties.useCalibratedCurves                              = 1;
+setCurveProperties.useTwoSidedTitinCurves                           = 0;
+setCurveProperties.smallNumericallyNonZeroNumber      = sqrt(sqrt(eps));
+setCurveProperties.flag_enableNumericallyNonZeroGradients           = 1;
+setCurveProperties.useForceVelocityCurveWithSlopeDiscontinuity      = 1;
+setCurveProperties.fitTitinToTRSS2017Data         =  ratMuscleData(1);
+setCurveProperties.activeForceLengthData          =  [];
+setCurveProperties.passiveForceLengthData         =  [];
+
+
+specimenTemperature     = 12; %As in 12 degrees centrigrade
+
+flag_useOctave                          = 0;
+
+
+
+%%
+% Plot configuration and data structs
+%%
+
+[plotDataConfig,...
+ plotIndexes,... 
+ plotSettings] = getRatMusculotendonModelPlottingStructures(muscleName);
+
+
+%%
+% Rat soleus fibril Model
+%%
+
+fprintf('\n\nCreating: rat EDL model \n');
+fprintf('  used to simulate Tomalka, Rode, Schumacher, Siebert 2017.\n\n');
+
+fprintf('\n\nTo do:');
+fprintf('\n\n1. Look at Prado again: there are a lot of references related to');
+fprintf(  '\n   rat muscle.');
+fprintf(  '\n');
+
+
+%%
+% Plot configuration
+%%
+plotLayoutSettings = struct('numberOfHorizontalPlotColumns',  2,...
+                            'numberOfVerticalPlotRows',       1,...
+                            'flag_fixedPlotWidth',            1,...
+                            'plotWidth',                      7,...
+                            'plotHeight',                     7,...
+                            'flag_usingOctave',               0);
+
+numberOfHorizontalPlotColumns = plotLayoutSettings.numberOfHorizontalPlotColumns;
+numberOfVerticalPlotRows      = plotLayoutSettings.numberOfVerticalPlotRows;
+flag_fixedPlotWidth           = plotLayoutSettings.flag_fixedPlotWidth;
+plotWidth                     = plotLayoutSettings.plotWidth;
+plotHeight                    = plotLayoutSettings.plotHeight;
+flag_usingOctave              = plotLayoutSettings.flag_usingOctave;
+
+plotHorizMarginCm = 2;
+plotVertMarginCm  = 2;
+
+pageWidth   = (plotWidth+plotHorizMarginCm)*numberOfHorizontalPlotColumns...
+                +plotHorizMarginCm;
+
+pageHeight  = (plotHeight+plotVertMarginCm)*numberOfVerticalPlotRows...
+                +plotVertMarginCm;
+
+plotConfigGeneric;
+
+ 
+%%
+% Fit the passive force-length relation
+%   Even for fibril models this is useful as it serves as a fitting
+%   reference for the passive-force-length relation for the entire 
+%   titin segment.
+%%
 
 if(indexOfDataSetForPassiveCurveParameters>0)
     
@@ -263,108 +274,29 @@ if(indexOfDataSetForPassiveCurveParameters>0)
 
 end
 
-% Since these experiments use skinned fibers, the ECM is assumed to contribute
-% nothing. 
-ecmForceFractionRatSoleusFitted = 0.0;% 
 
-%
-% default value
-%
-normPevkToActinAttachmentPointRatSoleus= 0.5;
-
-
-%
-% The half relaxation time in Figure 1 of Tomalka et al. (a stretch of ~20%
-% in 0.5 s) is 
-%
-% thalf = 0.0313 s
-%
-% The half relaxation time of the cat soleus in Herzog & Leonard 2002
-% Figure 7C (a stretch of 21% lopt in 0.333 s) is
-% 
-% thalf = 0.111 s
-%
-% Scaling the value of normMaxActiveTitinToActinDamping used to simulate 
-% Herzog & Leonard we have
-% 
-% normMaxActiveTitinToActinDamping = 71.9*(0.0313 / 0.111) 
-%                                  = 20.3
-%
-%
-% Tomalka A, Weidner S, Hahn D, Seiberl W, Siebert T. Power amplification 
-% increases with contraction velocity during stretch-shortening cycles of 
-% skinned muscle fibers. Frontiers in physiology. 2021 Mar 31;12:644981.
-%
-% Herzog W, Leonard TR. Force enhancement following stretching of skeletal 
-% muscle: a new mechanism. Journal of Experimental Biology. 2002 
-% May 1;205(9):1275-83.
-%
-normMaxActiveTitinToActinDamping = 20.3; %fo/(lo/s)
-
-
-smallNumericallyNonZeroNumber = sqrt(sqrt(eps));
-
-
-%
-% Rat soleus model with the titin-actin bond at the IgP-PEVK border (N2A)
-%
-useSharpForceVelocityCurve          = 1;
-%This makes a force-velocity curve that has a slope discontinuity 
-%at vce=0 so that there is a sharp difference between the concentric
-%and eccentric curves. This is useful to match the transient response of
-%muscle during sharp length changes.
-%
-useModifiedPassiveForceLengthCurve  = 1;
-
-ratMuscleModelParameters = createRatSoleusModel(...
-                      normCrossBridgeStiffness,...
-                      normCrossBridgeDamping,...
-                      normPevkToActinAttachmentPointRatSoleus,...
-                      normMaxActiveTitinToActinDamping,...
-                      normFiberLengthAtZeroPassiveForce,...                      
-                      normFiberLengthAtOneNormPassiveForce,...
-                      normFiberStiffnessAtOneNormPassiveForce,...                      
-                      ecmForceFractionRatSoleusFitted,...
-                      titinMolecularWeightInkDDefault,...
-                      useWlcTitinModel,...
-                      useCalibratedCurves,...
-                      useTwoSidedTitinCurves,...
-                      smallNumericallyNonZeroNumber,...
-                      flag_enableNumericallyNonZeroGradients,...
-                      scaleOptimalFiberLengthRatSoleus,...
-                      scaleMaximumIsometricTensionRatSoleus, ...
-                      specimenTemperature,...
-                      useSharpForceVelocityCurve,...
-                      useModifiedPassiveForceLengthCurve,...                      
-                      useElasticTendon,...
-                      makeFibrilModel,...
-                      activeForceLengthData,...
-                      passiveForceLengthData,...
-                      mapToEDLModel,...
-                      projectFolders,...
-                      flag_useOctave);
+ratMuscleModelParameters = createRatSkeletalMuscleModel(...
+                              setSarcomereProperties,...
+                              setMusculotendonProperties,...
+                              setCurveProperties,...
+                              specimenTemperature,...                   
+                              muscleName,...
+                              projectFolders,...
+                              flag_useOctave);
 
 wlcStr = '';
-if(useWlcTitinModel==1)
+if(setSarcomereProperties.useWLCTitinModel==1)
     wlcStr='WLC';
 end
 fibrilStr='';
-if(makeFibrilModel==1)
+if(setMusculotendonProperties.makeSkinnedFibrilModel==1)
     fibrilStr='Fibril';
 end
-muscleStr='Soleus';
-if(mapToEDLModel==1)
-    muscleStr='EDL';
-end
 
-fileName = ['rat',muscleStr,fibrilStr,'ActiveTitin',wlcStr,'.mat'];
+fileName = ['rat',muscleName,fibrilStr,'ActiveTitin',wlcStr,'.mat'];
 filePathRatMuscle = fullfile(projectFolders.output_structs_FittedModels,...
                              fileName);
-if(mapToEDLModel==1)
-    save(filePathRatMuscle,'ratMuscleModelParameters');
-else
-    save(filePathRatMuscle,'ratMuscleModelParameters');
-end
+save(filePathRatMuscle,'ratMuscleModelParameters');
 
 
 %
@@ -651,19 +583,12 @@ for i=1:1:length(plotSettings)
 
     titleStr = plotSettings(i).title{:};
 
-    if(mapToEDLModel==1)
-        idx = strfind(titleStr,'Soleus');
-        titleStr = [titleStr(1,1:(idx-1)),'EDL',titleStr(1,(idx+6):end)];
-    end
-
     title(titleStr);            
 end
 
 
 figure(figModelCurves);
 
-if(mapToEDLModel==1)
-    filePath = fullfile(projectFolders.output_plots_MuscleCurves,...
-                        'fig_Pub_MuscleCurves_RatSoleusMappedToEDL.pdf');
-end
+filePath = fullfile(projectFolders.output_plots_MuscleCurves,...
+                    ['fig_Pub_MuscleCurves_Rat',muscleName,'.pdf']);
 print('-dpdf', filePath); 

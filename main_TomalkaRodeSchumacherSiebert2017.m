@@ -21,6 +21,8 @@ specimenTemperature     = 12; %As in 12 degrees centrigrade
 
 simulationFileName      = 'benchRecordVexat_TRSS2017.mat';
 
+validMuscles = {'SOL','EDL'};
+muscleName = validMuscles{2};
 
 %%
 % Set up the files
@@ -48,12 +50,8 @@ fibrilStr='';
 if(makeFibrilModel==1)
     fibrilStr='Fibril';
 end
-muscleStr='Soleus';
-if(mapToEDLModel==1)
-    muscleStr='EDL';
-end
 
-fileName = ['rat',muscleStr,fibrilStr,'ActiveTitin',wlcStr,'.mat'];
+fileName = ['rat',muscleName,fibrilStr,'ActiveTitin',wlcStr,'.mat'];
 filePathRatMuscle = fullfile(projectFolders.output_structs_FittedModels,...
                              fileName);
 load(filePathRatMuscle);
@@ -70,10 +68,10 @@ end
 % Plot parameters
 %%
 plotLayoutSettings = struct('numberOfHorizontalPlotColumns',  2,...
-                            'numberOfVerticalPlotRows',       2,...
+                            'numberOfVerticalPlotRows',       3,...
                             'flag_fixedPlotWidth',            1,...
-                            'plotWidth',                      7,...
-                            'plotHeight',                     7,...
+                            'plotWidth',                      6,...
+                            'plotHeight',                     6,...
                             'flag_usingOctave',               0);
 
 numberOfHorizontalPlotColumns = plotLayoutSettings.numberOfHorizontalPlotColumns;
@@ -83,8 +81,8 @@ plotWidth                     = plotLayoutSettings.plotWidth;
 plotHeight                    = plotLayoutSettings.plotHeight;
 flag_usingOctave              = plotLayoutSettings.flag_usingOctave;
 
-plotHorizMarginCm = 2;
-plotVertMarginCm  = 2;
+plotHorizMarginCm = 3;
+plotVertMarginCm  = 3;
 
 pageWidth   = (plotWidth+plotHorizMarginCm)*numberOfHorizontalPlotColumns...
                 +plotHorizMarginCm;
@@ -102,69 +100,8 @@ plotConfigGeneric;
         loadRatSkeletalMuscleData(projectFolders);
 
 
-
-%%
-% Simulation: length change function
-%%
 lceOptMdl   = ratMuscleModelParameters.musculotendon.optimalFiberLength;
 lceOptData  = min(ratMuscleData(1).activeLengtheningData(3).x);
-
-vmax = ...
-  ratMuscleModelParameters.musculotendon.maximumNormalizedFiberVelocity;
-
-lmin = min(ratMuscleData(1).activeLengtheningData(2).x);
-lmax = max(ratMuscleData(1).activeLengtheningData(2).x);
-
-%Starting
-e0 = 0;
-l0 = lmin;
-t0 = 0;
-
-%Excitation 1
-l1 = lmin;
-e1 = 1;
-t1 = t0+1;
-
-%Ramp start
-l2 = lmin;
-e2 = 1;
-t2 = t1+3;
-
-%Ramp End
-rampSlope = 0.11*vmax*lceOptData;
-l3 = lmax;
-t3 = t2 + (l3-l2)/(rampSlope);
-e3 = 1;
-
-timeSpan = [t0,t3];
-
-%Setup functions
-activation=1;
-excitationFcn = @(argT)calcStepFunction(argT,...
-                  t1,...
-                  inf,...
-                  activation);
-
-pathLengthFcn = @(argT)calcRampStateSharp(...
-                       argT,t2,t3,l2,rampSlope);
-
-activationFcn = ...
-    @(argU,argA)calcFirstOrderActivationDerivative(argU,argA, ...
-                ratMuscleModelParameters.sarcomere.activationTimeConstant,...
-                ratMuscleModelParameters.sarcomere.deactivationTimeConstant,0);
-
-% Fitting points
-lA = (lmin+(1/3)*(lmax-lmin));
-lB =  lmax;
-npts = 10;
-lkp  = [lA:((lB-lA)/(npts-1)):lB]';
-
-fkp  = interp1(ratMuscleData(1).activeLengtheningData(2).x,...
-               ratMuscleData(1).activeLengtheningData(2).y,...
-               lkp);
-
-fittingKeyPoints = [lkp, fkp];
-
 
 %%
 % Simulation parameters
@@ -172,55 +109,67 @@ fittingKeyPoints = [lkp, fkp];
 simSoln         = [];
 folderTRSS2017  = projectFolders.output_structs_TRSS2017;
 
+musculotendon   = ratMuscleModelParameters.musculotendon;
+sarcomere       = ratMuscleModelParameters.sarcomere;
+curves          = ratMuscleModelParameters.curves;
+
+lceNTA_00 = sarcomere.normLengthTitinActinBondMinimum;
+lceNTA_01 = sarcomere.normLengthTitinActinBondMinimum;
+
+betaA_TiA_00 = sarcomere.normMaxActiveTitinToActinDamping;
+betaA_TiA_01 = sarcomere.normMaxActiveTitinToActinDamping*10;
+
+disp('Changing normLengthTitinActinBondMinimum:');
+fprintf('%1.3f\tfrom\n', lceNTA_00);
+fprintf('%1.3f\tto\n'  , lceNTA_01);
+
+sarcomere.normLengthTitinActinBondMinimum = lceNTA_01;
+
+disp('Changing normActivePevkDamping:');
+fprintf('%1.3f\tfrom\n', betaA_TiA_00);
+fprintf('%1.3f\tto\n'  , betaA_TiA_01);
+
+sarcomere.normMaxActiveTitinToActinDamping = betaA_TiA_01;
+
+
+sarcomere.scaleECM=0;
+sarcomere.scaleTitinProximal=1;
+sarcomere.scaleTitinDistal=1;
+
+
+
+responseTimeScaling=20;
+
+sarcomere.slidingTimeConstantBlendingParameter = 0.01;
+
+sarcomere.slidingTimeConstantLengthening= ...
+    sarcomere.slidingTimeConstant*responseTimeScaling;
+
+sarcomere.slidingTimeConstantShortening= ...
+    sarcomere.slidingTimeConstant;
+
+sarcomere.useVariableSlidingTimeConstant = 1;
+
+
+
+disp('Note: updateMillard2023VexatCache.m update near line 1198');
+disp('  to modulate the time constant so that it is smaller when');
+disp('  shortening and larger when lengthening');
+
+curves.useCalibratedCurves=1;
+
+
+%%
+% Run simulations
+%%
+
 if(runSimulations==1)
-    flag_fitTitinModel  = 0;
-    
-    musculotendon   = ratMuscleModelParameters.musculotendon;
-    sarcomere       = ratMuscleModelParameters.sarcomere;
-    curves          = ratMuscleModelParameters.curves;
-    
-    lceNTA_00 = sarcomere.normLengthTitinActinBondMinimum;
-    lceNTA_01 = sarcomere.normLengthTitinActinBondMinimum;
 
-    betaA_TiA_00 = sarcomere.normMaxActiveTitinToActinDamping;
-    betaA_TiA_01 = sarcomere.normMaxActiveTitinToActinDamping*10;
-
-    disp('Changing normLengthTitinActinBondMinimum:');
-    fprintf('%1.3f\tfrom\n', lceNTA_00);
-    fprintf('%1.3f\tto\n'  , lceNTA_01);
-    
-    sarcomere.normLengthTitinActinBondMinimum = lceNTA_01;
-
-    disp('Changing normActivePevkDamping:');
-    fprintf('%1.3f\tfrom\n', betaA_TiA_00);
-    fprintf('%1.3f\tto\n'  , betaA_TiA_01);
-
-    sarcomere.normMaxActiveTitinToActinDamping = betaA_TiA_01;
-    
-    sarcomere.scaleECM=0;
-    sarcomere.scaleTitinProximal=1;
-    sarcomere.scaleTitinDistal=1;
-
-    responseTimeScaling=15; %20
-
-    sarcomere.slidingTimeConstant = ...
-        sarcomere.slidingTimeConstant*responseTimeScaling;
-
-    sarcomere.normCrossBridgeCyclingDamping = ...
-        sarcomere.normCrossBridgeCyclingDamping...
-        *responseTimeScaling*0.5;
-
-    curves.useCalibratedCurves=1;
-    
     [success] = runTomalkaRodeSchumacherSiebert2017SimulationsVEXAT( ...
-                              timeSpan,...
-                              excitationFcn,...
-                              activationFcn,...
-                              pathLengthFcn,...
+                              ratMuscleData(1),...
                               musculotendon,...
                               sarcomere,...
                               curves,...
-                              flag_fitTitinModel,...
                               fullfile(folderTRSS2017,simulationFileName));
     simSoln = load(fullfile(folderTRSS2017,simulationFileName));
 else
@@ -255,10 +204,24 @@ lineColors(11,:) = plotColors.orange;
 lineColors(12,:) = [1,1,1].*0.9;
 lineColors(13,:) = [1,1,1].*0.85;
 
+lineColors(14,:) = [0,0,0];
+lineColors(15,:) = [44,133,229]./255;
+lineColors(16,:) = [63,181,175]./255;
+
+lineColors(17,:) = [0,0,0];
+lineColors(18,:) = [1,0,0];
+lineColors(19,:) = [0,1,0];
+lineColors(20,:) = [44,133,229]./255;
+
 idxExpFig2A = [1:3];
 idxExpFig3A = [4:7];
 idxExpMark  = [8,9];
 idxMdl      = [10,11,12,13];
+
+idxMdlFig2A = [14:16];
+idxMdlFig3A = [17:20];
+
+idxGreys =[12,13];
 
 expLineWidth=1.5;
 mdlLineWidth=0.5;
@@ -268,10 +231,16 @@ falSample = calcBezierYFcnXCurveSampleVector(...
             100,...
             [1,4]./lceOptData);
 
-fpeSample = calcBezierYFcnXCurveSampleVector(...
-            ratMuscleModelParameters.curves.fiberForceLengthCurve,...
+fvSample = calcBezierYFcnXCurveSampleVector(...
+            ratMuscleModelParameters.curves.fiberForceVelocityCurve,...
             100,...
-            [1,4]./lceOptData);
+            [-1,1]);
+
+titinCurveSample = ...
+  sampleTitinCurves20250217(...
+    curves,...
+    sarcomere,...
+    100);
 
 falFill.x = [falSample.x;...
              fliplr(falSample.x(2:end-1)')'];
@@ -279,59 +248,86 @@ falFill.x = falFill.x.*lceOptMdl;
 falFill.y = [zeros(size(falSample.y));...
              fliplr(falSample.y(2:end-1)')'];
 
-fpeFill.x = [fpeSample.x;...
-             fliplr(fpeSample.x(2:end-1)')'];
-fpeFill.x = fpeFill.x.*lceOptMdl;
-fpeFill.y = [zeros(size(fpeSample.y));...
-             fliplr(fpeSample.y(2:end-1)')'];
+fvSample.x = fvSample.x*sarcomere.forceVelocityCalibrationFactor;
+fvFill.x = [fvSample.x;...
+             fliplr(fvSample.x(1:end)')'];
+fvFill.x = fvFill.x.*lceOptMdl;
+fvFill.y = [zeros(size(fvSample.y));...
+             fliplr(fvSample.y(1:end)')'];
+
+ftpFill.x = [titinCurveSample.curveSampleTitin.x;...
+             fliplr(titinCurveSample.curveSampleTitin.x(2:end-1)')'];
+ftpFill.x = ftpFill.x.*(2*lceOptMdl);
+ftpFill.y = [zeros(size(titinCurveSample.curveSampleTitin.y));...
+             fliplr(titinCurveSample.curveSampleTitin.y(2:end-1)')'];
+
+
 
 figH = figure;
 subplot(subplot('Position', reshape(subPlotPanel(1,1,:),1,4)));
+    lengthTicks =[];
+    for idx=1:1:3
+        yyaxis left;    
+        plot(simSoln.benchRecord.time(:,idx),...
+             simSoln.benchRecord.fiberForce(:,idx),...
+             '-','Color',lineColors(idxMdlFig2A(idx),:),...
+             'LineWidth',mdlLineWidth,...
+             'DisplayName',sprintf('Sim %i',idx));
+        hold on;
+
+    
+        yyaxis right;
+        n = (idx-1)/2;
+        lpColor = [0.5,0.3,0].*(1-n) + [1,0.6,0].*(n);
+
+        plot(simSoln.benchRecord.time(:,idx),...
+             simSoln.benchRecord.pathLength(:,idx)./lceOptData,...
+             '--','Color',lpColor,...
+             'LineWidth',mdlLineWidth,...         
+             'DisplayName',sprintf('Sim %i',idx));
+        hold on;
+
+        lengthTicks = [lengthTicks,...
+            simSoln.benchRecord.pathLength(1,idx),...
+            simSoln.benchRecord.pathLength(end,idx)];
+    end
+
     yyaxis left;
-    plot(simSoln.benchRecord.time(:,1),...
-         simSoln.benchRecord.fiberForce(:,1),...
-         '-','Color',lineColors(idxMdl(1),:),...
-         'LineWidth',mdlLineWidth,...
-         'DisplayName','VEXAT');
-    hold on;
     xlabel('Time (s)');
     ylabel('Norm. Force ($$f/f_o^M$$)');
+    ylim([-0.5,2]);
 
     yyaxis right;
-    plot(simSoln.benchRecord.time(:,1),...
-         simSoln.benchRecord.pathLength(:,1),...
-         '-','Color',lineColors(idxMdl(2),:),...
-         'LineWidth',mdlLineWidth,...         
-         'DisplayName','VEXAT');
-    hold on;
-    dl = ( max(simSoln.benchRecord.pathLength(:,1)) ...
-          -min(simSoln.benchRecord.pathLength(:,1)))*0.1;
+    lengthTicks = lengthTicks ./ lceOptData;
+    lengthTicks= sort(lengthTicks);
+    lengthTicks = unique(lengthTicks);
+    lengthTicks = round(lengthTicks,2);
 
-    ylim([0,...
-          max(simSoln.benchRecord.pathLength(:,1))*3]);
-    yticks([0,...
-            round(simSoln.benchRecord.pathLength(1,1)  ,2),...
-            round(simSoln.benchRecord.pathLength(end,1),2)]);
-    ylabel('Path length ($$\mu m$$)');
+    dl = (max(lengthTicks)-min(lengthTicks))*0.1;
+    ylim([min(lengthTicks)-dl,max(lengthTicks)*2]);
+    yticks([lengthTicks]);
+    ylabel('Norm. Path length ($$\ell / \ell_o^M$$)');
     
     box off;
-    title('Rat EDL fiber force');
+    title('Active-Lengthening');
 
 subplot(subplot('Position', reshape(subPlotPanel(1,2,:),1,4)));
-    plot(simSoln.benchRecord.time(:,1),...
-         simSoln.benchRecord.normProximalTitinLength(:,1),...
-         '-','Color',lineColors(idxMdl(1),:),...
-         'LineWidth',mdlLineWidth,...         
-         'DisplayName','VEXAT')
-    hold on;
+    for idx=1:1:3
+        plot(simSoln.benchRecord.time(:,idx),...
+             simSoln.benchRecord.normProximalTitinLength(:,idx),...
+             '-','Color',lineColors(idxMdlFig2A(idx),:),...
+             'LineWidth',mdlLineWidth,...         
+             'DisplayName',sprintf('Sim %i',idx));
+        hold on;
+    end
     box off;
     xlabel('Time (s)');
     ylabel('Norm. Length ($$\ell^1/\ell_o^M$$)');
-    title('Prox. Titin Length');
+    title('Active Lengthening Prox. Titin Length');
 subplot(subplot('Position', reshape(subPlotPanel(2,1,:),1,4)));
     fill(falFill.x,falFill.y,lineColors(idxMdl(3),:),'EdgeColor','none');
     hold on;
-    fill(fpeFill.x,fpeFill.y,lineColors(idxMdl(4),:),'EdgeColor','none');
+    fill(ftpFill.x,ftpFill.y,lineColors(idxMdl(4),:),'EdgeColor','none');
     hold on;    
 
     plot(ratMuscleData(1).activeForceLengthData.x,...
@@ -353,14 +349,17 @@ subplot(subplot('Position', reshape(subPlotPanel(2,1,:),1,4)));
              'LineWidth',expLineWidth);
         hold on;
     end
-    plot(simSoln.benchRecord.normFiberLength(:,1).*lceOptMdl,...
-         simSoln.benchRecord.fiberForce(:,1),...
-         '-','Color',lineColors(idxMdl(1),:),...
-         'DisplayName','VEXAT',...
-         'LineWidth',mdlLineWidth);
-    hold on;
+    for idx=1:1:3
+        plot(simSoln.benchRecord.normFiberLength(:,idx).*lceOptMdl,...
+             simSoln.benchRecord.fiberForce(:,idx),...
+             '-','Color',lineColors(idxMdlFig2A(idx),:),...
+             'DisplayName',sprintf('Sim %i',idx),...
+             'LineWidth',mdlLineWidth);
+        hold on;
+    end
     box off;
     
+
     xlim([1,4]);
     ylim([0,3]);
     xticks([1,1.5,2,2.5,3,3.5,4]);
@@ -368,12 +367,12 @@ subplot(subplot('Position', reshape(subPlotPanel(2,1,:),1,4)));
 
     xlabel('Norm. Length ($$\ell/\ell_o^M$$)');
     ylabel('Norm. Force ($$f/f_o^M$$)');
-    title('Rat EDL fiber force');
+    title('Active-Lengthening Fiber Force vs. Length');
 
 subplot(subplot('Position', reshape(subPlotPanel(2,2,:),1,4)));
     fill(falFill.x,falFill.y,lineColors(idxMdl(3),:),'EdgeColor','none');
     hold on;
-    fill(fpeFill.x,fpeFill.y,lineColors(idxMdl(4),:),'EdgeColor','none');
+    fill(ftpFill.x,ftpFill.y,lineColors(idxMdl(4),:),'EdgeColor','none');
     hold on;    
 
 
@@ -398,9 +397,9 @@ subplot(subplot('Position', reshape(subPlotPanel(2,2,:),1,4)));
         hold on;
     end
 
-    plot(simSoln.benchRecord.normFiberLength(:,1).*lceOptMdl,...
-         simSoln.benchRecord.normDistalTitinForce(:,1),...
-         '-','Color',lineColors(idxMdl(1),:),...
+    plot(simSoln.benchRecord.normFiberLength(:,2).*lceOptMdl,...
+         simSoln.benchRecord.normDistalTitinForce(:,2),...
+         '-','Color',lineColors(idxMdlFig2A(2),:),...
          'DisplayName','VEXAT',...
          'LineWidth',mdlLineWidth);
 
@@ -412,7 +411,82 @@ subplot(subplot('Position', reshape(subPlotPanel(2,2,:),1,4)));
     box off;
     xlabel('Norm. Length ($$\ell/\ell_o^M$$)');
     ylabel('Norm. Force ($$f/f_o^M$$)');
-    title('Rat EDL active lengthening');
+    title('Active-Lengthening Titin Force');
+
+subplot(subplot('Position', reshape(subPlotPanel(3,1,:),1,4)));
+    fill(fvFill.x,fvFill.y,lineColors(idxGreys(2),:),'EdgeColor','none');
+    hold on;
+
+    vmaxNorm = musculotendon.maximumNormalizedFiberVelocity;
+    fvNSim = [];
+    for idx=4:1:6
+        vceN = simSoln.benchRecord.pathVelocity(end,idx) / (lceOptMdl);
+        fceN = simSoln.benchRecord.normFiberForce(end,idx);
+        falN = simSoln.benchRecord.fiberActiveForceLengthMultiplier(end,idx);
+        lceN = simSoln.benchRecord.normFiberLength(end,idx);
+        fpeN = simSoln.benchRecord.normPassiveFiberForce(end,idx);
+
+        fvN = (fceN-fpeN)/falN;
+        fvNSim = [fvNSim;...
+                  vceN,fvN];
+    end
+    plot(fvNSim(:,1),fvNSim(:,2),'x','Color',[0,0,0],...
+         'MarkerFaceColor',[0,0,0],'MarkerSize',4,'DisplayName','Sim Fv');
+    hold on;
+    xticks([-vmaxNorm,0,vmaxNorm]);
+    yticks([0,1]);
+    axis tight;
+    box off;
+
+    xlabel('Norm. Velocity ($$v/\ell_o^M$$)');
+    ylabel('Norm. Force ($$f/f_o^M$$');
+    title('Simulated Force-Velocity Relation');
+
+subplot(subplot('Position', reshape(subPlotPanel(3,2,:),1,4)));
+    colorA =[1,0,0];
+    lpMin = inf;
+    lpMax = -inf;
+    for idx=4:1:6
+        n = (idx-4)/2;
+        yyaxis left;
+        fvColor = [0.25,0,0.25].*(1-n) + [1,0,1].*(n);
+        lpColor = [0.5,0.3,0].*(1-n) + [1,0.6,0].*(n);
+
+        plot(simSoln.benchRecord.time(:,idx),...
+             simSoln.benchRecord.normFiberForce(:,idx),...
+             '-','Color',fvColor);        
+        hold on;
+
+        plot(simSoln.benchRecord.time(end,idx),...
+             simSoln.benchRecord.normFiberForce(end,idx),...
+             'x','Color',[0,0,0],...
+             'MarkerFaceColor',[0,0,0],...
+             'MarkerSize',4,'DisplayName','Sim Fv');        
+        hold on;
+
+        yyaxis right;
+        plot(simSoln.benchRecord.time(:,idx),...
+             simSoln.benchRecord.pathLength(:,idx)./lceOptMdl,...
+             '--','Color',lpColor);
+        hold on;
+
+        lpMin = min(lpMin, min(simSoln.benchRecord.pathLength(:,idx)./lceOptMdl));
+        lpMax = max(lpMax, max(simSoln.benchRecord.pathLength(:,idx)./lceOptMdl));
+    end    
+    box off;
+    yyaxis left
+    ylim([-0.5,1]);
+    xlabel('Time (s)');
+    ylabel('Norm. Force ($$f/f_o^M$$)');
+
+    yyaxis right;
+    ylabel('Norm. Path Length ($$\ell_p/\ell_o^M$$)');
+    yticks(round( [min(simSoln.benchRecord.pathLength(:,4)),...
+                   max(simSoln.benchRecord.pathLength(:,4))]./lceOptMdl,2));
+
+    dpDelta = (lpMax-lpMin);
+    ylim([lpMin, lpMax+2*dpDelta]);
+    title('Force-Velocity');
 
 figure(figH);    
 configPlotExporter;

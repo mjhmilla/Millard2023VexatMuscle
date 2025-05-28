@@ -1,9 +1,17 @@
 function [dataToPlot, dataIndexes, plotSettings] = ...
-    getRatSoleusModelPlottingStructures(mapToEDLModel)
+    getRatMusculotendonModelPlottingStructures(muscleName)
 
 %
 % Layout
 %
+titleMuscleName = '';
+switch muscleName
+    case 'SOL'
+        titleMuscleName = 'Rat Soleus';
+    case 'EDL'
+        titleMuscleName = 'Rat EDL';        
+    otherwise assert(0,'Error muscleName not recognized');
+end
 
 plotSettings(2) = ...
     struct('row',0,...
@@ -23,35 +31,36 @@ plotSettings(idx).xlim = [1.28,4.44];
 plotSettings(idx).ylim = [0,1.6];
 plotSettings(idx).xlabel = 'Length ($$\mu$$m)';
 plotSettings(idx).ylabel = 'Norm. Force ($$f/f_o^M$$)';
-plotSettings(idx).title = {'Rat Soleus $$f^L(\ell^M)$$'};
+plotSettings(idx).title = {[titleMuscleName,' $$f^L(\ell^M)$$']};
 plotSettings(idx).legendLocation = 'NorthWest';
 plotSettings(idx).xticks = [1.28,1.81,2.53];
 plotSettings(idx).yticks = [0.00,0.54,1.00];
 
-% idx=idx+1;
-% plotSettings(idx).row = 1;
-% plotSettings(idx).col = 2;
-% plotSettings(idx).xlim = [1.3,4.5];
-% plotSettings(idx).ylim = [0,1.1];
-% plotSettings(idx).xlabel = 'Length ($$\mu$$m)';
-% plotSettings(idx).ylabel = 'Norm. Force ($$f/f_o^M$$)';
-% plotSettings(idx).title = {'Rat Soleus $$f^{PE}(\ell^M)$$'};
+
 
 idx=idx+1;
 plotSettings(idx).row = 1;
 plotSettings(idx).col = 2;
-plotSettings(idx).xlim = [-1.03,1.03];
+plotSettings(idx).xlim = [];
 plotSettings(idx).ylim = [0,1.6];
 plotSettings(idx).xlabel = 'Velocity ($$\ell^M/\ell_o^M$$)';
 plotSettings(idx).ylabel = 'Norm. Force ($$f/f_o^M$$)';
-plotSettings(idx).title = {'Rat Soleus $$f^{V}(v^M/v^M_{max})$$'};
+plotSettings(idx).title = {[titleMuscleName,' $$f^{V}(v^M/v^M_{max})$$']};
 plotSettings(idx).legendLocation = 'SouthEast';
-plotSettings(idx).xticks = [-1.02,0,1.02];
+plotSettings(idx).xticks = [];
 plotSettings(idx).yticks = [0,1,1.24,1.44];
 
-if(mapToEDLModel==1)
-    plotSettings(idx).xlim = [-2.26,2.26];
-    plotSettings(idx).xticks = [-2.25,0,2.25];
+
+
+switch muscleName
+    case 'SOL'
+        plotSettings(idx).xlim = [-1.03,1.03];
+        plotSettings(idx).xticks = [-1.02,0,1.02];
+    case 'EDL'
+        plotSettings(idx).xlim = [-2.26,2.26];
+        plotSettings(idx).xticks = [-2.25,0,2.25];
+
+    otherwise assert(0,'Error: muscleName not found');
 end
 
 %

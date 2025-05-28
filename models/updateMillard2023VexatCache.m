@@ -124,6 +124,11 @@ betaTApHN  = modelConstants.betaTApHN  ;
 
 forceVelocityCalibrationFactor = modelConstants.forceVelocityCalibrationFactor;
 tau                     = modelConstants.tau       ;
+tauS                    = modelConstants.tauS      ;
+tauL                    = modelConstants.tauL      ;
+tauW                    = modelConstants.tauW      ;
+useVariableTau          = modelConstants.useVariableTau;
+
 lowActivationThreshold  = modelConstants.lowActivationThreshold;
 lowActivationGain       = modelConstants.lowActivationGain;
 
@@ -1187,8 +1192,18 @@ if(flag_evaluateInitializationFunctions == 0)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     
-    lambda              =   0;
-    ddlaHN_HillError    =   ((fxHN - a*flN*(fvN))/(tau));
+    lambda  =   0;
+    tauValue = tau;
+    if(useVariableTau==1)
+        tauBlending = 0.5*tanh(dlaNN/0.01)+0.5;
+        tauValue = tauS*(1-tauBlending) + tauL*tauBlending;
+    end
+
+    if(dlaNN < -0.01)
+        here=1;
+    end
+    ddlaHN_HillError    =   ((fxHN - a*flN*(fvN))/(tauValue));
+    %ddlaHN_HillError    =   ((fxHN - a*flN*(fvN))/(tau));
     ddlaHN_Damping      = - betaCXHN*dlaNN;
     
     ka                  = (a/lowActivationThreshold);
