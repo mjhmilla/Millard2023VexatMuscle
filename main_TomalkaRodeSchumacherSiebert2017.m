@@ -16,7 +16,7 @@ makeFibrilModel         = 1;
 useElasticTendon        = 1 && ~makeFibrilModel;
 useWlcTitinModel        = 0;
 
-runSimulations          = 1;
+runSimulations          = 0;
 specimenTemperature     = 12; %As in 12 degrees centrigrade
 
 simulationFileName      = 'benchRecordVexat_TRSS2017.mat';
@@ -309,7 +309,7 @@ subplot(subplot('Position', reshape(subPlotPanel(1,1,:),1,4)));
     ylabel('Norm. Path length ($$\ell / \ell_o^M$$)');
     
     box off;
-    title('Active-Lengthening');
+    title('Tomalka et al. 2017 Fig 2A (time domain)');
 
 subplot(subplot('Position', reshape(subPlotPanel(1,2,:),1,4)));
     for idx=1:1:3
@@ -323,30 +323,34 @@ subplot(subplot('Position', reshape(subPlotPanel(1,2,:),1,4)));
     box off;
     xlabel('Time (s)');
     ylabel('Norm. Length ($$\ell^1/\ell_o^M$$)');
-    title('Active Lengthening Prox. Titin Length');
+    title('Titin-Actin bond length');
+
 subplot(subplot('Position', reshape(subPlotPanel(2,1,:),1,4)));
-    fill(falFill.x,falFill.y,lineColors(idxMdl(3),:),'EdgeColor','none');
+    fill(falFill.x,falFill.y,lineColors(idxMdl(3),:),...
+        'EdgeColor','none', 'HandleVisibility','off');
     hold on;
-    fill(ftpFill.x,ftpFill.y,lineColors(idxMdl(4),:),'EdgeColor','none');
+    fill(ftpFill.x,ftpFill.y,lineColors(idxMdl(4),:),...
+        'EdgeColor','none', 'HandleVisibility','off');
     hold on;    
 
     plot(ratMuscleData(1).activeForceLengthData.x,...
          ratMuscleData(1).activeForceLengthData.y,...
          '.','Color',lineColors(idxExpMark(1),:),...
          'MarkerFaceColor',lineColors(idxExpMark(1),:),...
-         'MarkerSize',3);
+         'MarkerSize',3,'HandleVisibility','off');
     hold on;
     plot(ratMuscleData(1).passiveForceLengthData.x,...
          ratMuscleData(1).passiveForceLengthData.y,...
          'x','Color',lineColors(idxExpMark(2),:),...
          'MarkerFaceColor',lineColors(idxExpMark(2),:),...
-         'MarkerSize',2);
+         'MarkerSize',2,'HandleVisibility','off');
     hold on;
     for i=1:1:length(idxExpFig2A)
         plot(ratMuscleData(1).activeLengtheningData(i).x,...
              ratMuscleData(1).activeLengtheningData(i).y,...
              '-','Color',lineColors(idxExpFig2A(i),:),...
-             'LineWidth',expLineWidth);
+             'LineWidth',expLineWidth,...
+             'DisplayName',sprintf('Exp %i',i));
         hold on;
     end
     for idx=1:1:3
@@ -359,6 +363,9 @@ subplot(subplot('Position', reshape(subPlotPanel(2,1,:),1,4)));
     end
     box off;
     
+    legend('Location','NorthWest');
+    legend boxoff;
+
 
     xlim([1,4]);
     ylim([0,3]);
@@ -367,12 +374,14 @@ subplot(subplot('Position', reshape(subPlotPanel(2,1,:),1,4)));
 
     xlabel('Norm. Length ($$\ell/\ell_o^M$$)');
     ylabel('Norm. Force ($$f/f_o^M$$)');
-    title('Active-Lengthening Fiber Force vs. Length');
+    title('Simulation of Tomalka et al. 2017 Fig. 2A');
 
 subplot(subplot('Position', reshape(subPlotPanel(2,2,:),1,4)));
-    fill(falFill.x,falFill.y,lineColors(idxMdl(3),:),'EdgeColor','none');
+    fill(falFill.x,falFill.y,lineColors(idxMdl(3),:),...
+        'EdgeColor','none','HandleVisibility','off');
     hold on;
-    fill(ftpFill.x,ftpFill.y,lineColors(idxMdl(4),:),'EdgeColor','none');
+    fill(ftpFill.x,ftpFill.y,lineColors(idxMdl(4),:),...
+        'EdgeColor','none','HandleVisibility','off');
     hold on;    
 
 
@@ -380,29 +389,34 @@ subplot(subplot('Position', reshape(subPlotPanel(2,2,:),1,4)));
          ratMuscleData(1).activeForceLengthData.y,...
          '.','Color',lineColors(idxExpMark(1),:),...
          'MarkerFaceColor',lineColors(idxExpMark(1),:),...
-         'MarkerSize',3);
+         'MarkerSize',3,'HandleVisibility','off');
     hold on;
     plot(ratMuscleData(1).passiveForceLengthData.x,...
          ratMuscleData(1).passiveForceLengthData.y,...
          'x','Color',lineColors(idxExpMark(2),:),...
          'MarkerFaceColor',lineColors(idxExpMark(2),:),...
-         'MarkerSize',2);
+         'MarkerSize',2,'HandleVisibility','off');
     hold on;
 
     for i=1:1:length(idxExpFig3A)
         plot(ratMuscleData(1).activeLengtheningBDMData(i).x,...
              ratMuscleData(1).activeLengtheningBDMData(i).y,...
              '-','Color',lineColors(idxExpFig3A(i),:),...
-             'LineWidth',expLineWidth);
+             'LineWidth',expLineWidth,...
+             'DisplayName',sprintf('BDM Exp %i',i));
         hold on;
     end
 
     plot(simSoln.benchRecord.normFiberLength(:,2).*lceOptMdl,...
          simSoln.benchRecord.normDistalTitinForce(:,2),...
          '-','Color',lineColors(idxMdlFig2A(2),:),...
-         'DisplayName','VEXAT',...
+         'DisplayName','Sim 2',...
          'LineWidth',mdlLineWidth);
 
+
+    legend('Location','NorthWest');
+    legend boxoff;
+    
     xlim([1,4]);
     ylim([0,3]);
     xticks([1,1.5,2,2.5,3,3.5,4]);
@@ -411,7 +425,7 @@ subplot(subplot('Position', reshape(subPlotPanel(2,2,:),1,4)));
     box off;
     xlabel('Norm. Length ($$\ell/\ell_o^M$$)');
     ylabel('Norm. Force ($$f/f_o^M$$)');
-    title('Active-Lengthening Titin Force');
+    title('Simulation of Tomalka et al. 2017 Fig. 3A');
 
 subplot(subplot('Position', reshape(subPlotPanel(3,1,:),1,4)));
     fill(fvFill.x,fvFill.y,lineColors(idxGreys(2),:),'EdgeColor','none');
@@ -440,7 +454,7 @@ subplot(subplot('Position', reshape(subPlotPanel(3,1,:),1,4)));
 
     xlabel('Norm. Velocity ($$v/\ell_o^M$$)');
     ylabel('Norm. Force ($$f/f_o^M$$');
-    title('Simulated Force-Velocity Relation');
+    title('Check: Simulated Force-Velocity Relation');
 
 subplot(subplot('Position', reshape(subPlotPanel(3,2,:),1,4)));
     colorA =[1,0,0];
@@ -486,7 +500,7 @@ subplot(subplot('Position', reshape(subPlotPanel(3,2,:),1,4)));
 
     dpDelta = (lpMax-lpMin);
     ylim([lpMin, lpMax+2*dpDelta]);
-    title('Force-Velocity');
+    title('Check: Simulated Force-Velocity Relation');
 
 figure(figH);    
 configPlotExporter;

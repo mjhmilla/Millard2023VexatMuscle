@@ -591,6 +591,12 @@ if(flag_passiveCurveFitted==0)
     kZero = smallNumericallyNonZeroNumber;
   end         
   kLow  = 0.2;
+  if(isfield(sarcomereProperties,'normFiberStiffnessAtLowPassiveForce'))
+      if(isnan(sarcomereProperties.normFiberStiffnessAtLowPassiveForce)==0)
+        kLow = sarcomereProperties.normFiberStiffnessAtLowPassiveForce;
+      end
+  end
+
   kToe  = 2.1/(normLengthToe-normLengthZero);
   if(isfield(sarcomereProperties,'normFiberStiffnessAtOneNormPassiveForce'))
       if(isnan(sarcomereProperties.normFiberStiffnessAtOneNormPassiveForce)==0)
@@ -599,6 +605,12 @@ if(flag_passiveCurveFitted==0)
   end
 
   curviness = 0.7;  
+  if(isfield(sarcomereProperties,'fiberForceLengthCurviness'))
+      if(isnan(sarcomereProperties.fiberForceLengthCurviness)==0)
+        curviness = sarcomereProperties.fiberForceLengthCurviness;
+      end
+  end
+
   flag_computeIntegral = 1;
   normMuscleCurves.fiberForceLengthCurve = ...
     createFiberForceLengthCurve2021(normLengthZero,...
@@ -707,6 +719,8 @@ fprintf('    forceLengthECMHalfInverseCurve created\n');
 flag_useElasticIgD        = 1;
 flag_createTwoSidedCurves = 0;
 
+
+
 [normMuscleCurves.forceLengthProximalTitinCurve, ...
     normMuscleCurves.forceLengthProximalTitinInverseCurve,...
  normMuscleCurves.forceLengthDistalTitinCurve, ...
@@ -717,7 +731,7 @@ flag_createTwoSidedCurves = 0;
     normMuscleCurves.forceLengthPevkTitinInverseCurve,...
  normMuscleCurves.forceLengthIgDTitinCurve, ...
     normMuscleCurves.forceLengthIgDTitinInverseCurve] ...
-          = createTitinCurves2022( normMuscleCurves.fiberForceLengthCurve,...                                   
+          = createTitinCurves2025( normMuscleCurves.fiberForceLengthCurve,...                                   
                                    forceLengthCurveSettings,...
                                    normMuscleCurves.forceLengthECMHalfCurve,...
                                    sarcomereProperties,...

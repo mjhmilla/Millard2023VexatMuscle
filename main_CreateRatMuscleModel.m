@@ -109,7 +109,7 @@ setSarcomereProperties.ecmForceFraction                 = (1-makeSkinnedFibrilMo
 % Otherwise use 0.56, the average amount of ECM reported in Prado et al.
 % across 5 rabbit skeletal muscles
 
-setSarcomereProperties.normPevkToActinAttachmentPoint   = 0.5; 
+setSarcomereProperties.normPevkToActinAttachmentPoint   = 0.4; 
 %0 : Prox-Ig/PEVK boundary
 %1 : PEVK/Dist-Ig boundary
 
@@ -265,12 +265,19 @@ if(indexOfDataSetForPassiveCurveParameters>0)
     y0 = x(2,1);
     %y = c*x + x0
     
-    normFiberStiffnessAtOneNormPassiveForce = ...
+    setMusculotendonProperties.normFiberStiffnessAtOneNormPassiveForce = ...
         c/(1/fittingFpeNOptSarcomereLengthInUm);
-    normFiberLengthAtOneNormPassiveForce = ...
+    setMusculotendonProperties.normFiberLengthAtOneNormPassiveForce = ...
         ((1-y0)/c)/fittingFpeNOptSarcomereLengthInUm;
 
-    here=1;
+
+    setMusculotendonProperties.normFiberStiffnessAtLowPassiveForce = ...
+        setMusculotendonProperties.normFiberStiffnessAtOneNormPassiveForce*0.4;
+
+    setMusculotendonProperties.fiberForceLengthCurviness = 0.4;
+    
+    disp(setMusculotendonProperties.normFiberStiffnessAtOneNormPassiveForce);
+    disp(setMusculotendonProperties.normFiberLengthAtOneNormPassiveForce);
 
 end
 
