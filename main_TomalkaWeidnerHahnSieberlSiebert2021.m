@@ -19,13 +19,15 @@ useWlcTitinModel        = 0;
 runSimulations          = 1;
 specimenTemperature     = 12; %As in 12 degrees centrigrade
 
-simulationFileName      = 'benchRecordVexat_TRSS2017.mat';
 
 validMuscles = {'SOL','EDL'};
-muscleName = validMuscles{2};
+muscleName = validMuscles{1};
 
 validExperiments = {'TRSS2017','TWHSS2021','WTRS2024'};
-experimentName = validExperiments{1};
+experimentName = validExperiments{2};
+
+simulationFileName   = sprintf('benchRecordVexat_%s.mat',experimentName);
+
 
 %%
 % Set up the files
@@ -61,8 +63,10 @@ filePathRatMuscle = fullfile(projectFolders.output_structs_FittedModels,...
                              fileName);
 load(filePathRatMuscle);
 
-assert(ratMuscleModelParameters.musculotendon.temperature==specimenTemperature,...
+assert(ratMuscleModelParameters.musculotendon.temperature ...
+        == specimenTemperature,...
        'Error: model temperature does not match desired temperature');
+
 if(makeFibrilModel==1)
     assert(ratMuscleModelParameters.musculotendon.tendonSlackLength==0,...
            ['Error: fibril model is desired but the model has',...
@@ -104,47 +108,32 @@ plotConfigGeneric;
 [ratMuscleData, ratMuscleMetaData] = ...
         loadRatSkeletalMuscleData(projectFolders);
 
+index_SW1982 = ratMuscleMetaData.index_SW1982;
+index_TWHSS2021 = ratMuscleMetaData.index_TWHSS2021;
 
 lceOptMdl   = ratMuscleModelParameters.musculotendon.optimalFiberLength;
-lceOptData  = min(ratMuscleData(1).activeLengtheningData(3).x);
+lceOptData  = lceOptMdl;
 
 %%
 % Simulation parameters
 %%
 simSoln         = [];
-folderTRSS2017  = projectFolders.output_structs_TRSS2017;
+folderTWHSS2021  = projectFolders.output_structs_TWHSS2021;
 
 musculotendon   = ratMuscleModelParameters.musculotendon;
 sarcomere       = ratMuscleModelParameters.sarcomere;
 curves          = ratMuscleModelParameters.curves;
 
-% lceNTA_00 = sarcomere.normLengthTitinActinBondMinimum;
-% lceNTA_01 = sarcomere.normLengthTitinActinBondMinimum;
-% 
-% 
-% disp('Changing normLengthTitinActinBondMinimum:');
-% fprintf('%1.3f\tfrom\n', lceNTA_00);
-% fprintf('%1.3f\tto\n'  , lceNTA_01);
-% 
-% sarcomere.normLengthTitinActinBondMinimum = lceNTA_01;
-% 
-
-betaA_TiA_00 = sarcomere.normMaxActiveTitinToActinDamping;
-betaA_TiA_01 = sarcomere.normMaxActiveTitinToActinDamping*10;
-
-disp('Changing normActivePevkDamping:');
-fprintf('%1.3f\tfrom\n', betaA_TiA_00);
-fprintf('%1.3f\tto\n'  , betaA_TiA_01);
-
-sarcomere.normMaxActiveTitinToActinDamping = betaA_TiA_01;
-
-
+%
+%This is a skinned fiber
+%
 sarcomere.scaleECM=0;
 sarcomere.scaleTitinProximal=1;
 sarcomere.scaleTitinDistal=1;
 
-
-
+%
+%Adjust the time-constants of lengthening and shortening
+%
 responseTimeScaling=20;
 
 sarcomere.slidingTimeConstantBlendingParameter = 0.01;
@@ -174,17 +163,19 @@ curves.useCalibratedCurves=1;
 % Run simulations
 %%
 
+
 if(runSimulations==1)
 
-    [success] = runTomalkaRodeSchumacherSiebert2017SimulationsVEXAT( ...
-                              ratMuscleData(1),...
+    [success] = runTomalkaWeidnerHahnSieberlSiebert2021SimulationsVEXAT( ...
+                              ratMuscleData(index_TWHSS2021),...
                               musculotendon,...
                               sarcomere,...
                               curves,...
-                              fullfile(folderTRSS2017,simulationFileName));
-    simSoln = load(fullfile(folderTRSS2017,simulationFileName));
+                              fullfile(folderTWHSS2021,simulationFileName));
+
+    simSoln = load(fullfile(folderTWHSS2021,simulationFileName));
 else
-    simSoln = load(fullfile(folderTRSS2017,simulationFileName));
+    simSoln = load(fullfile(folderTWHSS2021,simulationFileName));
 end
 %%
 % Plot results
@@ -515,6 +506,6 @@ subplot(subplot('Position', reshape(subPlotPanel(3,2,:),1,4)));
 
 figure(figH);    
 configPlotExporter;
-filePath = fullfile(projectFolders.output_plots_TRSS2017,...
-                    'fig_Sim_TRSS2017_Fig2A_3A.pdf');
+filePath = fullfile(projectFolders.output_plots_TWHSS2021,...
+                    'fig_Sim_TWHSS2021_Fig2A_3A.pdf');
 print('-dpdf', filePath); 

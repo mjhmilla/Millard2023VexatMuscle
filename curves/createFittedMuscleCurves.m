@@ -333,11 +333,14 @@ if(useElasticTendon == 0 && ...
       isempty(elasticTendonReferenceModel)==0 && ...
       isempty(dataPassiveForceLengthNormalized) ==0)
   flag_passiveCurveFitted=1;
-  normLengthZero           = sarcomereProperties.normFiberLengthAtZeroForce; 
-  if(isfield(sarcomere,'normFiberLengthAtZeroPassiveForce'))
+  normLengthToe            = sarcomereProperties.normFiberLengthAtOneNormPassiveForce;
+  normLengthZero           = max(0,(normLengthToe-0.6));
+  if(isfield(sarcomereProperties,'normFiberLengthAtZeroForce'))
+    normLengthZero           = sarcomereProperties.normFiberLengthAtZeroForce; 
+  end
+  if(isfield(sarcomereProperties,'normFiberLengthAtZeroPassiveForce'))
     normLengthZero = sarcomereProperties.normFiberLengthAtZeroPassiveForce;
   end   
-  normLengthToe            = sarcomereProperties.normFiberLengthAtOneNormPassiveForce;
 
      
   dataPassiveForceLengthNormalized = [dataPassiveForceLengthNormalized;...
@@ -477,7 +480,7 @@ if(flag_passiveCurveFitted == 0 && ...
 
       flag_passiveCurveFitted=1;
       normLengthZero  = min(1.0,sarcomereProperties.normFiberLengthAtOneNormPassiveForce-0.6);
-      if(isfield(sarcomere,'normFiberLengthAtZeroPassiveForce'))
+      if(isfield(sarcomereProperties,'normFiberLengthAtZeroPassiveForce'))
         normLengthZero = sarcomereProperties.normFiberLengthAtZeroPassiveForce;
       end      
       normLengthToe   = sarcomereProperties.normFiberLengthAtOneNormPassiveForce;

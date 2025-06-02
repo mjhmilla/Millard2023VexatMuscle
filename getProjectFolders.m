@@ -55,6 +55,7 @@ projectFolders.experiments_HBSG1995      = fullfile(projectFolders.experiments, 
 projectFolders.experiments_SW1982        = fullfile(projectFolders.experiments, 'StephensonWilliams1982'              ); 
 projectFolders.experiments_TWHSS2021     = fullfile(projectFolders.experiments, 'TomalkaWeidnerHahnSieberlSiebert2021'); 
 projectFolders.experiments_TRSS2017      = fullfile(projectFolders.experiments, 'TomalkaRodeSchumacherSiebert2017'); 
+projectFolders.experiments_WTRS2024      = fullfile(projectFolders.experiments, 'WeidnerTomalkaRodeSiebert2024'); 
 projectFolders.experiments_ZHGL1995      = fullfile(projectFolders.experiments, 'ZuurbierHeslingaGrootLaarse1995'); 
 
 

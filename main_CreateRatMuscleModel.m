@@ -18,11 +18,26 @@ addpath( genpath(projectFolders.simulation)     );
 addpath( genpath(projectFolders.models)         );
 addpath( genpath(projectFolders.postprocessing) );
 
+validExperiments = {'TRSS2017','TWHSS2021','WTRS2024'};
+experimentName = validExperiments{3};
+
 %%
 % Parameters
 %%
 validMuscles = {'SOL','EDL'};
-muscleName = validMuscles{2};
+
+switch experimentName
+    case 'TRSS2017'
+        muscleName = validMuscles{2};
+    case 'TWHSS2021'
+        muscleName = validMuscles{1};        
+    case 'WTRS2024'
+        muscleName = validMuscles{1}; 
+        disp('Note WTRS2024 used both SOL and EDL');
+    otherwise
+        assert(0,'Error: experimental series name not recognized');
+end
+
 
 %Least-squares fit of the optimal CE length and the passive-force-length
 %relation
@@ -109,9 +124,13 @@ setSarcomereProperties.ecmForceFraction                 = (1-makeSkinnedFibrilMo
 % Otherwise use 0.56, the average amount of ECM reported in Prado et al.
 % across 5 rabbit skeletal muscles
 
-setSarcomereProperties.normPevkToActinAttachmentPoint   = 0.4; 
+setSarcomereProperties.normPevkToActinAttachmentPoint   = 0.85; 
 %0 : Prox-Ig/PEVK boundary
 %1 : PEVK/Dist-Ig boundary
+
+setSarcomereProperties.normLengthTitinActinBondMinimum = 1.0;
+%This sets the shortest length at which a titin actin-bond is possible;
+%
 
 setSarcomereProperties.normMaxActiveTitinToActinDamping = 20.3; %fo/(lo/s)
 % setSarcomereProperties.normMaxActiveTitinToActinDamping
@@ -138,6 +157,8 @@ setSarcomereProperties.normMaxActiveTitinToActinDamping = 20.3; %fo/(lo/s)
 % Herzog W, Leonard TR. Force enhancement following stretching of skeletal 
 % muscle: a new mechanism. Journal of Experimental Biology. 2002 
 % May 1;205(9):1275-83.
+
+
 
 %%
 % Manually set musculotendon properties
@@ -175,6 +196,45 @@ flag_useOctave                          = 0;
 
 
 %%
+%
+% Series-specific parameters
+%
+%%
+
+switch experimentName
+
+    case 'TRSS2017'
+        muscleName = validMuscles{2};
+        setSarcomereProperties.normPevkToActinAttachmentPoint   = 0.85;         
+        setSarcomereProperties.normLengthTitinActinBondMinimum  = 1.0;
+        setSarcomereProperties.normMaxActiveTitinToActinDamping = 20.3;   
+
+    case 'TWHSS2021'
+        muscleName = validMuscles{1};        
+        setSarcomereProperties.normPevkToActinAttachmentPoint   = 0.85;         
+        setSarcomereProperties.normLengthTitinActinBondMinimum  = 1.0;
+        setSarcomereProperties.normMaxActiveTitinToActinDamping = 20.3;   
+
+    case 'WTRS2024'
+        muscleName = validMuscles{2}; 
+        disp('Note WTRS2024 used both SOL and EDL');
+        switch muscleName
+            case 'SOL'
+                setSarcomereProperties.normPevkToActinAttachmentPoint   = 0.85;         
+                setSarcomereProperties.normLengthTitinActinBondMinimum  = 1.0;
+                setSarcomereProperties.normMaxActiveTitinToActinDamping = 20.3;           
+            case 'EDL'
+                setSarcomereProperties.normPevkToActinAttachmentPoint   = 0.85;         
+                setSarcomereProperties.normLengthTitinActinBondMinimum  = 1.0;
+                setSarcomereProperties.normMaxActiveTitinToActinDamping = 20.3;                 
+            otherwise assert(0,'Error: muscleName not recognized');
+        end
+    otherwise
+        assert(0,'Error: experimental series name not recognized');
+end
+
+
+%%
 % Plot configuration and data structs
 %%
 
@@ -188,7 +248,7 @@ flag_useOctave                          = 0;
 %%
 
 fprintf('\n\nCreating: rat EDL model \n');
-fprintf('  used to simulate Tomalka, Rode, Schumacher, Siebert 2017.\n\n');
+fprintf('  used to simulate %s.\n\n',experimentName);
 
 fprintf('\n\nTo do:');
 fprintf('\n\n1. Look at Prado again: there are a lot of references related to');
@@ -274,7 +334,7 @@ if(indexOfDataSetForPassiveCurveParameters>0)
     setMusculotendonProperties.normFiberStiffnessAtLowPassiveForce = ...
         setMusculotendonProperties.normFiberStiffnessAtOneNormPassiveForce*0.4;
 
-    setMusculotendonProperties.fiberForceLengthCurviness = 0.4;
+    setMusculotendonProperties.fiberForceLengthCurviness = 0.5;
     
     disp(setMusculotendonProperties.normFiberStiffnessAtOneNormPassiveForce);
     disp(setMusculotendonProperties.normFiberLengthAtOneNormPassiveForce);
@@ -300,7 +360,9 @@ if(setMusculotendonProperties.makeSkinnedFibrilModel==1)
     fibrilStr='Fibril';
 end
 
-fileName = ['rat',muscleName,fibrilStr,'ActiveTitin',wlcStr,'.mat'];
+fileName = ['rat',experimentName,muscleName,...
+             fibrilStr,'ActiveTitin',wlcStr,'.mat'];
+
 filePathRatMuscle = fullfile(projectFolders.output_structs_FittedModels,...
                              fileName);
 save(filePathRatMuscle,'ratMuscleModelParameters');
@@ -597,5 +659,5 @@ end
 figure(figModelCurves);
 
 filePath = fullfile(projectFolders.output_plots_MuscleCurves,...
-                    ['fig_Pub_MuscleCurves_Rat',muscleName,'.pdf']);
+                    ['fig_Pub_MuscleCurves_Rat',experimentName,muscleName,'.pdf']);
 print('-dpdf', filePath); 

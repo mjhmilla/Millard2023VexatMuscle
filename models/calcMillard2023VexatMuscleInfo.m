@@ -1,5 +1,5 @@
 %%
-% SPDX-FileCopyrightText: 2023 Matthew Millard <millard.matthew@gmail.com>
+% SPDX-FileCopyrightText: 2023 Matthew Millard <midl1Hllard.matthew@gmail.com>
 %
 % SPDX-License-Identifier: MIT
 %
