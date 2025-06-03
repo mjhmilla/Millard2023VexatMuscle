@@ -58,7 +58,7 @@ end
 
 fileName = ['rat',experimentName,muscleName,...
              fibrilStr,'ActiveTitin',wlcStr,'.mat'];
-
+%ratTWHSS2021SOLFibrilActiveTitin
 filePathRatMuscle = fullfile(projectFolders.output_structs_FittedModels,...
                              fileName);
 load(filePathRatMuscle);
@@ -136,7 +136,7 @@ sarcomere.scaleTitinDistal=1;
 %
 responseTimeScaling=20;
 
-sarcomere.slidingTimeConstantBlendingParameter = 0.01;
+sarcomere.slidingTimeConstantBlendingParameter = 0.5;
 
 sarcomere.slidingTimeConstantLengthening= ...
     sarcomere.slidingTimeConstant*responseTimeScaling;
@@ -146,11 +146,19 @@ sarcomere.slidingTimeConstantShortening= ...
 
 sarcomere.useVariableSlidingTimeConstant = 1;
 
+sarcomere.normCrossBridgeCyclingDamping = ...
+    sarcomere.normCrossBridgeCyclingDamping*0.1;
+
 disp('Using variable sliding time constant:');
 fprintf('%1.3f\ttau-shortening\n', ...
     sarcomere.slidingTimeConstantShortening);
 fprintf('%1.3f\ttau-lengthening\n'  ,...
     sarcomere.slidingTimeConstantLengthening);
+
+fprintf('%1.3f\tMax. Titin-Actin Damping\n'  ,...
+    sarcomere.normMaxActiveTitinToActinDamping);
+
+sarcomere.normMaxActiveTitinToActinDamping = 5;
 
 disp('Note: updateMillard2023VexatCache.m update near line 1198');
 disp('  to modulate the time constant so that it is smaller when');
@@ -183,47 +191,42 @@ end
 
 plotColors = getPaulTolColourSchemes('vibrant');
 
+seriesColors =zeros(3,3);
+seriesColors(1,:) = [236,179, 41]./255;
+seriesColors(2,:) = [220, 89, 36]./255;
+seriesColors(3,:) = [ 18,123,193]./255;
 
-lineColors =zeros(3,3);
-lineColors(1,:) = [0,0,0];
-lineColors(2,:) = [44,133,229]./255;
-lineColors(3,:) = [63,181,175]./255;
+expSeriesNames = {  'Exp: SSC 85\% $$v_o$$','Exp: SSC 60\% $$v_o$$',...
+                    'Exp: SSC 30\% $$v_o$$','Exp: Pure SHO 85\% $$v_o$$',...
+                    'Exp: $$P_1$$','Exp: $$P_2$$'};
 
-lineColors(4,:) = [0,0,0];
-lineColors(5,:) = [1,0,0];
-lineColors(6,:) = [0,1,0];
-lineColors(7,:) = [44,133,229]./255;
+mdlSeriesNames = {  'Sim: SSC 85\% $$v_o$$','Sim: SSC 60\% $$v_o$$',...
+                    'Sim: SSC 30\% $$v_o$$','Sim: Pure SHO 85\% $$v_o$$',...
+                    'Sim: $$P_1$$','Sim: $$P_2$$'};
 
-lineColors(8,:) = [1,1,1].*0.4;
-lineColors(9,:) = [1,1,1].*0.4;
 
-for i=1:1:7
-    lineColors(i,:) = lineColors(i,:).*0.25 + [1,1,1].*0.75;
-end
+greyLevel = 0.67;
 
-lineColors(10,:) = [0,0,0];
-lineColors(11,:) = plotColors.orange;
-lineColors(12,:) = [1,1,1].*0.9;
-lineColors(13,:) = [1,1,1].*0.85;
+lineColors =zeros(9,3);
+lineColors(1,:) = seriesColors(1,:).*(1-greyLevel) + ([1,1,1].*0.5).*greyLevel;
+lineColors(2,:) = seriesColors(2,:).*(1-greyLevel) + ([1,1,1].*0.5).*greyLevel;
+lineColors(3,:) = seriesColors(3,:).*(1-greyLevel) + ([1,1,1].*0.5).*greyLevel;
+lineColors(4,:) = [1,1,1].*greyLevel;
+lineColors(5,:) = [0,0,0];
+lineColors(6,:) = [0,0,0];
 
-lineColors(14,:) = [0,0,0];
-lineColors(15,:) = [44,133,229]./255;
-lineColors(16,:) = [63,181,175]./255;
+lineColors(7,:) = seriesColors(1,:);
+lineColors(8,:) = seriesColors(2,:);
+lineColors(9,:) = seriesColors(3,:);
+lineColors(10,:)= [0,0,0];
 
-lineColors(17,:) = [0,0,0];
-lineColors(18,:) = [1,0,0];
-lineColors(19,:) = [0,1,0];
-lineColors(20,:) = [44,133,229]./255;
+lineColors(11,:) = [1,1,1].*.7;
+lineColors(12,:) = [1,1,1].*.9;
 
-idxExpFig2A = [1:3];
-idxExpFig3A = [4:7];
-idxExpMark  = [8,9];
-idxMdl      = [10,11,12,13];
+idxExp = [1,2,3,4,5,6];
+idxMdl = [7,8,9,10];
 
-idxMdlFig2A = [14:16];
-idxMdlFig3A = [17:20];
-
-idxGreys =[12,13];
+idxGreys = [11,12];
 
 expLineWidth=1.5;
 mdlLineWidth=0.5;
@@ -264,27 +267,137 @@ ftpFill.y = [zeros(size(titinCurveSample.curveSampleTitin.y));...
              fliplr(titinCurveSample.curveSampleTitin.y(2:end-1)')'];
 
 
+index_TWHSS2021 = ratMuscleMetaData.index_TWHSS2021;
 
 figH = figure;
+
+subplot(subplot('Position', reshape(subPlotPanel(1,1,:),1,4)));
+    fill(falFill.x,falFill.y,lineColors(idxGreys(2),:),...
+        'EdgeColor','none', 'HandleVisibility','off');
+    hold on;
+    fill(ftpFill.x,ftpFill.y,lineColors(idxGreys(1),:),...
+        'EdgeColor','none', 'HandleVisibility','off');
+    hold on;    
+
+
+
+    for i=1:1:4
+        plot(ratMuscleData(index_TWHSS2021).activeStretchShorteningData(i).x,...
+             ratMuscleData(index_TWHSS2021).activeStretchShorteningData(i).y,...
+             '-','Color',lineColors(idxExp(i),:),...
+             'LineWidth',expLineWidth,...
+             'DisplayName',expSeriesNames{i});
+        hold on;
+    end
+
+    for i=1:1:4
+        plot(simSoln.benchRecord.normFiberLength(:,i).*lceOptMdl,...
+             simSoln.benchRecord.fiberForce(:,i),...
+             '-','Color',lineColors(idxMdl(i),:),...
+             'DisplayName',mdlSeriesNames{i},...
+             'LineWidth',mdlLineWidth);
+        hold on;
+    end
+    box off;
+    
+    legend('Location','NorthWest');
+    legend boxoff;
+
+
+    xlim([1.9,2.5]);
+    ylim([0,1.6]);
+    xticks([2,2.4]);
+    yticks([0,0.5,1,1.5]);
+
+    xlabel('Length ($$\mu$$m)');
+    ylabel('Norm. Force ($$f/f_o^M$$)');
+    title('A. Simulation of Tomalka et al. 2021 Fig. 4');
+
+subplot(subplot('Position', reshape(subPlotPanel(1,2,:),1,4)));
+
+    fill(falFill.x,falFill.y,lineColors(idxGreys(2),:),...
+        'EdgeColor','none', 'HandleVisibility','off');
+    hold on;
+    fill(ftpFill.x,ftpFill.y,lineColors(idxGreys(1),:),...
+        'EdgeColor','none', 'HandleVisibility','off');
+    hold on;    
+
+    for i=1:1:3
+        plot(ratMuscleData(index_TWHSS2021).activeStretchShorteningBLEData(i).x,...
+             ratMuscleData(index_TWHSS2021).activeStretchShorteningBLEData(i).y,...
+             '-','Color',lineColors(idxExp(i),:),...
+             'LineWidth',expLineWidth,...
+             'DisplayName',[expSeriesNames{i},' BLE']);
+        hold on;
+    end
+
+    for i=1:1:4
+        plot(simSoln.benchRecord.normFiberLength(:,i).*lceOptMdl,...
+             simSoln.benchRecord.normDistalTitinForce(:,i),...
+             '-','Color',lineColors(idxMdl(i),:),...
+             'DisplayName',[mdlSeriesNames{i},' D.Titin'],...
+             'LineWidth',mdlLineWidth);
+        hold on;
+    end
+    box off;
+
+    legend('Location','NorthWest');
+    legend boxoff;
+
+
+    xlim([1.9,2.5]);
+    ylim([0,1.6]);
+    xticks([2,2.4]);
+    yticks([0,0.5,1,1.5]);
+
+    xlabel('Length ($$\mu$$m)');
+    ylabel('Norm. Force ($$f/f_o^M$$)');
+    title('B. Simulation of Tomalka et al. 2021 Fig. 5');
+
+
 subplot(subplot('Position', reshape(subPlotPanel(2,1,:),1,4)));
     lengthTicks =[];
-    for idx=1:1:3
+
+    expTimeOffset=100-0.2;
+
+    fceMdl0 = simSoln.benchRecord.fiberForce(1,1);
+    expFceScale = ...
+        fceMdl0 ...
+        /ratMuscleData(index_TWHSS2021).activeStretchShorteningForceData(1).y(1);
+
+    yyaxis left;  
+    plot(ratMuscleData(index_TWHSS2021).activeStretchShorteningForceData(1).x-expTimeOffset,...
+         ratMuscleData(index_TWHSS2021).activeStretchShorteningForceData(1).y.*expFceScale,...
+         '-','Color',lineColors(idxGreys(1),:),...
+         'LineWidth',expLineWidth,...
+         'DisplayName','TWHSS2021: Fig. 2C');
+    hold on;    
+
+    yyaxis right;
+    plot(ratMuscleData(index_TWHSS2021).activeStretchShorteningLengthData(1).x-expTimeOffset,...
+         ratMuscleData(index_TWHSS2021).activeStretchShorteningLengthData(1).y,...
+         '-','Color',lineColors(idxGreys(2),:),...
+         'LineWidth',expLineWidth,...
+         'DisplayName','TWHSS2021: Fig. 2D');
+    hold on;    
+
+
+    for idx=1:1:4
         yyaxis left;    
         plot(simSoln.benchRecord.time(:,idx),...
              simSoln.benchRecord.fiberForce(:,idx),...
-             '-','Color',lineColors(idxMdlFig2A(idx),:),...
+             '-','Color',lineColors(idxMdl(idx),:),...
              'LineWidth',mdlLineWidth,...
-             'DisplayName',sprintf('Sim %i',idx));
+             'DisplayName',mdlSeriesNames{i});
         hold on;
 
     
         yyaxis right;
-        n = (idx-1)/2;
-        lpColor = [0.5,0.3,0].*(1-n) + [1,0.6,0].*(n);
+
 
         plot(simSoln.benchRecord.time(:,idx),...
-             simSoln.benchRecord.pathLength(:,idx)./lceOptData,...
-             '--','Color',lpColor,...
+             simSoln.benchRecord.pathLength(:,idx),...
+             '--','Color',lineColors(idxMdl(idx),:),...
              'LineWidth',mdlLineWidth,...         
              'DisplayName',sprintf('Sim %i',idx));
         hold on;
@@ -297,10 +410,10 @@ subplot(subplot('Position', reshape(subPlotPanel(2,1,:),1,4)));
     yyaxis left;
     xlabel('Time (s)');
     ylabel('Norm. Force ($$f/f_o^M$$)');
-    ylim([-0.5,3]);
+    ylim([-1,1.5]);
 
     yyaxis right;
-    lengthTicks = lengthTicks ./ lceOptData;
+
     lengthTicks= sort(lengthTicks);
     lengthTicks = unique(lengthTicks);
     lengthTicks = round(lengthTicks,2);
@@ -311,15 +424,15 @@ subplot(subplot('Position', reshape(subPlotPanel(2,1,:),1,4)));
     ylabel('Norm. Path length ($$\ell / \ell_o^M$$)');
     
     box off;
-    title('C. Tomalka et al. 2017 Fig 2A (time domain)');
+    title('C. Tomalka et al. 2021 (time domain)');
 
 subplot(subplot('Position', reshape(subPlotPanel(2,2,:),1,4)));
-    for idx=1:1:3
+    for idx=1:1:4
         plot(simSoln.benchRecord.time(:,idx),...
              simSoln.benchRecord.normProximalTitinLength(:,idx),...
-             '-','Color',lineColors(idxMdlFig2A(idx),:),...
+             '-','Color',lineColors(idxMdl(idx),:),...
              'LineWidth',mdlLineWidth,...         
-             'DisplayName',sprintf('Sim %i',idx));
+             'DisplayName',mdlSeriesNames{idx});
         hold on;
     end
     box off;
@@ -327,185 +440,9 @@ subplot(subplot('Position', reshape(subPlotPanel(2,2,:),1,4)));
     ylabel('Norm. Length ($$\ell^1/\ell_o^M$$)');
     title('D. Titin-Actin bond length');
 
-subplot(subplot('Position', reshape(subPlotPanel(1,1,:),1,4)));
-    fill(falFill.x,falFill.y,lineColors(idxMdl(3),:),...
-        'EdgeColor','none', 'HandleVisibility','off');
-    hold on;
-    fill(ftpFill.x,ftpFill.y,lineColors(idxMdl(4),:),...
-        'EdgeColor','none', 'HandleVisibility','off');
-    hold on;    
-
-    plot(ratMuscleData(1).activeForceLengthData.x,...
-         ratMuscleData(1).activeForceLengthData.y,...
-         '.','Color',lineColors(idxExpMark(1),:),...
-         'MarkerFaceColor',lineColors(idxExpMark(1),:),...
-         'MarkerSize',3,'HandleVisibility','off');
-    hold on;
-    plot(ratMuscleData(1).passiveForceLengthData.x,...
-         ratMuscleData(1).passiveForceLengthData.y,...
-         'x','Color',lineColors(idxExpMark(2),:),...
-         'MarkerFaceColor',lineColors(idxExpMark(2),:),...
-         'MarkerSize',2,'HandleVisibility','off');
-    hold on;
-    for i=1:1:length(idxExpFig2A)
-        plot(ratMuscleData(1).activeLengtheningData(i).x,...
-             ratMuscleData(1).activeLengtheningData(i).y,...
-             '-','Color',lineColors(idxExpFig2A(i),:),...
-             'LineWidth',expLineWidth,...
-             'DisplayName',sprintf('Exp %i',i));
-        hold on;
-    end
-    for idx=1:1:3
-        plot(simSoln.benchRecord.normFiberLength(:,idx).*lceOptMdl,...
-             simSoln.benchRecord.fiberForce(:,idx),...
-             '-','Color',lineColors(idxMdlFig2A(idx),:),...
-             'DisplayName',sprintf('Sim %i',idx),...
-             'LineWidth',mdlLineWidth);
-        hold on;
-    end
-    box off;
-    
-    legend('Location','NorthWest');
-    legend boxoff;
-
-
-    xlim([1,4]);
-    ylim([0,3]);
-    xticks([1,1.5,2,2.5,3,3.5,4]);
-    yticks([0,0.5,1,1.5,2,2.5]);
-
-    xlabel('Norm. Length ($$\ell/\ell_o^M$$)');
-    ylabel('Norm. Force ($$f/f_o^M$$)');
-    title('A. Simulation of Tomalka et al. 2017 Fig. 2A');
-
-subplot(subplot('Position', reshape(subPlotPanel(1,2,:),1,4)));
-    fill(falFill.x,falFill.y,lineColors(idxMdl(3),:),...
-        'EdgeColor','none','HandleVisibility','off');
-    hold on;
-    fill(ftpFill.x,ftpFill.y,lineColors(idxMdl(4),:),...
-        'EdgeColor','none','HandleVisibility','off');
-    hold on;    
-
-
-    plot(ratMuscleData(1).activeForceLengthData.x,...
-         ratMuscleData(1).activeForceLengthData.y,...
-         '.','Color',lineColors(idxExpMark(1),:),...
-         'MarkerFaceColor',lineColors(idxExpMark(1),:),...
-         'MarkerSize',3,'HandleVisibility','off');
-    hold on;
-    plot(ratMuscleData(1).passiveForceLengthData.x,...
-         ratMuscleData(1).passiveForceLengthData.y,...
-         'x','Color',lineColors(idxExpMark(2),:),...
-         'MarkerFaceColor',lineColors(idxExpMark(2),:),...
-         'MarkerSize',2,'HandleVisibility','off');
-    hold on;
-
-    for i=1:1:length(idxExpFig3A)
-        plot(ratMuscleData(1).activeLengtheningBDMData(i).x,...
-             ratMuscleData(1).activeLengtheningBDMData(i).y,...
-             '-','Color',lineColors(idxExpFig3A(i),:),...
-             'LineWidth',expLineWidth,...
-             'DisplayName',sprintf('BDM Exp %i',i));
-        hold on;
-    end
-
-    plot(simSoln.benchRecord.normFiberLength(:,2).*lceOptMdl,...
-         simSoln.benchRecord.normDistalTitinForce(:,2),...
-         '-','Color',lineColors(idxMdlFig2A(2),:),...
-         'DisplayName','Sim 2',...
-         'LineWidth',mdlLineWidth);
-
-
-    legend('Location','NorthWest');
-    legend boxoff;
-    
-    xlim([1,4]);
-    ylim([0,3]);
-    xticks([1,1.5,2,2.5,3,3.5,4]);
-    yticks([0,0.5,1,1.5,2,2.5]);
-    hold on;
-    box off;
-    xlabel('Norm. Length ($$\ell/\ell_o^M$$)');
-    ylabel('Norm. Force ($$f/f_o^M$$)');
-    title('B. Simulation of Tomalka et al. 2017 Fig. 3A');
-
-subplot(subplot('Position', reshape(subPlotPanel(3,1,:),1,4)));
-    fill(fvFill.x,fvFill.y,lineColors(idxGreys(2),:),'EdgeColor','none');
-    hold on;
-
-    vmaxNorm = musculotendon.maximumNormalizedFiberVelocity;
-    fvNSim = [];
-    for idx=4:1:6
-        vceN = simSoln.benchRecord.pathVelocity(end,idx) / (lceOptMdl);
-        fceN = simSoln.benchRecord.normFiberForce(end,idx);
-        falN = simSoln.benchRecord.fiberActiveForceLengthMultiplier(end,idx);
-        lceN = simSoln.benchRecord.normFiberLength(end,idx);
-        fpeN = simSoln.benchRecord.normPassiveFiberForce(end,idx);
-
-        fvN = (fceN-fpeN)/falN;
-        fvNSim = [fvNSim;...
-                  vceN,fvN];
-    end
-    plot(fvNSim(:,1),fvNSim(:,2),'x','Color',[0,0,0],...
-         'MarkerFaceColor',[0,0,0],'MarkerSize',4,'DisplayName','Sim Fv');
-    hold on;
-    xticks([-vmaxNorm,0,vmaxNorm]);
-    yticks([0,1]);
-    axis tight;
-    box off;
-
-    xlabel('Norm. Velocity ($$v/\ell_o^M$$)');
-    ylabel('Norm. Force ($$f/f_o^M$$');
-    title('E. Check: Simulated Force-Velocity Relation');
-
-subplot(subplot('Position', reshape(subPlotPanel(3,2,:),1,4)));
-    colorA =[1,0,0];
-    lpMin = inf;
-    lpMax = -inf;
-    for idx=4:1:6
-        n = (idx-4)/2;
-        yyaxis left;
-        fvColor = [0.25,0,0.25].*(1-n) + [1,0,1].*(n);
-        lpColor = [0.5,0.3,0].*(1-n) + [1,0.6,0].*(n);
-
-        plot(simSoln.benchRecord.time(:,idx),...
-             simSoln.benchRecord.normFiberForce(:,idx),...
-             '-','Color',fvColor);        
-        hold on;
-
-        plot(simSoln.benchRecord.time(end,idx),...
-             simSoln.benchRecord.normFiberForce(end,idx),...
-             'x','Color',[0,0,0],...
-             'MarkerFaceColor',[0,0,0],...
-             'MarkerSize',4,'DisplayName','Sim Fv');        
-        hold on;
-
-        yyaxis right;
-        plot(simSoln.benchRecord.time(:,idx),...
-             simSoln.benchRecord.pathLength(:,idx)./lceOptMdl,...
-             '--','Color',lpColor);
-        hold on;
-
-        lpMin = min(lpMin, min(simSoln.benchRecord.pathLength(:,idx)./lceOptMdl));
-        lpMax = max(lpMax, max(simSoln.benchRecord.pathLength(:,idx)./lceOptMdl));
-    end    
-    box off;
-    yyaxis left
-    ylim([-0.5,1]);
-    xlabel('Time (s)');
-    ylabel('Norm. Force ($$f/f_o^M$$)');
-
-    yyaxis right;
-    ylabel('Norm. Path Length ($$\ell_p/\ell_o^M$$)');
-    yticks(round( [min(simSoln.benchRecord.pathLength(:,4)),...
-                   max(simSoln.benchRecord.pathLength(:,4))]./lceOptMdl,2));
-
-    dpDelta = (lpMax-lpMin);
-    ylim([lpMin, lpMax+2*dpDelta]);
-    title('F. Check: Simulated Force-Velocity Relation');
 
 figure(figH);    
 configPlotExporter;
 filePath = fullfile(projectFolders.output_plots_TWHSS2021,...
-                    'fig_Sim_TWHSS2021_Fig2A_3A.pdf');
+                    'fig_Sim_TWHSS2021.pdf');
 print('-dpdf', filePath); 

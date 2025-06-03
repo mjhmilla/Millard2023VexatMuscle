@@ -19,7 +19,7 @@ addpath( genpath(projectFolders.models)         );
 addpath( genpath(projectFolders.postprocessing) );
 
 validExperiments = {'TRSS2017','TWHSS2021','WTRS2024'};
-experimentName = validExperiments{3};
+experimentName = validExperiments{2};
 
 %%
 % Parameters
@@ -187,6 +187,8 @@ setCurveProperties.useForceVelocityCurveWithSlopeDiscontinuity      = 1;
 setCurveProperties.fitTitinToTRSS2017Data         =  ratMuscleData(1);
 setCurveProperties.activeForceLengthData          =  [];
 setCurveProperties.passiveForceLengthData         =  [];
+setCurveProperties.forceVelocityMultiplierAtLowEccentricFiberVelocity = 1.25;
+setCurveProperties.forceVelocityMultiplierAtMaximumEccentricFiberVelocity = 1.35; 
 
 
 specimenTemperature     = 12; %As in 12 degrees centrigrade
@@ -200,6 +202,7 @@ flag_useOctave                          = 0;
 % Series-specific parameters
 %
 %%
+shiftPassiveCurve = 0;
 
 switch experimentName
 
@@ -207,13 +210,28 @@ switch experimentName
         muscleName = validMuscles{2};
         setSarcomereProperties.normPevkToActinAttachmentPoint   = 0.85;         
         setSarcomereProperties.normLengthTitinActinBondMinimum  = 1.0;
-        setSarcomereProperties.normMaxActiveTitinToActinDamping = 20.3;   
+        setSarcomereProperties.normMaxActiveTitinToActinDamping = 20.3;
+
+        setMusculotendonProperties.fiberForceLengthCurviness = 0.5;
+
+
 
     case 'TWHSS2021'
         muscleName = validMuscles{1};        
-        setSarcomereProperties.normPevkToActinAttachmentPoint   = 0.85;         
-        setSarcomereProperties.normLengthTitinActinBondMinimum  = 1.0;
-        setSarcomereProperties.normMaxActiveTitinToActinDamping = 20.3;   
+        setSarcomereProperties.normPevkToActinAttachmentPoint   = 0.95;         
+        setSarcomereProperties.normLengthTitinActinBondMinimum  = 0.5;
+        setSarcomereProperties.normMaxActiveTitinToActinDamping = 100;  
+        setCurveProperties.forceVelocityMultiplierAtLowEccentricFiberVelocity ...
+            = 1.025;
+        setCurveProperties.forceVelocityMultiplierAtMaximumEccentricFiberVelocity ...
+            = 1.05;         
+
+        setMusculotendonProperties.fiberForceLengthCurviness = 0.5;
+
+        setSarcomereProperties.normCrossBridgeStiffness         = 75;%49.1;  %fiso/lopt
+        setSarcomereProperties.normCrossBridgeDamping           = 0.347*(75/49.1); %fiso/(lopt/s)
+
+        shiftPassiveCurve = -0.1;
 
     case 'WTRS2024'
         muscleName = validMuscles{2}; 
@@ -240,7 +258,8 @@ end
 
 [plotDataConfig,...
  plotIndexes,... 
- plotSettings] = getRatMusculotendonModelPlottingStructures(muscleName);
+ plotSettings] = getRatMusculotendonModelPlottingStructures(...
+                    experimentName,muscleName);
 
 
 %%
@@ -330,11 +349,15 @@ if(indexOfDataSetForPassiveCurveParameters>0)
     setMusculotendonProperties.normFiberLengthAtOneNormPassiveForce = ...
         ((1-y0)/c)/fittingFpeNOptSarcomereLengthInUm;
 
-
-    setMusculotendonProperties.normFiberStiffnessAtLowPassiveForce = ...
-        setMusculotendonProperties.normFiberStiffnessAtOneNormPassiveForce*0.4;
-
-    setMusculotendonProperties.fiberForceLengthCurviness = 0.5;
+    if(strcmp(experimentName,'TWHSS2021')==1)
+        setMusculotendonProperties.normFiberLengthAtOneNormPassiveForce = ...
+            setMusculotendonProperties.normFiberLengthAtOneNormPassiveForce ...
+            +shiftPassiveCurve;
+    
+        setMusculotendonProperties.normFiberStiffnessAtLowPassiveForce = ...
+            setMusculotendonProperties.normFiberStiffnessAtOneNormPassiveForce*0.4;
+    end
+    
     
     disp(setMusculotendonProperties.normFiberStiffnessAtOneNormPassiveForce);
     disp(setMusculotendonProperties.normFiberLengthAtOneNormPassiveForce);
@@ -346,7 +369,8 @@ ratMuscleModelParameters = createRatSkeletalMuscleModel(...
                               setSarcomereProperties,...
                               setMusculotendonProperties,...
                               setCurveProperties,...
-                              specimenTemperature,...                   
+                              specimenTemperature,...   
+                              experimentName,...
                               muscleName,...
                               projectFolders,...
                               flag_useOctave);

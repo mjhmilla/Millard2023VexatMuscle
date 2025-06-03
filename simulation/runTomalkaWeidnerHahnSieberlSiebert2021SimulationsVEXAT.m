@@ -24,6 +24,7 @@ benchRecord             = [];
 vmax = musculotendonProperties.maximumNormalizedFiberVelocity;
 
 lceOptMdl   = musculotendonProperties.optimalFiberLength;
+vceMaxMdl   = musculotendonProperties.maximumNormalizedFiberVelocity;
 lceOptData  = lceOptMdl;
 
 npts=400;
@@ -42,110 +43,138 @@ for idxSimulation = 1:1:numberOfSimulations
     excitationProfile.time = [];
     excitationProfile.value =[];
 
-    timeWait         = 0.5;
+    timeWait         = 0.1;
     
     if(idxSimulation <= 3)
-            lenA     = 2.0/lceOptData;
-            lenB     = 2.4/lceOptData;
-            lenC     = 2.0/lceOptData; 
+            lenA     = 2.0;
+            lenB     = 2.4;
+            lenC     = 2.0; 
+
+            vceA = 0;
+            vceB = 0;
+            vceC = 0;
+            switch idxSimulation
+                case 1
+                    vceA =  vceMaxMdl*lceOptMdl*0.85;
+                    vceB = -vceMaxMdl*lceOptMdl*0.85;                    
+                case 2
+                    vceA =  vceMaxMdl*lceOptMdl*0.6;
+                    vceB = -vceMaxMdl*lceOptMdl*0.6;                    
+                case 3
+                    vceA =  vceMaxMdl*lceOptMdl*0.3;
+                    vceB = -vceMaxMdl*lceOptMdl*0.3;                    
+                    
+                otherwise assert(0,'Error: invalid idxSimulation');
+            end
 
             timeStart       = 0;
             timeStimulation = timeStart + timeWait;
             timeA           = timeStimulation + timeWait;
-            timeB           = timeA+0.5;
-            timeC           = timeB+0.5;
+            timeB           = timeA + (lenB-lenA)/vceA;
+            timeC           = timeB + (lenC-lenB)/vceB;
             timeEnd         = timeC + timeWait;
             
-            velA    = (lenB-lenA)/0.5;
-            velB    =-(lenB-lenA)/0.5;
-            velC    = 0;
-
             lengthProfile.time      = [timeStart,timeA,timeB,timeC,timeEnd]';
             lengthProfile.length    = [lenA,lenA,lenB,lenC,lenC]';
         
-            excitationProfile.time = [timeStart,(timeStimulation-1e-6),...
-                                      timeStimulation,timeEnd]';
-            excitationProfile.value =[0,0,1,1]';   
+%             excitationProfile.time = [timeStart,(timeStimulation-1e-6),...
+%                                       timeStimulation,timeEnd]';
+%             excitationProfile.value =[0,0,1,1]';   
+            excitationProfile.time = [timeStart,timeEnd]';
+            excitationProfile.value =[1,1]';  
 
             timeLength     = [0:0.01:timeEnd]';
             valueLength   = zeros(length(timeLength),2);
 
             timeEx = timeLength;
             valueEx = zeros(length(timeLength),2);
-            
-            flag_debug=1;
-            if(flag_debug == 1)
-                for i=1:1:length(timeEx)
-                    tmp = calcLinearlyInterpolatedState(timeLength(i,1),...
-                                lengthProfile.time,lengthProfile.length);
-    
-                    valueLength(i,1)=tmp(2,1);
-                    valueLength(i,2)=tmp(1,1);
-    
-                    tmp = calcLinearlyInterpolatedState(timeLength(i,1),...
-                                excitationProfile.time,excitationProfile.value);
-        
-                    valueEx(i,1) = tmp(2,1);
-                    valueEx(i,2) = tmp(1,1);
-                end
-    
-                figTest=figure;
-                subplot(1,2,1);
-                    yyaxis left;
-                    plot(timeLength,valueLength(:,1),'b');
-                    hold on;
-                    ylabel('Length');
-                    yyaxis right;
-                    plot(timeLength,valueLength(:,2),'r');
-                    hold on;
-                    xlabel('Time (s)');
-                    ylabel('Velocity');
-                    title('Length function');
-                subplot(1,2,2);
-                    yyaxis left;
-                    plot(timeEx,valueEx(:,1),'b');
-                    hold on;
-                    ylabel('Excitation');
-                    yyaxis right;
-                    plot(timeEx,valueEx(:,2),'r');
-                    hold on;
-                    xlabel('Time (s)');
-                    ylabel('d/dt Excitation');
-                    title('Excitation function');
-            end
-                
+                            
     end
 
-    if(idxSimulation >= 3)
-            lengthA     = 2.4/lceOptData;
-            lengthB     = 2.4/lceOptData;
-            lengthC     = 2.0/lceOptData; 
+    if(idxSimulation > 3)
+            lenA     = 2.4;
+            lenB     = 2.4;
+            lenC     = 2.0; 
+
+            vceA =  0;
+            vceB = -vceMaxMdl*lceOptMdl*0.85;                    
+            vceC =  0;
 
             timeStart       = 0;
             timeStimulation = timeStart + timeWait;
             timeA           = timeStimulation + timeWait;
-            timeB           = timeA+0.5;
-            timeC           = timeC+timeB;
-            
-            rampLengthStart = lstart;
-            velocityA    = 0;
-            velocityB    =-(lengthB-lengthA)/0.5;
-            velocityC    = 0;
+            timeB           = timeA + abs(lenC-lenB)/abs(vceB);
+            timeC           = timeB + (lenC-lenB)/(vceB);
+           
 
             timeEnd         = timeC + timeWait;
+
+            lengthProfile.time      = [timeStart,timeA,timeB,timeC,timeEnd]';
+            lengthProfile.length    = [lenA,lenA,lenB,lenC,lenC]';
+        
+            %excitationProfile.time = [timeStart,(timeStimulation-1e-6),...
+            %                          timeStimulation,timeEnd]';
+            %excitationProfile.value =[0,0,1,1]';   
+
+            excitationProfile.time = [timeStart,timeEnd]';
+            excitationProfile.value =[1,1]';  
+
+            timeLength     = [0:0.01:timeEnd]';
+            valueLength   = zeros(length(timeLength),2);
+
+            timeEx = timeLength;
+            valueEx = zeros(length(timeLength),2);
+                     
     end
     
+    flag_debug=0;
+    if(flag_debug == 1)
+        for i=1:1:length(timeEx)
+            tmp = calcLinearlyInterpolatedState(timeLength(i,1),...
+                        lengthProfile.time,...
+                        lengthProfile.length,1);
+
+            valueLength(i,1)=tmp(2,1);
+            valueLength(i,2)=tmp(1,1);
+
+            tmp = calcLinearlyInterpolatedState(timeLength(i,1),...
+                        excitationProfile.time,...
+                        excitationProfile.value,0);
+
+            valueEx(i,1) = tmp(1,1);
+        end
+
+        figTest=figure;
+        subplot(1,2,1);
+            yyaxis left;
+            plot(timeLength,valueLength(:,1),'b');
+            hold on;
+            ylabel('Length');
+            yyaxis right;
+            plot(timeLength,valueLength(:,2),'r');
+            hold on;
+            xlabel('Time (s)');
+            ylabel('Velocity');
+            title('Length function');
+        subplot(1,2,2);
+            plot(timeEx,valueEx(:,1),'b');
+            hold on;
+            ylabel('Excitation');
+            xlabel('Time (s)');
+            ylabel('Excitation');
+            title('Excitation function');
+    end   
+
     timeSpan = [timeStart,timeEnd];
 
+    pathLengthFcn = @(argT)calcLinearlyInterpolatedState(argT,...
+                lengthProfile.time,lengthProfile.length,1);
+
+
+    excitationFcn = @(argT)calcLinearlyInterpolatedState(argT,...
+                excitationProfile.time,excitationProfile.value,0);
+
     activation=1;
-    excitationFcn = @(argT)calcStepFunction(argT,...
-                      timeStimulation,...
-                      inf,...
-                      activation);
-    
-    pathLengthFcn = @(argT)calcRampStateSharp(argT,...
-                            timeRampStart,timeRampEnd,...
-                            rampLengthStart,rampVelocity);
     
     activationFcn = ...
         @(argU,argA)calcFirstOrderActivationDerivative(argU,argA, ...
@@ -171,7 +200,7 @@ for idxSimulation = 1:1:numberOfSimulations
     benchConfig.stateLabels           = labelStates;
     benchConfig.name                  = '';
     benchConfig.initialState          = [];
-    benchConfig.initialActivation     = 0;
+    benchConfig.initialActivation     = excitationFcn(0);
     benchConfig.pathFcn               = [];
     benchConfig.excitationFcn         = [];
     benchConfig.activationFcn         = activationFcn; 

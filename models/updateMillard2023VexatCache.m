@@ -1199,7 +1199,7 @@ if(flag_evaluateInitializationFunctions == 0)
         tauValue = tauS*(1-tauBlending) + tauL*tauBlending;
     end
 
-    if(dlaNN < -0.01)
+    if(dlaNN > 0.1)
         here=1;
     end
     ddlaHN_HillError    =   ((fxHN - a*flN*(fvN))/(tauValue));

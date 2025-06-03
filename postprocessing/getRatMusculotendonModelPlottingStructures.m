@@ -1,5 +1,5 @@
 function [dataToPlot, dataIndexes, plotSettings] = ...
-    getRatMusculotendonModelPlottingStructures(muscleName)
+    getRatMusculotendonModelPlottingStructures(experimentName,muscleName)
 
 %
 % Layout
@@ -61,6 +61,11 @@ switch muscleName
         plotSettings(idx).xticks = [-2.25,0,2.25];
 
     otherwise assert(0,'Error: muscleName not found');
+end
+
+if(strcmp(experimentName,'TWHSS2021')==1)
+    plotSettings(idx).xlim = [-0.47,0.47];
+    plotSettings(idx).xticks = [-0.46,0,0.46];
 end
 
 %

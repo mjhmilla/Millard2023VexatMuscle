@@ -290,6 +290,7 @@ normMuscleCurves.fiberForceVelocityCurve ...
 if(useSharpForceVelocityCurve==1)
 
     dydxEcc_div_dydxConc = 5;
+    %dydxEcc_div_dydxConc = 10;
     curvinessEccentricForceVelocitySharp = 0.95;
     
     normMuscleCurves.fiberForceVelocityCurve ...

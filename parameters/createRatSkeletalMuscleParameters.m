@@ -29,9 +29,12 @@ function [ratSoleusMusculotendonProperties, ...
                     normLengthTitinActinBondMinimum,...
                     ecmForceFraction,...
                     titinMolecularWeightInkD,...
+                    forceVelocityMultiplierAtLowEccentricFiberVelocity,...
+                    forceVelocityMultiplierAtMaximumEccentricFiberVelocity,...                 
                     specimenTemperature,...
                     makeSkinnedFibrilModel,...
                     useElasticTendon,...
+                    experimentName,...
                     muscleName,...
                     projectFolders,...
                     flag_useOctave)
@@ -156,6 +159,7 @@ switch muscleName
         assert(0,'Error: muscleName not found');
 end
 
+
 % 2.25 Lo/s from pg 4, column 1, paragraph 3
 %
 % Tomalka A, Rode C, Schumacher J, Siebert T. The active force–length 
@@ -229,7 +233,13 @@ c12 = [specimenTemperature,1]*x;
 % velocity and myosin isoforms in single rat muscle fibres. Acta physiologica 
 % scandinavica. 1998 May;163(1):33-40.
 
+if(strcmp(experimentName,'TWHSS2021')==1)
+    maximumNormalizedFiberVelocity = 0.46; % 0.46 +/- 0.13 Lo/s
+    c12 = 0.07;                            % 0.07 +/- 0.02
+end
+
 halfMaximumNormalizedFiberVelocity = maximumNormalizedFiberVelocity*0.5;
+
 
 Po = 1;
 c = c12;
@@ -254,8 +264,8 @@ if(flag_debugFv==1)
   title('Force-velocity curve and curvature'); 
 end
 
-forceVelocityMultiplierAtLowEccentricFiberVelocity     = 1.25;
-forceVelocityMultiplierAtMaximumEccentricFiberVelocity = 1.30;
+%forceVelocityMultiplierAtLowEccentricFiberVelocity     = 1.25;
+%forceVelocityMultiplierAtMaximumEccentricFiberVelocity = 1.30;
 
 kisoScott                       = nan;
 tendonStrainAtOneNormForce      = nan;

@@ -13,10 +13,14 @@
 %%
 
 function rampState = calcLinearlyInterpolatedState(t, ...
-                        timeSeries,lengthSeries)
+                        timeSeries,lengthSeries, flag_returnDerivative)
 
-
-rampState = zeros(2,1);
+rampState=[];
+if(flag_returnDerivative==1)
+    rampState = zeros(2,1);
+else
+    rampState = 0;
+end
 
 
 l = interp1(timeSeries,lengthSeries,t,...
@@ -32,5 +36,10 @@ for i=2:1:length(timeSeries)
 end
 
 
-rampState(1) = dldt;
-rampState(2) = l;
+
+if(flag_returnDerivative==1)
+    rampState(1) = dldt;
+    rampState(2) = l;
+else
+    rampState = l;
+end
