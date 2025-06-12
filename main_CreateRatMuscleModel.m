@@ -19,11 +19,17 @@ addpath( genpath(projectFolders.models)         );
 addpath( genpath(projectFolders.postprocessing) );
 
 validExperiments = {'TRSS2017','TWHSS2021','WTRS2024'};
-experimentName = validExperiments{2};
+experimentName = validExperiments{1};
+
+trialId = 3;
+
 
 %%
 % Parameters
 %%
+flag_makeAndSavePubPlots = 1;
+flag_makeDetailedExpDataPlots=0;
+
 validMuscles = {'SOL','EDL'};
 
 switch experimentName
@@ -46,10 +52,14 @@ indexOfDataSetToPassiveForceLengthCurve =0;
 
 %Sets the initial stiffness and length at which the curve develops
 %one norm force
-indexOfDataSetForPassiveCurveParameters = 3;
+indexStephensonWilliams1982 = 3;
+
+indexOfDataSetForPassiveCurveParameters = indexStephensonWilliams1982;
 % 1. Tomalka et al. 2017
 % 2. Zuurbier et al. 1995
 % 3. Stephenson & Williams 1982
+
+
 
 expDataSetFittingData(3)=struct('optimalSarcomereLength',0,...
                                'minLengthWhereFpeIsLinear',0);
@@ -102,10 +112,13 @@ end
 %%
 % Manually set sarcomere properties 
 %%
+
+
+
 makeSkinnedFibrilModel = 1;
 
-setSarcomereProperties.normCrossBridgeStiffness         = 75;%49.1;  %fiso/lopt
-setSarcomereProperties.normCrossBridgeDamping           = 0.347*(75/49.1); %fiso/(lopt/s)
+setSarcomereProperties.normCrossBridgeStiffness         = 49.1;  %fiso/lopt
+setSarcomereProperties.normCrossBridgeDamping           = 0.347; %fiso/(lopt/s)
 % Manually set to produce the force transient in TRSS2017 Figure 2A
 % at the beginning of lengthening
 
@@ -190,6 +203,14 @@ setCurveProperties.passiveForceLengthData         =  [];
 setCurveProperties.forceVelocityMultiplierAtLowEccentricFiberVelocity = 1.25;
 setCurveProperties.forceVelocityMultiplierAtMaximumEccentricFiberVelocity = 1.35; 
 
+setCurveProperties.useTitinModel2025           = 0;
+% 0. Use the default PEVK segment as described in Millard, Frankling,
+% Herzog 2024
+% 1. Use a PEVK segment that has been modified to fit the simulations of
+%    Tomalka, Weidner, Sieberl, and Siebert 2017
+%
+
+
 
 specimenTemperature     = 12; %As in 12 degrees centrigrade
 
@@ -208,13 +229,26 @@ switch experimentName
 
     case 'TRSS2017'
         muscleName = validMuscles{2};
-        setSarcomereProperties.normPevkToActinAttachmentPoint   = 0.85;         
-        setSarcomereProperties.normLengthTitinActinBondMinimum  = 1.0;
-        setSarcomereProperties.normMaxActiveTitinToActinDamping = 20.3;
+                
+        setSarcomereProperties.normLengthTitinActinBondMinimum  = 0.0;
+        setSarcomereProperties.normMaxActiveTitinToActinDamping = 200;
 
-        setMusculotendonProperties.fiberForceLengthCurviness = 0.5;
+        setMusculotendonProperties.fiberForceLengthCurviness = 0.75;
 
+        setCurveProperties.useTitinModel2025                 = 1;
 
+        setCurveProperties.forceVelocityMultiplierAtLowEccentricFiberVelocity = 1.35;
+        setCurveProperties.forceVelocityMultiplierAtMaximumEccentricFiberVelocity = 1.45; 
+
+        switch trialId
+            case 1
+                setSarcomereProperties.normPevkToActinAttachmentPoint   = 0.60; 
+            case 2
+                setSarcomereProperties.normPevkToActinAttachmentPoint   = 0.6875; 
+            case 3
+                setSarcomereProperties.normPevkToActinAttachmentPoint = 0.775; 
+            otherwise assert(0,'Error: trialId not recognized');
+        end
 
     case 'TWHSS2021'
         muscleName = validMuscles{1};        
@@ -365,15 +399,60 @@ if(indexOfDataSetForPassiveCurveParameters>0)
 end
 
 
-ratMuscleModelParameters = createRatSkeletalMuscleModel(...
-                              setSarcomereProperties,...
-                              setMusculotendonProperties,...
-                              setCurveProperties,...
-                              specimenTemperature,...   
-                              experimentName,...
-                              muscleName,...
-                              projectFolders,...
-                              flag_useOctave);
+%%
+% Human soleus and achilles tendon model
+%
+% This is used in calcTitinCurves2025 to make sure that the
+% modified force-length relations that I'm making for 
+% the PEVK segment don't break Trombitas et al.
+%%
+
+fprintf('\n\nCreating: default human soleus model\n');
+fprintf('\tused to simulate the Ig and PEVK kinematics from Trombitas et al.\n\n');
+
+linearTitinModel=0;
+wlcTitinModel = 1;
+
+scaleOptimalFiberLengthHumanSoleus = 1;
+scaleMaximumIsometricTensionHumanSoleus = 1;
+
+defaultHumanSoleus = createHumanSoleusModel(...
+                        setSarcomereProperties.normPevkToActinAttachmentPoint,...
+                        setSarcomereProperties.normMaxActiveTitinToActinDamping,...                        
+                        setMusculotendonProperties.normFiberLengthAtOneNormPassiveForce,... 
+                        setSarcomereProperties.ecmForceFraction,...
+                        linearTitinModel,...
+                        setCurveProperties.useTwoSidedTitinCurves,...
+                        setCurveProperties.useTwoSidedTitinCurves,...
+                        setCurveProperties.smallNumericallyNonZeroNumber,...
+                        setCurveProperties.flag_enableNumericallyNonZeroGradients,...
+                        scaleOptimalFiberLengthHumanSoleus,...
+                        scaleMaximumIsometricTensionHumanSoleus,...
+                        setCurveProperties.useTitinModel2025,...
+                        projectFolders,...
+                        flag_useOctave);
+
+filePathHumanSoleus = fullfile(projectFolders.output_structs_FittedModels,...
+                                'defaultHumanSoleus.mat');
+save(filePathHumanSoleus,'defaultHumanSoleus');
+
+%%
+%
+% Rat skeletal muscle
+%
+%%
+
+[ratMuscleModelParameters,...
+ activeForceLengthCurveAnnotationPoints] ...
+    = createRatSkeletalMuscleModel(...
+          setSarcomereProperties,...
+          setMusculotendonProperties,...
+          setCurveProperties,...
+          specimenTemperature,...   
+          experimentName,...
+          muscleName,...
+          projectFolders,...
+          flag_useOctave);
 
 wlcStr = '';
 if(setSarcomereProperties.useWLCTitinModel==1)
@@ -387,301 +466,395 @@ end
 fileName = ['rat',experimentName,muscleName,...
              fibrilStr,'ActiveTitin',wlcStr,'.mat'];
 
+if(strcmp(experimentName,'TRSS2017')==1)
+    fileName = ['rat',experimentName,muscleName,...
+                 fibrilStr,'ActiveTitin',wlcStr,'_',...
+                 num2str(trialId),'.mat'];
+
+end
+
+
+
+
 filePathRatMuscle = fullfile(projectFolders.output_structs_FittedModels,...
                              fileName);
 save(filePathRatMuscle,'ratMuscleModelParameters');
 
 
-%
-% Sample the experimental datda
-%
-
-idx =  ratMuscleMetaData.index_TRSS2017;
-
-plotDataConfig(plotIndexes.TRSS2017_fl).x =...
-    ratMuscleData(idx).activeForceLengthData.x;
-plotDataConfig(plotIndexes.TRSS2017_fl).y =...
-    ratMuscleData(idx).activeForceLengthData.y;
-
-plotDataConfig(plotIndexes.TRSS2017_fpe).x =...
-    ratMuscleData(idx).passiveForceLengthData.x;
-plotDataConfig(plotIndexes.TRSS2017_fpe).y =...
-    ratMuscleData(idx).passiveForceLengthData.y;
-
-%
-% sample Zuurbier et al.
-%
-
-idx =  ratMuscleMetaData.index_ZHGL1995;
-
-yNorm = 1/100;
-xData=[];
-yData=[];
-for i=1:1:length(ratMuscleData(idx).activeForceLengthData)
-    ratMuscleData(idx).activeForceLengthData(i).y = ...
-        ratMuscleData(idx).activeForceLengthData(i).y.*yNorm;
-    xData = [xData;ratMuscleData(idx).activeForceLengthData(i).x];
-    yData = [yData;ratMuscleData(idx).activeForceLengthData(i).y];    
-end
-
-ratMuscleData(idx).passiveForceLengthData = [];
-plotDataConfig(plotIndexes.ZHGL1995_fl).x = xData;
-plotDataConfig(plotIndexes.ZHGL1995_fl).y = yData;
-
-
-%
-% sample Stephenson & Williams 
-%
-
-idx = ratMuscleMetaData.index_SW1982;
-
-xData_fl=[];
-yData_fl=[];
-xData_fpe=[];
-yData_fpe=[];
-for i=1:1:length(ratMuscleData(idx).activeForceLengthData)
-    xData_fl = [xData_fl;ratMuscleData(idx).activeForceLengthData(i).x];
-    yData_fl = [yData_fl;ratMuscleData(idx).activeForceLengthData(i).y];       
-end
-for i=1:1:length(ratMuscleData(idx).passiveForceLengthData)
-    xData_fpe= [xData_fpe;ratMuscleData(idx).passiveForceLengthData(i).x];
-    yData_fpe= [yData_fpe;ratMuscleData(idx).passiveForceLengthData(i).y]; 
-end
-
-plotDataConfig(plotIndexes.SW1982_fl).x = xData_fl;
-plotDataConfig(plotIndexes.SW1982_fl).y = yData_fl;
-plotDataConfig(plotIndexes.SW1982_fpe).x = xData_fpe;
-plotDataConfig(plotIndexes.SW1982_fpe).y = yData_fpe;
-
-
-
-%
-% Sample the model curves
-%
-
-% 
-% fl
-%
-activeForceLengthCurveData   = ...
-    calcBezierYFcnXCurveSampleVector( ...
-        ratMuscleModelParameters.curves.activeForceLengthCurve,...
-        100,[]);
-      
-lsOpt = ratMuscleModelParameters.sarcomere.optimalSarcomereLength;
-
-plotDataConfig(plotIndexes.model_fl).x = activeForceLengthCurveData.x.*lsOpt;
-plotDataConfig(plotIndexes.model_fl).y = activeForceLengthCurveData.y;
-
-%
-% fpe and titin detail
-%
-passiveForceLengthCurveData   = ...
-    calcBezierYFcnXCurveSampleVector( ...
-        ratMuscleModelParameters.curves.fiberForceLengthCurve, ...
-        100,[]);
-
-plotDataConfig(plotIndexes.model_fpe).x = passiveForceLengthCurveData.x.*lsOpt;
-plotDataConfig(plotIndexes.model_fpe).y = passiveForceLengthCurveData.y;
-
-titinCurveSample = ...
-  sampleTitinCurves20250217(...
-    ratMuscleModelParameters.curves,...
-    ratMuscleModelParameters.sarcomere,...
-    100);
 
 
 
 
-lambdaECM = ratMuscleModelParameters.sarcomere.extraCellularMatrixPassiveForceFraction;
+
+%%
+% Plotting
+%%
+if(flag_makeAndSavePubPlots==1)
+    previousPlotFullFilePathName=[];
+    plotFullFilePathName = fullfile(...
+       projectFolders.output_plots_MuscleCurves,...
+       ['fig_Pub_RatMuscleCurves_',experimentName]);
+
+    if(strcmp(experimentName,'TRSS2017')==1)
+        plotFullFilePathName = fullfile(...
+               projectFolders.output_plots_MuscleCurves,...
+               ['fig_Pub_RatMuscleCurves_',experimentName,...
+                '_',num2str(trialId)]);  
+        if(trialId > 1)
+            previousPlotFullFilePathName = fullfile(...
+               projectFolders.output_plots_MuscleCurves,...
+               ['fig_Pub_RatMuscleCurves_',experimentName,...
+                '_',num2str(trialId-1)]); 
+        end
+    end
+
+  activeForceLengthData = [];
+
+  for i=1:1:length(ratMuscleData(indexStephensonWilliams1982).activeForceLengthData)
+      activeForceLengthData = [...
+          activeForceLengthData;...
+          ratMuscleData(indexStephensonWilliams1982).activeForceLengthData(i).x,...
+          ratMuscleData(indexStephensonWilliams1982).activeForceLengthData(i).y];
+  end
+
+  passiveForceLengthData = [];
+
+  for i=1:1:length(ratMuscleData(indexStephensonWilliams1982).passiveForceLengthData)
+      passiveForceLengthData = [...
+          passiveForceLengthData;...
+          ratMuscleData(indexStephensonWilliams1982).passiveForceLengthData(i).x,...
+          ratMuscleData(indexStephensonWilliams1982).passiveForceLengthData(i).y];
+  end
+
+  activeForceLengthData(:,1)=...
+      activeForceLengthData(:,1)./...
+      expDataSetFittingData(indexStephensonWilliams1982).optimalSarcomereLength;
+
+  passiveForceLengthData(:,1)=...
+      passiveForceLengthData(:,1)./...
+      expDataSetFittingData(indexStephensonWilliams1982).optimalSarcomereLength;
+
+  updateTitinPlotsOnly=0;
+  if(strcmp(experimentName,'TRSS2017') && trialId > 1)
+      updateTitinPlotsOnly=1;
+  end
+
+  [success] = plotMuscleCurves2025(...
+                ratMuscleModelParameters,...
+                defaultHumanSoleus,...
+                activeForceLengthCurveAnnotationPoints,...
+                activeForceLengthData,...
+                passiveForceLengthData,...
+                ratMuscleModelParameters.sarcomere.normFiberLengthAtOneNormPassiveForce,...
+                trialId,...
+                updateTitinPlotsOnly,...
+                previousPlotFullFilePathName,...
+                plotFullFilePathName,...
+                projectFolders);
+end 
 
 
-plotDataConfig(plotIndexes.model_titinPassive).x = ...
-    titinCurveSample.curveSampleTitin.x.*(2*lsOpt);
-plotDataConfig(plotIndexes.model_titinPassive).y = ...
-    titinCurveSample.curveSampleTitin.y.*(1-lambdaECM) ...
-   +titinCurveSample.curveSampleECMHalf.y.*(lambdaECM);
-
-plotDataConfig(plotIndexes.model_titinActive).x = ...
-    titinCurveSample.curveSampleTitinActive.x.*(2*lsOpt);
-plotDataConfig(plotIndexes.model_titinActive).y = ...
-    titinCurveSample.curveSampleTitinActive.y.*(1-lambdaECM) ...
-   +titinCurveSample.curveSampleECMHalf.y.*(lambdaECM);
 
 
-
-%
-% fv
-%
-
-forceVelocityCurveData   = ...
-    calcBezierYFcnXCurveSampleVector( ...
-        ratMuscleModelParameters.curves.fiberForceVelocityCurve, ...
-        100,[]);
-
-scaleVmax = ...
-    ratMuscleModelParameters.musculotendon.maximumNormalizedFiberVelocity;
-
-plotDataConfig(plotIndexes.model_fv).x = forceVelocityCurveData.x .* scaleVmax;
-plotDataConfig(plotIndexes.model_fv).y = forceVelocityCurveData.y;
-
-
-
-%
-% Plot the overview curves
-%
-
-%
-% Force-length ticks
-%
-maxActiveSarcomereLengthInUm = ...
-         2*ratMuscleModelParameters.sarcomere.zLineLengthInUm ...
-        +2*ratMuscleModelParameters.sarcomere.actinLengthInUm...
-        +ratMuscleModelParameters.sarcomere.myosinLengthInUm;
-
-optimalSarcomereLengthInUm = ...
-         2*ratMuscleModelParameters.sarcomere.zLineLengthInUm ...
-        +2*ratMuscleModelParameters.sarcomere.actinLengthInUm...
-        +ratMuscleModelParameters.sarcomere.myosinBareLengthInUm;
-
-shortSarcomereLengthInUm = ...
-         2*ratMuscleModelParameters.sarcomere.zLineLengthInUm ...
-        +ratMuscleModelParameters.sarcomere.myosinLengthInUm;
-
-zeroForceSarcomereLengthInUm = ...
-    ratMuscleModelParameters.sarcomere.zeroForceSarcomereLengthInUm;
-
-
-plotSettings(1).xticks = [];
-plotSettings(1).yticks = [];
-
-plotSettings(1).xticks = [...
-    zeroForceSarcomereLengthInUm,...
-    shortSarcomereLengthInUm,...
-    optimalSarcomereLengthInUm,...
-    maxActiveSarcomereLengthInUm];
-
-
-
-plotSettings(1).xticks =...
-    [plotSettings(1).xticks, ...
-     max(plotDataConfig(plotIndexes.SW1982_fpe).x)];
-
-%Evaluate the max. isometric force at the length when the myosin tip
-%touches the z-line. These expressions require a diagram to understand 
-%but I've justed checked them and these expressions are correct.
-
-%The length at which the two actin filaments overlap with
-%the active part of  myosin
-shallowPlateauInterference = ...
-    2*(      ratMuscleModelParameters.sarcomere.actinLengthInUm ...
-       - 0.5*ratMuscleModelParameters.sarcomere.myosinLengthInUm ...
-       - 0.5*ratMuscleModelParameters.sarcomere.myosinBareLengthInUm);
-
-%The length at which the actin filaments can interact with the 
-%active part of myosin without over lap
-shallowPlateauOverlap      = ...
-    2*(ratMuscleModelParameters.sarcomere.myosinLengthInUm ...
-     - ratMuscleModelParameters.sarcomere.actinLengthInUm);
-
-%The maximum possible length at which myosin and actin can
-% actively interact 
-maxOverlap                 = ...
-    ratMuscleModelParameters.sarcomere.myosinLengthInUm ...
-  - ratMuscleModelParameters.sarcomere.myosinBareLengthInUm;
-
-%With half of the cross-bridges pulling in one direction and the other half 
-%pulling in the opposite direction the interference section contributes no force
-
-interferenceTension     = 0.0; 
-
-maxNormForceAtShortLength =...
-    ( shallowPlateauInterference*interferenceTension ...
-      + shallowPlateauOverlap )/maxOverlap;
-
-plotSettings(1).yticks = [0,maxNormForceAtShortLength,1];
-
-if(indexOfDataSetForPassiveCurveParameters>0)
-    fittingFpeNMinForce = ...
-        expDataSetFittingData(...
-        indexOfDataSetForPassiveCurveParameters).minLengthWhereFpeIsLinear;
+if(flag_makeDetailedExpDataPlots==1)
+    %
+    % Sample the experimental datda
+    %
     
-    plotSettings(1).yticks = ...
-        [0,fittingFpeNMinForce,maxNormForceAtShortLength,1];
-    plotSettings(1).yticks = sort(plotSettings(1).yticks);
-end
-
-
-
-
-%
-% Force-velocity ticks
-%
-
-plotSettings(2).xticks = [];
-plotSettings(2).yticks = [];
-
-plotSettings(2).xticks = [...
-    -ratMuscleModelParameters.musculotendon.maximumNormalizedFiberVelocity,...
-    -0.5*ratMuscleModelParameters.musculotendon.maximumNormalizedFiberVelocity,...
-    0,...
-    ratMuscleModelParameters.musculotendon.maximumNormalizedFiberVelocity];
-
-plotSettings(2).yticks = [...
-    0.00,...
-    ratMuscleModelParameters.musculotendon.forceVelocityMultiplierAtHalfMaximumFiberVelocity,...
-    1.00,...
-    ratMuscleModelParameters.musculotendon.forceVelocityMultiplierAtLowEccentricFiberVelocity,...
-    ratMuscleModelParameters.musculotendon.forceVelocityMultiplierAtMaximumEccentricFiberVelocity];
-
-figModelCurves = figure;
+    idx =  ratMuscleMetaData.index_TRSS2017;
     
-
-for i=1:1:length(plotDataConfig)
-    if(plotDataConfig(i).enablePlot==1)
-        row=plotDataConfig(i).row;
-        col=plotDataConfig(i).col;
+    plotDataConfig(plotIndexes.TRSS2017_fl).x =...
+        ratMuscleData(idx).activeForceLengthData.x;
+    plotDataConfig(plotIndexes.TRSS2017_fl).y =...
+        ratMuscleData(idx).activeForceLengthData.y;
+    
+    plotDataConfig(plotIndexes.TRSS2017_fpe).x =...
+        ratMuscleData(idx).passiveForceLengthData.x;
+    plotDataConfig(plotIndexes.TRSS2017_fpe).y =...
+        ratMuscleData(idx).passiveForceLengthData.y;
+    
+    %
+    % sample Zuurbier et al.
+    %
+    
+    idx =  ratMuscleMetaData.index_ZHGL1995;
+    
+    yNorm = 1/100;
+    xData=[];
+    yData=[];
+    for i=1:1:length(ratMuscleData(idx).activeForceLengthData)
+        ratMuscleData(idx).activeForceLengthData(i).y = ...
+            ratMuscleData(idx).activeForceLengthData(i).y.*yNorm;
+        xData = [xData;ratMuscleData(idx).activeForceLengthData(i).x];
+        yData = [yData;ratMuscleData(idx).activeForceLengthData(i).y];    
+    end
+    
+    ratMuscleData(idx).passiveForceLengthData = [];
+    plotDataConfig(plotIndexes.ZHGL1995_fl).x = xData;
+    plotDataConfig(plotIndexes.ZHGL1995_fl).y = yData;
+    
+    
+    %
+    % sample Stephenson & Williams 
+    %
+    
+    idx = ratMuscleMetaData.index_SW1982;
+    
+    xData_fl=[];
+    yData_fl=[];
+    xData_fpe=[];
+    yData_fpe=[];
+    for i=1:1:length(ratMuscleData(idx).activeForceLengthData)
+        xData_fl = [xData_fl;ratMuscleData(idx).activeForceLengthData(i).x];
+        yData_fl = [yData_fl;ratMuscleData(idx).activeForceLengthData(i).y];       
+    end
+    for i=1:1:length(ratMuscleData(idx).passiveForceLengthData)
+        xData_fpe= [xData_fpe;ratMuscleData(idx).passiveForceLengthData(i).x];
+        yData_fpe= [yData_fpe;ratMuscleData(idx).passiveForceLengthData(i).y]; 
+    end
+    
+    plotDataConfig(plotIndexes.SW1982_fl).x = xData_fl;
+    plotDataConfig(plotIndexes.SW1982_fl).y = yData_fl;
+    plotDataConfig(plotIndexes.SW1982_fpe).x = xData_fpe;
+    plotDataConfig(plotIndexes.SW1982_fpe).y = yData_fpe;
+    
+    
+    
+    %
+    % Sample the model curves
+    %
+    
+    % 
+    % fl
+    %
+    activeForceLengthCurveData   = ...
+        calcBezierYFcnXCurveSampleVector( ...
+            ratMuscleModelParameters.curves.activeForceLengthCurve,...
+            100,[]);
+          
+    lsOpt = ratMuscleModelParameters.sarcomere.optimalSarcomereLength;
+    
+    plotDataConfig(plotIndexes.model_fl).x = activeForceLengthCurveData.x.*lsOpt;
+    plotDataConfig(plotIndexes.model_fl).y = activeForceLengthCurveData.y;
+    
+    %
+    % fpe and titin detail
+    %
+    passiveForceLengthCurveData   = ...
+        calcBezierYFcnXCurveSampleVector( ...
+            ratMuscleModelParameters.curves.fiberForceLengthCurve, ...
+            100,[]);
+    
+    plotDataConfig(plotIndexes.model_fpe).x = passiveForceLengthCurveData.x.*lsOpt;
+    plotDataConfig(plotIndexes.model_fpe).y = passiveForceLengthCurveData.y;
+    
+    titinCurveSample = ...
+      sampleTitinCurves20250217(...
+        ratMuscleModelParameters.curves,...
+        ratMuscleModelParameters.sarcomere,...
+        100);
+    
+    
+    
+    
+    lambdaECM = ratMuscleModelParameters.sarcomere.extraCellularMatrixPassiveForceFraction;
+    
+    
+    plotDataConfig(plotIndexes.model_titinPassive).x = ...
+        titinCurveSample.curveSampleTitin.x.*(2*lsOpt);
+    plotDataConfig(plotIndexes.model_titinPassive).y = ...
+        titinCurveSample.curveSampleTitin.y.*(1-lambdaECM) ...
+       +titinCurveSample.curveSampleECMHalf.y.*(lambdaECM);
+    
+    plotDataConfig(plotIndexes.model_titinActive).x = ...
+        titinCurveSample.curveSampleTitinActive.x.*(2*lsOpt);
+    plotDataConfig(plotIndexes.model_titinActive).y = ...
+        titinCurveSample.curveSampleTitinActive.y.*(1-lambdaECM) ...
+       +titinCurveSample.curveSampleECMHalf.y.*(lambdaECM);
+    
+    
+    
+    %
+    % fv
+    %
+    
+    forceVelocityCurveData   = ...
+        calcBezierYFcnXCurveSampleVector( ...
+            ratMuscleModelParameters.curves.fiberForceVelocityCurve, ...
+            100,[]);
+    
+    scaleVmax = ...
+        ratMuscleModelParameters.musculotendon.maximumNormalizedFiberVelocity;
+    
+    plotDataConfig(plotIndexes.model_fv).x = forceVelocityCurveData.x .* scaleVmax;
+    plotDataConfig(plotIndexes.model_fv).y = forceVelocityCurveData.y;
+    
+    
+    
+    %
+    % Plot the overview curves
+    %
+    
+    %
+    % Force-length ticks
+    %
+    maxActiveSarcomereLengthInUm = ...
+             2*ratMuscleModelParameters.sarcomere.zLineLengthInUm ...
+            +2*ratMuscleModelParameters.sarcomere.actinLengthInUm...
+            +ratMuscleModelParameters.sarcomere.myosinLengthInUm;
+    
+    optimalSarcomereLengthInUm = ...
+             2*ratMuscleModelParameters.sarcomere.zLineLengthInUm ...
+            +2*ratMuscleModelParameters.sarcomere.actinLengthInUm...
+            +ratMuscleModelParameters.sarcomere.myosinBareLengthInUm;
+    
+    shortSarcomereLengthInUm = ...
+             2*ratMuscleModelParameters.sarcomere.zLineLengthInUm ...
+            +ratMuscleModelParameters.sarcomere.myosinLengthInUm;
+    
+    zeroForceSarcomereLengthInUm = ...
+        ratMuscleModelParameters.sarcomere.zeroForceSarcomereLengthInUm;
+    
+    
+    plotSettings(1).xticks = [];
+    plotSettings(1).yticks = [];
+    
+    plotSettings(1).xticks = [...
+        zeroForceSarcomereLengthInUm,...
+        shortSarcomereLengthInUm,...
+        optimalSarcomereLengthInUm,...
+        maxActiveSarcomereLengthInUm];
+    
+    
+    
+    plotSettings(1).xticks =...
+        [plotSettings(1).xticks, ...
+         max(plotDataConfig(plotIndexes.SW1982_fpe).x)];
+    
+    %Evaluate the max. isometric force at the length when the myosin tip
+    %touches the z-line. These expressions require a diagram to understand 
+    %but I've justed checked them and these expressions are correct.
+    
+    %The length at which the two actin filaments overlap with
+    %the active part of  myosin
+    shallowPlateauInterference = ...
+        2*(      ratMuscleModelParameters.sarcomere.actinLengthInUm ...
+           - 0.5*ratMuscleModelParameters.sarcomere.myosinLengthInUm ...
+           - 0.5*ratMuscleModelParameters.sarcomere.myosinBareLengthInUm);
+    
+    %The length at which the actin filaments can interact with the 
+    %active part of myosin without over lap
+    shallowPlateauOverlap      = ...
+        2*(ratMuscleModelParameters.sarcomere.myosinLengthInUm ...
+         - ratMuscleModelParameters.sarcomere.actinLengthInUm);
+    
+    %The maximum possible length at which myosin and actin can
+    % actively interact 
+    maxOverlap                 = ...
+        ratMuscleModelParameters.sarcomere.myosinLengthInUm ...
+      - ratMuscleModelParameters.sarcomere.myosinBareLengthInUm;
+    
+    %With half of the cross-bridges pulling in one direction and the other half 
+    %pulling in the opposite direction the interference section contributes no force
+    
+    interferenceTension     = 0.0; 
+    
+    maxNormForceAtShortLength =...
+        ( shallowPlateauInterference*interferenceTension ...
+          + shallowPlateauOverlap )/maxOverlap;
+    
+    plotSettings(1).yticks = [0,maxNormForceAtShortLength,1];
+    
+    if(indexOfDataSetForPassiveCurveParameters>0)
+        fittingFpeNMinForce = ...
+            expDataSetFittingData(...
+            indexOfDataSetForPassiveCurveParameters).minLengthWhereFpeIsLinear;
+        
+        plotSettings(1).yticks = ...
+            [0,fittingFpeNMinForce,maxNormForceAtShortLength,1];
+        plotSettings(1).yticks = sort(plotSettings(1).yticks);
+    end
+    
+    
+    
+    
+    %
+    % Force-velocity ticks
+    %
+    
+    plotSettings(2).xticks = [];
+    plotSettings(2).yticks = [];
+    
+    plotSettings(2).xticks = [...
+        -ratMuscleModelParameters.musculotendon.maximumNormalizedFiberVelocity,...
+        -0.5*ratMuscleModelParameters.musculotendon.maximumNormalizedFiberVelocity,...
+        0,...
+        ratMuscleModelParameters.musculotendon.maximumNormalizedFiberVelocity];
+    
+    plotSettings(2).yticks = [...
+        0.00,...
+        ratMuscleModelParameters.musculotendon.forceVelocityMultiplierAtHalfMaximumFiberVelocity,...
+        1.00,...
+        ratMuscleModelParameters.musculotendon.forceVelocityMultiplierAtLowEccentricFiberVelocity,...
+        ratMuscleModelParameters.musculotendon.forceVelocityMultiplierAtMaximumEccentricFiberVelocity];
+    
+    figModelCurves = figure;
+        
+    
+    for i=1:1:length(plotDataConfig)
+        if(plotDataConfig(i).enablePlot==1)
+            row=plotDataConfig(i).row;
+            col=plotDataConfig(i).col;
+            subplot('Position', reshape(subPlotPanel(row,col,:),1,4));
+            plot(plotDataConfig(i).x,...
+                 plotDataConfig(i).y,...
+                 plotDataConfig(i).Mark,...
+                 'Color',plotDataConfig(i).LineColor,...
+                 'MarkerFaceColor',plotDataConfig(i).MarkerFaceColor,...
+                 'MarkerEdgeColor',plotDataConfig(i).MarkerEdgeColor,...
+                 'MarkerSize',plotDataConfig(i).MarkerSize,...
+                 'DisplayName',plotDataConfig(i).DisplayName,...
+                 'HandleVisibility',plotDataConfig(i).HandleVisibility);
+            hold on;
+        end
+    end
+    
+    for i=1:1:length(plotSettings)
+        figure(figModelCurves);
+        row = plotSettings(i).row;
+        col = plotSettings(i).col;
         subplot('Position', reshape(subPlotPanel(row,col,:),1,4));
-        plot(plotDataConfig(i).x,...
-             plotDataConfig(i).y,...
-             plotDataConfig(i).Mark,...
-             'Color',plotDataConfig(i).LineColor,...
-             'MarkerFaceColor',plotDataConfig(i).MarkerFaceColor,...
-             'MarkerEdgeColor',plotDataConfig(i).MarkerEdgeColor,...
-             'MarkerSize',plotDataConfig(i).MarkerSize,...
-             'DisplayName',plotDataConfig(i).DisplayName,...
-             'HandleVisibility',plotDataConfig(i).HandleVisibility);
-        hold on;
+        xlim(plotSettings(i).xlim);
+        ylim(plotSettings(i).ylim);
+        if(isempty(plotSettings(i).xticks)==0)
+            xticks(round(plotSettings(i).xticks,2));
+        end
+        if(isempty(plotSettings(i).yticks)==0)
+            yticks(round(plotSettings(i).yticks,2));
+        end
+    
+        legend('Location',plotSettings(i).legendLocation);
+        legend('boxoff');
+        box off;
+        xlabel(plotSettings(i).xlabel);
+        ylabel(plotSettings(i).ylabel);    
+    
+        titleStr = plotSettings(i).title{:};
+    
+        title(titleStr);            
     end
-end
-
-for i=1:1:length(plotSettings)
+    
+    
     figure(figModelCurves);
-    row = plotSettings(i).row;
-    col = plotSettings(i).col;
-    subplot('Position', reshape(subPlotPanel(row,col,:),1,4));
-    xlim(plotSettings(i).xlim);
-    ylim(plotSettings(i).ylim);
-    if(isempty(plotSettings(i).xticks)==0)
-        xticks(round(plotSettings(i).xticks,2));
+    
+    filePath = fullfile(projectFolders.output_plots_MuscleCurves,...
+                        ['fig_Pub_MuscleCurves_Rat',experimentName,muscleName,'.pdf']);
+
+    if(strcmp(experimentName,'TRSS2017')==1)
+        filePath = fullfile(projectFolders.output_plots_MuscleCurves,...
+                   ['fig_Pub_MuscleCurves_Rat',experimentName,...
+                     muscleName,'_',num2str(trialId),'.pdf']);
     end
-    if(isempty(plotSettings(i).yticks)==0)
-        yticks(round(plotSettings(i).yticks,2));
-    end
+    print('-dpdf', filePath); 
 
-    legend('Location',plotSettings(i).legendLocation);
-    legend('boxoff');
-    box off;
-    xlabel(plotSettings(i).xlabel);
-    ylabel(plotSettings(i).ylabel);    
-
-    titleStr = plotSettings(i).title{:};
-
-    title(titleStr);            
 end
-
-
-figure(figModelCurves);
-
-filePath = fullfile(projectFolders.output_plots_MuscleCurves,...
-                    ['fig_Pub_MuscleCurves_Rat',experimentName,muscleName,'.pdf']);
-print('-dpdf', filePath); 

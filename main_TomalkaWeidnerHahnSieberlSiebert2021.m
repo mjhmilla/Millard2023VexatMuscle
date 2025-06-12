@@ -134,6 +134,9 @@ sarcomere.scaleTitinDistal=1;
 %
 %Adjust the time-constants of lengthening and shortening
 %
+
+sarcomere.forceVelocityCalibrationFactor = 1;
+
 responseTimeScaling=20;
 
 sarcomere.slidingTimeConstantBlendingParameter = 0.5;
@@ -147,7 +150,7 @@ sarcomere.slidingTimeConstantShortening= ...
 sarcomere.useVariableSlidingTimeConstant = 1;
 
 sarcomere.normCrossBridgeCyclingDamping = ...
-    sarcomere.normCrossBridgeCyclingDamping*0.1;
+    sarcomere.normCrossBridgeCyclingDamping;%*0.1;
 
 disp('Using variable sliding time constant:');
 fprintf('%1.3f\ttau-shortening\n', ...

@@ -22,605 +22,417 @@ function [forceLengthProximalTitinCurve, forceLengthProximalTitinInverseCurve,..
                                    forceLengthECMHalfCurve,...
                                    sarcomereProperties,...
                                    muscleName,...
-                                   flag_useWLCTitinModel,...
+                                   flag_useWLCTitinModel,...                                   
                                    flag_createTwoSidedCurves,...
                                    flag_computeCurveIntegrals,...
                                    flag_useElasticIgD,...
                                    flag_activeTitinModel,...
+                                   projectFolders,...
                                    flag_useOctave)
                                  
 
-%%
-%Evaluate the length and stiffness of fpe when it reaches a normalized
-%force of 1.
-%%
 
+fpeNRef = fiberForceLengthCurve.yEnd(1,2);
 
 lambdaECM = sarcomereProperties.extraCellularMatrixPassiveForceFraction;
-normPevkToActinAttachmentPoint = sarcomereProperties.normPevkToActinAttachmentPoint;
 
-%%
-% Get the titin normalized segment lengths
-%%
+normPevkToActinAttachmentPoint = ...
+    sarcomereProperties.normPevkToActinAttachmentPoint;
+
 ZLineToT12NormLengthAtOptimalFiberLength = ...
   sarcomereProperties.ZLineToT12NormLengthAtOptimalFiberLength;
-
-IGDTotalNormLengthAtOptimalFiberLength = ...
-  sarcomereProperties.IGDTotalNormLengthAtOptimalFiberLength;
 
 IGDFixedNormLengthAtOptimalFiberLength=...
     sarcomereProperties.IGDFixedNormLengthAtOptimalFiberLength;  
 
 
-lceZero = fiberForceLengthCurve.xEnd(1,1);
-
-k = size(fiberForceLengthCurve.ypts,2);
-x0 = 0;
-if(   fiberForceLengthCurve.ypts(end,k) < 1 )
-  x0 =   fiberForceLengthCurve.xEnd(1,2)...
-       + diff(fiberForceLengthCurve.xEnd)*0.1;
-else
-  x0 = mean(fiberForceLengthCurve.xpts(:,k));
-end
+%%
+%
+% Make the reference human model with the same modified titin curves
+% as the updated model. Check to see if the model can still reproduce
+% Trombitas
+%
+%%
 
 
-fpeNRef = 0.5*fiberForceLengthCurve.yEnd(1,2);
+tmp = load(fullfile(projectFolders.output_structs_FittedModels,...
+                                'defaultHumanSoleus.mat'));
+defaultHumanSoleus = tmp.defaultHumanSoleus;
 
-%20 August 2023
-%At lengths longer than lceRef the fpe and titin curves must be 
-%approximately linear AND all of the titin segments must be well below
-%their respective contour lengths. I have had to adjust fpeNRef from 
-%a value of 1.0 to accomodate the rabbit EDL from Siebert et al. 2015
-%which has a right-shifted force-length curve and yet is quite stiff
-lceRef = ...
-  calcBezierFcnXGivenY(fpeNRef, fiberForceLengthCurve, x0);
+defaultHumanSoleus.sarcomere.normPevkToActinAttachmentPoint = ...
+    normPevkToActinAttachmentPoint;
 
-lceZeroHalf  = 0.5*lceZero;
-lceRefHalf   = 0.5*lceRef;
+lsOptHuman = defaultHumanSoleus.sarcomere.optimalSarcomereLength;
 
-kpeRef = calcBezierYFcnXDerivative(lceRef,...
-                      fiberForceLengthCurve,...
-                      1);
+[forceLengthProximalTitinHumanCurve, forceLengthProximalTitinInverseHumanCurve,...
+ forceLengthDistalTitinHumanCurve, forceLengthDistalTitinInverseHumanCurve,...
+ forceLengthIgPTitinHumanCurve, forceLengthIgPInverseTitinHumanCurve,...
+ forceLengthPevkTitinHumanCurve, forceLengthPevkInverseTitinHumanCurve,...
+ forceLengthIgDTitinHumanCurve, forceLengthIgDInverseTitinHumanCurve] ...
+          = createCandidateTitinCurves2025(...
+               fiberForceLengthCurve,...                                   
+               forceLengthCurveSettings,...
+               forceLengthECMHalfCurve,...
+               defaultHumanSoleus.sarcomere,...
+               muscleName,...
+               flag_useWLCTitinModel,...                                   
+               flag_createTwoSidedCurves,...
+               flag_computeCurveIntegrals,...
+               flag_useElasticIgD,...
+               flag_activeTitinModel,...                                   
+               flag_useOctave);
 
-kpeRefHalf = 2*kpeRef;
-kecmRefHalf= calcBezierYFcnXDerivative(lceRefHalf,...
-                      forceLengthECMHalfCurve,...
-                      1);
+[forceLengthProximalTitinCurve, forceLengthProximalTitinInverseCurve,...
+ forceLengthDistalTitinCurve, forceLengthDistalTitinInverseCurve,...
+ forceLengthIgPTitinCurve, forceLengthIgPInverseTitinCurve,...
+ forceLengthPevkTitinCurve, forceLengthPevkInverseTitinCurve,...
+ forceLengthIgDTitinCurve, forceLengthIgDInverseTitinCurve] ...
+          = createCandidateTitinCurves2025(...
+               fiberForceLengthCurve,...                                   
+               forceLengthCurveSettings,...
+               forceLengthECMHalfCurve,...
+               sarcomereProperties,...
+               muscleName,...
+               flag_useWLCTitinModel,...                                   
+               flag_createTwoSidedCurves,...
+               flag_computeCurveIntegrals,...
+               flag_useElasticIgD,...
+               flag_activeTitinModel,...                                   
+               flag_useOctave);
 
-kTitinRefHalf = kpeRefHalf - kecmRefHalf;
+%%
+% Data
+%%
+fileTrombitas1998Figure5 = fullfile(projectFolders.experiments_TGFG1998, 'Trombitas1998_Figure5.csv');
 
-igpStretchRate  = sarcomereProperties.IGPNormStretchRate;
-pevkStretchRate = sarcomereProperties.PEVKNormStretchRate;
-igdStretchRate  = sarcomereProperties.IGDFreeNormStretchRate;
-
-igpContourLength    = sarcomereProperties.IGPContourLengthNorm;
-pevkContourLength   = sarcomereProperties.PEVKContourLengthNorm;
-igdContourLength    = sarcomereProperties.IGDFreeContourLengthNorm;
-
-pevkIgdStretchRate = 0;
-distalStretchRate=0;   % From the pevk-actin attachment point to myosin
-proximalStretchRate=0; % From the z-line to the pevk-actin attachment point
+dataTrombitas1998Figure5 = loadDigitizedData(fileTrombitas1998Figure5,...
+                    'Sarcomere Length','PEVK Width (um)',...
+                    {'a','b'},'Trombitas 1998 Figure 5');  
 
 
+%%
+% 1. Sample the IgP, PEVK, and IdD curves 
+% 2. Form the force-length relations for the proximal and distal curves
+% 3. Fit Bezier splines to each one.   
+%%
 
-proximalContourLength=0;
-distalContourLength = 0;
+flag_debug=0;
+if(flag_debug==1)
 
-switch flag_activeTitinModel
-
-    case 0
-        %Sticky spring: lump IgD and part of PEVK distal to attachment point 
-        %Lump IgD with PEVK
-        u = flag_useElasticIgD;
-        assert(u==0 || u==1,'flag_useElasticIgD must be 0 or 1');
-
-%        if(flag_useElasticIgD==1)
-            pevkIgdStretchRate = sarcomereProperties.PEVKNormStretchRate ...
-                                +u*sarcomereProperties.IGDFreeNormStretchRate;
+    fTiNSeries = [0.01:0.01:1]' .* fpeNRef;
+    n = length(fTiNSeries);
+    
+    %Human (for Trombitas)
+    igpHSoln.x    = zeros(n,1);
+    igpHSoln.y    = zeros(n,1);
+    igpHSoln.dydx = zeros(n,1);
+    
+    %Human (for Trombitas)
+    pevkHSoln.x    = zeros(n,1);
+    pevkHSoln.y    = zeros(n,1);
+    pevkHSoln.dydx = zeros(n,1);
+    
+    %Human (for Trombitas)
+    igdHSoln.x    = zeros(n,1);
+    igdHSoln.y    = zeros(n,1);
+    igdHSoln.dydx = zeros(n,1);
+    
+    %Human (for Trombitas)
+    lengthZ2PevkH.x = zeros(n,1);
+    lengthZ2PevkH.y = zeros(n,1);
+    
+    %Human (for Trombitas)
+    lengthZ2IgdH.x = zeros(n,1);
+    lengthZ2IgdH.y = zeros(n,1);
+    
+    %The model
+    igpSoln.x    = zeros(n,1);
+    igpSoln.y    = zeros(n,1);
+    igpSoln.dydx = zeros(n,1);
+    
+    igdSoln.x    = zeros(n,1);
+    igdSoln.y    = zeros(n,1);
+    igdSoln.dydx = zeros(n,1);
+    
+    pevkSoln.x    = zeros(n,1);
+    pevkSoln.y    = zeros(n,1);
+    pevkSoln.dydx = zeros(n,1);
+    
+    pTiSoln.x    = zeros(n,1);
+    pTiSoln.y    = zeros(n,1);
+    pTiSoln.dydx = zeros(n,1);
+    
+    dTiSoln.x    = zeros(n,1);
+    dTiSoln.y    = zeros(n,1);
+    dTiSoln.dydx = zeros(n,1);
+    
+    pTiMdlSoln.x    = zeros(n,1);
+    pTiMdlSoln.y    = zeros(n,1);
+    pTiMdlSoln.dydx = zeros(n,1);
+    
+    dTiMdlSoln.x    = zeros(n,1);
+    dTiMdlSoln.y    = zeros(n,1);
+    dTiMdlSoln.dydx = zeros(n,1);
+    
+    titinSoln.x    = zeros(n,1);
+    titinSoln.y    = zeros(n,1);
+    titinSoln.dydx = zeros(n,1);
+    
+    fpeNSoln.x    = zeros(n,1);
+    fpeNSoln.y    = zeros(n,1);
+    fpeNSoln.dydx = zeros(n,1);
+    
+    lengthZ2Pevk.x = zeros(n,1);
+    lengthZ2Pevk.y = zeros(n,1);
+    
+    lengthZ2Igd.x = zeros(n,1);
+    lengthZ2Igd.y = zeros(n,1);
+    
+    
+    for i=1:1:n
+        fTiN = fTiNSeries(i,1);
+    
+        %Human (for Trombitas)
+        igpHSoln.y(i,1)=fTiN;    
+        igpHSoln.x(i,1)= calcBezierYFcnXDerivative(fTiN,...
+                            forceLengthIgPInverseTitinHumanCurve,0);
+        igpHSoln.dydx(i,1) = calcBezierYFcnXDerivative(igpHSoln.x(i,1),...
+                            forceLengthIgPTitinHumanCurve,1);
         
-            distalStretchRate = ...
-                (1-normPevkToActinAttachmentPoint)*sarcomereProperties.PEVKNormStretchRate ...
-                                + u*sarcomereProperties.IGDFreeNormStretchRate;  
-            
-            proximalStretchRate = sarcomereProperties.IGPNormStretchRate ...
-              + normPevkToActinAttachmentPoint*sarcomereProperties.PEVKNormStretchRate;               
+        %Human (for Trombitas)
+        pevkHSoln.y(i,1)=fTiN;    
+        pevkHSoln.x(i,1)= calcBezierYFcnXDerivative(fTiN,...
+                            forceLengthPevkInverseTitinHumanCurve,0);
+        pevkHSoln.dydx(i,1) = calcBezierYFcnXDerivative(pevkHSoln.x(i,1),...
+                            forceLengthPevkTitinHumanCurve,1);
+    
+        %Human (for Trombitas)
+        igdHSoln.y(i,1)=fTiN;    
+        igdHSoln.x(i,1)= calcBezierYFcnXDerivative(fTiN,...
+                            forceLengthIgDInverseTitinHumanCurve,0);
+        igdHSoln.dydx(i,1) = calcBezierYFcnXDerivative(igdHSoln.x(i,1),...
+                            forceLengthIgDTitinHumanCurve,1);    
+        %Human
+        lceN_human = 2*(igpHSoln.x(i,1)+pevkHSoln.x(i,1)+igdHSoln.x(i,1) ... 
+                      + defaultHumanSoleus.sarcomere.ZLineToT12NormLengthAtOptimalFiberLength ...
+                      + defaultHumanSoleus.sarcomere.IGDFixedNormLengthAtOptimalFiberLength);
+    
+        lengthZ2PevkH.x(i,1) = lceN_human;
+        lengthZ2PevkH.y(i,1) = igpHSoln.x(i,1)...
+                             +defaultHumanSoleus.sarcomere.ZLineToT12NormLengthAtOptimalFiberLength;
         
-            proximalContourLength = sarcomereProperties.IGPContourLengthNorm ...
-              + normPevkToActinAttachmentPoint*sarcomereProperties.PEVKContourLengthNorm;
-            distalContourLength   = ...
-                (1-normPevkToActinAttachmentPoint)*sarcomereProperties.PEVKContourLengthNorm ...
-                +u*sarcomereProperties.IGDFreeContourLengthNorm;
-
-    case 1 
-        %Stiff spring: lump IgP and IgD together
-        %Lump IgD with IgP 
-        u = flag_useElasticIgD;
-        assert(u==0 || u==1,'flag_useElasticIgD must be 0 or 1');
-
-        proximalStretchRate = sarcomereProperties.IGPNormStretchRate;               
+        lengthZ2IgdH.x(i,1) = lceN_human;
+        lengthZ2IgdH.y(i,1) = lengthZ2PevkH.y(i,1) + pevkHSoln.x(i,1);
     
-        pevkIgdStretchRate = sarcomereProperties.PEVKNormStretchRate ...
-                            + u*sarcomereProperties.IGDFreeNormStretchRate;  
+        lceN = 0;
+        if(i>1)
+            lceN=fpeNSoln.x(i-1,1);
+        else
+            lceN = fiberForceLengthCurve.yEnd(1,2);
+        end
+    
+    
+        fpeNSoln.y(i,1)=fTiN;
+        fpeNSoln.x(i,1)=calcBezierFcnXGivenY(fTiN,fiberForceLengthCurve,lceN);
+        fpeNSoln.dydx(i,1) = calcBezierYFcnXDerivative(fpeNSoln.x(i,1),...
+                                               fiberForceLengthCurve,1);
+    
+        igpSoln.y(i,1) = fTiN;
+        igpSoln.x(i,1) = calcBezierYFcnXDerivative(fTiN,...
+                            forceLengthIgPInverseTitinCurve,0);
+        igpSoln.dydx(i,1) = calcBezierYFcnXDerivative(igpSoln.x(i,1),...
+                            forceLengthIgPTitinCurve,1);
+    
+        igdSoln.y(i,1) = fTiN;
+        igdSoln.x(i,1) = calcBezierYFcnXDerivative(fTiN,...
+                            forceLengthIgDInverseTitinCurve,0);
+        igdSoln.dydx(i,1) = calcBezierYFcnXDerivative(igdSoln.x(i,1),...
+                            forceLengthIgDTitinCurve,1);
+    
+        pevkSoln.y(i,1) = fTiN;
+        pevkSoln.x(i,1) = calcBezierYFcnXDerivative(fTiN,...
+                             forceLengthPevkInverseTitinCurve,0);
+        pevkSoln.dydx(i,1) = calcBezierYFcnXDerivative(pevkSoln.x(i,1),...
+                            forceLengthPevkTitinCurve,1);
+    
+    
+        lceN = 2*(igpSoln.x(i,1)+pevkSoln.x(i,1)+igdSoln.x(i,1) ... 
+                      + ZLineToT12NormLengthAtOptimalFiberLength ...
+                      + IGDFixedNormLengthAtOptimalFiberLength);
+    
+        lengthZ2Pevk.x(i,1) = lceN;
+        lengthZ2Pevk.y(i,1) = igpSoln.x(i,1)...
+                             +ZLineToT12NormLengthAtOptimalFiberLength;
         
-        %For this model the distal stretch rate is identical to the
-        %pevkIgdStretchRate
-        distalStretchRate = pevkIgdStretchRate;
-
-        proximalContourLength = sarcomereProperties.IGPContourLengthNorm;
-        distalContourLength   = sarcomereProperties.PEVKContourLengthNorm ...
-                              + u*sarcomereProperties.IGDFreeContourLengthNorm;  
-    otherwise
-        assert(0,'flag_activeTitinModel must be 0 or 1');  
-
-end
-
-
-
-
-%%
-% ka = kigp
-% kb = kpevk
-% kc = kigd
-% kd = ktitin
-% 1/ka + 1/kb + 1/kc = 1/kd [1]
-%
-% We also have the stretch rates extracted from Trombitas 1998 (see
-% parameters/felineSoleus/getMammalianSkeletalMuscleNormalizedSarcomereProperties.m
-% where the variable 'normStretchRateIgP is defined (near line 218-220)
-%
-% sa = rate the igp region stretches as the sarcomere stretches
-% sb = rate the pevk region stretches as the sarcomere stretches
-% sc = rate the igd region stretches as the sarcomere stretches
-%
-% Or more concisely
-%
-%  sa = delta la /delta ls     [2]
-%  sb = delta lb /delta ls     [3]
-%  sb = delta lc /delta ls     [4]
-%
-%
-% where ls is the sarcomere length. Since these elements are in series
-%
-% ka = delta f / delta la  =  delta f / (delta sa * delta ls)   [5]
-% kb = delta f / delta lb  =  delta f / (delta sb * delta ls)   [6]
-% kc = delta f / delta lc  =  delta f / (delta sc * delta ls)   [7]
-%
-% If we multiply Eqn. 1 by ka we end up with
-%
-% ka/ka + ka/kb + ka/kc = ka/kd [8]
-%
-% Subsituting in Eqns. 5, 6, 7 on the left hand side
-%
-% 1 + lb/la + lc/la = ka/kd [9]
-%
-% Allowing us to solve for ka, since it is the only unknown in Eqn. 9
-%
-%%
-sigp = igpStretchRate;
-spevk= pevkStretchRate;
-sigd = igdStretchRate;
-
-kigp  = (     1       + (spevk/sigp) + (sigd/sigp))*kTitinRefHalf;
-kpevk = ((sigp/spevk) +       1      + (sigd/spevk))*kTitinRefHalf;
-kigd  = ((sigp/sigd)  + (spevk/sigd) +      1      )*kTitinRefHalf;
-
-kerr = (1/kigp) + (1/kpevk) + (1/kigd) - (1/kTitinRefHalf);
-assert(abs(kerr) < 1e-3);
-
-A   = distalStretchRate/proximalStretchRate;
-kD  = kTitinRefHalf*(A+1)/A;
-kP  = A*kD;
-
-
-
-%Geometrically scale the stiffnesses of the two segment titin
-%force-length curves
-kDLow     = kD*(forceLengthCurveSettings.kLow ...
-               /forceLengthCurveSettings.kToe);
-
-kPLow     = kP*(forceLengthCurveSettings.kLow ...
-               /forceLengthCurveSettings.kToe);
-
-kDZero    = kD*(forceLengthCurveSettings.kZero ...
-               /forceLengthCurveSettings.kToe);
-
-kPZero    = kP*(forceLengthCurveSettings.kZero ...
-               /forceLengthCurveSettings.kToe); 
-
-%Geometrically scale the stiffnesses of the three segment titin
-%force-length curves
-kpevkLow    = kpevk*(forceLengthCurveSettings.kLow ...
-                 /forceLengthCurveSettings.kToe);
-
-kigpLow     = kigp*(forceLengthCurveSettings.kLow ...
-                   /forceLengthCurveSettings.kToe);
-
-kigdLow     = kigd*(forceLengthCurveSettings.kLow ...
-                   /forceLengthCurveSettings.kToe);
-
-kpevkZero   = kpevk*(forceLengthCurveSettings.kZero ...
-                  /forceLengthCurveSettings.kToe);
-
-kigpZero    = kigp*(forceLengthCurveSettings.kZero ...
-                    /forceLengthCurveSettings.kToe);                    
-
-kigdZero    = kigd*(forceLengthCurveSettings.kZero ...
-                    /forceLengthCurveSettings.kToe);                    
-
-
-
-%Evalute the normalized length of each element at lceRefHalf
-%sarcomereProperties
-ltitinRefHalf = 0;
-
-if(flag_useElasticIgD==1)
-
-    ltitinRefHalf = lceRefHalf...
-      -(IGDFixedNormLengthAtOptimalFiberLength ...
-      + ZLineToT12NormLengthAtOptimalFiberLength);  
-
-else  
-  ltitinRefHalf = lceRefHalf...
-    -(IGDTotalNormLengthAtOptimalFiberLength ...
-    + ZLineToT12NormLengthAtOptimalFiberLength);    
-end
-
-
-lPRefHalf  = ltitinRefHalf /(1 + (kP/kD)); 
-lDRefHalf  = ltitinRefHalf /(1 + (kD/kP));
-
-%As before
-ligpRefHalf  = ltitinRefHalf /(1 + (kigp/kpevk) + (kigp/kigd)); 
-lpevkRefHalf = ltitinRefHalf /((kpevk/kigp) + 1 + (kpevk/kigd));
-ligdRefHalf  = ltitinRefHalf /((kigd/kigp)  + (kigd/kpevk) + 1); 
-
-lerr = (ligpRefHalf+lpevkRefHalf+ligdRefHalf)-ltitinRefHalf;
-assert(abs(lerr)<1e-3);
-
-
-%Evaluate the proportion of the force-length curve that is of low 
-%strain
-strainWidth = forceLengthCurveSettings.normLengthToe-forceLengthCurveSettings.normLengthZero;  
-lowStrainWidth =  (strainWidth - (1/forceLengthCurveSettings.kToe))...
-                  /(1/forceLengthCurveSettings.kToe);
-eZeroTest = forceLengthCurveSettings.normLengthToe ...
-           -(1/forceLengthCurveSettings.kToe)...
-           -(1/forceLengthCurveSettings.kToe)*lowStrainWidth;    
-
-%Set the low strain values for each of the igp and pevk-igd to preserve
-%this same proportion
-
-% ltitinZeroHalf = 0;
-% 
-% if(flag_useElasticIgD==1)
-% 
-%     ltitinZeroHalf = lceZeroHalf...
-%       -(IGDFixedNormLengthAtOptimalFiberLength ...
-%        + ZLineToT12NormLengthAtOptimalFiberLength);  
-% 
-% else
-% 
-%     ltitinZeroHalf = lceZeroHalf...
-%       -(IGDTotalNormLengthAtOptimalFiberLength ...
-%        + ZLineToT12NormLengthAtOptimalFiberLength);    
-% 
-% end
-
-fNTitinRef = (1-lambdaECM)*fpeNRef;
-
-ligpZeroHalf     = ligpRefHalf      - (fNTitinRef/kigp) ...
-                 - (fNTitinRef/kigp)*lowStrainWidth; 
-lpevkZeroHalf    = lpevkRefHalf  - (fNTitinRef/kpevk) ...
-                  - (fNTitinRef/kpevk)*lowStrainWidth;  
-ligdZeroHalf     = ligdRefHalf      - (fNTitinRef/kigd) ...
-                 - (fNTitinRef/kigd)*lowStrainWidth; 
-
-
-lPZeroHalf      = lPRefHalf      - (fNTitinRef/kP) ...
-                 - (fNTitinRef/kP)*lowStrainWidth; 
-lDZeroHalf      = lDRefHalf  - (fNTitinRef/kD) ...
-                 - (fNTitinRef/kD)*lowStrainWidth;  
-%%
-% Evaluate the zero, one, kzero, klow, and k values for two segments:
-%   1. From the Z-line, through the IgP segment, to the desired PEVK segment fraction
-%   2. From the desired PEVK segment fraction to the distal Ig/myosin boundary.
-%%
-
-
-fNfailure = sarcomereProperties.normTitinFailureForce*2; 
-
-%%
-% Make the Igp curve
-%%
-%titinCurviness = max(0.0,min(1,forceLengthCurveSettings.curviness*0.4));
-titinCurviness = forceLengthCurveSettings.curviness;
-
-if flag_createTwoSidedCurves == 0
-  forceLengthIgPTitinCurve  = ...
-    createWLCForceLengthCurve2022(ligpZeroHalf,...
-                                ligpRefHalf,...
-                                fNTitinRef,...
-                                igpContourLength,...
-                                fNfailure,...
-                                kigpZero,...
-                                kigpLow,...
-                                kigp,...
-                                titinCurviness,...
-                                flag_computeCurveIntegrals,...
-                                flag_useWLCTitinModel,...                                
-                                muscleName,...
-                                flag_useOctave); 
-else
-  forceLengthIgPTitinCurve  = ...
-    createTwoSidedWLCForceLengthCurve2022(ligpZeroHalf,...
-                                ligpRefHalf,...
-                                fNTitinRef,...
-                                igpContourLength,...
-                                fNfailure,...
-                                kigpZero,...
-                                kigpLow,...
-                                kigp,...
-                                titinCurviness,...
-                                flag_computeCurveIntegrals,...
-                                flag_useWLCTitinModel,...
-                                muscleName,...
-                                flag_useOctave); 
-end
-
-forceLengthIgPTitinCurve.name = sprintf('%s.%s',...
-  muscleName,'forceLengthIgPTitinCurve');
-%fprintf('    forceLengthProximalTitinCurve created\n');
-
-forceLengthIgPInverseTitinCurve = ...
-      createInverseCurve(forceLengthIgPTitinCurve); 
-%fprintf('    forceLengthProximalTitinInverseCurve created\n');
-
-%%
-% Make the PEVK curve
-%%
-
-if flag_createTwoSidedCurves == 0
-
-  forceLengthPevkTitinCurve  = ...
-    createWLCForceLengthCurve2022(lpevkZeroHalf,...
-                                lpevkRefHalf,...
-                                fNTitinRef,...
-                                pevkContourLength,...
-                                fNfailure,...
-                                kpevkZero,...
-                                kpevkLow,...
-                                kpevk,...
-                                titinCurviness,...
-                                flag_computeCurveIntegrals,...
-                                flag_useWLCTitinModel,...
-                                muscleName,...
-                                flag_useOctave); 
-else
-  forceLengthPevkTitinCurve  = ...
-    createTwoSidedWLCForceLengthCurve2022(lpevkZeroHalf,...
-                                lpevkRefHalf,...
-                                fNTitinRef,...
-                                pevkContourLength,...
-                                fNfailure,...
-                                kpevkZero,...
-                                kpevkLow,...
-                                kpevk,...
-                                titinCurviness,...
-                                flag_computeCurveIntegrals,...
-                                flag_useWLCTitinModel,...
-                                muscleName,...
-                                flag_useOctave);
-end
-
-forceLengthPevkTitinCurve.name = sprintf('%s.%s',...
-  muscleName,'forceLengthPevkTitinCurve');
-
-forceLengthPevkInverseTitinCurve = ...
-      createInverseCurve(forceLengthPevkTitinCurve); 
-
-%%
-% Make the Igd curve
-%%
-
-if flag_createTwoSidedCurves == 0
-  forceLengthIgDTitinCurve  = ...
-    createWLCForceLengthCurve2022(ligdZeroHalf,...
-                                ligdRefHalf,...
-                                fNTitinRef,...
-                                igdContourLength,...
-                                fNfailure,...
-                                kigdZero,...
-                                kigdLow,...
-                                kigd,...
-                                titinCurviness,...
-                                flag_computeCurveIntegrals,...
-                                flag_useWLCTitinModel,...
-                                muscleName,...
-                                flag_useOctave); 
-else
-  forceLengthIgDTitinCurve  = ...
-    createTwoSidedWLCForceLengthCurve2022(ligdZeroHalf,...
-                                ligdRefHalf,...
-                                fNTitinRef,...
-                                igdContourLength,...
-                                fNfailure,...
-                                kigdZero,...
-                                kigdLow,...
-                                kigd,...
-                                titinCurviness,...
-                                flag_computeCurveIntegrals,...
-                                flag_useWLCTitinModel,...
-                                muscleName,...
-                                flag_useOctave); 
-end
-
-forceLengthIgDTitinCurve.name = sprintf('%s.%s',...
-  muscleName,'forceLengthIgDTitinCurve');
-
-forceLengthIgDInverseTitinCurve = ...
-      createInverseCurve(forceLengthIgDTitinCurve); 
-
-
-
-%%
-% Make the P curve
-%%
-if flag_createTwoSidedCurves == 0
-  forceLengthProximalTitinCurve  = ...
-    createWLCForceLengthCurve2022(lPZeroHalf,...
-                                lPRefHalf,...
-                                fNTitinRef,...
-                                proximalContourLength,...
-                                fNfailure,...
-                                kPZero,...
-                                kPLow,...
-                                kP,...
-                                titinCurviness,...
-                                flag_computeCurveIntegrals,...
-                                flag_useWLCTitinModel,...
-                                muscleName,...
-                                flag_useOctave); 
-else
-  forceLengthProximalTitinCurve  = ...
-    createTwoSidedWLCForceLengthCurve2022(lPZeroHalf,...
-                                lPRefHalf,...
-                                fNTitinRef,...
-                                proximalContourLength,...
-                                fNfailure,...
-                                kPZero,...
-                                kPLow,...
-                                kP,...
-                                titinCurviness,...
-                                flag_computeCurveIntegrals,...
-                                flag_useWLCTitinModel,...
-                                muscleName,...
-                                flag_useOctave); 
-end
-
-
-forceLengthProximalTitinCurve.name = sprintf('%s.%s',...
-  muscleName,'forceLengthProximalTitinCurve');
-%fprintf('    forceLengthProximalTitinCurve created\n');
-
-forceLengthProximalTitinInverseCurve = ...
-      createInverseCurve(forceLengthProximalTitinCurve); 
-%fprintf('    forceLengthProximalTitinInverseCurve created\n');
-
-
-%%
-% Make the D curve
-%%
-if flag_createTwoSidedCurves == 0
-  forceLengthDistalTitinCurve  = ...
-    createWLCForceLengthCurve2022(lDZeroHalf,...
-                                lDRefHalf,...
-                                fNTitinRef,...
-                                distalContourLength,...
-                                fNfailure,...
-                                kDZero,...
-                                kDLow,...
-                                kD,...
-                                titinCurviness,...
-                                flag_computeCurveIntegrals,...
-                                flag_useWLCTitinModel,...
-                                muscleName,...
-                                flag_useOctave);  
-else 
-  forceLengthDistalTitinCurve  = ...
-    createTwoSidedWLCForceLengthCurve2022(lDZeroHalf,...
-                                lDRefHalf,...
-                                fNTitinRef,...
-                                distalContourLength,...
-                                fNfailure,...
-                                kDZero,...
-                                kDLow,...
-                                kD,...
-                                titinCurviness,...
-                                flag_computeCurveIntegrals,...
-                                flag_useWLCTitinModel,...
-                                muscleName,...
-                                flag_useOctave);    
-end
-
-
-
-
-forceLengthDistalTitinCurve.name = sprintf('%s.%s',...
-  muscleName,'forceLengthDistalTitinCurve');
-%fprintf('    forceLengthDistalTitinCurve created\n');
-
-forceLengthDistalTitinInverseCurve = ...
-      createInverseCurve(forceLengthDistalTitinCurve); 
-
-
-%fprintf('    forceLengthDistalTitinInverseCurve created\n');
-
-
-flag_debugWLCExtension=0;
-if(flag_debugWLCExtension == 1)
-
-    figWLCDebug = figure;
-    subplot(3,1,1);
-    flag_addWLCCurve=1;
-    flag_addAnnotation=0;
-    [figWLCDebug,ligpV,figpV,figpWLCV] ...
-        = addWLCPlot(figWLCDebug, forceLengthIgPTitinCurve,...
-            ligpRefHalf,igpContourLength,fNfailure,[0,0,1],'IgP',...
-            flag_addAnnotation,flag_addWLCCurve);    
-    [figWLCDebug,lpevkV,fpevkV,fpevkWLCV]...
-        = addWLCPlot(figWLCDebug, forceLengthPevkTitinCurve,...
-            lpevkRefHalf,pevkContourLength,fNfailure,[1,0,1],'PEVK',...
-            flag_addAnnotation,flag_addWLCCurve);    
-    [figWLCDebug,ligdV,figdV,figdWLCV]...
-        = addWLCPlot(figWLCDebug, forceLengthIgDTitinCurve,...
-        ligdRefHalf,igdContourLength,fNfailure,[1,0,0],'IgD',...
-        flag_addAnnotation,flag_addWLCCurve);    
-    title('Three segment molecular titin model');
+        lengthZ2Igd.x(i,1) = lceN;
+        lengthZ2Igd.y(i,1) = lengthZ2Pevk.y(i,1) + pevkSoln.x(i,1);
     
-    subplot(3,1,2);
-    [figWLCDebug,lPV,fPV,fPWLCV]...
-        = addWLCPlot(figWLCDebug, forceLengthProximalTitinCurve,...
-            lPRefHalf,proximalContourLength,fNfailure,[0,0,1],'P',...
-            flag_addAnnotation,flag_addWLCCurve); 
-
-    [figWLCDebug,lDV,fDV,fPWLCV]...    
-        = addWLCPlot(figWLCDebug, forceLengthDistalTitinCurve,...
-            lDRefHalf,distalContourLength,fNfailure,[1,0,1],'D',...
-            flag_addAnnotation,flag_addWLCCurve);    
-    title('Two segment lumped titin model');
+        titinSoln.x(i,1) = igpSoln.x(i,1)+pevkSoln.x(i,1)+igdSoln.x(i,1);
+        titinSoln.y(i,1) = fTiN;
+        titinSoln.dydx(i,1) = 1/((1/igpSoln.dydx(i,1))... 
+                                +(1/pevkSoln.dydx(i,1))...
+                                +(1/igdSoln.dydx(i,1)));
     
-    subplot(3,1,3);
-
-    fsample = ([0:0.01:1.0]').*fNfailure;
-    ligp    = interp1(figpV, ligpV, fsample);
-    lpevk   = interp1(fpevkV,lpevkV,fsample);
-    ligd    = interp1(figdV, ligdV, fsample);
+        pTiSoln.x(i,1) = igpSoln.x(i,1) + pevkSoln.x(i,1).*normPevkToActinAttachmentPoint;
+        pTiSoln.y(i,1) = fTiN;
     
-    lp = interp1(fPV,lPV,fsample);
-    ld = interp1(fDV,lDV,fsample);
+        kigp = igpSoln.dydx(i,1);
+        kigd = igdSoln.dydx(i,1);
+        kpevk= pevkSoln.dydx(i,1);
+    
+        cigp = 1/kigp;
+        cpevk= 1/kpevk;
+        cigd = 1/kigd;
+    
+        cp = cigp + cpevk*normPevkToActinAttachmentPoint;
+        cd = cigd + cpevk*(1-normPevkToActinAttachmentPoint);
+    
+        kp = 1/cp;
+        kd = 1/cd;
+    
+        pTiSoln.x(i,1) = igpSoln.x(i,1) + pevkSoln.x(i,1).*(normPevkToActinAttachmentPoint);
+        pTiSoln.y(i,1) = fTiN;
+        pTiSoln.dydx(i,1)=kp;
+    
+        dTiSoln.x(i,1) = igdSoln.x(i,1) + pevkSoln.x(i,1).*(1-normPevkToActinAttachmentPoint);
+        dTiSoln.y(i,1) = fTiN;
+        dTiSoln.dydx(i,1)=kd;
+        
+        pTiMdlSoln.x(i,1) = calcBezierYFcnXDerivative(fTiN,...
+                            forceLengthProximalTitinInverseCurve,0);
+        pTiMdlSoln.y(i,1) = fTiN;
+        pTiMdlSoln.dydx(i,1)= calcBezierYFcnXDerivative(pTiMdlSoln.x(i,1),...
+                               forceLengthProximalTitinCurve,1);
+    
+        dTiMdlSoln.x(i,1) = calcBezierYFcnXDerivative(fTiN,...
+                            forceLengthDistalTitinInverseCurve,0);
+        dTiMdlSoln.y(i,1) = fTiN;
+        dTiMdlSoln.dydx(i,1)= calcBezierYFcnXDerivative(pTiMdlSoln.x(i,1),...
+                               forceLengthDistalTitinCurve,1);
+    
+    end
+    
+    %
+    %
+    % Fit the proximal and distal titin segments
+    %
+    %
 
-    plot((ligp+lpevk+ligd),fsample,'--','Color',[1,1,1].*0.5,...
-        'LineWidth',2,'DisplayName','Titin3');
+
+
+
+
+
+    subplot(3,2,1);
+    plot(igpSoln.x,igpSoln.y,'-b','DisplayName','IgP');
     hold on;
-
-    plot((lp+ld),fsample,'-','Color',[0,0,0],'DisplayName','Titin2');
+    plot(pevkSoln.x,pevkSoln.y,'-m','DisplayName','Pevk');
     hold on;
-
-    box off;
+    plot(igdSoln.x,igdSoln.y,'-r','DisplayName','IgD');
+    hold on;
     legend;
+    box off;
+    xlabel('Norm. Length');
+    ylabel('Norm. Force')
+    title('Force-length relation of titin segments');
 
-    xlabel('Norm. Length ($$\ell/\ell_{o}^{M}$$)');
-    ylabel('Norm. Force ($$f/f_{o}^{M}$$)');
+    lceNLength = 2*(titinSoln.x ... 
+                  + ZLineToT12NormLengthAtOptimalFiberLength ...
+                  + IGDFixedNormLengthAtOptimalFiberLength);
 
-    text(0.05,5,'Titin3 and Titin2 WLC models have the same singularity');
-    text(0.05,4,'but reach fN failure at different lengths because the');
-    text(0.05,3,'WLC is nonlinear.');
+
+    subplot(3,2,2);
+    plot(lceNLength,titinSoln.y,'-g','DisplayName','Titin (passive)');
+    hold on;
+    plot(fpeNSoln.x,fpeNSoln.y, '-k','DisplayName','fpeN');
+    hold on;
+    legend;
+    box off;
+    xlabel('Norm. Length');
+    ylabel('Norm. Force');
+    title('Force-length relation: Titin vs. parallel element');
+
+
+    subplot(3,2,3);
+    plot(igpSoln.x,igpSoln.dydx,'-b','DisplayName','IgP');
+    hold on;
+    plot(pevkSoln.x,pevkSoln.dydx,'-m','DisplayName','Pevk');
+    hold on;
+    plot(igdSoln.x,igdSoln.dydx,'-r','DisplayName','IgD');
+    hold on;
+    legend;
+    box off;
+    xlabel('Norm. Length');
+    ylabel('Norm. Stiffness')
+    title('Stiffness-length relation of titin segments');
+
+    subplot(3,2,4);
+    plot(lceNLength,titinSoln.dydx.*0.5,'-g','DisplayName','Titin (passive)');
+    hold on;
+    plot(fpeNSoln.x,fpeNSoln.dydx, '-k','DisplayName','fpeN');
+    hold on;
+    legend;
+    box off;    
+    xlabel('Norm. Length');
+    ylabel('Norm. Stiffness')
+    title('Stiffness-length relation: Titin vs. parallel element'); 
+
+    subplot(3,2,5);
+    plot(lengthZ2PevkH.x.*lsOptHuman, ...
+         lengthZ2PevkH.y.*lsOptHuman,...
+        '-r','DisplayName','Z-PEVK (human)');
+    hold on;
+    plot(lengthZ2IgdH.x.*lsOptHuman, ...
+         lengthZ2IgdH.y.*lsOptHuman,...
+        '-r','DisplayName','Z-Igd (human)');
+    hold on;
+
+    plot( dataTrombitas1998Figure5(2).x,...
+            dataTrombitas1998Figure5(2).y,...
+            'o','MarkerSize',3, ...
+            'MarkerFaceColor',[1,1,1].*0.9,...
+            'Color',[1,1,1].*0.75,...
+            'DisplayName','Exp: Z-line (ZL) to N-end 9D10');
+    hold on;
     
+    plot( dataTrombitas1998Figure5(1).x,...
+            dataTrombitas1998Figure5(1).y,...
+            'o','MarkerSize',3, ...
+            'MarkerFaceColor',[1,1,1].*0.5,...
+            'Color',[1,1,1].*0.5,...
+            'DisplayName','Exp: ZL to C-end 9D10');
+    hold on;
+
+    legend;
+    box off;
+    xlabel('Sarcomere Length $$\mu m$$');
+    ylabel('Length $$\mu m$$');
+    title('Distance: Z-IgP/PEVK and Z-PEVK/IgD');
+
+    subplot(3,2,6);
+    plot(pTiSoln.x,pTiSoln.y,'-','Color',[0.75,0.75,1],'LineWidth',2,...
+        'DisplayName','Prox. Segment Data');
+    hold on;
+    plot(dTiSoln.x,dTiSoln.y,'-','Color',[1,0.75,1],'LineWidth',2,...
+        'DisplayName','Dist. Segment Data');
+    hold on;
+
+    plot(pTiSoln.x,pTiSoln.y,'-b','DisplayName','Prox. Segment Mdl');
+    hold on;
+    plot(dTiSoln.x,dTiSoln.y,'-m','DisplayName','Dist. Segment Mdl');
+    hold on;
+
+
+    xlabel('Norm. Length $$\ell/\ell_o^M$$');
+    ylabel('Norm. Force');
+    title('Two-segment titin model');
+    legend;
+    box off;
     here=1;
 
+   
+end
 
 
-
-end    
                                 
                                  
