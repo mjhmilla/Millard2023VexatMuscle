@@ -55,16 +55,15 @@ IGDFixedNormLengthAtOptimalFiberLength=...
 lceZero = fiberForceLengthCurve.xEnd(1,1);
 
 k = size(fiberForceLengthCurve.ypts,2);
-x0 = 0;
-if(   fiberForceLengthCurve.ypts(end,k) < 1 )
-  x0 =   fiberForceLengthCurve.xEnd(1,2)...
-       + diff(fiberForceLengthCurve.xEnd)*0.1;
-else
-  x0 = mean(fiberForceLengthCurve.xpts(:,k));
-end
+% x0 = 0;
+% if(   fiberForceLengthCurve.ypts(end,k) < 1 )
+%   x0 =   fiberForceLengthCurve.xEnd(1,2)...
+%        + diff(fiberForceLengthCurve.xEnd)*0.1;
+% else
+%   x0 = mean(fiberForceLengthCurve.xpts(:,k));
+% end
 
 
-fpeNRef = 0.5*fiberForceLengthCurve.yEnd(1,2);
 
 %20 August 2023
 %At lengths longer than lceRef the fpe and titin curves must be 
@@ -72,6 +71,17 @@ fpeNRef = 0.5*fiberForceLengthCurve.yEnd(1,2);
 %their respective contour lengths. I have had to adjust fpeNRef from 
 %a value of 1.0 to accomodate the rabbit EDL from Siebert et al. 2015
 %which has a right-shifted force-length curve and yet is quite stiff
+
+fpeNRef = 1;
+x0      = fiberForceLengthCurve.xEnd(1,2);
+
+if(   contains(sarcomereProperties.animalName,'rabbit') ...
+   || contains(sarcomereProperties.animalName,'rat'))
+    fpeNRef = 0.5*fiberForceLengthCurve.yEnd(1,2);
+    x0      = mean(fiberForceLengthCurve.xEnd(1,:));
+end
+
+
 lceRef = ...
   calcBezierFcnXGivenY(fpeNRef, fiberForceLengthCurve, x0);
 

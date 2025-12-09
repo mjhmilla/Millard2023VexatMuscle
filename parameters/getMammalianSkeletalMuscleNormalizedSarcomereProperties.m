@@ -231,6 +231,35 @@ fileTrombitas1998Figure5 = ...
       halfMyosinLengthHuman,zLineToT12LengthHuman,...
       flag_assumeUniformIgDomainLength);
 
+%The slopes of the lines that fit Trombitals 1998 Fig. 5 are in normalized
+%units because the x and y axis are in units of um. The zero crossing,
+%however, is in units of um and must be normalized
+
+%Fixed components
+lineT12HumanN = [0;(zLineToT12LengthHuman/optSarcomereLengthHuman)];
+lineMyosinHumanN=[0;(halfMyosinLengthHuman/optSarcomereLengthHuman)];
+
+AigpH = lineHumanZToPevkP(1,1); 
+bigpH = (lineHumanZToPevkP(2,1)-zLineToT12LengthHuman)./(optSarcomereLengthHuman);
+
+lineIgpHumanN = [AigpH;bigpH];
+
+linePevkHuman = lineHumanZToPevkD-lineHumanZToPevkP;
+ApevkH = linePevkHuman(1,1);
+bpevkH = linePevkHuman(2,1)/optSarcomereLengthHuman;
+linePevkHumanN = [ApevkH;bpevkH]; 
+
+lineIgDHumanN = [0.5;0]-(lineT12HumanN+lineIgpHumanN+linePevkHumanN+lineMyosinHumanN);
+AigdH = lineIgDHumanN(1,1);
+bigdH = lineIgDHumanN(2,1);
+
+fprintf('%1.3f\tAIgp (human)\n', AigpH)
+fprintf('%1.3f\tbIgp (human)\n', bigpH);
+fprintf('%1.3f\tApevk (human)\n', ApevkH)
+fprintf('%1.3f\tbpevk (human)\n', bpevkH);
+fprintf('%1.3f\tAIgd (human)\n', AigdH)
+fprintf('%1.3f\tbIgd (human)\n', bigdH);
+
 %%
 % If the geometry of the animal's titin filament is known, scale the
 % elongation data from Trombitas et al. such that 
@@ -528,6 +557,29 @@ normStretchRateIgP     = lineZToPevkP(1,1);
 normStretchRatePevk    = (lineZToPevkD(1,1)-lineZToPevkP(1,1));
 normStretchRateIgDFree = (0.5 -(normStretchRateIgP+normStretchRatePevk));
 normStretchHalfLce     = stretchHalfLce/optSarcomereLengthHuman;
+
+Aigp = lineZToPevkP(1,1); 
+bigp = (lineZToPevkP(2,1)-zLineToT12Length)./(optSarcomereLength);
+lineHalfMyosinN = [0; (halfMyosinLength/optSarcomereLength)];
+lineT12N = [0;(zLineToT12Length/optSarcomereLength)];
+lineIgpN = [Aigp;bigp];
+
+linePevk = lineZToPevkD-lineZToPevkP;
+Apevk = linePevk(1,1);
+bpevk = linePevk(2,1)/optSarcomereLength;
+linePevkN = [Apevk;bpevk]; 
+
+lineIgDN = [0.5;0]-(lineT12N+lineHalfMyosinN+lineIgpN+linePevkN);
+Aigd = lineIgDN(1,1);
+bigd = lineIgDN(2,1);
+
+fprintf('%1.3f\tAIgp (%s)\n', Aigp, animalName);
+fprintf('%1.3f\tbIgp (%s)\n', bigp, animalName);
+fprintf('%1.3f\tApevk (%s)\n', Apevk, animalName);
+fprintf('%1.3f\tbpevk (%s)\n', bpevk, animalName);
+fprintf('%1.3f\tAIgd (%s)\n', Aigd, animalName);
+fprintf('%1.3f\tbIgd (%s)\n', bigd, animalName);
+
 
 % fprintf('%e\t%e\tNorm. IgP Stretch Rate human vs %s \n'   , ...
 %     normStretchRateHumanIgP, normStretchRateIgP, animalName);
@@ -837,5 +889,6 @@ sarcomereProperties = ...
              'normActivePevkDamping',100,...
              'activationThresholdTitin',0.1,...
              'normTitinFailureForce', normTitinFailureForce,...
-             'normLengthTitinActinBondMinimum', 0.5); 
+             'normLengthTitinActinBondMinimum', 0.5,...
+             'animalName',animalName); 
 
