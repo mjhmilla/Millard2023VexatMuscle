@@ -27,8 +27,8 @@ trialId = 3;
 %%
 % Parameters
 %%
-flag_makeAndSavePubPlots = 0;
-flag_makeDetailedExpDataPlots=1;
+flag_makeAndSavePubPlots        =1;
+flag_makeDetailedExpDataPlots   =1;
 
 validMuscles = {'SOL','EDL'};
 

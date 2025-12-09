@@ -49,7 +49,6 @@ useCalibratedCurves         = setCurveProperties.useCalibratedCurves;
 useTwoSidedTitinCurves      = setCurveProperties.useTwoSidedTitinCurves;
 useTitinModel2025           = setCurveProperties.useTitinModel2025;     
 
-
 useSharpForceVelocityCurve            =  ...
   setCurveProperties.useForceVelocityCurveWithSlopeDiscontinuity;
 
@@ -687,7 +686,7 @@ flag_useElasticIgD        = 1;
 flag_createTwoSidedCurves = 0;
 
 
-if(useTitinModel2025==0)
+if(useTitinModel2025==0 )
   normMuscleCurves.forceLengthCurveSettings=forceLengthCurveSettings;
   normMuscleCurves.setTitinSlackLengthToZero=0;
   normMuscleCurves.useTitinCurves2022=1;
@@ -732,7 +731,7 @@ else
   normMuscleCurves.setTitinSlackLengthToZero=setTitinSlackLengthToZero;
   normMuscleCurves.useWLCTitinModel=useWLCTitinModel;
   normMuscleCurves.useTitinCurves2022=0;
-  normMuscleCurves.useTitinCurves2025=1;
+  normMuscleCurves.useTitinCurves2025=useTitinModel2025;
   normMuscleCurves.flag_createTwoSidedCurves          = flag_createTwoSidedCurves          ;               
   normMuscleCurves.flag_computeCurveIntegrals         = flag_computeCurveIntegrals         ;              
   normMuscleCurves.flag_useElasticIgD                 = flag_useElasticIgD                 ;                      
@@ -761,7 +760,6 @@ else
                                      sarcomereProperties.titinModelType,...  
                                      projectFolders,...                                  
                                      flag_useOctave);
-
 end 
 
 %%

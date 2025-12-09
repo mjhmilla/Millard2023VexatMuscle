@@ -105,7 +105,7 @@ p5DyDx = 0;
 %           showing that the myosin tips can pass through the z-line (mentioned
 %           by Christoph Rode in conversation).
 %
-%         : Christoph Rode also mentioned that when myosin protrudes into its
+%         : Christian Rode also mentioned that when myosin protrudes into its
 %           neighbors sarcomere that the cross-bridges can still attach to
 %           its neighbors actin filaments. This would reduce the available
 %           sites for attachment and attentuate the tension developed. In this

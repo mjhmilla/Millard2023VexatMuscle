@@ -59,10 +59,10 @@ assert(~(fittingConfig.fitTimeConstant ...
 %Lengthening time constant in Eqn. 16 of Millard, Franklin, Herzog
 
 fittingConfig.fitKx             =0;
-fittingConfig.fitQToF           =0;
-fittingConfig.fitQToK           =1;
+fittingConfig.fitQToF           =1;
+fittingConfig.fitQToK           =0;
 fittingConfig.fitf1HNPreload    =0;
-fittingConfig.fitl1HNOffset     =1;
+fittingConfig.fitl1HNOffset     =0;
 
 assert(~(fittingConfig.fitf1HNPreload && fittingConfig.fitl1HNOffset),...
     'Error: using both fitf1HNPreload and fitl1HNOffset does not make sense');

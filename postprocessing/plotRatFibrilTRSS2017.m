@@ -615,6 +615,9 @@ for idx=simConfig.trials
     if(~isempty(fitInfo.QToF.x))
         ffit = 'QToF';        
     end
+    if(~isempty(fitInfo.QToK.x))
+        ffit = 'QToK';        
+    end    
     if(~isempty(fitInfo.f1HNPreload.x))
         ffit = 'f1HNPreload';        
     end
