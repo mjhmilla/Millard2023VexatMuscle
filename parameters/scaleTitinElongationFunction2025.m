@@ -189,45 +189,42 @@ kig_kpevk       = pevkStretchRate/igStretchRate;
 % l = f1/(kig/Ni1)) + f1/(kp/Np1)
 % l = f1*Ni1/kig + f1*Np1/kp
 % l = f1*(Ni1*kp + Np1*kig)/(kig*kp)
+% l*kig = f1*(Ni1 + Np1*R)
+%
+% where R = kig/kpevk
+%
 % and
 % l = f2*Ni2/kig + f2*Np2/kp
-% l = f2*(Ni2*kp + Np2*kig)/(kig*kp)
+% l =     f2*(Ni2*kp + Np2*kig)/(kig*kp)
+% l*kig = f2*(Ni2 + Np2*R)
 %
 % Now we're going to massage the previous equation so that we can
 % express f2 in terms of f1
 %
-% l  = [(Ni2*kp + Np2*kig)/(Ni1*kp + Np1*kig)]*f1*(Ni1*kp + Np1*kig)/(kig*kp)
-% 
+% l*kig = [f2*(Ni2 + Np2*R)/(Ni1 + Np1*R)]*(Ni1 + Np1*R)
+%% 
 % Thus
 %
-% f2 = (Ni2*kp + Np2*kig)/(Ni1*kp + Np1*kig)*f1
-%
-% Dividing top and bottom by kp
-%
-% f2 = (Ni2 + Np2*(kig/kp))/(Ni1 + Np1*(kig/kp))*f1
-%
-% Since we know kig/kp, the only unknown in the above equation is f1
+% f2*(Ni2 + Np2*R)/(Ni1 + Np1*R) = f1
 %
 % Now we want to evaluate lp2/lp1. We have
 %
 % lp1 = (f1/kp1)
-%     = f1 / (kp/Np1)
-%     = f1*Np1 / kp
+%     = f2*(Ni2 + Np2*R)/(Ni1 + Np1*R) / (kp/Np1)
+%     = f2*Np1*((Ni2 + Np2*R)/(Ni1 + Np1*R)) / kp
 %
 % lp2 = (f2/kp2)
-%     = [(Ni2 + Np2*(kig/kp))/(Ni1 + Np1*(kig/kp))]*f1     / (kp/Np2)
-%     = [(Ni2 + Np2*(kig/kp))/(Ni1 + Np1*(kig/kp))]*f1*Np2 / (kp)
+%     = f2 / (kp/Np2)
+%     = f2*Np2 / (kp)
 %
-% lp2 / lp1 = ([(Ni2 + Np2*(kig/kp))/(Ni1 + Np1*(kig/kp))]*f1*Np2 / (kp) )
-%            /(f1*Np1 / kp)           
+% lp2 / lp1 = (f2* Np2 / (kp)) 
+%            /(f2*Np1*((Ni2 + Np2*R)/(Ni1 + Np1*R)) / kp)           
 %
-% The f1's cancel out as do the kps
-%
-% lp2 / lp1 = ([(Ni2 + Np2*(kig/kp))/(Ni1 + Np1*(kig/kp))]*Np2) /(Np1)           
+%           = (Np2/Np1)((Ni1 + Np1*R)/(Ni2 + Np2*R))
 %
 % Here 2 is the target and 1 is the reference. So we have
-lpevk_div_lpevkRef = ( (nIg + nPevk*kig_kpevk)...
-                       /(nIgRef+nPevkRef*kig_kpevk)...
+lpevk_div_lpevkRef = ( (nIgRef+nPevkRef*kig_kpevk)...
+                       /(nIg + nPevk*kig_kpevk)...
                      )*(nPevk/nPevkRef);
 
 linePevk    = linePevkRef.*lpevk_div_lpevkRef;

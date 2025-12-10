@@ -251,7 +251,7 @@ switch experimentName
 
         setSarcomereProperties.fiberForceLengthCurviness = 0.9;
 
-        setCurveProperties.useTitinModel2025                 = 0;
+        setCurveProperties.useTitinModel2025                 = 1;
 
         setCurveProperties.forceVelocityMultiplierAtLowEccentricFiberVelocity = 1.35;
         setCurveProperties.forceVelocityMultiplierAtMaximumEccentricFiberVelocity = 1.45; 
