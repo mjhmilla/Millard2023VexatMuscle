@@ -4,9 +4,14 @@
 % SPDX-License-Identifier: MIT
 %
 %%
-clc;
-close all;
-clear all;
+
+flag_OuterLoopMode=1;
+
+if(flag_OuterLoopMode==0)
+    clc;
+    close all;
+    clear all;
+end
 
 rootDir         = getRootProjectDirectory();
 projectFolders  = getProjectFolders(rootDir);

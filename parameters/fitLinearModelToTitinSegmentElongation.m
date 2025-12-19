@@ -71,6 +71,14 @@ bb = dataTrombitas1998Figure5(2).y;
 Ab = [dataTrombitas1998Figure5(2).x, ones(size(bb))];
 cZToPEVKd = pinv(Ab'*Ab)*(Ab'*bb);
 
+%Measure the difference in Ig domain strain that this data implies
+lineIgP = cZToPEVKp - [0;lT12];
+lineIgD = [0.5;0]-[0;halfMyosinLength]-cZToPEVKd;
+
+stretchRateIgPDomain = lineIgP(1,1)/numDomainsIgP;
+stretchRateIgDDomain = lineIgD(1,1)/numDomainsIgD;
+stretchRateScale = stretchRateIgDDomain/stretchRateIgPDomain;
+
 cZToPEVKpAdj = cZToPEVKp;
 cZToPEVKdAdj = cZToPEVKd;  
 

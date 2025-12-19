@@ -75,7 +75,10 @@ lineIgRefTotal = [0.5;0] - linePevkRef ...
 lineIgPRef = lineIgRefTotal.*ratioIgPRef;
 lineIgDRef = lineIgRefTotal.*ratioIgDRef;
 
+lineIgPExact = (lineZToPevkPRef-[0;lT12Ref]);
+lineIgDExact = ([0.5;0]-[0;halfMyosinLengthRef]-lineZToPevkDRef);
 
+here=1;
 %lineIgDRef     = [0.5;0] - lineZToPevkDRef - [0;halfMyosinLengthRef];
 %lineIgDRef      = [0.5;0] - linePevkRef   - lineIgPRef ...
 %                 -[0;halfMyosinLengthRef] - [0;lT12Ref];

@@ -6,19 +6,83 @@ Millard Matthew, Franklin David W., Herzog Walter (2023) A three filament mechan
 
 Matthew Millard, David W. Franklin, Walter Herzog. A three filament mechanistic model of musculotendon force and impedance. bioRxiv 2023.03.27.534347; doi: https://doi.org/10.1101/2023.03.27.534347 
 
-# Updates
 
-This branch contains some additional code 
+# Quick Start: Analysis and simulation of active muscle fibers during lengthening across the force-length relation
 
-main/
-- main_CreateRatSoleusModel.m 
-  - Can make a rat soleus fibril and whole-muscle model
-  - By setting mapToEDLModel to 1 a rat extensor digitorum longus fibril or whole-muscle model can be created
+This part of the README.md refers specifically to code that accompanies a paper titled <em>Analysis and simulation of active muscle fibers during lengthening across the force-length relation</em> in which an analysis and simulation of Tomalka et al. is presented.
+
+Tomalka A, Rode C, Schumacher J, Siebert T. The active force–length relationship is invisible during extensive eccentric contractions in skinned skeletal muscle fibres. Proceedings of the Royal Society B: Biological Sciences. 2017 May 17;284(1854):20162497. https://doi.org/10.1098/rspb.2016.2497
+
+## Running the simulations
+
+To run the simulations that are presented in <em>Analysis and simulation of active muscle fibers during lengthening across the force-length relation</em> please:
+
+1. Run main_TomalkaRodeSchumacherSiebert2017_OuterLoop.m in Matlab. Please note that the simulations presented in <em>Analysis and simulation ...</em> were run on the following system:
+  - Ubuntu 20.04.6 LTS
+  - Matlab version 9.11.0.1873467 (R2021b) Update 3 
+2. The function main_TomalkaRodeSchumacherSiebert2017_OuterLoop.m requires about 10 minutes to terminate on a 2.80 GHz Intel machine with 32 GB ram, and a SSD.
+3. These simulations generate the following plots found in the paper:
+  - Figure 2 from the paper in <em>output/plots/MuscleCurves/fig_Pub_RatMuscleCurves_TRSS2017_0.pdf</em>
+  - Figure 4 and Figure 5A,B,C in <em>output/structs/plots/TomalkaRodeSchumacherSiebert2017/fig_Sim_TRSS2017_123_Fl_Fv_QToF.pdf</em>
+  - Figure 4 and Figure 5D,E,F in <em>output/structs/plots/TomalkaRodeSchumacherSiebert2017/fig_Sim_TRSS2017_123_Fl_Fv_QToF_i.pdf</em>
+4. Initial model parameters (before fitting) can be found: 
+  - <em>output/structs/FittedModels/ratTRSS2017EDLFibrilActiveTitin_0.mat</em>. 
+  - Note that <em>ratTRSS2017EDLFibrilActiveTitin_1.mat</em> and <em>ratTRSS2017EDLFibrilActiveTitin_2.mat</em> are identical to <em>ratTRSS2017EDLFibrilActiveTitin_0.mat</em>
+5. Outputs related to fitting with one Q value: 
+  - Fitted model parameters: 
+    - <em>output/structs/FittedModels/ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF.mat</em> 
+  - Time-series data of the fitted simulations: 
+    - <em>output/structs/TomalkaRodeSchumacherSiebert2017/benchRecordVexat_TRSS2017_fitted_123_Fl_Fv_QToF.mat</em>
+  - Fitted parameters and error information
+    - <em>fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF.mat</em>  
+    - <em>fittingLog__123_Fl_Fv_QToF.txt</em>
+6. Outputs related to fitting with a Q value for each trial (Q_1, Q_2, and Q_3). Note that the file names have <em>_i</em> appended
+  - Fitted model parameters: 
+    - <em>output/structs/FittedModels/ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF_i.mat</em> 
+  - Time-series data of the fitted simulations: 
+    - <em>output/structs/TomalkaRodeSchumacherSiebert2017/benchRecordVexat_TRSS2017_fitted_123_Fl_Fv_QToF_i.mat</em>
+  - Fitted parameters and error information
+    - <em>fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF_i.mat</em>  
+    - <em>fittingLog__123_Fl_Fv_QToF_i.txt</em>
+
+## Code overview
+
+Here is a list of files to look at if the implementation interests you:
+
+- Model generation
+  - <em>main_CreateRatMuscleModel.m</em>
+  - Generate the reference human soleus titin model model. Used in the methods described in Appendix B 
+    - <em>parameters/createHumanSoleusModel2025.m</em> 
+  - Generate the rat EDL model 
+    - <em>parameters/createRatSkeletalMuscleModel.m</em> 
+  - Get Sarcomere related parameters
+    - <em>parameters/getMammalianSkeletalMuscleNormalizedSarcomereProperties2025.m</em>
+  - Titin curve scaling from Appendix B.
+    - <em>parameters/scaleTitinElongationFunction2025.m</em>      
+  - Get Musculotendon parameters
+    - <em>parameters/getRatMusculotendonProperties.m</em>
+  - Bezier curve generation
+    - <em>curves/createFittedMuscleCurvesTRSS2017.m</em>
+  - Active force length relation curves
+    - <em>curves/MusculoTendonCurves/createFiberActiveForceLengthCurve2025.m</em>
+  - Titin curves
+    - <em>curves/MusculoTendonCurves/createTitinCurves2025.m</em>
+
+- Fitting to Tomalka et al. 2017
+  - <em>main_TomalkaRodeSchumacherSiebert2017.m</em>
+  - Fit one set of parameters
+    - <em>parameters/fitRatFibrilTRSS2017.m</em>
+  - Evaluate the error of the force-length and force-velocity curves
+    - <em>parameters/calcErrorTRSS2017ForceLengthRelationAscendingLimb.m</em>
+  - Evalaute the error of the Q parameters (among others)
+    - <em>parameters/calcErrorTRSS2017RampFraction.m</em>
 
 
-Eventually this branch will include the code needed to simulate Figures 2A and 3A (blue trial) and compare the results to Tomalka et al. (https://doi.org/10.1098/rspb.2016.2497).
+# Quick start guide: Millard, Franklin, Herzog (2024)
 
-# Quick start guide:
+The instructions here are related to the simulations presented in Millard et al. (2024)
+
+Millard M, Franklin DW, Herzog W. A three filament mechanistic model of musculotendon force and impedance. Elife. 2024 Sep 10;12:RP88344.(https://doi.org/10.7554/eLife.88344.4)
 
 Execute 'main_OuterLoop.m' from Matlab to run everything. Roughly 5 hours and 45 minutes is needed to run all of the experiments on my old 2013 Samsung laptop (Intel i7-3630QM @ 2.40 GHz, Ubuntu 22 8 GB ram, SSD harddrive), while the newer Lenovo machine (Windows 10) requires nearly an hour less time. The experiments require roughly 500 simulations, some of which are numerically stiff. At the end if this round of simulation, you can find all of the figures that appear in Millard et al., and many more besides, in the folders:
 
@@ -36,7 +100,7 @@ Please be aware that there might be slight differences between the results conta
 1. The properties of titin are fitted by optimization, the solution of which may differ from one run to the next.
 2. The simulations of Kirsch et al. require a pseudo-random perturbation waveform. This waveform is generated from scratch each time the script is run.
 
-# Repository Overview
+## Repository Overview
 
 1. The muscle models used for the experiments consist of a cat soleus, a rabbit psoas, and a human soleus. These models are created and fitted in the function main_CreateModels_OuterLoop.m.
 
@@ -65,8 +129,4 @@ Please be aware that there might be slight differences between the results conta
   - simulation: Contains the scripts that are needed to run the various simulations that are applied to each model.
   - LICENSE: A folder that contains the licenses that apply to the files in this project. This project's licensing will be compliant with the license auditing tool provided by https://api.reuse.software/
 
-#Readme Details
 
-- author: Matthew Millard
-- date: 10 April 2023
-- version: 0.0

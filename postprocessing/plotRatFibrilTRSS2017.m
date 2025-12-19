@@ -26,6 +26,12 @@ lineWidthEst = 0.75;
 addLegends = 0;
 addErrorText=0;
 
+subplotIds = {'A.','B.','C.'};
+if(simConfig.fitToIndividualTrials==1)
+    subplotIds = {'D.','E.','F.'};
+end
+
+
 %
 % Plot the force-length relation
 %
@@ -86,7 +92,7 @@ subplot('Position',reshape(plotConfig.subPlotPanel(1,1,:),1,4));
              expTRSS2017.activeLengtheningData(idx).seriesName);
         hold on;
     end
-    xlabel('Norm. Length ($$\ell/\ell_o$$)');
+    xlabel('Norm. Length ($$\ell/\ell_o^M$$)');
     ylabel(expTRSS2017.activeLengtheningData(3).yName);
     title('Force-Length Relation Fitting');  
     xlim([pubPlotOptions.lceNMin,pubPlotOptions.lceNMax]);
@@ -137,7 +143,7 @@ subplot('Position',reshape(plotConfig.subPlotPanel(1,2,:),1,4));
         hold on; 
     end
 
-    xlabel('Norm. Length ($$\ell/\ell_o$$)');
+    xlabel('Norm. Length ($$\ell/\ell_o^M$$)');
     ylabel(expTRSS2017.activeLengtheningData(3).yName);
     title('Force-Velocity Curve Fitting');  
     xlim([pubPlotOptions.lceNMin,pubPlotOptions.lceNMax]);
@@ -357,10 +363,11 @@ for idx=simConfig.trials
         xlim([pubPlotOptions.lceNMin,pubPlotOptions.lceNMax]);
         ylim([0,pubPlotOptions.fceNMax]);
 
-        xlabel('Norm. Length ($$\ell/\ell_o$$)');
+        xlabel('Norm. Length ($$\ell/\ell_o^M$$)');
         ylabel(expTRSS2017.activeLengtheningData(3).yName);
         %title({'Experimental, simulated, and estimated','crossbridge and titin forces'});
-        title({'A. Fitted $$f^L(\tilde{\ell}^M),\,\&\,f^V(\tilde{\ell}^M)$$ and',...
+        title({[subplotIds{1},...
+               ' Fitted $$f^L(\tilde{\ell}^M),\,\&\,f^V(\tilde{\ell}^M)$$ and'],...
                'estimated titin forces'},...
                'HorizontalAlignment','center');
 
@@ -398,8 +405,8 @@ for idx=simConfig.trials
 %              '-','Color',[1,1,1].*0.75);
 %         hold on;
 %         box off;
-%         xlabel('Norm. Length ($$\ell/\ell_o$$)');
-%         ylabel('Norm. Force ($$f/f_o$$)');
+%         xlabel('Norm. Length ($$\ell/\ell_o^M$$)');
+%         ylabel('Norm. Force ($$f/f_o^M$$)');
 %         title('Calc. Titin forces vs. smoothed version');
             
 
@@ -444,7 +451,7 @@ for idx=simConfig.trials
         hold on;
 
 %         text(lceNSpan,titinAnalysis(idx).f2N(end),...
-%              sprintf('%1.1f%s',titinAnalysis(idx).f2N(end),'$$f_o$$'),...
+%              sprintf('%1.1f%s',titinAnalysis(idx).f2N(end),'$$f_o^M$$'),...
 %              'HorizontalAlignment','right',...
 %              'VerticalAlignment','bottom',...
 %              'FontSize',6);
@@ -452,9 +459,10 @@ for idx=simConfig.trials
 
         box off;
 
-        xlabel('$$\Delta$$ Norm. Length $$(\ell/\ell_o)-\ell_i$$');
-        ylabel('Norm. Force ($$f/f_o$$)');
-        title({'B. Estimated active titin','force-length relation $$f^{C}(\tilde{\ell}^{M})$$'},...
+        xlabel('$$\Delta$$ Norm. Length $$(\ell - \ell_i)/\ell_o^M$$');
+        ylabel('Norm. Force ($$f/f_o^M$$)');
+        title({[subplotIds{2},' Titin''s active force--'],...
+              'length-change relation'},...
               'HorizontalAlignment','center');  
         
         xlim([0,lceNSpan]);
@@ -507,7 +515,7 @@ for idx=simConfig.trials
                  'LineWidth',lineWidthEst,...
                  'DisplayName',...
                  sprintf('%s: %1.1f %s','$$\ell_i$$',...
-                        titinAnalysis(idx).lceN(1,1),'$$\ell_o$$'),...
+                        titinAnalysis(idx).lceN(1,1),'$$\ell_o^M$$'),...
                  'HandleVisibility',hVis);
             hold on;
 %             text(lceNSpan,titinAnalysis(idx).k2N(end),...
@@ -523,9 +531,10 @@ for idx=simConfig.trials
         xlim([0,lceNSpan]);
         ylim([0,pubPlotOptions.kceNMax]);
 
-        xlabel('$$\Delta$$ Norm. Length $$(\ell/\ell_o)-\ell_i$$');
-        ylabel('Norm. Stiffness $$(f/\ell)/(f_o/\ell_o)$$');
-        title({'C. Estimated active titin','stiffness-length relation $$k^{C}(\tilde{\ell}^{M})$$'},...
+        xlabel('$$\Delta$$ Norm. Length $$(\ell - \ell_i)/\ell_o^M$$');
+        ylabel('Norm. Stiffness $$(f/\ell)/(f_o^M/\ell_o^M)$$');
+        title({[subplotIds{3},' Titin''s active stiffness--'],...
+            'length-change relation'},...
                 'HorizontalAlignment','center');  
         if(idx==3)
             [lgdH, lgdIcons, lgdPlots, lgdTxt]=...
@@ -772,7 +781,7 @@ end
 box off;
 xlim([pubPlotOptions.lceNMin,pubPlotOptions.lceNMax]);
 ylim([0,pubPlotOptions.fceNMax]); 
-xlabel('Norm. Length ($$\ell/\ell_o$$)');
+xlabel('Norm. Length ($$\ell/\ell_o^M$$)');
 ylabel(expTRSS2017.activeLengtheningData(3).yName);
 %legend('Location','northwest');
 [lgdH, lgdIcons, lgdPlots, lgdTxt]=...
@@ -782,7 +791,8 @@ legend boxoff;
 % [lgdH, lgdIcons, lgdPlots, lgdTxt,xDataOrig,xDataUpd] = ...
 % scaleLegendLines(0.5,lgdH, lgdIcons, lgdPlots, lgdTxt);
 
-title({'A. Fitted $$f^L(\tilde{\ell}^M),\,\&\,f^V(\tilde{\ell}^M)$$ and',...
+title({[subplotIds{1},...
+        ' Fitted $$f^L(\tilde{\ell}^M),\,\&\,f^V(\tilde{\ell}^M)$$ and'],...
        'estimated titin forces $$f^{C}(\tilde{\ell}^{M})$$'},...
        'HorizontalAlignment','center');
 
@@ -806,7 +816,7 @@ subplot('Position',reshape(plotConfig.subPlotPanel(4,2,:),1,4));
         hold on;
 
 %         text(lceNSpan,titinAnalysis(idx).f2N(end),...
-%              sprintf('%1.1f%s',titinAnalysis(idx).f2N(end),'$$f_o$$'),...
+%              sprintf('%1.1f%s',titinAnalysis(idx).f2N(end),'$$f_o^M$$'),...
 %              'HorizontalAlignment','right',...
 %              'VerticalAlignment','bottom',...
 %              'FontSize',6);
@@ -836,7 +846,7 @@ subplot('Position',reshape(plotConfig.subPlotPanel(4,2,:),1,4));
                  -benchRecordFitted.normFiberLength(1,idx);
 %        text(lceNSpan,...
 %             benchRecordFitted.normDistalTitinForce(end,idx),...
-%              sprintf('%1.1f%s',benchRecordFitted.normDistalTitinForce(end,idx),'$$f_o$$'),...
+%              sprintf('%1.1f%s',benchRecordFitted.normDistalTitinForce(end,idx),'$$f_o^M$$'),...
 %              'HorizontalAlignment','left',...
 %              'VerticalAlignment','top',...
 %              'FontSize',6);
@@ -890,9 +900,9 @@ box off;
 xlim([0,lceNSpan]);
 ylim([0,pubPlotOptions.fceNMax]);
 
-xlabel('$$\Delta$$ Norm. Length $$(\ell/\ell_o)-\ell_i$$');
-ylabel('Norm. Force ($$f/f_o$$)');
-title({'B. Estimated and simulated','titin force-length relation'},...
+xlabel('$$\Delta$$ Norm. Length $$(\ell - \ell_i)/\ell_o^M$$');
+ylabel('Norm. Force ($$f/f_o^M$$)');
+title({[subplotIds{2},' Titin''s active force--'],'length-change relation'},...
       'HorizontalAlignment','center');  
 
 % legend('Location','NorthWest');
@@ -943,11 +953,11 @@ for idx=simConfig.trials
              'LineWidth',lineWidthSim,...
              'DisplayName',...
              sprintf('%s: %1.1f %s','$$\ell_i$$',...
-                    titinAnalysis(idx).lceN(1,1),'$$\ell_o$$'),...
+                    titinAnalysis(idx).lceN(1,1),'$$\ell_o^M$$'),...
              'HandleVisibility',hVis);
         hold on;
 %         text(lceNSpan,titinAnalysis(idx).k2N(end),...
-%              sprintf('%1.1f%s',titinAnalysis(idx).k2N(end),'$$f_o$$'),...
+%              sprintf('%1.1f%s',titinAnalysis(idx).k2N(end),'$$f_o^M$$'),...
 %              'HorizontalAlignment','right',...
 %              'VerticalAlignment','bottom',...
 %              'FontSize',6);
@@ -998,9 +1008,9 @@ box off;
 xlim([0,lceNSpan]);
 ylim([0,pubPlotOptions.kceNMax]);
 
-xlabel('$$\Delta$$ Norm. Length $$(\ell/\ell_o)-\ell_i$$');
-ylabel('Norm. Stiffness $$(f/\ell)/(f_o/\ell_o)$$');
-title({'C. Estimated and simulated','titin stiffness-length relation'},...
+xlabel('$$\Delta$$ Norm. Length $$(\ell - \ell_i)/\ell_o^M$$');
+ylabel('Norm. Stiffness $$(f/\ell)/(f_o^M/\ell_o^M)$$');
+title({[subplotIds{3},' Titin''s active stiffness--'],'length-change relation'},...
       'HorizontalAlignment','center');  
 if(idx==3)
 %    legend('Location','NorthWest');

@@ -69,7 +69,7 @@ assert(~(fittingConfig.fitf1HNPreload && fittingConfig.fitl1HNOffset),...
 assert(~(fittingConfig.fitQToF && fittingConfig.fitQToK),...
   'Error: fitting Q to force and also Q to stiffness does not make sense');
 
-fittingConfig.numberOfBisections = 10;
+fittingConfig.numberOfBisections = 10; %Gives us an parameter error of < 0.00098 or < 0.098%
 fittingConfig.idxFvKey = 3;
 fittingConfig.idxFlKey = 1;
 fittingConfig.titin.trials = simConfig.trials; 
