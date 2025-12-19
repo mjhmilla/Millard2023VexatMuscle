@@ -17,9 +17,9 @@ Tomalka A, Rode C, Schumacher J, Siebert T. The active force–length relationsh
 
 To run the simulations that are presented in <em>Analysis and simulation of active muscle fibers during lengthening across the force-length relation</em> please:
 
-1. Run main_TomalkaRodeSchumacherSiebert2017_OuterLoop.m in Matlab. Please note that the simulations presented in <em>Analysis and simulation ...</em> were run on the following system:
-  - Ubuntu 20.04.6 LTS
-  - Matlab version 9.11.0.1873467 (R2021b) Update 3 
+1. Run main_TomalkaRodeSchumacherSiebert2017_OuterLoop.m in Matlab. Please note that the simulations presented in <em>Analysis and simulation ...</em> were run on the following systems
+  - Ubuntu 20.04.6 LTS + Matlab version 9.11.0.1873467 (R2021b) Update 3 
+  - Windows 11 Pro + Matlab version 9.13.0.2105380 (R2022b) Update 2
 2. The function main_TomalkaRodeSchumacherSiebert2017_OuterLoop.m requires about 10 minutes to terminate on a 2.80 GHz Intel machine with 32 GB ram, and a SSD.
 3. These simulations generate the following plots found in the paper:
   - Figure 2 from the paper in <em>output/plots/MuscleCurves/fig_Pub_RatMuscleCurves_TRSS2017_0.pdf</em>
