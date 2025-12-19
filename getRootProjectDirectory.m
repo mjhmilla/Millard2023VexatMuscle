@@ -23,7 +23,8 @@ assert(contains(localDirContents(1).folder,rootDirName),...
              ' directory for this script to work'],rootDirName) );    
 
 rootDir = localDirContents(1).folder;		
-i0 = strfind(rootDir,rootDirName)-1;
+tmp = strfind(rootDir,rootDirName);
+i0 = tmp(end)-1;
 i1 = i0+length(rootDirName);
 rootDir = rootDir(1,1:i1);
 
