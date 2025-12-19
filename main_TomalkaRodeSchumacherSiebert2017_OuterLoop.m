@@ -5,6 +5,7 @@ clear all;
 %%
 %
 % Before running this script, make sure that
+%
 % 1. Open main_CreateRatMuscleModel.m and set
 %    flag_OuterLoopMode=1;
 %    on line  8

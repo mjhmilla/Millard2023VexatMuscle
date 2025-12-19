@@ -34,16 +34,18 @@ To run the simulations that are presented in <em>Analysis and simulation of acti
   - Time-series data of the fitted simulations: 
     - <em>output/structs/TomalkaRodeSchumacherSiebert2017/benchRecordVexat_TRSS2017_fitted_123_Fl_Fv_QToF.mat</em>
   - Fitted parameters and error information
-    - <em>fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF.mat</em>  
-    - <em>fittingLog__123_Fl_Fv_QToF.txt</em>
+    - <em>output/tables/fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF.tex</em>    
+    - <em>output/structs/fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF.mat</em>  
+    - <em>output/structs/fittingLog__123_Fl_Fv_QToF.txt</em>
 6. Outputs related to fitting with a Q value for each trial (Q_1, Q_2, and Q_3). Note that the file names have <em>_i</em> appended
   - Fitted model parameters: 
     - <em>output/structs/FittedModels/ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF_i.mat</em> 
   - Time-series data of the fitted simulations: 
     - <em>output/structs/TomalkaRodeSchumacherSiebert2017/benchRecordVexat_TRSS2017_fitted_123_Fl_Fv_QToF_i.mat</em>
   - Fitted parameters and error information
-    - <em>fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF_i.mat</em>  
-    - <em>fittingLog__123_Fl_Fv_QToF_i.txt</em>
+    - <em>output/tables/fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF_i.tex</em>    
+    - <em>output/structs/fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF_i.mat</em>  
+    - <em>output/structs/fittingLog__123_Fl_Fv_QToF_i.txt</em>
 
 ## Code overview
 
