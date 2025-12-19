@@ -687,27 +687,7 @@ if(fittingConfig.fitQToF ==1 || fittingConfig.fitQToK == 1)
         QDelta=QDeltaInit;
         dirMap = [1,-1];
 
-        if(fittingConfig.titin.individuallyFit==1)
-            fprintf('%1.2e\tfitting trial %i: Q rmse terminal slope (start)\n',...
-                    optErrorBest,idxTrial);
-            fprintf('%e\tQ (start)\n',QBest);    
-    
-            fprintf(fidFitting,...
-                '%1.2e\tfitting trial %i: Q rmse terminal slope (start)\n',...
-                optErrorBest,idxTrial);
-            fprintf(fidFitting,...
-                '%e\tQ (start)\n',QBest);    
-        else
-            fprintf('%1.2e\tfitting all: Q rmse terminal slope (start)\n',...
-                    optErrorBest);
-            fprintf('%e\tQ (start)\n',QBest);    
-    
-            fprintf(fidFitting,...
-                '%1.2e\tfitting all: Q rmse terminal slope (start)\n',...
-                optErrorBest);
-            fprintf(fidFitting,...
-                '%e\tQ (start)\n',QBest);    
-        end
+
 
         for i=1:1:fittingConfig.numberOfBisections
             fprintf('%i/%i\n',i,fittingConfig.numberOfBisections);
@@ -736,6 +716,27 @@ if(fittingConfig.fitQToF ==1 || fittingConfig.fitQToK == 1)
 
         if(fittingConfig.fitQToF)
             if(fittingConfig.titin.individuallyFit==1)
+                fprintf('%1.2e\tfitting trial %i: Q rmse force profile (start)\n',...
+                        optErrorBest,idxTrial);
+                fprintf('%e\tQ (start)\n',QBest);    
+        
+                fprintf(fidFitting,...
+                    '%1.2e\tfitting trial %i: Q rmse force profile (start)\n',...
+                    optErrorBest,idxTrial);
+                fprintf(fidFitting,...
+                    '%e\tQ (start)\n',QBest);    
+            else
+                fprintf('%1.2e\tfitting all: Q rmse force profile (start)\n',...
+                        optErrorBest);
+                fprintf('%e\tQ (start)\n',QBest);    
+        
+                fprintf(fidFitting,...
+                    '%1.2e\tfitting all: Q rmse force profile (start)\n',...
+                    optErrorBest);
+                fprintf(fidFitting,...
+                    '%e\tQ (start)\n',QBest);    
+            end            
+            if(fittingConfig.titin.individuallyFit==1)
                 if(isnan(fitInfo.QToF.rmse))
                     fitInfo.QToF.rmse = optErrorBest;
                     fitInfo.QToF.x  = optErrorValuesBest.x(:,idxTrial);
@@ -763,9 +764,35 @@ if(fittingConfig.fitQToF ==1 || fittingConfig.fitQToK == 1)
                 fitInfo.QToF.arg  = QBest;           
                 fitInfo.QToF.argDelta = QDelta*2;
             end
+            fprintf('%1.2e\tfitting: Q rmse force profile (end)\n',optErrorBest);
+            fprintf('%e\tQ (end)\n',QBest);    
+            fprintf(fidFitting,'%1.2e\tfitting: Q rmse force profile (end)\n',optErrorBest);
+            fprintf(fidFitting,'%e\tQ (end)\n',QBest);              
         end
 
         if(fittingConfig.fitQToK)
+            if(fittingConfig.titin.individuallyFit==1)
+                fprintf('%1.2e\tfitting trial %i: Q rmse terminal slope (start)\n',...
+                        optErrorBest,idxTrial);
+                fprintf('%e\tQ (start)\n',QBest);    
+        
+                fprintf(fidFitting,...
+                    '%1.2e\tfitting trial %i: Q rmse terminal slope (start)\n',...
+                    optErrorBest,idxTrial);
+                fprintf(fidFitting,...
+                    '%e\tQ (start)\n',QBest);    
+            else
+                fprintf('%1.2e\tfitting all: Q rmse terminal slope (start)\n',...
+                        optErrorBest);
+                fprintf('%e\tQ (start)\n',QBest);    
+        
+                fprintf(fidFitting,...
+                    '%1.2e\tfitting all: Q rmse terminal slope (start)\n',...
+                    optErrorBest);
+                fprintf(fidFitting,...
+                    '%e\tQ (start)\n',QBest);    
+            end      
+                  
             if(fittingConfig.titin.individuallyFit==1)
                 if(isnan(fitInfo.QToK.rmse))
                     fitInfo.QToK.rmse = optErrorBest;
@@ -793,12 +820,13 @@ if(fittingConfig.fitQToF ==1 || fittingConfig.fitQToK == 1)
                 fitInfo.QToK.arg  = QBest;   
                 fitInfo.QToK.argDelta = QDelta*2;
             end
+            fprintf('%1.2e\tfitting: Q rmse terminal slope (end)\n',optErrorBest);
+            fprintf('%e\tQ (end)\n',QBest);    
+            fprintf(fidFitting,'%1.2e\tfitting: Q rmse terminal slope (end)\n',optErrorBest);
+            fprintf(fidFitting,'%e\tQ (end)\n',QBest);              
         end
 
-        fprintf('%1.2e\tfitting: Q rmse terminal slope (end)\n',optErrorBest);
-        fprintf('%e\tQ (end)\n',QBest);    
-        fprintf(fidFitting,'%1.2e\tfitting: Q rmse terminal slope (end)\n',optErrorBest);
-        fprintf(fidFitting,'%e\tQ (end)\n',QBest);    
+  
 
         %
         % Update the parameter struct
