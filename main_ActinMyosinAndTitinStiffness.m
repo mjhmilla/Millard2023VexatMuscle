@@ -22,6 +22,32 @@ addpath('postprocessing/');
 rootDir         = getRootProjectDirectory();
 projectFolders  = getProjectFolders(rootDir);
 
+
+% Huxley & Simmons 1981: number crossbridges per half-sarcomere
+%2*(700/14.3); %pair of xbridges every 14.3 nm for 700 nm
+
+%Anthony Hessel informed me of some literature that shows that the number
+% of crossbridges per half sarcomere is closer to 300! That's a lot
+% different than Huxley and Simmons 1981, and of course affects our
+% estimates of stiffness.
+% 
+% Piazzesi G, Reconditi M, Linari M, Lucii L, Bianco P, Brunello E, 
+% Decostre V, Stewart A, Gore DB, Irving TC, Irving M. Skeletal muscle 
+% performance determined by modulation of number of myosin motors rather 
+% than motor force or stroke size. Cell. 2007 Nov 16;131(4):784-95.
+%
+numCrossbridgesHalfSarcomere = 294*2; %2 cross-bridges per myosin motor
+
+
+%Linari M, Dobbie I, Reconditi M, Koubassova N, Irving M, Piazzesi G, 
+% Lombardi V. The stiffness of skeletal muscle in isometric contraction and 
+% rigor: the fraction of myosin heads bound to actin. Biophysical journal. 
+% 1998 May 1;74(5):2459-73.
+maxActivationProportionOfAttachedCrossbridges = 0.43;
+
+numberOfAttachedCrossbridges=...
+  maxActivationProportionOfAttachedCrossbridges*numCrossbridgesHalfSarcomere;
+
 %Units:
 % nm: length
 % pN: force
@@ -58,8 +84,7 @@ lengthMLineToMyosinMeanAttachmentPoint = 450; %nm;
 sarcomereLength                        = 2*sarcomereProperties.actinLength;
 
 
-% Huxley & Simmons 1981: number crossbridges per half-sarcomere
-numCrossbridgesHalfSarcomere = 2*(700/14.3); %pair of xbridges every 14.3 nm for 700 nm
+
 
 %One attached crossbridge
 kam1 = calcActinMyosinLoadPathStiffness(...
@@ -71,7 +96,7 @@ kam1 = calcActinMyosinLoadPathStiffness(...
 %All 20% of the possible attached crossbridges, which is the maximum
 %according to Howard 1997
 kam20p = calcActinMyosinLoadPathStiffness(...
-                      0.20*numCrossbridgesHalfSarcomere, ...
+                      numberOfAttachedCrossbridges, ...
                       lengthMLineToMyosinMeanAttachmentPoint, ...
                       sarcomereLength,...
                       sarcomereProperties);
@@ -115,8 +140,9 @@ yTop = max(kam20p)*1.1;
 yBottom=min(kt2T);
 
 
-yTextA=55;%0.03;
-yTextB=37.5;%0.02;
+yTextA=130;%55;%0.03;
+yTextB=0.2;%37.5;%0.02;
+
 yTextC = 1.75;
 yTextD = 1.1;
 yTextE = 3.5;
@@ -134,7 +160,7 @@ hold on;
 semilogy([x0-x1,x0+x1],[y1,y1],'Color',xLineColor,'LineWidth',1);
 hold on;
 
-text(x0,yTextB,'1 XB','HorizontalAlignment','center',...
+text(x0,2e-1,'1 XB','HorizontalAlignment','center',...
                   'VerticalAlignment','top');
 hold on;
 
@@ -160,8 +186,9 @@ semilogy([x0-x1,x0+x1],[y1,y1],'Color',xLineColor,'LineWidth',1);
 hold on;
 
 
-text(x0,yTextB,'19.6 XB','HorizontalAlignment','center',...
-                        'VerticalAlignment','top');
+text(x0,20,sprintf('%1.1f XB',numberOfAttachedCrossbridges),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','top');
 hold on;
 text(x0+x1,y0,sprintf('%1.1e',y0),...
      'HorizontalAlignment','left',...
@@ -272,7 +299,7 @@ text(x0+x1,y1,sprintf('%1.1e',y1),...
      'Color',[0,0,0]);
 hold on;
 
-text(1.5,yTextA,'Actin-myosin (AM)','Color',[0,0,0],...
+text(1.75,yTextA,'Actin-myosin (AM)','Color',[0,0,0],...
     'HorizontalAlignment','center',...
     'VerticalAlignment','top');
 hold on;
@@ -295,15 +322,15 @@ xtickangle(45);
 xlabel('Load Paths');
 
 ylabel('Stiffness (pN/nm)');
-yticks([0.01,0.1,1,10]);
+yticks([0.01,0.1,1,10,100]);
 
 
 box off;
 
-text(-0.75,75,'Stiffness comparison: actin-myosin \& titin','FontSize',12);
+text(-0.75,170,'Stiffness comparison: actin-myosin \& titin','FontSize',12);
 %title('Stiffness comparision','HorizontalAlignment','left');
 hold on;
-ylim([0.011,55]);
+ylim([0.011,150]);
 
 print('-dpdf', fullfile(projectFolders.output_plots,...
                 'fig_Pub_StiffnessActinMyosinVsTitin.pdf'));
