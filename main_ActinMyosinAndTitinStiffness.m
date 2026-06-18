@@ -87,7 +87,7 @@ sarcomereLength                        = 2*sarcomereProperties.actinLength;
 
 
 %One attached crossbridge
-kam1 = calcActinMyosinLoadPathStiffness(...
+kamMin = calcActinMyosinLoadPathStiffness(...
                       1, ...
                       lengthMLineToMyosinMeanAttachmentPoint, ...
                       sarcomereLength,...
@@ -95,7 +95,7 @@ kam1 = calcActinMyosinLoadPathStiffness(...
 
 %All 20% of the possible attached crossbridges, which is the maximum
 %according to Howard 1997
-kam20p = calcActinMyosinLoadPathStiffness(...
+kamMax = calcActinMyosinLoadPathStiffness(...
                       numberOfAttachedCrossbridges, ...
                       lengthMLineToMyosinMeanAttachmentPoint, ...
                       sarcomereLength,...
@@ -136,23 +136,26 @@ xLineColor = [0,0,0];
 tLineColor = [0,0,1];
 taLineColor = [1,0,0];
 
-yTop = max(kam20p)*1.1;
-yBottom=min(kt2T);
 
+dy = 0.1;
 
-yTextA=130;%55;%0.03;
-yTextB=0.2;%37.5;%0.02;
+yTop    = max(kamMax) + dy*(20*max(kamMax));
+yBottom = 10.^(round(min(log10(kt2T))-1));
 
-yTextC = 1.75;
-yTextD = 1.1;
-yTextE = 3.5;
-yTextF = 2.1;
+yTextA= max(kamMax) + dy*(9*max(kamMax)); 
+yTextB= max(kamMax) + dy*(1*max(kamMax));
+
+yTextC = max(kt4T) + dy*(9*max(kt4T));
+yTextD = max(kt4T) + dy*(1*max(kt4T));
+
+yTextE = max(kt4Ta) + dy*(9*max(kt4Ta));
+yTextF = max(kt4Ta) + dy*(1*max(kt4Ta));
 
 
 x0 = 1;
 x1 = 0.125;
-y0 = kam1(1,1);
-y1 = kam1(1,2);
+y0 = kamMin(1,1);
+y1 = kamMin(1,2);
 semilogy([x0,x0],[y0,y1],'Color',xLineColor,'LineWidth',2);
 hold on;
 semilogy([x0-x1,x0+x1],[y0,y0],'Color',xLineColor,'LineWidth',1);
@@ -160,8 +163,8 @@ hold on;
 semilogy([x0-x1,x0+x1],[y1,y1],'Color',xLineColor,'LineWidth',1);
 hold on;
 
-text(x0,2e-1,'1 XB','HorizontalAlignment','center',...
-                  'VerticalAlignment','top');
+text(x0,yTextB,'1 XB','HorizontalAlignment','center',...
+                  'VerticalAlignment','bottom');
 hold on;
 
 
@@ -176,8 +179,8 @@ hold on;
 
 
 x0 = 2;
-y0 = kam20p(1,1);
-y1 = kam20p(1,2);
+y0 = kamMax(1,1);
+y1 = kamMax(1,2);
 semilogy([x0,x0],[y0,y1],'Color',xLineColor,'LineWidth',2);
 hold on;
 semilogy([x0-x1,x0+x1],[y0,y0],'Color',xLineColor,'LineWidth',1);
@@ -186,9 +189,9 @@ semilogy([x0-x1,x0+x1],[y1,y1],'Color',xLineColor,'LineWidth',1);
 hold on;
 
 
-text(x0,20,sprintf('%1.1f XB',numberOfAttachedCrossbridges),...
+text(x0,yTextB,sprintf('%1.1f XB',numberOfAttachedCrossbridges),...
     'HorizontalAlignment','center',...
-    'VerticalAlignment','top');
+    'VerticalAlignment','bottom');
 hold on;
 text(x0+x1,y0,sprintf('%1.1e',y0),...
      'HorizontalAlignment','left',...
@@ -211,7 +214,7 @@ semilogy([x0-x1,x0+x1],[y1,y1],'Color',tLineColor,'LineWidth',1);
 hold on;
 
 text(x0,yTextD,'2$\mu$m ','HorizontalAlignment','center',...
-                          'VerticalAlignment','top',...
+                          'VerticalAlignment','bottom',...
                           'Color',[0,0,1]);
 hold on;
 text(x0+x1,y0,sprintf('%1.1e',y0),...
@@ -234,7 +237,7 @@ hold on;
 semilogy([x0-x1,x0+x1],[y1,y1],'Color',tLineColor,'LineWidth',1);
 hold on;
 text(x0,yTextD,'4$\mu$m ','HorizontalAlignment','center', ...
-                         'VerticalAlignment','top',...
+                         'VerticalAlignment','bottom',...
                           'Color',[0,0,1]);
 hold on;
 text(x0+x1,y0,sprintf('%1.1e',y0),...
@@ -259,7 +262,7 @@ semilogy([x0-x1,x0+x1],[y1,y1],'Color',taLineColor,'LineWidth',1);
 hold on;
 
 text(x0,yTextF,'2$\mu$m ','HorizontalAlignment','center',...
-                          'VerticalAlignment','top',...
+                          'VerticalAlignment','bottom',...
                           'Color',taLineColor);
 hold on;
 text(x0+x1,y0,sprintf('%1.1e',y0),...
@@ -284,7 +287,7 @@ hold on;
 semilogy([x0-x1,x0+x1],[y1,y1],'Color',taLineColor,'LineWidth',1);
 hold on;
 text(x0,yTextF,'4$\mu$m ','HorizontalAlignment','center', ...
-                         'VerticalAlignment','top',...
+                         'VerticalAlignment','bottom',...
                           'Color',taLineColor);
 
 hold on;
@@ -301,17 +304,17 @@ hold on;
 
 text(1.75,yTextA,'Actin-myosin (AM)','Color',[0,0,0],...
     'HorizontalAlignment','center',...
-    'VerticalAlignment','top');
+    'VerticalAlignment','bottom');
 hold on;
 
 text(3.5,yTextC,'Passive Titin (TP)','Color',[0,0,1],...
     'HorizontalAlignment','center',...
-    'VerticalAlignment','top');
+    'VerticalAlignment','bottom');
 hold on;
 
 text(5.5,yTextE,'Active Titin (TA)','Color',taLineColor,...
     'HorizontalAlignment','center',...
-    'VerticalAlignment','top');
+    'VerticalAlignment','bottom');
 hold on;
 
 
@@ -326,11 +329,13 @@ yticks([0.01,0.1,1,10,100]);
 
 
 box off;
-
-text(-0.75,170,'Stiffness comparison: actin-myosin \& titin','FontSize',12);
+ylim([yBottom,yTop]);
+text(-0.75,yTop,...
+  'Stiffness comparison: actin-myosin \& titin','FontSize',12,...
+  'VerticalAlignment','bottom');
 %title('Stiffness comparision','HorizontalAlignment','left');
 hold on;
-ylim([0.011,150]);
+
 
 print('-dpdf', fullfile(projectFolders.output_plots,...
                 'fig_Pub_StiffnessActinMyosinVsTitin.pdf'));
