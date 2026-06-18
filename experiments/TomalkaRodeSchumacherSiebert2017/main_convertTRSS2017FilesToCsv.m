@@ -7,9 +7,10 @@ flag_checkMean=0; %Will plot the means stored in the mat files in magenta
                   %If everything is correct (and it is) the computed
                   %mean (in black) will not be visible.
 
-fileList = {'Matt_0_85_1_3_L0','085','0.85';...
-            'Matt_1_1_45_L0','1','1.45';...
-            'Matt_07_1_15_L0' ,'07','0.70'};
+fileList = {'Matt_0_85_1_3_L0','085','0.85','mixedLength','shortOutput';...
+            'Matt_1_1_45_L0','1','1.45','uniformLength','shortOutput';...
+            'Matt_07_1_15_L0' ,'07','0.70','mixedLength','shortOutput';...
+            'Matt_1_1_45_L0','1','1.45','uniformLength','longOutput'};
 
 dirTRSS2017 = pwd;
 assert(contains(dirTRSS2017,'TomalkaRodeSchumacherSiebert2017'));
@@ -51,23 +52,32 @@ for i=1:1:size(fileList,1)
 
   lengthField = ['FL_',fileList{i,2}];
 
-  idxA = sampleRampStart;
-  if(i==2)
-    idxB = idxA+sampleRampTotal-1;
-  else
-    idxB = idxA+length(data.(lengthField))-1;
+  idxA = 0;
+  idxB = 0;
+  switch fileList{i,5}
+    case 'shortOutput'
+      idxA = sampleRampStart;
+      if(strcmp(fileList{i,4},'uniformLength'))
+        idxB = idxA+sampleRampTotal-1;
+      else
+        idxB = idxA+length(data.(lengthField))-1;
+      end      
+    case 'longOutput'
+      idxA = 1;
+      idxB = idxA+length(data.(lengthField))-1;
+    otherwise
+      assert(0,'Error: unrecognized data length option');
   end
 
-  if(i==1)
-    csvData = zeros(length(data.(lengthField)),length(csvDataHeader));
-  end
+  csvData = zeros((idxB-idxA+1),length(csvDataHeader));
+
 
   idxData=1;
   idxTime=idxData;
   csvData(:,idxData) = [idxA:idxB]./sampleFrequencyHz;
   idxData=idxData+1;
   idxLength=idxData;
-  if(i==2)
+  if(strcmp(fileList{i,4},'uniformLength'))
     csvData(:,idxData) = data.(lengthField)(idxA:idxB);
   else
     csvData(:,idxData) = data.(lengthField);
@@ -201,7 +211,7 @@ for i=1:1:size(fileList,1)
       hold on;
 
       if(flag_checkMean==1)
-        if(i==2)
+        if(strcmp(fileList{i,4},'uniformLength'))
           plot(csvData(:,idxTime),data.(['mean_LR_',fileList{i,2}])(idxA:idxB),'-','Color',[1,0,1]);
           hold on;        
         else
@@ -224,7 +234,7 @@ for i=1:1:size(fileList,1)
       hold on;
       
       if(flag_checkMean==1)
-        if(i==2)
+        if(strcmp(fileList{i,4},'uniformLength'))
           plot(csvData(:,idxLength),data.(['mean_LR_',fileList{i,2}])(idxA:idxB),'-','Color',[1,0,1]);
           hold on;        
         else
@@ -238,7 +248,7 @@ for i=1:1:size(fileList,1)
   end
 
   fileName = strrep(fileList{i,3},'.','p');
-  fileName = ['data_TRSS2017_',fileName,'.csv'];
+  fileName = ['data_TRSS2017_',fileName,'_',fileList{i,5},'.csv'];
   fid = fopen(fullfile(dirTRSS2017,fileName),'w');
   for j=1:1:length(csvDataHeader)
     if(j==1)

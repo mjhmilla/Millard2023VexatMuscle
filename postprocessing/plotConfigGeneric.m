@@ -19,13 +19,13 @@
 plotFontName = 'latex';
 
 if(~exist('baseFontSize','var'))
-    baseFontSize=8;
+    baseFontSize=10;
 end 
 
 
 if(flag_usingOctave == 0)
-set(groot, 'defaultAxesFontSize',8);
-set(groot, 'defaultTextFontSize',8);
+set(groot, 'defaultAxesFontSize',baseFontSize);
+set(groot, 'defaultTextFontSize',baseFontSize);
 set(groot, 'defaultAxesLabelFontSizeMultiplier',1.2);
 set(groot, 'defaultAxesTitleFontSizeMultiplier',1.2);
 set(groot, 'defaultAxesTickLabelInterpreter','latex');
