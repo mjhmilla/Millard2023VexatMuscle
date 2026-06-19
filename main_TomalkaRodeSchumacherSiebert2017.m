@@ -13,7 +13,7 @@ if(flag_OuterLoopMode==0)
 
     simConfigInput.runFitting              = 0; 
     simConfigInput.generatePlots           = 1;
-    simConfigInput.fitToIndividualTrials   = 1; 
+    simConfigInput.fitToIndividualTrials   = 0; 
     simConfigInput.manuallySetTimeConstant = 0;
 
 end
@@ -87,7 +87,7 @@ pubPlotOptions.plotSmoothedStiffnessData    = 1;
 pubPlotOptions.plotRawStiffnessData         = 0;
 pubPlotOptions.stiffnessLowerForceBound     = 0.05;
 
-pubPlotOptions.fceNMax   = 2.9;
+pubPlotOptions.fceNMax   = 3.1;
 pubPlotOptions.kceNMax   = 6.5;
 pubPlotOptions.lceNMin   = 0.6;
 pubPlotOptions.lceNMax   = 1.45;
