@@ -3,7 +3,9 @@ function [optError,optErrorValues, figDebugFitting,...
             calcErrorTRSS2017RampFraction(...
                        optParams,...
                        fittingFraction, npts, ...
-                       ratFibrilModels, expTRSS2017,simConfig,...
+                       ratFibrilModels, ...
+                       expTRSS2017Raw,...
+                       simConfig,...
                        figDebugFitting,subPlotPanel,lineColorsSimTRSS2017)
 
     ratFibrilModelsUpd  = ratFibrilModels;
@@ -12,10 +14,15 @@ function [optError,optErrorValues, figDebugFitting,...
     benchRecord             = [];
 
     optError=0;
-    optErrorValues.x = [];
-    optErrorValues.y = [];
-    optErrorValues.yFit=[];
-    optErrorValues.yerr=[];
+    optErrorValues.x      = [];
+    optErrorValues.y      = [];
+    optErrorValues.yFit   = [];
+    optErrorValues.yErr   = [];    
+    optErrorValues.rmse   = [];
+    optErrorValues.yStd   = [];
+    optErrorValues.yNErr  = [];
+    optErrorValues.nrmse  = [];
+    
 
     for idxTrial = simConfig.trials
         
@@ -102,14 +109,26 @@ function [optError,optErrorValues, figDebugFitting,...
 
         lceOptMdl   = ratFibrilModelsUpd(idxTrial).musculotendon.optimalFiberLength;
         vmax        = ratFibrilModelsUpd(idxTrial).musculotendon.maximumNormalizedFiberVelocity;
-        lceOptData  = min(expTRSS2017.activeLengtheningData(3).x);
+        lceOptData  = lceOptMdl; 
+        %min(expTRSS2017.activeLengtheningData(3).x);
 
-        rampLengthStart  = expTRSS2017.activeLengtheningData(idxTrial).x(1,1);
-        rampLengthEnd    = expTRSS2017.activeLengtheningData(idxTrial).x(end,1); 
-        
+        %rampLengthStart  = expTRSS2017.activeLengtheningData(idxTrial).x(1,1);
+        %rampLengthEnd    = expTRSS2017.activeLengtheningData(idxTrial).x(end,1); 
+
+        seriesName = expTRSS2017Raw.trials{idxTrial};
+        rampLengthStart = expTRSS2017Raw.(seriesName).lN(1,1).*lceOptMdl;
+        rampLengthEnd   = expTRSS2017Raw.(seriesName).lN(end,1).*lceOptMdl;
+
+        lpfFreqHz = simConfig.numericalDiffLowPassFilterFrequencyHz;
+        [b,a]     = butter(2,lpfFreqHz/(0.5*expTRSS2017Raw.sampleFrequencyHz),'low');
+        vceNnum  = calcCentralDifferenceDataSeries(...
+                      expTRSS2017Raw.(seriesName).time,...
+                      filtfilt(b,a,expTRSS2017Raw.(seriesName).lN));
+
+
         timeStart       = 0;
         timeRampStart   = 0.1;
-        rampVelocity    = 0.11*vmax*lceOptData;
+        rampVelocity    = mean(vceNnum)*lceOptData;%0.11*vmax*lceOptData;
         timeRampEnd     = timeRampStart + ...
                           fittingFraction*(...
                             rampLengthEnd-rampLengthStart)/rampVelocity;         
@@ -237,42 +256,73 @@ function [optError,optErrorValues, figDebugFitting,...
 
         switch optParams.name
             case 'responseTimeScaling'
-                [expLceU,iq] = unique(expTRSS2017.activeLengtheningData(idxTrial).x);
-                expfNU = expTRSS2017.activeLengtheningData(idxTrial).y(iq);
+                seriesName = expTRSS2017Raw.trials{idxTrial};
+                [expLceU,iq] = ...
+                  unique(expTRSS2017Raw.(seriesName).lN*lceOptMdl);
+                expfNU = expTRSS2017Raw.(seriesName).fNavg(iq);
+                expfNStdU = expTRSS2017Raw.(seriesName).fNstd(iq);
+
+
         
-                errV = zeros(npts,1);
-                yV = zeros(npts,1);
+                errV  = zeros(npts,1);
+                nerrV = zeros(npts,1);                
+                yV    = zeros(npts,1);
                 yFitV = zeros(npts,1);
+                yStdV = zeros(npts,1);
                 for k=1:1:npts
-                    lceN = benchRecord.normFiberLength(k,idx).*lceOptMdl;
-                    fN   = benchRecord.normFiberForce(k,idx);
+                    lceN  = benchRecord.normFiberLength(k,idx).*lceOptMdl;
+                    fN    = benchRecord.normFiberForce(k,idx);
                     
                     expfN = interp1(expLceU,...
                                     expfNU,...
-                                    lceN);
-                    yV(k,1)=expfN;
-                    yFitV(k,1)=fN;
-                    errV(k,1) =(expfN-fN);
+                                    lceN); 
+                    expStdfN   = interp1(expLceU,...
+                                         expfNStdU,...
+                                         lceN);                    
+                    yV(k,1)    = expfN;    
+                    yFitV(k,1) = fN;                           
+                    yStdV(k,1) = expStdfN;
+                    errV(k,1)  = (expfN-fN);
+                    nerrV(k,1) = (expfN-fN)/expStdfN;
+
                 end
                 if(isempty(optErrorValues))
-                    optErrorValues.x = zeros(npts,3);                    
-                    optErrorValues.y = zeros(npts,3);
-                    optErrorValues.yFit = zeros(npts,3);
-                    optErrorValues.yErr = zeros(npts,3);
+                    optErrorValues.x    = zeros(npts,3);                    
+                    optErrorValues.y    = zeros(npts,3);
+                    optErrorValues.yFit   = zeros(npts,3);
+                    optErrorValues.yErr   = zeros(npts,3);
+                    optErrorValues.yStd   = zeros(npts,3);
+                    optErrorValues.yNErr  = zeros(npts,3);
+                    optErrorValues.rmse   = zeros(1,3);
+                    optErrorValues.nrmse  = zeros(1,3);
                 end
                 optErrorValues.x(:,idx) = ...
                     benchRecord.normFiberLength(:,idx).*lceOptMdl;
                 optErrorValues.y(:,idx) = yV;
                 optErrorValues.yFit(:,idx) = yFitV;
                 optErrorValues.yErr(:,idx) = errV;
-                optError = optError+sqrt(mean(errV.^2));                
+                optErrorValues.yStd(:,idx) = yStdV;
+                optErrorValues.yNErr(:,idx)= nerrV;   
+                optErrorValues.rmse(1,idx) = ...
+                  sqrt(mean(optErrorValues.yErr(:,idx).^2));
+                optErrorValues.nrmse(1,idx) = ...
+                  sqrt(mean(optErrorValues.yNErr(:,idx).^2));
+                optError = optError+optErrorValues.nrmse(1,idx);                
             case 'xeStiffnessDampingScaling'
-                [expLceU,iq] = unique(expTRSS2017.activeLengtheningData(idxTrial).x);
-                expfNU = expTRSS2017.activeLengtheningData(idxTrial).y(iq);
+                %[expLceU,iq] = unique(expTRSS2017.activeLengtheningData(idxTrial).x);
+                %expfNU = expTRSS2017.activeLengtheningData(idxTrial).y(iq);
+
+                seriesName = expTRSS2017Raw.trials{idxTrial};
+                [expLceU,iq] = ...
+                  unique(expTRSS2017Raw.(seriesName).lN*lceOptMdl);
+                expfNU = expTRSS2017Raw.(seriesName).fNavg(iq);
+                expfNStdU = expTRSS2017Raw.(seriesName).fNstd(iq);
         
                 errV = zeros(npts,1);
+                nerrV= zeros(npts,1);
                 yV = zeros(npts,1);
                 yFitV = zeros(npts,1);
+                yStdV = zeros(npts,1);
                 
                 for k=1:1:npts
                     lceN = benchRecord.normFiberLength(k,idx).*lceOptMdl;
@@ -281,23 +331,40 @@ function [optError,optErrorValues, figDebugFitting,...
                     expfN = interp1(expLceU,...
                                     expfNU,...
                                     lceN);
+
+                    expStdfN   = interp1(expLceU,...
+                                         expfNStdU,...
+                                         lceN);
                     yV(k,1)=expfN;
                     yFitV(k,1)=fN;
+                    yStdV(k,1)=expStdfN;
                     errV(k,1) = expfN-fN;
+                    nerrV(k,1)= (expfN-fN)/expStdfN;
                 end
                 if(isempty(optErrorValues))
-                    optErrorValues.x = zeros(npts,3);
-                    optErrorValues.y = zeros(npts,3);
-                    optErrorValues.yFit = zeros(npts,3);
-                    optErrorValues.yErr = zeros(npts,3);
+                    optErrorValues.x     = zeros(npts,3);
+                    optErrorValues.y     = zeros(npts,3);
+                    optErrorValues.yFit  = zeros(npts,3);
+                    optErrorValues.yErr  = zeros(npts,3);
+                    optErrorValues.yStd  = zeros(npts,3);
+                    optErrorValues.yNErr = zeros(npts,3);
+                    optErrorValues.rmse   = zeros(1,3);
+                    optErrorValues.nrmse  = zeros(1,3);
                 end
                 optErrorValues.x(:,idx) = ...
                     benchRecord.normFiberLength(:,idx).*lceOptMdl;
                 optErrorValues.y(:,idx)     = yV; 
                 optErrorValues.yFit(:,idx)  = yFitV; 
-                optErrorValues.yErr(:,idx)  = errV; 
+                optErrorValues.yErr(:,idx)  = errV;
+                optErrorValues.yStd(:,idx)  = yStdV;
+                optErrorValues.yNErr(:,idx) = nerrV;
+                optErrorValues.rmse(1,idx)  = ...
+                  sqrt(mean(optErrorValues.yErr(:,idx).^2));
+                optErrorValues.nrmse(1,idx) = ...
+                  sqrt(mean(optErrorValues.yNErr(:,idx).^2));
                 
-                optError = optError+sqrt(mean(errV.^2));
+                optError = optError+optErrorValues.nrmse(1,idx);
+
             case 'QToF'
                lopt = ratFibrilModelsUpd(idxTrial).sarcomere.optimalSarcomereLength;
 
@@ -312,6 +379,7 @@ function [optError,optErrorValues, figDebugFitting,...
                %
                mdlX = optParams.exp(idxTrial).x;               
                mdlY = zeros(size(optParams.exp(idxTrial).x));
+
                 
                for i=1:1:length(mdlX)
                    mdlY(i,1)=interp1(benchRecord.normFiberLength(idx0:idx1,idx).*lopt,...
@@ -320,18 +388,43 @@ function [optError,optErrorValues, figDebugFitting,...
                end
 
                if(isempty(optErrorValues))
-                 optErrorValues.x = zeros(length(mdlX),3);
-                 optErrorValues.y = zeros(length(mdlX),3);
-                 optErrorValues.yFit= zeros(length(mdlX),3);
-                 optErrorValues.yErr = zeros(length(mdlX),3);
+                 optErrorValues.x     = zeros(length(mdlX),3);
+                 optErrorValues.y     = zeros(length(mdlX),3);
+                 optErrorValues.yFit  = zeros(length(mdlX),3);
+                 optErrorValues.yErr  = zeros(length(mdlX),3);
+                 optErrorValues.yStd  = zeros(length(mdlX),3);
+                 optErrorValues.yNErr = zeros(length(mdlX),3);
+                 optErrorValues.rmse  = zeros(1,3);
+                 optErrorValues.nrmse = zeros(1,3);
+
                end
                optErrorValues.x(:,idx)      = mdlX;
                optErrorValues.y(:,idx)      = optParams.exp(idxTrial).y;
+               optErrorValues.yStd(:,idx)   = optParams.exp(idxTrial).yStd;
                optErrorValues.yFit(:,idx)   = mdlY;
-               optErrorValues.yErr(:,idx)   = (mdlY - optParams.exp(idxTrial).y);               
-                
-               optError = optError+sqrt(mean((mdlY - optParams.exp(idxTrial).y).^2));                       
+               optErrorValues.yErr(:,idx)   = ...
+                 (mdlY - optParams.exp(idxTrial).y); 
+               optErrorValues.yNErr(:,idx)  = ...
+                 optErrorValues.yErr(:,idx) ...
+                 ./optParams.exp(idxTrial).yStd; 
+                optErrorValues.rmse(1,idx)  = ...
+                  sqrt(mean(optErrorValues.yErr(:,idx).^2));
+                optErrorValues.nrmse(1,idx) = ...
+                  sqrt(mean(optErrorValues.yNErr(:,idx).^2));               
+               
+               %meanStd  = mean(optParams.exp(idxTrial).yStd);
+               %nrmse    = sqrt(mean((mdlY - optParams.exp(idxTrial).y).^2)) ...
+               %           /meanStd;
+               
+               optError = optError+optErrorValues.nrmse(1,idx);                       
             case 'QToK'
+
+               assert(0,['Error: QToK is out of date. The slope of every',...
+                         ' experimental trial would need to be calculated',...
+                         ' so that the mean and standard deviation of the',...
+                         ' slope can be evaluated. Only then can NRMSE be',...
+                         ' evaluated']);
+
                lopt = ratFibrilModelsUpd(idxTrial).sarcomere.optimalSarcomereLength;
 
                x0N = optParams.exp(idxTrial).x(1,1)/lopt;
@@ -376,6 +469,8 @@ function [optError,optErrorValues, figDebugFitting,...
                optError = optError+(mdlSlope-optParams.exp(idxTrial).dydx).^2;
                
             case 'f1HNPreload'
+
+              assert(0,'Error: f1HNPreload needs to have its logic updated');
                lopt = ratFibrilModelsUpd(idxTrial).sarcomere.optimalSarcomereLength;
 
                x0N = optParams.exp(idxTrial).x(1,1)/lopt;
@@ -397,10 +492,10 @@ function [optError,optErrorValues, figDebugFitting,...
                end
 
                if(isempty(optErrorValues))
-                 optErrorValues.x = zeros(length(mdlX),3);
-                 optErrorValues.y = zeros(length(mdlX),3);
-                 optErrorValues.yFit = zeros(length(mdlX),3);
-                 optErrorValues.yErr = zeros(length(mdlX),3);
+                 optErrorValues.x     = zeros(length(mdlX),3);
+                 optErrorValues.y     = zeros(length(mdlX),3);
+                 optErrorValues.yFit  = zeros(length(mdlX),3);
+                 optErrorValues.yErr  = zeros(length(mdlX),3);
                end
                optErrorValues.x(:,idx) = mdlX;
                optErrorValues.y(:,idx)      = optParams.exp(idxTrial).y;               
@@ -410,6 +505,7 @@ function [optError,optErrorValues, figDebugFitting,...
                optError = optError+sqrt(mean((mdlY - optParams.exp(idxTrial).y).^2));
 
             case 'l1HNOffset'
+              assert(0,'Error: l1HNOffset needs to have its logic updated');              
                lopt = ratFibrilModelsUpd(idxTrial).sarcomere.optimalSarcomereLength;
 
                x0N = optParams.exp(idxTrial).x(1,1)/lopt;
@@ -460,10 +556,12 @@ function [optError,optErrorValues, figDebugFitting,...
     
             switch optParams.name
                 case 'responseTimeScaling'
-                    txtName = expTRSS2017.activeLengtheningData(idx).seriesName;
-                    i0=strfind(txtName,'Exp.');
-                    txtName(1,i0:4)='Sim.';
-            
+                    %txtName = expTRSS2017.activeLengtheningData(idx).seriesName;
+                    %i0=strfind(txtName,'Exp.');
+                    %txtName(1,i0:4)='Sim.';
+                    seriesName = expTRSS2017Raw.trials{idx};
+                    txtName = ['Sim. ', seriesName];
+
                     plot(benchRecord.normFiberLength(:,idx).*lceOptMdl,...
                          benchRecord.normCrossBridgeForceAlongTendon(:,idx),...
                          '-','Color',lineColorsSimTRSS2017(idx,:),...
@@ -472,9 +570,11 @@ function [optError,optErrorValues, figDebugFitting,...
                     hold on;
                     
                 case 'xeStiffnessDampingScaling'
-                    txtName = expTRSS2017.activeLengtheningData(idx).seriesName;
-                    i0=strfind(txtName,'Exp.');
-                    txtName(1,i0:4)='Sim.';
+                    %txtName = expTRSS2017.activeLengtheningData(idx).seriesName;
+                    %i0=strfind(txtName,'Exp.');
+                    %txtName(1,i0:4)='Sim.';
+                    seriesName = expTRSS2017Raw.trials{idx};
+                    txtName = ['Sim. ', seriesName];
             
                     plot(benchRecord.normFiberLength(:,idx).*lceOptMdl,...
                          benchRecord.normCrossBridgeForceAlongTendon(:,idx),...
@@ -484,10 +584,12 @@ function [optError,optErrorValues, figDebugFitting,...
                     hold on;
                     
                 case 'QToF'
-                    txtName = expTRSS2017.activeLengtheningData(idx).seriesName;
-                    i0=strfind(txtName,'Exp.');
-                    txtName(1,i0:4)='Sim.';
-            
+                    %txtName = expTRSS2017.activeLengtheningData(idx).seriesName;
+                    %i0=strfind(txtName,'Exp.');
+                    %txtName(1,i0:4)='Sim.';
+                    seriesName = expTRSS2017Raw.trials{idx};
+                    txtName = ['Sim. ', seriesName];            
+                    
                     plot(benchRecord.normFiberLength(:,idx).*lceOptMdl,...
                          benchRecord.normFiberForce(:,idx),...
                          '-','Color',lineColorsSimTRSS2017(idx,:),...
@@ -496,9 +598,11 @@ function [optError,optErrorValues, figDebugFitting,...
                     hold on;
 
                 case 'QToK'
-                    txtName = expTRSS2017.activeLengtheningData(idx).seriesName;
-                    i0=strfind(txtName,'Exp.');
-                    txtName(1,i0:4)='Sim.';
+                    %txtName = expTRSS2017.activeLengtheningData(idx).seriesName;
+                    %i0=strfind(txtName,'Exp.');
+                    %txtName(1,i0:4)='Sim.';
+                    seriesName = expTRSS2017Raw.trials{idx};
+                    txtName = ['Sim. ', seriesName];                    
             
                     plot(benchRecord.normFiberLength(:,idx).*lceOptMdl,...
                          benchRecord.normFiberForce(:,idx),...
@@ -509,10 +613,12 @@ function [optError,optErrorValues, figDebugFitting,...
     
                     
                 case 'f1HNPreload'
-                    txtName = expTRSS2017.activeLengtheningData(idx).seriesName;
-                    i0=strfind(txtName,'Exp.');
-                    txtName(1,i0:4)='Sim.';
-            
+                    %txtName = expTRSS2017.activeLengtheningData(idx).seriesName;
+                    %i0=strfind(txtName,'Exp.');
+                    %txtName(1,i0:4)='Sim.';
+                    seriesName = expTRSS2017Raw.trials{idx};
+                    txtName = ['Sim. ', seriesName];            
+                    
                     plot(benchRecord.normFiberLength(:,idx).*lceOptMdl,...
                          benchRecord.normFiberForce(:,idx),...
                          '-','Color',lineColorsSimTRSS2017(idx,:),...
@@ -521,10 +627,12 @@ function [optError,optErrorValues, figDebugFitting,...
                     hold on;
     
                 case 'l1HNOffset'
-                    txtName = expTRSS2017.activeLengtheningData(idx).seriesName;
-                    i0=strfind(txtName,'Exp.');
-                    txtName(1,i0:4)='Sim.';
-            
+                    %txtName = expTRSS2017.activeLengtheningData(idx).seriesName;
+                    %i0=strfind(txtName,'Exp.');
+                    %txtName(1,i0:4)='Sim.';
+                    seriesName = expTRSS2017Raw.trials{idx};
+                    txtName = ['Sim. ', seriesName];
+
                     plot(benchRecord.normFiberLength(:,idx).*lceOptMdl,...
                          benchRecord.normFiberForce(:,idx),...
                          '-','Color',lineColorsSimTRSS2017(idx,:),...

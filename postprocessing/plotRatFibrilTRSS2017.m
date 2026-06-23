@@ -357,9 +357,8 @@ for idx=simConfig.trials
         %        /(expTRSS2017Raw.(seriesName).time(end) ...
         %        -expTRSS2017Raw.(seriesName).time(1)); %
         %vceNV = ones(size(lceNV)).*vceNVavg;
-        fsample = 1/(expTRSS2017Raw.(seriesName).time(2,1)-expTRSS2017Raw.(seriesName).time(1,1));
-
-        [b,a]=butter(2,30/(0.5*fsample),'low');
+        lpfFreqHz=simConfig.numericalDiffLowPassFilterFrequencyHz;
+        [b,a]=butter(2,lpfFreqHz/(0.5*expTRSS2017Raw.sampleFrequencyHz),'low');
         vceNVnum = calcCentralDifferenceDataSeries(...
                     expTRSS2017Raw.(seriesName).time,...
                     filtfilt(b,a,expTRSS2017Raw.(seriesName).lN));
