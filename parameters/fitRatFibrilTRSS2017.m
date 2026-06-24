@@ -764,7 +764,7 @@ if(fittingConfig.fitQToF ==1 || fittingConfig.fitQToK == 1)
         simConfigTmp.flag_debugFitting=0;
         fittingFraction=1;
         npts=100;
-        [optError,optErrorValues,figDebugFittingQ,...
+        [optErrorStart,optErrorValues,figDebugFittingQ,...
             ratFibrilModelsFittedUpd,benchRecord] =...
             calcErrorTRSS2017RampFraction(optParams,...
                        fittingFraction, npts, ...
@@ -774,7 +774,7 @@ if(fittingConfig.fitQToF ==1 || fittingConfig.fitQToK == 1)
                        figDebugFittingQ,plotConfig.subPlotPanel,...
                        plotConfig.lineColors.simTitinK);
 
-        optErrorBest=optError;
+        optErrorBest=optErrorStart;
         optErrorValuesBest=optErrorValues;
         QBest=QInit;
         QDelta=QDeltaInit;
@@ -809,118 +809,210 @@ if(fittingConfig.fitQToF ==1 || fittingConfig.fitQToK == 1)
 
         end
 
+        fitType='';
         if(fittingConfig.fitQToF)
-            if(fittingConfig.titin.individuallyFit==1)
-                fprintf('%1.2e\tfitting trial %i: Q rmse force profile (start)\n',...
-                        optErrorBest,idxTrial);
-                fprintf('%e\tQ (start)\n',QBest);    
-        
-                fprintf(fidFitting,...
-                    '%1.2e\tfitting trial %i: Q rmse force profile (start)\n',...
-                    optErrorBest,idxTrial);
-                fprintf(fidFitting,...
-                    '%e\tQ (start)\n',QBest);    
-            else
-                fprintf('%1.2e\tfitting all: Q rmse force profile (start)\n',...
-                        optErrorBest);
-                fprintf('%e\tQ (start)\n',QBest);    
-        
-                fprintf(fidFitting,...
-                    '%1.2e\tfitting all: Q rmse force profile (start)\n',...
-                    optErrorBest);
-                fprintf(fidFitting,...
-                    '%e\tQ (start)\n',QBest);    
-            end            
-            if(fittingConfig.titin.individuallyFit==1)
-                if(isnan(fitInfo.QToF.rmse))
-                    fitInfo.QToF.rmse = optErrorBest;
-                    fitInfo.QToF.x  = optErrorValuesBest.x(:,idxTrial);
-                    fitInfo.QToF.y     = optErrorValuesBest.y(:,idxTrial);
-                    fitInfo.QToF.yFit  = optErrorValuesBest.yFit(:,idxTrial);                    
-                    fitInfo.QToF.yErr  = optErrorValuesBest.yErr(:,idxTrial);
-
-                    fitInfo.QToF.arg  = QBest;            
-                    fitInfo.QToF.argDelta = QDelta*2;
-
-                else
-                    fitInfo.QToF.rmse = [fitInfo.QToF.rmse, optErrorBest];
-                    fitInfo.QToF.x  = [fitInfo.QToF.x,  optErrorValuesBest.x(:,idxTrial)];
-                    fitInfo.QToF.y      = [fitInfo.QToF.y,      optErrorValuesBest.y(:,idxTrial)];
-                    fitInfo.QToF.yFit   = [fitInfo.QToF.yFit,   optErrorValuesBest.yFit(:,idxTrial)];
-                    fitInfo.QToF.yErr   = [fitInfo.QToF.yErr,   optErrorValuesBest.yErr(:,idxTrial)];
-                    fitInfo.QToF.arg  = [fitInfo.QToF.arg,  QBest];            
-                    fitInfo.QToF.argDelta = QDelta*2;
-                end
-            else
-                fitInfo.QToF.rmse = optErrorBest;
-                fitInfo.QToF.x  = optErrorValuesBest.x;
-                fitInfo.QToF.y     = optErrorValuesBest.y;
-                fitInfo.QToF.yFit  = optErrorValuesBest.yFit;
-                fitInfo.QToF.yErr  = optErrorValuesBest.yErr;                
-                fitInfo.QToF.arg  = QBest;           
-                fitInfo.QToF.argDelta = QDelta*2;
-            end
-            fprintf('%1.2e\tfitting: Q rmse force profile (end)\n',optErrorBest);
-            fprintf('%e\tQ (end)\n',QBest);    
-            fprintf(fidFitting,'%1.2e\tfitting: Q rmse force profile (end)\n',optErrorBest);
-            fprintf(fidFitting,'%e\tQ (end)\n',QBest);              
+            fitType = 'QToF';
         end
-
         if(fittingConfig.fitQToK)
-            if(fittingConfig.titin.individuallyFit==1)
-                fprintf('%1.2e\tfitting trial %i: Q rmse terminal slope (start)\n',...
-                        optErrorBest,idxTrial);
-                fprintf('%e\tQ (start)\n',QBest);    
-        
-                fprintf(fidFitting,...
-                    '%1.2e\tfitting trial %i: Q rmse terminal slope (start)\n',...
-                    optErrorBest,idxTrial);
-                fprintf(fidFitting,...
-                    '%e\tQ (start)\n',QBest);    
-            else
-                fprintf('%1.2e\tfitting all: Q rmse terminal slope (start)\n',...
-                        optErrorBest);
-                fprintf('%e\tQ (start)\n',QBest);    
-        
-                fprintf(fidFitting,...
-                    '%1.2e\tfitting all: Q rmse terminal slope (start)\n',...
-                    optErrorBest);
-                fprintf(fidFitting,...
-                    '%e\tQ (start)\n',QBest);    
-            end      
-                  
-            if(fittingConfig.titin.individuallyFit==1)
-                if(isnan(fitInfo.QToK.rmse))
-                    fitInfo.QToK.rmse = optErrorBest;
-                    fitInfo.QToK.x  = optErrorValuesBest.x(:,idxTrial);
-                    fitInfo.QToK.y      = optErrorValuesBest.y(:,idxTrial);
-                    fitInfo.QToK.yFit   = optErrorValuesBest.yFit(:,idxTrial);
-                    fitInfo.QToK.yErr   = optErrorValuesBest.yErr(:,idxTrial);
-                    fitInfo.QToK.arg  = QBest;   
-                    fitInfo.QToK.argDelta = QDelta*2;
-                else
-                    fitInfo.QToK.rmse = [fitInfo.QToK.rmse, optErrorBest];
-                    fitInfo.QToK.x  = [fitInfo.QToK.x,  optErrorValuesBest.x(:,idxTrial)];
-                    fitInfo.QToK.y    = [fitInfo.QToK.y,   optErrorValuesBest.y(:,idxTrial)];
-                    fitInfo.QToK.yFit = [fitInfo.QToK.yFit,optErrorValuesBest.yFit(:,idxTrial)];
-                    fitInfo.QToK.yErr = [fitInfo.QToK.yErr,optErrorValuesBest.yErr(:,idxTrial)];
-                    fitInfo.QToK.arg  = [fitInfo.QToK.arg,  QBest];            
-                    fitInfo.QToK.argDelta = QDelta*2;
-                end
-            else
-                fitInfo.QToK.rmse = optErrorBest;
-                fitInfo.QToK.x  = optErrorValuesBest.x;
-                fitInfo.QToK.y      = optErrorValuesBest.y;
-                fitInfo.QToK.yFit   = optErrorValuesBest.yFit;
-                fitInfo.QToK.yErr   = optErrorValuesBest.yErr;
-                fitInfo.QToK.arg  = QBest;   
-                fitInfo.QToK.argDelta = QDelta*2;
-            end
-            fprintf('%1.2e\tfitting: Q rmse terminal slope (end)\n',optErrorBest);
-            fprintf('%e\tQ (end)\n',QBest);    
-            fprintf(fidFitting,'%1.2e\tfitting: Q rmse terminal slope (end)\n',optErrorBest);
-            fprintf(fidFitting,'%e\tQ (end)\n',QBest);              
+            fitType = 'QToK';
         end
+
+        if(fittingConfig.titin.individuallyFit==1)
+            fprintf('fitting trial %i: Q nrmse force profile\n',idxTrial);
+            fprintf('\t%e\tQ (start)\n',QInit); 
+            fprintf('\t%e\tNRMSE (start)\n',optErrorStart); 
+            fprintf('\t%e\tQ (end)\n',QBest); 
+            fprintf('\t%e\tNRMSE (end)\n',optErrorBest);
+        else
+            fprintf('fitting all: Q rmse force profile\n');
+            fprintf('\t%e\tQ (start)\n',QInit); 
+            fprintf('\t%e\tNRMSE (start)\n',optErrorStart); 
+            fprintf('\t%e\tQ (end)\n',QBest); 
+            fprintf('\t%e\tNRMSE (end)\n',optErrorBest); 
+        end            
+        if(fittingConfig.titin.individuallyFit==1)
+            if(isnan(fitInfo.(fitType).rmse))
+                fitInfo.(fitType).x     = optErrorValuesBest.x(:,idxTrial);
+                fitInfo.(fitType).y     = optErrorValuesBest.y(:,idxTrial);
+                fitInfo.(fitType).yFit  = optErrorValuesBest.yFit(:,idxTrial);                    
+                fitInfo.(fitType).yErr  = optErrorValuesBest.yErr(:,idxTrial);
+                fitInfo.(fitType).rmse  = optErrorValuesBest.rmse(:,idxTrial);
+                fitInfo.(fitType).yStd  = optErrorValuesBest.yStd(:,idxTrial);
+                fitInfo.(fitType).yNErr = optErrorValuesBest.yNErr(:,idxTrial);
+                fitInfo.(fitType).nrmse = optErrorValuesBest.nrmse(:,idxTrial);
+
+                fitInfo.(fitType).arg  = QBest;            
+                fitInfo.(fitType).argDelta = QDelta*2;
+
+            else
+                fitInfo.(fitType).x     = [fitInfo.(fitType).x,     optErrorValuesBest.x(:,idxTrial)];
+                fitInfo.(fitType).y     = [fitInfo.(fitType).y,     optErrorValuesBest.y(:,idxTrial)];
+                fitInfo.(fitType).yFit  = [fitInfo.(fitType).yFit,  optErrorValuesBest.yFit(:,idxTrial)];
+                fitInfo.(fitType).yErr  = [fitInfo.(fitType).yErr,  optErrorValuesBest.yErr(:,idxTrial)];
+                fitInfo.(fitType).rmse  = [fitInfo.(fitType).rmse,  optErrorValuesBest.rmse(:,idxTrial)];
+                fitInfo.(fitType).yStd  = [fitInfo.(fitType).yStd,  optErrorValuesBest.yStd(:,idxTrial)];
+                fitInfo.(fitType).yNErr = [fitInfo.(fitType).yNErr, optErrorValuesBest.yNErr(:,idxTrial)];
+                fitInfo.(fitType).nrmse = [fitInfo.(fitType).nrmse, optErrorValuesBest.nrmse(:,idxTrial)];
+                
+                fitInfo.(fitType).arg  = [fitInfo.(fitType).arg,  QBest];            
+                fitInfo.(fitType).argDelta = QDelta*2;
+            end
+        else
+            fitInfo.(fitType).x     = optErrorValuesBest.x;
+            fitInfo.(fitType).y     = optErrorValuesBest.y;
+            fitInfo.(fitType).yFit  = optErrorValuesBest.yFit;
+            fitInfo.(fitType).yErr  = optErrorValuesBest.yErr;
+            fitInfo.(fitType).rmse  = optErrorValuesBest.rmse;
+            fitInfo.(fitType).yStd  = optErrorValuesBest.yStd;
+            fitInfo.(fitType).yNErr = optErrorValuesBest.yNErr;
+            fitInfo.(fitType).nrmse = optErrorValuesBest.nrmse;
+
+            fitInfo.(fitType).arg  = QBest;           
+            fitInfo.(fitType).argDelta = QDelta*2;
+        end
+%         fprintf('%1.2e\tfitting: Q rmse force profile (end)\n',optErrorBest);
+%         fprintf('%e\tQ (end)\n',QBest);    
+%         fprintf(fidFitting,'%1.2e\tfitting: Q rmse force profile (end)\n',optErrorBest);
+%         fprintf(fidFitting,'%e\tQ (end)\n',QBest);          
+%         if(fittingConfig.fitQToF)
+%             if(fittingConfig.titin.individuallyFit==1)
+%                 fprintf('%1.2e\tfitting trial %i: Q rmse force profile (start)\n',...
+%                         optErrorBest,idxTrial);
+%                 fprintf('%e\tQ (start)\n',QBest);    
+%         
+%                 fprintf(fidFitting,...
+%                     '%1.2e\tfitting trial %i: Q rmse force profile (start)\n',...
+%                     optErrorBest,idxTrial);
+%                 fprintf(fidFitting,...
+%                     '%e\tQ (start)\n',QBest);    
+%             else
+%                 fprintf('%1.2e\tfitting all: Q rmse force profile (start)\n',...
+%                         optErrorBest);
+%                 fprintf('%e\tQ (start)\n',QBest);    
+%         
+%                 fprintf(fidFitting,...
+%                     '%1.2e\tfitting all: Q rmse force profile (start)\n',...
+%                     optErrorBest);
+%                 fprintf(fidFitting,...
+%                     '%e\tQ (start)\n',QBest);    
+%             end            
+%             if(fittingConfig.titin.individuallyFit==1)
+%                 if(isnan(fitInfo.QToF.rmse))
+%                     fitInfo.QToF.rmse = optErrorBest;
+%                     fitInfo.QToF.x     = optErrorValuesBest.x(:,idxTrial);
+%                     fitInfo.QToF.y     = optErrorValuesBest.y(:,idxTrial);
+%                     fitInfo.QToF.yFit  = optErrorValuesBest.yFit(:,idxTrial);                    
+%                     fitInfo.QToF.yErr  = optErrorValuesBest.yErr(:,idxTrial);
+%                     fitInfo.QToF.rmse  = optErrorValuesBest.rmse(:,idxTrial);
+%                     fitInfo.QToF.yStd  = optErrorValuesBest.yStd(:,idxTrial);
+%                     fitInfo.QToF.yNErr = optErrorValuesBest.yNErr(:,idxTrial);
+%                     fitInfo.QToF.nrmse = optErrorValuesBest.rmse(:,idxTrial);
+% 
+%                     fitInfo.QToF.arg  = QBest;            
+%                     fitInfo.QToF.argDelta = QDelta*2;
+% 
+%                 else
+%                     fitInfo.QToF.rmse = [fitInfo.QToF.rmse, optErrorBest];
+%                     fitInfo.QToF.x     = [fitInfo.QToF.x,     optErrorValuesBest.x(:,idxTrial)];
+%                     fitInfo.QToF.y     = [fitInfo.QToF.y,     optErrorValuesBest.y(:,idxTrial)];
+%                     fitInfo.QToF.yFit  = [fitInfo.QToF.yFit,  optErrorValuesBest.yFit(:,idxTrial)];
+%                     fitInfo.QToF.yErr  = [fitInfo.QToF.yErr,  optErrorValuesBest.yErr(:,idxTrial)];
+%                     fitInfo.QToF.rmse  = [fitInfo.QToF.rmse,  optErrorValuesBest.rmse(:,idxTrial)];
+%                     fitInfo.QToF.yStd  = [fitInfo.QToF.yStd,  optErrorValuesBest.yStd(:,idxTrial)];
+%                     fitInfo.QToF.yNErr = [fitInfo.QToF.yNErr, optErrorValuesBest.yNErr(:,idxTrial)];
+%                     fitInfo.QToF.nrmse = [fitInfo.QToF.nrmse, optErrorValuesBest.rmse(:,idxTrial)];
+%                     
+%                     fitInfo.QToF.arg  = [fitInfo.QToF.arg,  QBest];            
+%                     fitInfo.QToF.argDelta = QDelta*2;
+%                 end
+%             else
+%                 fitInfo.QToF.rmse = optErrorBest;
+%                 fitInfo.QToF.x     = optErrorValuesBest.x;
+%                 fitInfo.QToF.y     = optErrorValuesBest.y;
+%                 fitInfo.QToF.yFit  = optErrorValuesBest.yFit;
+%                 fitInfo.QToF.yErr  = optErrorValuesBest.yErr;
+%                 fitInfo.QToF.rmse  = optErrorValuesBest.rmse;
+%                 fitInfo.QToF.yStd  = optErrorValuesBest.yStd;
+%                 fitInfo.QToF.yNErr = optErrorValuesBest.yNErr;
+%                 fitInfo.QToF.nrmse = optErrorValuesBest.nrmse;
+% 
+%                 fitInfo.QToF.arg  = QBest;           
+%                 fitInfo.QToF.argDelta = QDelta*2;
+%             end
+%             fprintf('%1.2e\tfitting: Q rmse force profile (end)\n',optErrorBest);
+%             fprintf('%e\tQ (end)\n',QBest);    
+%             fprintf(fidFitting,'%1.2e\tfitting: Q rmse force profile (end)\n',optErrorBest);
+%             fprintf(fidFitting,'%e\tQ (end)\n',QBest);              
+%         end
+% 
+%         if(fittingConfig.fitQToK)
+%             if(fittingConfig.titin.individuallyFit==1)
+%                 fprintf('%1.2e\tfitting trial %i: Q rmse terminal slope (start)\n',...
+%                         optErrorBest,idxTrial);
+%                 fprintf('%e\tQ (start)\n',QBest);    
+%         
+%                 fprintf(fidFitting,...
+%                     '%1.2e\tfitting trial %i: Q rmse terminal slope (start)\n',...
+%                     optErrorBest,idxTrial);
+%                 fprintf(fidFitting,...
+%                     '%e\tQ (start)\n',QBest);    
+%             else
+%                 fprintf('%1.2e\tfitting all: Q rmse terminal slope (start)\n',...
+%                         optErrorBest);
+%                 fprintf('%e\tQ (start)\n',QBest);    
+%         
+%                 fprintf(fidFitting,...
+%                     '%1.2e\tfitting all: Q rmse terminal slope (start)\n',...
+%                     optErrorBest);
+%                 fprintf(fidFitting,...
+%                     '%e\tQ (start)\n',QBest);    
+%             end      
+%                   
+%             if(fittingConfig.titin.individuallyFit==1)
+%                 if(isnan(fitInfo.QToK.rmse))
+%                     fitInfo.QToK.rmse = optErrorBest;
+%                     fitInfo.QToK.x     = optErrorValuesBest.x(:,idxTrial);
+%                     fitInfo.QToK.y     = optErrorValuesBest.y(:,idxTrial);
+%                     fitInfo.QToK.yFit  = optErrorValuesBest.yFit(:,idxTrial);
+%                     fitInfo.QToK.yErr  = optErrorValuesBest.yErr(:,idxTrial);
+%                     fitInfo.QToK.rmse  = optErrorValuesBest.rmse(:,idxTrial);
+%                     fitInfo.QToK.yStd  = optErrorValuesBest.yStd(:,idxTrial);
+%                     fitInfo.QToK.yNErr = optErrorValuesBest.yNErr(:,idxTrial);
+%                     fitInfo.QToK.nrmse = optErrorValuesBest.rmse(:,idxTrial);
+%                     
+%                     fitInfo.QToK.arg  = QBest;   
+%                     fitInfo.QToK.argDelta = QDelta*2;
+%                 else
+%                     fitInfo.QToK.rmse = [fitInfo.QToK.rmse, optErrorBest];
+%                     fitInfo.QToK.x    = [fitInfo.QToK.x,  optErrorValuesBest.x(:,idxTrial)];
+%                     fitInfo.QToK.y    = [fitInfo.QToK.y,   optErrorValuesBest.y(:,idxTrial)];
+%                     fitInfo.QToK.yFit = [fitInfo.QToK.yFit,optErrorValuesBest.yFit(:,idxTrial)];
+%                     fitInfo.QToK.yErr = [fitInfo.QToK.yErr,optErrorValuesBest.yErr(:,idxTrial)];
+%                     fitInfo.QToK.rmse  = [fitInfo.QToK.rmse,  optErrorValuesBest.rmse(:,idxTrial)];
+%                     fitInfo.QToK.yStd  = [fitInfo.QToK.yStd,  optErrorValuesBest.yStd(:,idxTrial)];
+%                     fitInfo.QToK.yNErr = [fitInfo.QToK.yNErr, optErrorValuesBest.yNErr(:,idxTrial)];
+%                     fitInfo.QToK.nrmse = [fitInfo.QToK.nrmse, optErrorValuesBest.rmse(:,idxTrial)];
+%                     fitInfo.QToK.arg  = [fitInfo.QToK.arg,  QBest];            
+%                     fitInfo.QToK.argDelta = QDelta*2;
+%                 end
+%             else
+%                 fitInfo.QToK.rmse   = optErrorBest;
+%                 fitInfo.QToK.x      = optErrorValuesBest.x;
+%                 fitInfo.QToK.y      = optErrorValuesBest.y;
+%                 fitInfo.QToK.yFit   = optErrorValuesBest.yFit;
+%                 fitInfo.QToK.yErr   = optErrorValuesBest.yErr;
+%                 fitInfo.QToK.rmse   = optErrorValuesBest.rmse;
+%                 fitInfo.QToK.yStd   = optErrorValuesBest.yStd;
+%                 fitInfo.QToK.yNErr  = optErrorValuesBest.yNErr;
+%                 fitInfo.QToK.nrmse  = optErrorValuesBest.nrmse;
+%                 fitInfo.QToK.arg  = QBest;   
+%                 fitInfo.QToK.argDelta = QDelta*2;
+%             end
+%             fprintf('%1.2e\tfitting: Q rmse terminal slope (end)\n',optErrorBest);
+%             fprintf('%e\tQ (end)\n',QBest);    
+%             fprintf(fidFitting,'%1.2e\tfitting: Q rmse terminal slope (end)\n',optErrorBest);
+%             fprintf(fidFitting,'%e\tQ (end)\n',QBest);              
+%         end
 
   
 

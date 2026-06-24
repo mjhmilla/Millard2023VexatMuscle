@@ -342,7 +342,7 @@ function [optError,optErrorValues, figDebugFitting,...
                     nerrV(k,1)= (expfN-fN)/expStdfN;
                 end
                 if(isempty(optErrorValues))
-                    optErrorValues.x     = zeros(npts,3);
+                  optErrorValues.x     = zeros(npts,3);
                     optErrorValues.y     = zeros(npts,3);
                     optErrorValues.yFit  = zeros(npts,3);
                     optErrorValues.yErr  = zeros(npts,3);

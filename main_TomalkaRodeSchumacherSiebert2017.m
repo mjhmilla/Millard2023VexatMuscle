@@ -11,7 +11,7 @@ if(flag_OuterLoopMode==0)
     close all;
     clear all;
 
-    simConfigInput.runFitting              = 1; 
+    simConfigInput.runFitting              = 0; 
     simConfigInput.generatePlots           = 1;
     simConfigInput.fitToIndividualTrials   = 1; 
     simConfigInput.manuallySetTimeConstant = 0;
@@ -121,8 +121,8 @@ addpath( genpath(projectFolders.postprocessing) );
 % Plot parameters
 %%
 %
-length135mm = 5.75;
-length160mm = 7;
+length135mm = 5.25;
+length160mm = 6.5;
 plotLayoutSettings = struct('numberOfHorizontalPlotColumns',  2,...
                             'numberOfVerticalPlotRows',       6,...
                             'flag_fixedPlotWidth',            1,...
@@ -137,7 +137,7 @@ plotWidth                     = plotLayoutSettings.plotWidth;
 plotHeight                    = plotLayoutSettings.plotHeight;
 flag_usingOctave              = plotLayoutSettings.flag_usingOctave;
 
-plotHorizMarginCm = 1.0;
+plotHorizMarginCm = 2.0;
 plotVertMarginCm  = 2.0;
 
 pageWidth   = (plotWidth+plotHorizMarginCm)*numberOfHorizontalPlotColumns...
@@ -165,6 +165,9 @@ n=0.75;
 lineColors.orig(1,:)=[0,0,0];
 lineColors.orig(2,:)=[44,133,229]./255;
 lineColors.orig(3,:)=[63,181,175]./255;
+lineColors.timeSeriesL = cs.blue;
+lineColors.timeSeriesF = [0,0,0];%cs.red;
+lineColors.annotationBox = [1,1,1].*0.75;
 
 for i=1:1:3
     n0 = 0.25*(i-1);
@@ -478,69 +481,21 @@ if(simConfig.generatePlots==1)
              fittingConfig.trialStr,'.mat']));
 
     ratFibrilModelsFitted=tmp.ratFibrilModelsFitted;
-    
-    fidParams = fopen(fullfile(projectFolders.output_tables_TRSS2017,...
-                    ['fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted',...
-                      fittingConfig.trialStr,'.tex']),'w');
-    
-    fitInfoFields=fields(fitInfo);
-    fprintf(fidParams,'%s\n','\begin{tabular}{l l l l}');
-    fprintf(fidParams,'%s\n','Parameter & Trial 1 & Trial 2 & Trial 3\\');
 
-    for idxF=1:1:length(fitInfoFields)
-        if(~isnan(fitInfo.(fitInfoFields{idxF}).rmse))
-            if(simConfig.fitToIndividualTrials)
-                fprintf(fidParams,...
-                        '%s Param',...
-                        fitInfoFields{idxF});
-                if(size(fitInfo.(fitInfoFields{idxF}).arg,2)>1)
-                    for i=1:1:size(fitInfo.(fitInfoFields{idxF}).arg,2)
-                        fprintf(fidParams,...
-                            ' & %1.3f',...
-                            fitInfo.(fitInfoFields{idxF}).arg(1,i));
-                    end
-                else
-                    fprintf(fidParams,...
-                        ' & \\multicol{3}{c}{%1.3f}\\\\ \n',...
-                        fitInfo.(fitInfoFields{idxF}).arg(1,1));
-                end
-                fprintf(fidParams,'\n');
-                
-                fprintf(fidParams,...
-                        '%s RMSE',...
-                        fitInfoFields{idxF});
-                    
-                for i=1:1:size(fitInfo.(fitInfoFields{idxF}).yErr,2)
-                    fprintf(fidParams,...
-                        ' & %1.3f',...
-                        sqrt(mean(fitInfo.(fitInfoFields{idxF}).yErr(:,i).^2)) );
-                end
-                fprintf(fidParams,'\n');
-            else
-                fprintf(fidParams,...
-                        '%s Param',...
-                        fitInfoFields{idxF});                    
-                fprintf(fidParams,...
-                    ' & \\multicol{3}{c}{%1.3f}\\\\ \n',...
-                    fitInfo.(fitInfoFields{idxF}).arg(1,1));
-                
-                fprintf(fidParams,...
-                        '%s RMSE',...
-                        fitInfoFields{idxF});                    
-                for i=1:1:size(fitInfo.(fitInfoFields{idxF}).yErr,2)
-                    fprintf(fidParams,...
-                        ' & %1.3f',...
-                        sqrt(mean(fitInfo.(fitInfoFields{idxF}).yErr(:,i).^2)) );
-                end
-                fprintf(fidParams,'%s\n','\\');
 
-            end
-        end
+    if(simConfig.fitToIndividualTrials==1)
+      filePathTable = fullfile(projectFolders.output_tables_TRSS2017,...
+                      ['fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted',...
+                        fittingConfig.trialStr,'.tex']);    
+
+    else
+      filePathTable = fullfile(projectFolders.output_tables_TRSS2017,...
+                      ['fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted',...
+                        fittingConfig.trialStr,'.tex']);    
     end
-    fprintf(fidParams,'%s\n','\end{tabular}');
 
-    fclose(fidParams);
-
+    success = writeTRSS2017ErrorTable(filePathTable,fitInfo,...
+                                   simConfig,projectFolders);
 
     figPub=figure;
 
