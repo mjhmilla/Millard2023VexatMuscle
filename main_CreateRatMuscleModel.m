@@ -5,7 +5,7 @@
 %
 %%
 
-flag_OuterLoopMode=1;
+flag_OuterLoopMode=0;
 
 if(flag_OuterLoopMode==0)
     clc;
@@ -68,7 +68,8 @@ indexOfDataSetToPassiveForceLengthCurve =0;
 %indexTRSS2017 = ratMuscleMetaData.index;
 
 
-indexOfDataSetForPassiveCurveParameters = ratMuscleMetaData.index_SW1982;
+indexPassiveDataSetLinearStiffness = ratMuscleMetaData.index_SW1982;
+indexPassiveDataSetToeRegion       = ratMuscleMetaData.index_TRSS2017;
 % 1. Tomalka et al. 2017
 % 2. Zuurbier et al. 1995
 % 3. Stephenson & Williams 1982
@@ -86,8 +87,55 @@ expDataSetFittingData(1).minLengthWhereFpeIsLinear=nan;
 expDataSetFittingData(2).minLengthWhereFpeIsLinear=nan;
 expDataSetFittingData(3).minLengthWhereFpeIsLinear=0.3;
 
+expTRSS2017 = loadTRSS2017Data(projectFolders);
+
+fittingDataSets.fpe = [];
+fittingDataSets.fl  = [];
+fittingDataSets.fv  = [];
+
+expTRSS2017Sets ={'lN070','lN085','lN145'};
+
+flN.x=[];
+flN.y=[];
+
+fvN.x=[];
+fvN.y=[];
+
+[b,a] = butter(2,30/500,'low');
 
 
+for i=1:1:length(expTRSS2017Sets)
+
+  vN = filtfilt(b,a,expTRSS2017.(expTRSS2017Sets{i}).lN);
+  dt =1/expTRSS2017.sampleFrequencyHz;
+  timeSeries = [0:1:(length(vN)-1)]' .* dt;
+
+  vN = calcCentralDifferenceDataSeries(timeSeries,vN);
+
+  idxA = expTRSS2017.keyIndices.(expTRSS2017Sets{i})(1);
+  idxB = expTRSS2017.keyIndices.(expTRSS2017Sets{i})(3);
+  if(i==1)
+    flN.x = expTRSS2017.(expTRSS2017Sets{i}).lN(idxA); 
+    flN.y = expTRSS2017.(expTRSS2017Sets{i}).fNavg(idxA);    
+    fvN.x = vN(idxA);
+
+    %This is an approximation but it works in this case 
+    fvN.y = expTRSS2017.(expTRSS2017Sets{i}).fNavg(idxB) ...
+           /expTRSS2017.(expTRSS2017Sets{i}).fNavg(idxA);
+  else
+    flN.x = [flN.x;expTRSS2017.(expTRSS2017Sets{i}).lN(idxA)]; 
+    flN.y = [flN.y;expTRSS2017.(expTRSS2017Sets{i}).fNavg(idxA)];
+
+    fvNVal= expTRSS2017.(expTRSS2017Sets{i}).fNavg(idxB) ...
+           /expTRSS2017.(expTRSS2017Sets{i}).fNavg(idxA);
+    fvN.x = [fvN.x;vN(idxA)];
+    fvN.y = [fvN.y;fvNVal];    
+  end
+
+end
+
+fittingDataSets.fl  = flN;
+fittingDataSets.fv  = fvN;
 
 %
 % Select the reference data set
@@ -376,65 +424,7 @@ pageHeight  = (plotHeight+plotVertMarginCm)*numberOfVerticalPlotRows...
 plotConfigGeneric;
 
  
-%%
-% Fit the passive force-length relation
-%   Even for fibril models this is useful as it serves as a fitting
-%   reference for the passive-force-length relation for the entire 
-%   titin segment.
-%%
 
-if(indexOfDataSetForPassiveCurveParameters>0)
-    
-    referencePassiveForceLengthDataTable = ...
-        ratMuscleData(indexOfDataSetForPassiveCurveParameters).passiveForceLengthData;
-
-    fittingFpeNMinForce = ...
-            expDataSetFittingData(...
-            indexOfDataSetForPassiveCurveParameters).minLengthWhereFpeIsLinear;
-
-    fittingFpeNOptSarcomereLengthInUm = ...
-            expDataSetFittingData(...
-            indexOfDataSetForPassiveCurveParameters).optimalSarcomereLength; 
-
-    fittingDataFpeN=[];
-    for i=1:1:length(referencePassiveForceLengthDataTable)
-        for j=1:1:length(referencePassiveForceLengthDataTable(i).x)
-            if(referencePassiveForceLengthDataTable(i).y(j) > fittingFpeNMinForce)
-                fittingDataFpeN = ...
-                    [fittingDataFpeN;...
-                     referencePassiveForceLengthDataTable(i).x(j), ...
-                     referencePassiveForceLengthDataTable(i).y(j)];            
-            end
-        end
-    end
-    
-    %Fit a line to the data
-    A = [fittingDataFpeN(:,1),ones(size(fittingDataFpeN(:,1)))];
-    b = fittingDataFpeN(:,2);
-    x = (A'*A)\(A'*b);
-    c = x(1,1);
-    y0 = x(2,1);
-    %y = c*x + x0
-    
-    setSarcomereProperties.normFiberStiffnessAtOneNormPassiveForce = ...
-        c/(1/fittingFpeNOptSarcomereLengthInUm);
-    setSarcomereProperties.normFiberLengthAtOneNormPassiveForce = ...
-        ((1-y0)/c)/fittingFpeNOptSarcomereLengthInUm;
-
-    if(strcmp(experimentName,'TWHSS2021')==1)
-        setSarcomereProperties.normFiberLengthAtOneNormPassiveForce = ...
-            setSarcomereProperties.normFiberLengthAtOneNormPassiveForce ...
-            +shiftPassiveCurve;
-    
-        setSarcomereProperties.normFiberStiffnessAtLowPassiveForce = ...
-            setSarcomereProperties.normFiberStiffnessAtOneNormPassiveForce*0.4;
-    end
-    
-    
-    disp(setSarcomereProperties.normFiberStiffnessAtOneNormPassiveForce);
-    disp(setSarcomereProperties.normFiberLengthAtOneNormPassiveForce);
-
-end
 
 
 %%
@@ -483,6 +473,240 @@ save(filePathHumanSoleus,'defaultHumanSoleus');
 %
 %%
 
+%
+% default rat muscle model
+%
+[defaultRatMuscleModelParameters,...
+ activeForceLengthCurveAnnotationPoints] ...
+    = createRatSkeletalMuscleModel(...
+          setSarcomereProperties,...
+          setMusculotendonProperties,...
+          setCurveProperties,...
+          specimenTemperature,...   
+          experimentName,...
+          muscleName,...
+          projectFolders,...
+          flag_useOctave);
+
+%
+% make the fitted rat muscle model
+%
+
+%%
+% Fit the passive force-length relation
+%   Even for fibril models this is useful as it serves as a fitting
+%   reference for the passive-force-length relation for the entire 
+%   titin segment.
+%%
+
+if(indexPassiveDataSetLinearStiffness > 0)
+      
+    referencePassiveForceLengthDataTable = ...
+        ratMuscleData(indexPassiveDataSetLinearStiffness).passiveForceLengthData;
+
+    fittingFpeNMinForce = ...
+            expDataSetFittingData(...
+            indexPassiveDataSetLinearStiffness).minLengthWhereFpeIsLinear;
+
+    fittingFpeNOptSarcomereLengthInUm = ...
+            expDataSetFittingData(...
+            indexPassiveDataSetLinearStiffness).optimalSarcomereLength; 
+
+    fittingDataFpeN=[];
+    for i=1:1:length(referencePassiveForceLengthDataTable)
+        for j=1:1:length(referencePassiveForceLengthDataTable(i).x)
+            if(referencePassiveForceLengthDataTable(i).y(j) > fittingFpeNMinForce)
+                fittingDataFpeN = ...
+                    [fittingDataFpeN;...
+                     referencePassiveForceLengthDataTable(i).x(j), ...
+                     referencePassiveForceLengthDataTable(i).y(j)];            
+            end
+        end
+    end
+    
+    %Fit a line to the data
+    A = [fittingDataFpeN(:,1),ones(size(fittingDataFpeN(:,1)))];
+    b = fittingDataFpeN(:,2);
+    x = (A'*A)\(A'*b);
+    c = x(1,1);
+    y0 = x(2,1);
+    %y = c*x + x0
+    
+    setSarcomereProperties.normFiberStiffnessAtOneNormPassiveForce = ...
+        c/(1/fittingFpeNOptSarcomereLengthInUm);
+    setSarcomereProperties.normFiberLengthAtOneNormPassiveForce = ...
+        ((1-y0)/c)/fittingFpeNOptSarcomereLengthInUm;
+
+    if(strcmp(experimentName,'TWHSS2021')==1)
+        setSarcomereProperties.normFiberLengthAtOneNormPassiveForce = ...
+            setSarcomereProperties.normFiberLengthAtOneNormPassiveForce ...
+            +shiftPassiveCurve;
+    
+        setSarcomereProperties.normFiberStiffnessAtLowPassiveForce = ...
+            setSarcomereProperties.normFiberStiffnessAtOneNormPassiveForce*0.4;
+    end
+        
+    disp(setSarcomereProperties.normFiberStiffnessAtOneNormPassiveForce);
+    disp(setSarcomereProperties.normFiberLengthAtOneNormPassiveForce);
+
+    fittingDataSets.fpe(1).x = fittingDataFpeN(:,1) ...
+      ./ defaultRatMuscleModelParameters.sarcomere.optimalSarcomereLength;
+    fittingDataSets.fpe(1).y = fittingDataFpeN(:,2);
+end
+
+%%
+% Solve for the shape of fpe to minimize the squared errors in the toe 
+% region
+%%
+if(indexPassiveDataSetToeRegion > 0)
+  assert(indexPassiveDataSetLinearStiffness > 0,...
+         ['Error: this fitting function assumes that the linear',...
+          ' portion of the curve has been fit to data.']);
+
+  forceLengthCurveSettings.normLengthZero = 0;
+  forceLengthCurveSettings.normLengthToe  = ...
+    setSarcomereProperties.normFiberLengthAtOneNormPassiveForce;
+
+  forceLengthCurveSettings.fToe = 1;
+  forceLengthCurveSettings.kToe = ...
+    setSarcomereProperties.normFiberStiffnessAtOneNormPassiveForce;
+
+  forceLengthCurveSettings.kZero = 0;
+  if(setCurveProperties.flag_enableNumericallyNonZeroGradients==1)
+    forceLengthCurveSettings.kZero = ...
+      setCurveProperties.smallNumericallyNonZeroNumber;        
+  end
+
+
+  optParams = {'kLow','curviness'};
+  
+  optParamsLB = [1,1].*sqrt(eps);
+  
+  kLowMax     = 0.26; 
+  % This upper bound has been found manually. It's not easy to establish
+  % this upper bound because, ultimately, the value of kLow is scaled
+  % and used to establish kLow for the curves that define titin's segments
+  % and each of these segments has its own bounds. These bounds depend
+  % on both the geometry of the target passive curve as well as the 
+  % number of prox Ig domains, PEVK residues, and distal Ig domains. 
+  % There is a way to evaluate this bound analytically, but its bound to
+  % be an ugly difficult-to-derive expression that I don't have time for
+  % at this moment.
+
+  optParamsUB = [kLowMax,0.95];
+
+  kLow      = 0.2;
+  curviness = 0.7;
+  optParamsDefault = [kLow;curviness];
+
+
+  forceLengthCurveSettings.kLow       = nan;
+  forceLengthCurveSettings.curviness  = nan;
+
+  fittingFpeNOptSarcomereLengthInUm = ...
+        expDataSetFittingData(...
+        indexPassiveDataSetLinearStiffness).optimalSarcomereLength; 
+
+  expDataFpeN.lceN = ...
+    ratMuscleData(indexPassiveDataSetToeRegion).passiveForceLengthData.x ...
+    ./ fittingFpeNOptSarcomereLengthInUm;
+
+  expDataFpeN.fpeN = ...
+    ratMuscleData(indexPassiveDataSetToeRegion).passiveForceLengthData.y;
+
+  fittingDataSets.fpe(2).x = expDataFpeN.lceN;
+  fittingDataSets.fpe(2).y = expDataFpeN.fpeN;
+
+
+  flag_generateCurveSample=1;
+  [errDefault,defaultCurveSample] = ...
+    calcErrorTitinForceLengthCurves(...
+                        optParamsDefault,...
+                        expDataFpeN,...
+                        optParams,...
+                        forceLengthCurveSettings,...
+                        defaultRatMuscleModelParameters,...
+                        projectFolders,...
+                        flag_generateCurveSample);
+
+  flag_generateCurveSample=0;
+  errFcnFpeN = @(arg)calcErrorTitinForceLengthCurves(...
+                        arg,...
+                        expDataFpeN,...
+                        optParams,...
+                        forceLengthCurveSettings,...
+                        defaultRatMuscleModelParameters,...
+                        projectFolders,...
+                        flag_generateCurveSample);
+
+  flag_plotfpeNToeFit=1;
+
+  if(flag_plotfpeNToeFit==1)
+
+    figFpeNToeFit=figure;    
+    plot(expDataFpeN.lceN,...
+         expDataFpeN.fpeN,'xk');
+    hold on;
+    plot(defaultCurveSample.x,...
+         defaultCurveSample.y,'-k');
+    hold on;
+    text(defaultCurveSample.x(end),...
+         defaultCurveSample.y(end),...
+         sprintf('%1.3e RMSE',sqrt(mean((errDefault).^2))),...
+         'HorizontalAlignment','right',...
+         'VerticalAlignment','top');
+    hold on;      
+    box off;
+    xlabel('Norm. Length');
+    ylabel('Norm. Force');
+    title('Fitting of the toe region of the fpeN curve');
+
+  end
+
+
+  options = optimset('AlwaysHonorConstraints','bounds');
+  [x,resnorm,residual,exitflag] = ...
+    lsqnonlin(errFcnFpeN,optParamsDefault,optParamsLB,optParamsUB);
+  
+  assert(resnorm < norm(errDefault));
+  assert(exitflag==1);
+
+  fprintf('\n\nOptimal fpeN and titin curve parameters');
+  fprintf('\n\t%1.3e\tkLow',x(1));
+  fprintf('\n\t%1.3e\tcurviness\n\n',x(2));
+
+  setSarcomereProperties.normFiberStiffnessAtLowPassiveForce=x(1);
+  setSarcomereProperties.fiberForceLengthCurviness = x(2); 
+
+  flag_generateCurveSample=1;
+  [errOpt,optCurveSample] = ...
+    calcErrorTitinForceLengthCurves(...
+                        x,...
+                        expDataFpeN,...
+                        optParams,...
+                        forceLengthCurveSettings,...
+                        defaultRatMuscleModelParameters,...
+                        projectFolders,...
+                        flag_generateCurveSample);
+
+  if(flag_plotfpeNToeFit==1)
+    %sample the default curve
+    plot(optCurveSample.x,...
+         optCurveSample.y,'-b');
+    hold on;
+    text(optCurveSample.x(end),...
+         optCurveSample.y(end),...
+         sprintf('%1.3e RMSE',sqrt(mean((errOpt).^2))),...
+         'HorizontalAlignment','left',...
+         'VerticalAlignment','top',...
+         'Color',[0,0,1]);
+    hold on;     
+    here=1;
+  end
+
+end
+
+
 [ratMuscleModelParameters,...
  activeForceLengthCurveAnnotationPoints] ...
     = createRatSkeletalMuscleModel(...
@@ -494,6 +718,9 @@ save(filePathHumanSoleus,'defaultHumanSoleus');
           muscleName,...
           projectFolders,...
           flag_useOctave);
+%
+%
+%
 
 wlcStr = '';
 if(setSarcomereProperties.useWLCTitinModel==1)
@@ -578,8 +805,8 @@ if(flag_makeAndSavePubPlots==1)
   end
 
 
- activeForceLengthDataSeries(2)=struct('x',[],'y',[],'label','');
- passiveForceLengthDataSeries(2)=struct('x',[],'y',[],'label','');
+ activeForceLengthDataSeriesPlot(2)=struct('x',[],'y',[],'label','');
+ passiveForceLengthDataSeriesPlot(2)=struct('x',[],'y',[],'label','');
 
 idxSeries = [ratMuscleMetaData.index_SW1982; ...
                        ratMuscleMetaData.index_TRSS2017];
@@ -594,38 +821,40 @@ colorSeriesPassive          = [0.5,0.5,0.5; ...
 colorSeriesPassiveFace = [0.5,0.5,0.5; ...
                                                     1,1,1];%[0.75,0.75,1; 0.25,0.25,1];
 
-activeMarkSeries    = {'o','d'};
-passiveMarkSeries = {'o','d'};
+activeMarkSeries    = {'.','d'};
+passiveMarkSeries = {'+','o'};
+seriesColors = [0.67,0.67,0.67;...
+                0.33,0.33,0.33];
 
 for i=1:1:2
   idx = idxSeries(i,1);    
   for j=1:1:length(ratMuscleData(idx).activeForceLengthData)
-      activeForceLengthDataSeries(i).x = [...
-          activeForceLengthDataSeries(i).x;...
+      activeForceLengthDataSeriesPlot(i).x = [...
+          activeForceLengthDataSeriesPlot(i).x;...
           ratMuscleData(idx).activeForceLengthData(j).x];
 
-      activeForceLengthDataSeries(i).y = [...
-          activeForceLengthDataSeries(i).y;...
+      activeForceLengthDataSeriesPlot(i).y = [...
+          activeForceLengthDataSeriesPlot(i).y;...
           ratMuscleData(idx).activeForceLengthData(j).y];
 
-      activeForceLengthDataSeries(i).label = labelSeries{i};
-      activeForceLengthDataSeries(i).color = colorSeriesActive(i,:);
-      activeForceLengthDataSeries(i).MarkerFaceColor = colorSeriesActiveFace(i,:);
-      activeForceLengthDataSeries(i).mark = activeMarkSeries{i};
+      activeForceLengthDataSeriesPlot(i).label = labelSeries{i};
+      activeForceLengthDataSeriesPlot(i).color = seriesColors(i,:);%colorSeriesActive(i,:);
+      activeForceLengthDataSeriesPlot(i).MarkerFaceColor = [1,1,1];%colorSeriesActiveFace(i,:);
+      activeForceLengthDataSeriesPlot(i).mark = activeMarkSeries{i};
   end
   for j=1:1:length(ratMuscleData(idx).passiveForceLengthData)  
-      passiveForceLengthDataSeries(i).x = [...
-          passiveForceLengthDataSeries(i).x;...
+      passiveForceLengthDataSeriesPlot(i).x = [...
+          passiveForceLengthDataSeriesPlot(i).x;...
           ratMuscleData(idx).passiveForceLengthData(j).x];
 
-      passiveForceLengthDataSeries(i).y = [...
-          passiveForceLengthDataSeries(i).y;...
+      passiveForceLengthDataSeriesPlot(i).y = [...
+          passiveForceLengthDataSeriesPlot(i).y;...
           ratMuscleData(idx).passiveForceLengthData(j).y];
 
-      passiveForceLengthDataSeries(i).label = labelSeries{i};      
-      passiveForceLengthDataSeries(i).color = colorSeriesPassive(i,:);
-      passiveForceLengthDataSeries(i).MarkerFaceColor = colorSeriesPassiveFace(i,:);
-      passiveForceLengthDataSeries(i).mark = passiveMarkSeries{i};
+      passiveForceLengthDataSeriesPlot(i).label = labelSeries{i};      
+      passiveForceLengthDataSeriesPlot(i).color = seriesColors(i,:);%colorSeriesPassive(i,:);
+      passiveForceLengthDataSeriesPlot(i).MarkerFaceColor = [1,1,1];%colorSeriesPassiveFace(i,:);
+      passiveForceLengthDataSeriesPlot(i).mark = passiveMarkSeries{i};
 
   end 
 end
@@ -636,8 +865,9 @@ end
                 ratMuscleModelParameters,...
                 defaultHumanSoleus,...
                 activeForceLengthCurveAnnotationPoints,...
-                activeForceLengthDataSeries,...
-                passiveForceLengthDataSeries,...
+                fittingDataSets,...
+                activeForceLengthDataSeriesPlot,...
+                passiveForceLengthDataSeriesPlot,...
                 ratMuscleModelParameters.sarcomere.normFiberLengthAtOneNormPassiveForce,...
                 trialId,...
                 updateTitinPlotsOnly,...
@@ -645,7 +875,35 @@ end
                 plotFullFilePathName,...
                 projectFolders);
 
-    
+
+  if(~isempty(previousPlotFullFilePathName))
+    previousPlotTitinFittingFullFilePathName = ...
+        strrep(previousPlotFullFilePathName,...
+        '_RatMuscleCurves_',...
+        '_RatMuscleTitinFittingCurves_');
+  else
+    previousPlotTitinFittingFullFilePathName=[];
+  end
+
+  plotTitinFittingFullFilePathName = ...
+    strrep(plotFullFilePathName,...
+    '_RatMuscleCurves_',...
+    '_RatMuscleTitinFittingCurves_');
+
+  [success] = plotRatMuscleTitinFittingCurvesTRSS2017(...
+              ratMuscleModelParameters,...
+              defaultHumanSoleus,...
+              activeForceLengthCurveAnnotationPoints,...
+              fittingDataSets,...
+              activeForceLengthDataSeriesPlot,...
+              passiveForceLengthDataSeriesPlot,...
+              ratMuscleModelParameters.sarcomere.normFiberLengthAtOneNormPassiveForce,...
+              trialId,...
+              previousPlotTitinFittingFullFilePathName,...
+              plotTitinFittingFullFilePathName,...
+              projectFolders);
+
+   here=1;
 end 
 
 
@@ -860,10 +1118,10 @@ if(flag_makeDetailedExpDataPlots==1)
     
     plotSettings(1).yticks = [0,maxNormForceAtShortLength,1];
     
-    if(indexOfDataSetForPassiveCurveParameters>0)
+    if(indexPassiveDataSetLinearStiffness>0)
         fittingFpeNMinForce = ...
             expDataSetFittingData(...
-            indexOfDataSetForPassiveCurveParameters).minLengthWhereFpeIsLinear;
+            indexPassiveDataSetLinearStiffness).minLengthWhereFpeIsLinear;
         
         plotSettings(1).yticks = ...
             [0,fittingFpeNMinForce,maxNormForceAtShortLength,1];

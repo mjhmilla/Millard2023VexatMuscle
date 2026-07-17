@@ -545,9 +545,9 @@ if(flag_passiveCurveFitted==0)
   flag_passiveCurveFitted=1;
   %normLengthZero = sarcomereProperties.normFiberLengthAtZeroForce; 
   normLengthZero  = min(0.928,sarcomereProperties.normFiberLengthAtOneNormPassiveForce-0.6);
-  if(isfield(sarcomereProperties,'normFiberLengthAtZeroPassiveForce'))
-      if(isnan(sarcomereProperties.normFiberLengthAtZeroPassiveForce)==0)
-        normLengthZero = sarcomereProperties.normFiberLengthAtZeroPassiveForce;
+  if(isfield(setSarcomereProperties,'normFiberLengthAtZeroPassiveForce'))
+      if(isnan(setSarcomereProperties.normFiberLengthAtZeroPassiveForce)==0)
+        normLengthZero = setSarcomereProperties.normFiberLengthAtZeroPassiveForce;
       end
   end
   normLengthToe  = sarcomereProperties.normFiberLengthAtOneNormPassiveForce;
@@ -557,23 +557,23 @@ if(flag_passiveCurveFitted==0)
     kZero = smallNumericallyNonZeroNumber;
   end         
   kLow  = 0.2;
-  if(isfield(sarcomereProperties,'normFiberStiffnessAtLowPassiveForce'))
-      if(isnan(sarcomereProperties.normFiberStiffnessAtLowPassiveForce)==0)
-        kLow = sarcomereProperties.normFiberStiffnessAtLowPassiveForce;
+  if(isfield(setSarcomereProperties,'normFiberStiffnessAtLowPassiveForce'))
+      if(isnan(setSarcomereProperties.normFiberStiffnessAtLowPassiveForce)==0)
+        kLow = setSarcomereProperties.normFiberStiffnessAtLowPassiveForce;
       end
   end
 
   kToe  = 2.1/(normLengthToe-normLengthZero);
-  if(isfield(sarcomereProperties,'normFiberStiffnessAtOneNormPassiveForce'))
-      if(isnan(sarcomereProperties.normFiberStiffnessAtOneNormPassiveForce)==0)
-        kToe = sarcomereProperties.normFiberStiffnessAtOneNormPassiveForce;
+  if(isfield(setSarcomereProperties,'normFiberStiffnessAtOneNormPassiveForce'))
+      if(isnan(setSarcomereProperties.normFiberStiffnessAtOneNormPassiveForce)==0)
+        kToe = setSarcomereProperties.normFiberStiffnessAtOneNormPassiveForce;
       end
   end
 
   curviness = 0.7;  
-  if(isfield(sarcomereProperties,'fiberForceLengthCurviness'))
-      if(isnan(sarcomereProperties.fiberForceLengthCurviness)==0)
-        curviness = sarcomereProperties.fiberForceLengthCurviness;
+  if(isfield(setSarcomereProperties,'fiberForceLengthCurviness'))
+      if(isnan(setSarcomereProperties.fiberForceLengthCurviness)==0)
+        curviness = setSarcomereProperties.fiberForceLengthCurviness;
       end
   end
 
@@ -598,6 +598,7 @@ if(flag_passiveCurveFitted==0)
   forceLengthCurveSettings.kToe  = kToe;
   forceLengthCurveSettings.curviness = curviness;                                             
 end     
+
 
 
 
