@@ -13,7 +13,7 @@ if(flag_OuterLoopMode==0)
 
     simConfigInput.runFitting              = 0; 
     simConfigInput.generatePlots           = 1;
-    simConfigInput.fitToIndividualTrials   = 1; 
+    simConfigInput.fitToIndividualTrials   = 0; 
     simConfigInput.manuallySetTimeConstant = 0;
 
 end
