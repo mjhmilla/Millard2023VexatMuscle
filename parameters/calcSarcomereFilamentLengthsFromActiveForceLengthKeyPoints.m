@@ -169,7 +169,7 @@ switch animalId
       halfMyosinLength,...
       zLineLength,...
       actinLength] = getRatSkeletalMuscleSarcomereFilamentLengths();   
-
+    here=1;
   otherwise
     assert(0,'animalName must be cat, human, frog, or rabbit');
 end
