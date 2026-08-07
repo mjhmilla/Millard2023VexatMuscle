@@ -925,6 +925,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %8. Populate the dynamics and energy information structures
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+mtInfo.type = 'Hill';
 mtInfo.muscleDynamicsInfo.activation                = a;                  % NA                   NA		
 mtInfo.muscleDynamicsInfo.activationDerivative      = dadt;                  % NA                   NA		
 mtInfo.muscleDynamicsInfo.fiberForce                = ffN*fiso;           % force                N

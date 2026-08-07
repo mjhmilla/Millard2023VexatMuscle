@@ -187,7 +187,7 @@ end
   plotProps(idx).xlim = ...
       (muscleModel.curves.activeForceLengthCurve.xEnd +[-0.02,0.02]).*scaleLength;
   
-  plotProps(idx).ylim   = [0,1.0]+[-0.01,0.01];
+  plotProps(idx).ylim   = [0,1.45]+[-0.01,0.01];
   plotProps(idx).domain = plotProps(idx).xlim + [-0.01,0.01];
   plotProps(idx).xticks = ...
       [ round(activeForceLengthCurveAnnotationPoints.x(1,1),2),...                                
@@ -203,7 +203,8 @@ end
                                 num2str(round(plotProps(idx).xticks(1,4),3))};
                               
   plotProps(idx).yticks      = [0,1];
-  plotProps(idx).yticklabels = {'0','$$f^M_o$$'};
+  plotProps(idx).yticklabels = {0,1,num2str(round(plotProps(idx).yticks(1,end),2))};  
+  %plotProps(idx).yticklabels = {''};
   plotProps(idx).lineColor   = lineColors.simF(1,:);
   plotProps(idx).lineWidth   = 0.5;
 
@@ -214,7 +215,7 @@ end
       plotProps(idx).xlabel = 'Length ($$\mu$$m)';
       plotProps(idx).ylabel = 'Normalized Force ($$f/f^{M}_{o}$$)';
   end
-  plotProps(idx).title  ={ 'A. CE Active force-length relation'};
+  plotProps(idx).title  ={ 'A. CE active force-length relation'};
 
   %%
   % CE force-velocity
@@ -537,9 +538,10 @@ end
                       200,muscleModel.curves.('activeForceLengthCurve').xEnd);
         
         for i=1:1:length(activeForceLengthData)
-            markerSize=2;
+
+            markerSize=4;
             if(strcmp(activeForceLengthData(i).mark,'.')==1)
-              markerSize=4;
+              markerSize=6;
             end
 
             plot(activeForceLengthData(i).x ,...
@@ -577,10 +579,10 @@ end
         if(flag_addFlFittingData==1)
           assert(length(fittingData.fl)==1);
           for i=1:1:length(fittingData.fl)
-            markerSize=2;
-            if(strcmp(passiveForceLengthData(i).mark,'.')==1)
-              markerSize=5;
-            end          
+            markerSize=4;
+%             if(strcmp(passiveForceLengthData(i).mark,'.')==1)
+%               markerSize=5;
+%             end          
             plot(fittingData.fl.x .* lopt,...
                  fittingData.fl.y,...
                  'd',...
@@ -596,13 +598,13 @@ end
         plot(curveSampleFL.x .* scaleLength, ...
                  curveSampleFL.y,...
                  '-','Color',[1,1,1],...
-                'LineWidth',plotProps(idx).lineWidth*2,...
+                'LineWidth',plotProps(idx).lineWidth*3,...
                 'HandleVisibility','off');
         hold on;
         plot(curveSampleFL.x .* scaleLength, ...
                  curveSampleFL.y,...
                  '-','Color',[0,0,0],...
-                'LineWidth',plotProps(idx).lineWidth,...
+                'LineWidth',plotProps(idx).lineWidth*2,...
                 'DisplayName','$$f^{L}(\ell^M)$$');
         hold on;
 
@@ -706,13 +708,20 @@ end
       
         idx=idxCEVelocity;    
         curveSampleFV = calcBezierYFcnXCurveSampleVector(...
-                      muscleModel.curves.('fiberForceVelocityCurve'), ...
-                      200, muscleModel.curves.('fiberForceVelocityCurve').xEnd);
+                          muscleModel.curves.('fiberForceVelocityCurve'), ...
+                          200, muscleModel.curves.('fiberForceVelocityCurve').xEnd);
     
         plot(curveSampleFV.x .* scaleVelocity, ...
-          curveSampleFV.y,...
-          '-','Color',plotProps(idx).lineColor,...
-              'LineWidth',plotProps(idx).lineWidth,...
+             curveSampleFV.y,...
+              '-','Color',[1,1,1],...
+              'LineWidth',plotProps(idx).lineWidth*3,...
+              'DisplayName','$$f^{V}(v^{M})$$',...
+              'HandleVisibility','off');
+        hold on;         
+        plot(curveSampleFV.x .* scaleVelocity, ...
+             curveSampleFV.y,...
+              '-','Color',plotProps(idx).lineColor,...
+              'LineWidth',plotProps(idx).lineWidth*2,...
               'DisplayName','$$f^{V}(v^{M})$$');
         hold on;        
 
@@ -771,11 +780,6 @@ end
   subplotPeEcmTitin = reshape(subPlotPanel(2,1,:),1,4);
   subplot('Position',subplotPeEcmTitin);  
   idx=idxPeEcmTitinLength;
-  
-              
-             
-
-
 
     if(updateTitinPlotsOnly==0)
       fill([curveSampleECMHalf.x;fliplr(curveSampleECMHalf.x')'].*(2*scaleLength), ...

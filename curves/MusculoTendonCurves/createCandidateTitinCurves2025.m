@@ -2,7 +2,8 @@ function [forceLengthProximalTitinCurve, forceLengthProximalTitinInverseCurve,..
             forceLengthDistalTitinCurve, forceLengthDistalTitinInverseCurve,...
             forceLengthIgPTitinCurve, forceLengthIgPInverseTitinCurve,...
             forceLengthPevkTitinCurve, forceLengthPevkInverseTitinCurve,...
-            forceLengthIgDTitinCurve, forceLengthIgDInverseTitinCurve] ...
+            forceLengthIgDTitinCurve, forceLengthIgDInverseTitinCurve,...
+            fittingReferenceTitinPassiveForceLengthCurve] ...
           = createCandidateTitinCurves2025(fiberForceLengthCurve,...                                   
                                    forceLengthCurveSettings,...
                                    forceLengthECMHalfCurve,...
@@ -76,7 +77,7 @@ IGDFixedNormLengthAtOptimalFiberLength=...
     sarcomereProperties.IGDFixedNormLengthAtOptimalFiberLength;  
 
 
-lceZero = fiberForceLengthCurve.xEnd(1,1);
+%lceZero = fiberForceLengthCurve.xEnd(1,1);
 
 k = size(fiberForceLengthCurve.ypts,2);
 x0 = 0;
@@ -88,7 +89,14 @@ else
 end
 
 
-fpeNRef = 0.5*fiberForceLengthCurve.yEnd(1,2);
+%fpeNRef = 0.5*fiberForceLengthCurve.yEnd(1,2);
+fpeNRef = forceLengthCurveSettings.fToe;
+lceZero = forceLengthCurveSettings.normLengthZero;
+
+% fpeNToe = fpeNRef;
+% if(isfield(forceLengthCurveSettings,'fLinearTransition'))
+%   fpeNRef = forceLengthCurveSettings.fLinearTransition;
+% end
 
 %20 August 2023
 %At lengths longer than lceRef the fpe and titin curves must be 
@@ -96,15 +104,30 @@ fpeNRef = 0.5*fiberForceLengthCurve.yEnd(1,2);
 %their respective contour lengths. I have had to adjust fpeNRef from 
 %a value of 1.0 to accomodate the rabbit EDL from Siebert et al. 2015
 %which has a right-shifted force-length curve and yet is quite stiff
-lceRef = ...
-  calcBezierFcnXGivenY(fpeNRef, fiberForceLengthCurve, x0);
+%lceRef = calcBezierFcnXGivenY(fpeNRef, fiberForceLengthCurve, x0);
+kpeRef  = forceLengthCurveSettings.kToe;
+%dl      = (fpeNRef-fpeNToe)/kpeRef;
+lceRef  = forceLengthCurveSettings.normLengthToe;
 
 lceZeroHalf  = 0.5*lceZero;
 lceRefHalf   = 0.5*lceRef;
 
-kpeRef = calcBezierYFcnXDerivative(lceRef,...
-                      fiberForceLengthCurve,...
-                      1);
+
+%kpeRef = calcBezierYFcnXDerivative(lceRef,...
+%                       fiberForceLengthCurve,...
+%                       1);
+
+%%
+
+  fittingReferenceTitinPassiveForceLengthCurve.normLengthZero = lceZero;
+  fittingReferenceTitinPassiveForceLengthCurve.normLengthToe  = lceRef;
+  fittingReferenceTitinPassiveForceLengthCurve.fToe           = fpeNRef;
+  fittingReferenceTitinPassiveForceLengthCurve.kToe           = kpeRef;
+  fittingReferenceTitinPassiveForceLengthCurve.kZero          = forceLengthCurveSettings.kZero;
+  fittingReferenceTitinPassiveForceLengthCurve.kLow           = forceLengthCurveSettings.kLow;
+  fittingReferenceTitinPassiveForceLengthCurve.curviness      = forceLengthCurveSettings.curviness;
+
+%%
 
 kpeRefHalf = 2*kpeRef;
 kecmRefHalf= calcBezierYFcnXDerivative(lceRefHalf,...
@@ -252,23 +275,23 @@ if(flag_solveForDefaultTwoSegmentTitinParameters==1)
     
     %Geometrically scale the stiffnesses of the two segment titin
     %force-length curves
-    kDLow     = kD*(forceLengthCurveSettings.kLow ...
-                   /forceLengthCurveSettings.kToe);
+    kDLow     = kD*(fittingReferenceTitinPassiveForceLengthCurve.kLow ...
+                   /fittingReferenceTitinPassiveForceLengthCurve.kToe);
     kDLow     = kDLow * scaleDKLow;
 
-    kPLow     = kP*(forceLengthCurveSettings.kLow ...
-                   /forceLengthCurveSettings.kToe);
+    kPLow     = kP*(fittingReferenceTitinPassiveForceLengthCurve.kLow ...
+                   /fittingReferenceTitinPassiveForceLengthCurve.kToe);
     kPLow     = kPLow*scalePKLow;
     
-    kDZero    = kD*(forceLengthCurveSettings.kZero ...
-                   /forceLengthCurveSettings.kToe);
+    kDZero    = kD*(fittingReferenceTitinPassiveForceLengthCurve.kZero ...
+                   /fittingReferenceTitinPassiveForceLengthCurve.kToe);
 
     if(useBigKDZero==1)
         kDZero = kDLow/10;
     end
     
-    kPZero    = kP*(forceLengthCurveSettings.kZero ...
-                   /forceLengthCurveSettings.kToe);  
+    kPZero    = kP*(fittingReferenceTitinPassiveForceLengthCurve.kZero ...
+                   /fittingReferenceTitinPassiveForceLengthCurve.kToe);  
     if(useBigKPZero==1)
         kPZero     = kPLow/10;
     end
@@ -280,30 +303,30 @@ end
 
 %Geometrically scale the stiffnesses of the three segment titin
 %force-length curves
-kpevkLow    = kpevk*(forceLengthCurveSettings.kLow ...
-                 /forceLengthCurveSettings.kToe);
+kpevkLow    = kpevk*(fittingReferenceTitinPassiveForceLengthCurve.kLow ...
+                 /fittingReferenceTitinPassiveForceLengthCurve.kToe);
 kpevkLow    = kpevkLow*scalePevkKLow;
 
-kigpLow     = kigp*(forceLengthCurveSettings.kLow ...
-                   /forceLengthCurveSettings.kToe);
+kigpLow     = kigp*(fittingReferenceTitinPassiveForceLengthCurve.kLow ...
+                   /fittingReferenceTitinPassiveForceLengthCurve.kToe);
 kigpLow     = kigpLow*scaleIgKLow;
 
-kigdLow     = kigd*(forceLengthCurveSettings.kLow ...
-                   /forceLengthCurveSettings.kToe);
+kigdLow     = kigd*(fittingReferenceTitinPassiveForceLengthCurve.kLow ...
+                   /fittingReferenceTitinPassiveForceLengthCurve.kToe);
 kigdLow     = kigdLow*scaleIgKLow;
 
-kpevkZero   = kpevk*(forceLengthCurveSettings.kZero ...
-                  /forceLengthCurveSettings.kToe);
+kpevkZero   = kpevk*(fittingReferenceTitinPassiveForceLengthCurve.kZero ...
+                  /fittingReferenceTitinPassiveForceLengthCurve.kToe);
 
 if(useBigPevkZero==1)
     kpevkZero = kpevkLow/20;
 end
 
-kigpZero    = kigp*(forceLengthCurveSettings.kZero ...
-                    /forceLengthCurveSettings.kToe);  
+kigpZero    = kigp*(fittingReferenceTitinPassiveForceLengthCurve.kZero ...
+                    /fittingReferenceTitinPassiveForceLengthCurve.kToe);  
 
-kigdZero    = kigd*(forceLengthCurveSettings.kZero ...
-                    /forceLengthCurveSettings.kToe);                    
+kigdZero    = kigd*(fittingReferenceTitinPassiveForceLengthCurve.kZero ...
+                    /fittingReferenceTitinPassiveForceLengthCurve.kToe);                    
 if(useBigIgKZero==1)
     kigpZero = kigpLow/20;
     kigdZero = kigdLow/20;
@@ -345,12 +368,15 @@ assert(abs(lerr)<1e-3);
 
 %Evaluate the proportion of the force-length curve that is of low 
 %strain
-strainWidth = forceLengthCurveSettings.normLengthToe-forceLengthCurveSettings.normLengthZero;  
-lowStrainWidth =  (strainWidth - (1/forceLengthCurveSettings.kToe))...
-                  /(1/forceLengthCurveSettings.kToe);
-eZeroTest = forceLengthCurveSettings.normLengthToe ...
-           -(1/forceLengthCurveSettings.kToe)...
-           -(1/forceLengthCurveSettings.kToe)*lowStrainWidth;    
+strainWidth = fittingReferenceTitinPassiveForceLengthCurve.normLengthToe...
+              -fittingReferenceTitinPassiveForceLengthCurve.normLengthZero;  
+lowStrainWidth =  ...
+  (strainWidth ...
+  - (1/fittingReferenceTitinPassiveForceLengthCurve.kToe))...
+    /(1/fittingReferenceTitinPassiveForceLengthCurve.kToe);
+eZeroTest = fittingReferenceTitinPassiveForceLengthCurve.normLengthToe ...
+           -(1/fittingReferenceTitinPassiveForceLengthCurve.kToe)...
+           -(1/fittingReferenceTitinPassiveForceLengthCurve.kToe)*lowStrainWidth;    
 
 %Set the low strain values for each of the igp and pevk-igd to preserve
 %this same proportion

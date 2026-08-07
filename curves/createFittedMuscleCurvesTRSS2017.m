@@ -541,6 +541,8 @@ end
     
 
 
+
+
 if(flag_passiveCurveFitted==0)
   flag_passiveCurveFitted=1;
   %normLengthZero = sarcomereProperties.normFiberLengthAtZeroForce; 
@@ -599,14 +601,21 @@ if(flag_passiveCurveFitted==0)
   forceLengthCurveSettings.curviness = curviness;                                             
 end     
 
-
-
-
 fprintf('  fiberForceLengthInverseCurve created\n');
 normMuscleCurves.fiberForceLengthInverseCurve = ...
       createInverseCurve(normMuscleCurves.fiberForceLengthCurve);
 
 
+if(isfield(sarcomereProperties,'normFiberForceAtPassiveToe'))
+  if(forceLengthCurveSettings.fToe>1e-6)
+    fToeOrig = forceLengthCurveSettings.fToe;
+    forceLengthCurveSettings.fToe = sarcomereProperties.normFiberForceAtPassiveToe;
+    df = forceLengthCurveSettings.fToe-fToeOrig;
+    dl = df / forceLengthCurveSettings.kToe;
+    forceLengthCurveSettings.normLengthToe=...
+      forceLengthCurveSettings.normLengthToe+dl;
+  end
+end
 
 %%
 %
@@ -747,7 +756,8 @@ else
    normMuscleCurves.forceLengthPevkTitinCurve, ...
       normMuscleCurves.forceLengthPevkTitinInverseCurve,...
    normMuscleCurves.forceLengthIgDTitinCurve, ...
-      normMuscleCurves.forceLengthIgDTitinInverseCurve] ...
+      normMuscleCurves.forceLengthIgDTitinInverseCurve,...
+   normMuscleCurves.fittingReferenceTitin] ...
             = createTitinCurves2025( normMuscleCurves.fiberForceLengthCurve,...                                   
                                      forceLengthCurveSettings,...
                                      normMuscleCurves.forceLengthECMHalfCurve,...
@@ -761,6 +771,7 @@ else
                                      sarcomereProperties.titinModelType,...  
                                      projectFolders,...                                  
                                      flag_useOctave);
+  here=1;
 end 
 
 %%

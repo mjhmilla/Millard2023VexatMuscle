@@ -231,14 +231,22 @@ activationThresholdTitin = ...
 
 slidingTimeConstant = sarcomereProperties.slidingTimeConstant;
 
-slidingTimeConstantLengthening = ...
-    sarcomereProperties.slidingTimeConstantLengthening;
-slidingTimeConstantShortening = ...
-    sarcomereProperties.slidingTimeConstantShortening;
-slidingTimeConstantBlendingParameter = ...
-    sarcomereProperties.slidingTimeConstantBlendingParameter;
-useVariableSlidingTimeConstant = ...
-    sarcomereProperties.useVariableSlidingTimeConstant;
+slidingTimeConstantLengthening = nan;
+  slidingTimeConstantShortening = nan;
+  slidingTimeConstantBlendingParameter = nan;
+  useVariableSlidingTimeConstant = 0;
+
+if(isfield('useVariableSlidingTimeConstant','sarcomereProperties'))
+  slidingTimeConstantLengthening = ...
+      sarcomereProperties.slidingTimeConstant;
+  slidingTimeConstantShortening = ...
+      sarcomereProperties.slidingTimeConstant;
+  slidingTimeConstantBlendingParameter = ...
+      sarcomereProperties.slidingTimeConstantBlendingParameter;
+  useVariableSlidingTimeConstant = ...
+      sarcomereProperties.useVariableSlidingTimeConstant;
+end
+
 
 normCrossBridgeCyclingDamping = sarcomereProperties.normCrossBridgeCyclingDamping;
 lowActivationThreshold        = sarcomereProperties.lowActivationThreshold;

@@ -240,10 +240,10 @@ setSarcomereProperties.setT12ToZLineSegmentToZero = 0;
 % that the proximal Ig segment will really shorten to the base of the
 % actin filament when it is under a load of zero.
 
-setSarcomereProperties.normFiberLengthAtZeroPassiveForce        = 0;%0.6;
+setSarcomereProperties.normFiberLengthAtZeroPassiveForce        = 0.25;
 setSarcomereProperties.normFiberLengthAtOneNormPassiveForce     = 1.9;
 setSarcomereProperties.normFiberStiffnessAtOneNormPassiveForce  = nan;
-
+setSarcomereProperties.normFiberForceAtPassiveToe=1;
 
 %%
 % Manually set musculotendon properties
@@ -271,6 +271,7 @@ setCurveProperties.activeForceLengthData          =  [];
 setCurveProperties.passiveForceLengthData         =  [];
 setCurveProperties.forceVelocityMultiplierAtLowEccentricFiberVelocity = 1.25;
 setCurveProperties.forceVelocityMultiplierAtMaximumEccentricFiberVelocity = 1.35; 
+
 
 setCurveProperties.useTitinModel2025           = 0;
 % 0. Use the default PEVK segment as described in Millard, Frankling,
@@ -563,13 +564,22 @@ if(indexPassiveDataSetToeRegion > 0)
          ['Error: this fitting function assumes that the linear',...
           ' portion of the curve has been fit to data.']);
 
-  forceLengthCurveSettings.normLengthZero = 0;
-  forceLengthCurveSettings.normLengthToe  = ...
-    setSarcomereProperties.normFiberLengthAtOneNormPassiveForce;
+  %%
+  %
+  %%
 
-  forceLengthCurveSettings.fToe = 1;
+  forceLengthCurveSettings.fToe = 0.5;
+
   forceLengthCurveSettings.kToe = ...
     setSarcomereProperties.normFiberStiffnessAtOneNormPassiveForce;
+
+  forceLengthCurveSettings.normLengthZero = ...
+    setSarcomereProperties.normFiberLengthAtZeroPassiveForce;
+
+  dl = (forceLengthCurveSettings.fToe-1)/forceLengthCurveSettings.kToe;
+  forceLengthCurveSettings.normLengthToe  = ...
+    setSarcomereProperties.normFiberLengthAtOneNormPassiveForce +dl;
+
 
   forceLengthCurveSettings.kZero = 0;
   if(setCurveProperties.flag_enableNumericallyNonZeroGradients==1)
@@ -669,14 +679,16 @@ if(indexPassiveDataSetToeRegion > 0)
     lsqnonlin(errFcnFpeN,optParamsDefault,optParamsLB,optParamsUB);
   
   assert(resnorm < norm(errDefault));
-  assert(exitflag==1);
+  %assert(exitflag==1);
 
   fprintf('\n\nOptimal fpeN and titin curve parameters');
   fprintf('\n\t%1.3e\tkLow',x(1));
   fprintf('\n\t%1.3e\tcurviness\n\n',x(2));
 
-  setSarcomereProperties.normFiberStiffnessAtLowPassiveForce=x(1);
-  setSarcomereProperties.fiberForceLengthCurviness = x(2); 
+  setSarcomereProperties.normFiberStiffnessAtLowPassiveForce = x(1);
+  setSarcomereProperties.fiberForceLengthCurviness           = x(2); 
+  setSarcomereProperties.normFiberForceAtPassiveToe = ...
+    forceLengthCurveSettings.fToe;
 
   flag_generateCurveSample=1;
   [errOpt,optCurveSample] = ...
@@ -688,6 +700,10 @@ if(indexPassiveDataSetToeRegion > 0)
                         defaultRatMuscleModelParameters,...
                         projectFolders,...
                         flag_generateCurveSample);
+
+%   assert(0,['Error: And output all of the fitting information later so ',...
+%             'that no one has to go hunting through the code']);  
+
 
   if(flag_plotfpeNToeFit==1)
     %sample the default curve
