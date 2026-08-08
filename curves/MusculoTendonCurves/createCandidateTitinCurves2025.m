@@ -37,11 +37,11 @@ useBigKPZero               = 0;
 scaleDKLow                 = 2;
 useBigKDZero               = 0;
 
-figpZero = 0.00;
-figdZero = 0.00;
-fpevkZero= 0.00;
-fPZero   = 0.00;
-fDZero   = 0.00;
+figpZero = sarcomereProperties.normTitinSegmentForceMinimum;
+figdZero = sarcomereProperties.normTitinSegmentForceMinimum;
+fpevkZero= sarcomereProperties.normTitinSegmentForceMinimum;
+fPZero   = sarcomereProperties.normTitinSegmentForceMinimum;
+fDZero   = sarcomereProperties.normTitinSegmentForceMinimum;
 
 sarcomereProperties.PEVKNormStretchRate = ...
     sarcomereProperties.PEVKNormStretchRate*scalePevkStretchRate;

@@ -11,7 +11,7 @@ if(flag_OuterLoopMode==0)
     close all;
     clear all;
 
-    simConfigInput.runFitting              = 1; 
+    simConfigInput.runFitting              = 0; 
     simConfigInput.generatePlots           = 1;
     simConfigInput.fitToIndividualTrials   = 1; 
     simConfigInput.manuallySetTimeConstant = 0;
@@ -486,7 +486,10 @@ if(simConfig.generatePlots==1)
                 pubPlotOptions);
 
 
-    figure(figPub);    
+    pause(0.1);
+    figure(figPub);   
+    pause(0.1);
+
     configPlotExporter;
 
     filePath = fullfile(projectFolders.output_plots_TRSS2017,...
@@ -494,5 +497,6 @@ if(simConfig.generatePlots==1)
                         fittingConfig.trialStr,'.pdf']);
     
     print('-dpdf', filePath); 
+    pause(0.1);
 
 end

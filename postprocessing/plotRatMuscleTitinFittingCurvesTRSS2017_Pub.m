@@ -1310,9 +1310,11 @@ end
   
   
   here=1;
-
+  pause(0.1);
   figure(fig_pubTitinCurves);  
+  pause(0.1);  
   configPlotExporter;
   print('-dpdf', [filePathAndName,'_Pub.pdf']); 
   saveas(fig_pubTitinCurves,filePathAndName,'fig');
+  pause(0.1);  
   success=1;

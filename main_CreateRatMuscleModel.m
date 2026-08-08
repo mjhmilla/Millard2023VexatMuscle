@@ -240,7 +240,7 @@ setSarcomereProperties.setT12ToZLineSegmentToZero = 0;
 % that the proximal Ig segment will really shorten to the base of the
 % actin filament when it is under a load of zero.
 
-setSarcomereProperties.normFiberLengthAtZeroPassiveForce        = 0.25;
+setSarcomereProperties.normFiberLengthAtZeroPassiveForce        = 0;
 setSarcomereProperties.normFiberLengthAtOneNormPassiveForce     = 1.9;
 setSarcomereProperties.normFiberStiffnessAtOneNormPassiveForce  = nan;
 setSarcomereProperties.normFiberForceAtPassiveToe=1;
@@ -629,7 +629,7 @@ if(indexPassiveDataSetToeRegion > 0)
 
 
   flag_generateCurveSample=1;
-  [errDefault,defaultCurveSample] = ...
+  [errDefault,defaultCurveSample,testRatMuscleModelParameters] = ...
     calcErrorTitinForceLengthCurves(...
                         optParamsDefault,...
                         expDataFpeN,...
@@ -681,7 +681,7 @@ if(indexPassiveDataSetToeRegion > 0)
   assert(resnorm < norm(errDefault));
   %assert(exitflag==1);
 
-  fprintf('\n\nOptimal fpeN and titin curve parameters');
+  fprintf('\n\nOptimal fpeN (fTiN) and titin curve parameters');
   fprintf('\n\t%1.3e\tkLow',x(1));
   fprintf('\n\t%1.3e\tcurviness\n\n',x(2));
 
@@ -691,7 +691,7 @@ if(indexPassiveDataSetToeRegion > 0)
     forceLengthCurveSettings.fToe;
 
   flag_generateCurveSample=1;
-  [errOpt,optCurveSample] = ...
+  [errOpt,optCurveSample,updRatMuscleModelParameters] = ...
     calcErrorTitinForceLengthCurves(...
                         x,...
                         expDataFpeN,...
@@ -701,9 +701,36 @@ if(indexPassiveDataSetToeRegion > 0)
                         projectFolders,...
                         flag_generateCurveSample);
 
-%   assert(0,['Error: And output all of the fitting information later so ',...
-%             'that no one has to go hunting through the code']);  
+  fprintf('\nFitted titin model parameters\n\n');
+  fprintf('\t%1.4f\tlToe\tfTiN\n', ...
+    updRatMuscleModelParameters.curves.fittingReferenceTitin.normLengthToe);
+  fprintf('\t%1.4f\tfToe\tfTiN\n', ...
+    updRatMuscleModelParameters.curves.fittingReferenceTitin.fToe);
+  fprintf('\t%1.4f\tkToe\tfTiN\n\n', ...
+    updRatMuscleModelParameters.curves.fittingReferenceTitin.kToe);
 
+  fprintf('\t%1.4f\tlToe\tfIgPN\n', ...
+    updRatMuscleModelParameters.curves.forceLengthIgPTitinCurve.xEnd(2));
+  fprintf('\t%1.4f\tfToe\tfIgPN\n', ...
+    updRatMuscleModelParameters.curves.forceLengthIgPTitinCurve.yEnd(2));
+  fprintf('\t%1.4f\tkToe\tfIgPN\n\n', ...
+    updRatMuscleModelParameters.curves.forceLengthIgPTitinCurve.dydxEnd(2));
+
+  fprintf('\t%1.4f\tlToe\tfPevkN\n', ...
+    updRatMuscleModelParameters.curves.forceLengthPevkTitinCurve.xEnd(2));
+  fprintf('\t%1.4f\tfToe\tfPevkN\n', ...
+    updRatMuscleModelParameters.curves.forceLengthPevkTitinCurve.yEnd(2));
+  fprintf('\t%1.4f\tkToe\tfPevkN\n\n', ...
+    updRatMuscleModelParameters.curves.forceLengthPevkTitinCurve.dydxEnd(2));
+
+  fprintf('\t%1.4f\tlToe\tfIgDN\n', ...
+    updRatMuscleModelParameters.curves.forceLengthIgDTitinCurve.xEnd(2));  
+  fprintf('\t%1.4f\tfToe\tfIgDN\n', ...
+    updRatMuscleModelParameters.curves.forceLengthIgDTitinCurve.yEnd(2));
+  fprintf('\t%1.4f\tkToe\tfIgDN\n\n', ...
+    updRatMuscleModelParameters.curves.forceLengthIgDTitinCurve.dydxEnd(2));
+  
+  pause(0.1);
 
   if(flag_plotfpeNToeFit==1)
     %sample the default curve
@@ -1245,8 +1272,9 @@ if(flag_makeDetailedExpDataPlots==1)
     end
     
     
+    pause(0.1);
     figure(figModelCurves);
-    
+    pause(0.1);
     filePath = fullfile(projectFolders.output_plots_MuscleCurves,...
                         ['fig_Pub_MuscleCurves_Rat',experimentName,muscleName,'.pdf']);
 
@@ -1256,5 +1284,5 @@ if(flag_makeDetailedExpDataPlots==1)
                      muscleName,'_',num2str(trialId),'.pdf']);
     end
     print('-dpdf', filePath); 
-
+    pause(0.1);
 end
