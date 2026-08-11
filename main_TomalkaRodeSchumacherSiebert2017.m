@@ -13,7 +13,7 @@ if(flag_OuterLoopMode==0)
 
     simConfigInput.runFitting              = 1; 
     simConfigInput.generatePlots           = 1;
-    simConfigInput.fitToIndividualTrials   = 1; 
+    simConfigInput.fitToIndividualTrials   = 0; 
     simConfigInput.manuallySetTimeConstant = 0;
 
 end
@@ -46,7 +46,7 @@ modelConfig.wlcOption        = ''; %WLC or ''6
 modelConfig.muscleName       = 'EDL';
 modelConfig.experimentName   = 'TRSS2017';
 
-fittingConfig.fittingEvaluationMethod = 'simulateFullModel';
+fittingConfig.fittingEvaluationMethod = 'approximationByStateCalculationMinimal';
 % 'approximationByStateCalculationMinimal'
 % 'approximationByStateCalculation'
 % 'approximationByInitialization'
@@ -111,8 +111,6 @@ end
 
 %%
 % Set up the files
-%%
-
 rootDir         = getRootProjectDirectory();
 projectFolders  = getProjectFolders(rootDir);
 
@@ -122,6 +120,8 @@ addpath( genpath(projectFolders.experiments)    );
 addpath( genpath(projectFolders.simulation)     );
 addpath( genpath(projectFolders.models)         );
 addpath( genpath(projectFolders.postprocessing) );
+
+
 
 
 %%

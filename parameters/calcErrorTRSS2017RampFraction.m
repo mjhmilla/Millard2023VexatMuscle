@@ -204,7 +204,7 @@ function [optError,optErrorValues, figDebugFitting,...
         approximationByStateSetting   =2;
         approximationMinimal          =3;
 
-        flag_compareEvaluationMethods=0;
+        flag_compareEvaluationMethods=1;
 
         %
         % Initialization 
@@ -262,83 +262,133 @@ function [optError,optErrorValues, figDebugFitting,...
 
 
         if(strcmp(evaluationMethod,'approximationByStateCalculationMinimal'))
-          tstart=tic;
 
+          tstart=tic;
           nPts = 100;
           timeVector = [0:(1/(nPts-1)):1]'.*(timeRampEnd-timeRampStart)...
-                       + timeRampStart;
-          mtInfoUpd=mtInfo;     
+                       + timeRampStart;  
+          activationState0=[0,1];
+          calcStateDerFcn = ...
+            @(argt, argState)calcApproximationMillard2023VexatMuscleInfo(...
+                              argt,...
+                              argState,...
+                              muscleState0,...           
+                              activationState0,...                                            
+                              pathLengthFcn, ... 
+                              pathState0,...
+                              ratFibrilModelsUpd(idxTrial).musculotendon,...
+                              ratFibrilModelsUpd(idxTrial).sarcomere,...
+                              ratFibrilModelsUpd(idxTrial).curves,...
+                              modelConfig,...
+                              'quasiStaticSkinnedFiberApproximation');
+          [t,y]=ode15s(calcStateDerFcn,timeVector,muscleState0(3));
 
-          if(ratFibrilModelsUpd(idxTrial).curves.useCalibratedCurves == 1)
-            calcFvDer      = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
-                              ratFibrilModelsUpd(idxTrial).curves.fiberForceVelocityCalibratedCurve,...
-                              arg2);
-            calcFalDer     = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
-                              ratFibrilModelsUpd(idxTrial).curves.activeForceLengthCalibratedCurve,...
-                              arg2);  
-          else
-              
-            calcFvDer      = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
-                              ratFibrilModelsUpd(idxTrial).curves.fiberForceVelocityCurve,...
-                              arg2);
-            calcFalDer     = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
-                            ratFibrilModelsUpd(idxTrial).curves.activeForceLengthCurve,...
-                            arg2);
-          end  
-          calcF2HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
-                             ratFibrilModelsUpd(idxTrial).curves.forceLengthDistalTitinCurve, ...
-                                arg2);           
-          
-          for idxTime =1:1:nPts
-            activationStateUpd    = [0;excitationFcn(timeVector(idxTime))];
-            pathStateUpd          = pathLengthFcn(timeVector(idxTime));
-            muscleStateUpd        = zeros(nStates,1);
-
-            if(isempty(benchRecord))
-              benchRecord.normFiberForce=zeros(nPts,numberOfSimulations);
-              benchRecord.normFiberLength=zeros(nPts,numberOfSimulations);
-            end
-            muscleStateUpd = mtInfo.state.value;
-            muscleStateUpd(1) = pathStateUpd(1)*0.5;
-            muscleStateUpd(2) = muscleState0(2)...
-                + (pathStateUpd(2)-pathState0(2))*0.5;
-
-            %Approximate state
-            dlaH   = muscleStateUpd(1);  
-            laH    = muscleStateUpd(2);  
-            l1H    = muscleStateUpd(3);  
-
-            %Constants
-            lceOpt=ratFibrilModelsUpd(idxTrial).musculotendon.optimalFiberLength;
-            dlceMaxN=ratFibrilModelsUpd(idxTrial).musculotendon.maximumNormalizedFiberVelocity;
-            lmHN    = ratFibrilModelsUpd(idxTrial).sarcomere.normMyosinHalfLength;
-            forceVelocityCalibrationFactor = ...
-                ratFibrilModelsUpd(idxTrial).sarcomere.forceVelocityCalibrationFactor;
-            lTitinFixedHN = ...
-                  ratFibrilModelsUpd(idxTrial).sarcomere.ZLineToT12NormLengthAtOptimalFiberLength ...
-                + ratFibrilModelsUpd(idxTrial).sarcomere.IGDFixedNormLengthAtOptimalFiberLength;
-            
-            scaleTitinDistal    = ...
-              ratFibrilModelsUpd(idxTrial).sarcomere.scaleTitinDistal;
-            
-            %Evaluate arguments to input functions
-            vce = pathStateUpd(1);
-            lce = pathStateUpd(2);
-            %
-            laHN  = laH/lceOpt;
-            lamN  = 2*(lmHN+laHN); 
-            flN = calcFalDer(lamN,0);
-            
-            dlfNN = ((dlaH*2)/(lceOpt*dlceMaxN));
-            fvN=calcFvDer(dlfNN*forceVelocityCalibrationFactor,0);
-    
-            l2H =lce*0.5-(l1H+lTitinFixedHN*lceOpt);
-            l2HN=l2H/lceOpt;
-            f2N = scaleTitinDistal*calcF2HDer(l2HN,0);
-            
-            benchRecord.normFiberForce(idxTime,idxTrial)=flN*fvN+f2N;
-            benchRecord.normFiberLength(idxTime,idxTrial)=lce/lceOpt;            
+          if(isempty(benchRecord))
+            benchRecord.normFiberForce=zeros(nPts,numberOfSimulations);
+            benchRecord.normFiberLength=zeros(nPts,numberOfSimulations);
           end
+          
+          assert(sum(abs(t-timeVector))<1e-6);
+
+          for idxTime=1:1:nPts
+
+            [muscleStateDerivativeUpd, mtInfoUpd] ...
+              = calcApproximationMillard2023VexatMuscleInfo(...
+                    timeVector(idxTime),...
+                    y(idxTime),...
+                    muscleState0,...           
+                    activationState0,...                                            
+                    pathLengthFcn, ... 
+                    pathState0,...
+                    ratFibrilModelsUpd(idxTrial).musculotendon,...
+                    ratFibrilModelsUpd(idxTrial).sarcomere,...
+                    ratFibrilModelsUpd(idxTrial).curves,...
+                    modelConfig,...
+                    'quasiStaticSkinnedFiberApproximation');
+
+            benchRecord.normFiberForce(idxTime,idxTrial)= ...
+              mtInfoUpd.muscleDynamicsInfo.normFiberForce;
+            benchRecord.normFiberLength(idxTime,idxTrial)= ...
+              mtInfoUpd.muscleDynamicsInfo.normFiberLength;              
+          end
+
+%           tstart=tic;
+% 
+%           nPts = 100;
+%           timeVector = [0:(1/(nPts-1)):1]'.*(timeRampEnd-timeRampStart)...
+%                        + timeRampStart;
+%           mtInfoUpd=mtInfo;     
+% 
+%           if(ratFibrilModelsUpd(idxTrial).curves.useCalibratedCurves == 1)
+%             calcFvDer      = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
+%                               ratFibrilModelsUpd(idxTrial).curves.fiberForceVelocityCalibratedCurve,...
+%                               arg2);
+%             calcFalDer     = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
+%                               ratFibrilModelsUpd(idxTrial).curves.activeForceLengthCalibratedCurve,...
+%                               arg2);  
+%           else
+%               
+%             calcFvDer      = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
+%                               ratFibrilModelsUpd(idxTrial).curves.fiberForceVelocityCurve,...
+%                               arg2);
+%             calcFalDer     = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
+%                             ratFibrilModelsUpd(idxTrial).curves.activeForceLengthCurve,...
+%                             arg2);
+%           end  
+%           calcF2HDer       = @(arg1, arg2)calcBezierYFcnXDerivative(arg1, ...
+%                              ratFibrilModelsUpd(idxTrial).curves.forceLengthDistalTitinCurve, ...
+%                                 arg2);           
+%           
+%           for idxTime =1:1:nPts
+%             activationStateUpd    = [0;excitationFcn(timeVector(idxTime))];
+%             pathStateUpd          = pathLengthFcn(timeVector(idxTime));
+%             muscleStateUpd        = zeros(nStates,1);
+% 
+%             if(isempty(benchRecord))
+%               benchRecord.normFiberForce=zeros(nPts,numberOfSimulations);
+%               benchRecord.normFiberLength=zeros(nPts,numberOfSimulations);
+%             end
+%             muscleStateUpd = mtInfo.state.value;
+%             muscleStateUpd(1) = pathStateUpd(1)*0.5;
+%             muscleStateUpd(2) = muscleState0(2)...
+%                 + (pathStateUpd(2)-pathState0(2))*0.5;
+% 
+%             %Approximate state
+%             dlaH   = muscleStateUpd(1);  
+%             laH    = muscleStateUpd(2);  
+%             l1H    = muscleStateUpd(3);  
+% 
+%             %Constants
+%             lceOpt=ratFibrilModelsUpd(idxTrial).musculotendon.optimalFiberLength;
+%             dlceMaxN=ratFibrilModelsUpd(idxTrial).musculotendon.maximumNormalizedFiberVelocity;
+%             lmHN    = ratFibrilModelsUpd(idxTrial).sarcomere.normMyosinHalfLength;
+%             forceVelocityCalibrationFactor = ...
+%                 ratFibrilModelsUpd(idxTrial).sarcomere.forceVelocityCalibrationFactor;
+%             lTitinFixedHN = ...
+%                   ratFibrilModelsUpd(idxTrial).sarcomere.ZLineToT12NormLengthAtOptimalFiberLength ...
+%                 + ratFibrilModelsUpd(idxTrial).sarcomere.IGDFixedNormLengthAtOptimalFiberLength;
+%             
+%             scaleTitinDistal    = ...
+%               ratFibrilModelsUpd(idxTrial).sarcomere.scaleTitinDistal;
+%             
+%             %Evaluate arguments to input functions
+%             vce = pathStateUpd(1);
+%             lce = pathStateUpd(2);
+%             %
+%             laHN  = laH/lceOpt;
+%             lamN  = 2*(lmHN+laHN); 
+%             flN = calcFalDer(lamN,0);
+%             
+%             dlfNN = ((dlaH*2)/(lceOpt*dlceMaxN));
+%             fvN=calcFvDer(dlfNN*forceVelocityCalibrationFactor,0);
+%     
+%             l2H =lce*0.5-(l1H+lTitinFixedHN*lceOpt);
+%             l2HN=l2H/lceOpt;
+%             f2N = scaleTitinDistal*calcF2HDer(l2HN,0);
+%             
+%             benchRecord.normFiberForce(idxTime,idxTrial)=flN*fvN+f2N;
+%             benchRecord.normFiberLength(idxTime,idxTrial)=lce/lceOpt;            
+%          end
           durationApprox=toc(tstart);
           if(flag_compareEvaluationMethods==1)
             benchRecordApprox=benchRecord;
