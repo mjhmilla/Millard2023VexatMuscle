@@ -13,7 +13,7 @@ if(flag_OuterLoopMode==0)
 
     simConfigInput.runFitting              = 1; 
     simConfigInput.generatePlots           = 1;
-    simConfigInput.fitToIndividualTrials   = 0; 
+    simConfigInput.fitToIndividualTrials   = 1; 
     simConfigInput.manuallySetTimeConstant = 0;
 
 end
@@ -34,6 +34,7 @@ simConfig.runSimUpdateResults     = 0;
 %Simulations for testing
 
 simConfig.trials                  = [1,2,3];
+simConfig.numberOfTrials          = length(simConfig.trials);
 simConfig.defaultTrialId          = 0; %Set to 1,2,3 to fit to just this trial
 simConfig.useDefaultModel         = 1;
 simConfig.flag_debugFitting       = 1;
