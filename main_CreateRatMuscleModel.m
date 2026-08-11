@@ -5,7 +5,7 @@
 %
 %%
 
-flag_OuterLoopMode=0;
+flag_OuterLoopMode=1;
 
 if(flag_OuterLoopMode==0)
     clc;

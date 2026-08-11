@@ -4,14 +4,14 @@
 % SPDX-License-Identifier: MIT
 %
 %%
-flag_OuterLoopMode=0;
+flag_OuterLoopMode=1;
 
 if(flag_OuterLoopMode==0)
     clc;
     close all;
     clear all;
 
-    simConfigInput.runFitting              = 0; 
+    simConfigInput.runFitting              = 1; 
     simConfigInput.generatePlots           = 1;
     simConfigInput.fitToIndividualTrials   = 1; 
     simConfigInput.manuallySetTimeConstant = 0;
