@@ -37,7 +37,7 @@ simConfig.trials                  = [1,2,3];
 simConfig.numberOfTrials          = length(simConfig.trials);
 simConfig.defaultTrialId          = 0; %Set to 1,2,3 to fit to just this trial
 simConfig.useDefaultModel         = 1;
-simConfig.flag_debugFitting       = 1;
+simConfig.flag_debugFitting       = 0;
 simConfig.numericalDiffLowPassFilterFrequencyHz=30; %
 
 
@@ -47,11 +47,28 @@ modelConfig.wlcOption        = ''; %WLC or ''6
 modelConfig.muscleName       = 'EDL';
 modelConfig.experimentName   = 'TRSS2017';
 
-fittingConfig.fittingEvaluationMethod = 'approximationByStateCalculationMinimal';
+fittingConfig.manuallySetTitinParameters = 1;
+if(flag_OuterLoopMode==1)
+  fittingConfig.manuallySetTitinParameters = 0;
+end
+fittingConfig.manuallySet.forceLengthCurveSettings = ...
+  struct('normLengthZero',0,...
+         'normLengthToe',1.500101242582240,...
+         'fToe',0.5,...
+         'kZero',1.2207e-4,...
+         'kToe',1.688112423563665,...
+         'curviness',0.659629158856933,...
+         'kLow',2.1791e-6);
+
+
+fittingConfig.fittingEvaluationMethod = 'simulateFullModel';
 % 'approximationByStateCalculationMinimal'
 % 'approximationByStateCalculation'
 % 'approximationByInitialization'
 % 'simulateFullModel'
+if(flag_OuterLoopMode==1)
+  fittingConfig.fittingEvaluationMethod = 'simulateFullModel';
+end
 
 fittingConfig.fitFl             =1;
 fittingConfig.fitFv             =1;
@@ -69,9 +86,21 @@ assert(~(fittingConfig.fitTimeConstant ...
 
 fittingConfig.fitKx             =0;
 fittingConfig.fitQToF           =1;
+fittingConfig.fitFpeQToF        =0;
 fittingConfig.fitQToK           =0;
 fittingConfig.fitf1HNPreload    =0;
 fittingConfig.fitl1HNOffset     =0;
+
+if(flag_OuterLoopMode==1)
+  fittingConfig.fitKx             =0;
+  fittingConfig.fitQToF           =1;
+  fittingConfig.fitFpeQToF        =0;
+  fittingConfig.fitQToK           =0;
+  fittingConfig.fitf1HNPreload    =0;
+  fittingConfig.fitl1HNOffset     =0;
+end
+
+
 
 assert(~(fittingConfig.fitf1HNPreload && fittingConfig.fitl1HNOffset),...
     'Error: using both fitf1HNPreload and fitl1HNOffset does not make sense');
@@ -276,6 +305,11 @@ for idxTrial = simConfig.trials
     
     ratFibrilModelsDefault(idxTrial).sarcomere.useVariableSlidingTimeConstant = 1;
 
+    if(fittingConfig.manuallySetTitinParameters==1)
+      ratFibrilModelsDefault(idxTrial).curves.forceLengthCurveSettings=...
+        fittingConfig.manuallySet.forceLengthCurveSettings;
+    end
+
 end
 
 %%
@@ -332,9 +366,11 @@ for i=1:1:length(fittingConfig.titin.trials)
 end
 
 for i=1:1:length(fittingNames)
-    if(fittingConfig.(fittingNames{i})==1)
-        fittingTrialsStr = [fittingTrialsStr,...
-            '_',fittingAbbr{i}];
+    if(~isstruct(fittingConfig.(fittingNames{i})))
+      if(fittingConfig.(fittingNames{i})==1)
+          fittingTrialsStr = [fittingTrialsStr,...
+              '_',fittingAbbr{i}];
+      end
     end
 end
 
@@ -485,7 +521,8 @@ if(simConfig.generatePlots==1)
     end
 
     success = writeTRSS2017ErrorTable(filePathTable,fitInfo,...
-                                   simConfig,projectFolders);
+                                   simConfig,fittingConfig,...
+                                   projectFolders);
 
     figPub=figure;
 

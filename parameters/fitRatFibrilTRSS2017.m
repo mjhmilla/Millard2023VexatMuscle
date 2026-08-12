@@ -27,7 +27,8 @@ benchRecord=[];
 
 
 fitInfo = struct('fl',[],'fv',[],'timeConstant',[],'Kx',[],...
-                    'QToF',[],'QToK',[],'f1HNPreload',[],'l1HNOffset',[]);
+                    'QToF',[],'QToK',[],'f1HNPreload',[],'l1HNOffset',[],...
+                    'FpeQToF',[]);
 
 fitInfoFields= fields(fitInfo);
 
@@ -45,9 +46,9 @@ fidFitting = fopen(fullfile(projectFolders.output_structs_TRSS2017,...
 %%
 % Fitting the active-force-length relation
 %%
-
-figDebugFitting = figure;
-
+if(simConfig.flag_debugFitting==1)
+  figDebugFitting = figure;
+end
 if(fittingConfig.fitFl==1)
 
     %%
@@ -806,7 +807,7 @@ for idxTrial=simConfig.trials
 
 end
 
-
+  
 if(fittingConfig.fitQToF ==1 || fittingConfig.fitQToK == 1)
     assert(~(fittingConfig.fitQToF && fittingConfig.fitQToK),...
       'Error: fitting Q to force and also Q to stiffness does not make sense');
@@ -912,6 +913,25 @@ if(fittingConfig.fitQToF ==1 || fittingConfig.fitQToK == 1)
             fitType = 'QToK';
         end
 
+        %
+        % Update the parameter struct
+        % 
+        optParams.value=QBest;
+        [optErrorBest,optErrorValuesBest, figDebugFittingQ,...
+            ratFibrilModelsFittedUpd,benchRecordFitted] =...
+            calcErrorTRSS2017RampFraction(optParams,...
+                       fittingFraction, ...
+                       npts, ...
+                       ratFibrilModelsFitted, ...
+                       expTRSS2017Raw,...
+                       simConfigTmp,...
+                       figDebugFittingQ,...
+                       plotConfig.subPlotPanel,...
+                       plotConfig.lineColors.simTitinK,...
+                       benchRecordFitted,...
+                       'simulateFullModel',...
+                       projectFolders);
+
         if(fittingConfig.titin.individuallyFit==1)
             fprintf('fitting trial %i: Q nrmse force profile\n',idxTrial);
             fprintf('\t%e\tQ (start)\n',QInit); 
@@ -966,27 +986,7 @@ if(fittingConfig.fitQToF ==1 || fittingConfig.fitQToK == 1)
             fitInfo.(fitType).argDelta = QDelta*2;
         end
 
-  
-        %
-        % Update the parameter struct
-        % 
-        optParams.value=QBest;
-        [optError,optErrorValues, figDebugFittingQ,...
-            ratFibrilModelsFittedUpd,benchRecordFitted] =...
-            calcErrorTRSS2017RampFraction(optParams,...
-                       fittingFraction, ...
-                       npts, ...
-                       ratFibrilModelsFitted, ...
-                       expTRSS2017Raw,...
-                       simConfigTmp,...
-                       figDebugFittingQ,...
-                       plotConfig.subPlotPanel,...
-                       plotConfig.lineColors.simTitinK,...
-                       benchRecordFitted,...
-                       'simulateFullModel',...
-                       projectFolders);
-                     
-
+                      
         if(fittingConfig.titin.individuallyFit==1)
             ratFibrilModelsFitted(idxTrial)=ratFibrilModelsFittedUpd(idxTrial);
         else
@@ -1037,8 +1037,243 @@ if(fittingConfig.fitQToF ==1 || fittingConfig.fitQToK == 1)
         end
         
     end
+end
+
+%%
+%
+% Multi-variate fitting
+%
+%%
+if(fittingConfig.fitFpeQToF ==1)
+    %
+    % Solve for Q to best fit the average slope of the force development
+    %
+    flagDebug           = 0;
+    simConfigTmp        = simConfig;
+    figDebugFittingFpeQ = figure;
+    
+    loops = length(fittingConfig.titin.trials);
+    if(fittingConfig.titin.individuallyFit==0)
+        loops=1;
+    end
+    
+    QInit = 0.5;
+    QDeltaInit = 0.5*QInit;
+
+    kToeMin = 1.40;    
+    kToeMax = ratFibrilModelsFitted(idxTrial).curves.forceLengthCurveSettings.kToe;
+    kToeInit = 0.5*(kToeMin+kToeMax);
+    kToeDeltaInit = 0.25*(kToeMax-kToeMin);
+
+    normLengthToeMax = ...
+      ratFibrilModelsFitted(idxTrial).curves.forceLengthCurveSettings.normLengthToe;
+    normLengthToeMin = normLengthToeMax-0.2;
+    normLengthToeInit = 0.5*(normLengthToeMax+normLengthToeMin);
+    normLengthToeDeltaInit = 0.25*(normLengthToeMax-normLengthToeMin);
+
+    curvinessMax =1;
+    curvinessMin =0;
+    curvinessInit = 0.5;
+    curvinessDeltaInit=0.25*(curvinessMax-curvinessMin);
+
+    paramInit = [QInit;kToeInit;normLengthToeInit;curvinessInit];
+    paramInitDelta = [QDeltaInit;...
+                      kToeDeltaInit;...
+                      normLengthToeDeltaInit;...
+                      curvinessDeltaInit];
+
+    numParams=length(paramInit);
+
+    paramPattern = zeros(numParams^2-1,numParams);
+
+    for i=1:1:size(paramPattern,1)
+      rowVal = dec2bin(i);
+      k = length(rowVal);
+      for j=size(paramPattern,2):-1:(size(paramPattern,2)-length(rowVal)+1)
+        paramPattern(i,j) = str2double(rowVal(k));
+        k=k-1;
+      end
+    end
+
+
+    for idxLoop = 1:1:loops
+
+        idxTrial = nan;
+        if(fittingConfig.titin.individuallyFit==1)
+            idxTrial = simConfig.trials(1,idxLoop);
+            simConfigTmp.trials = idxTrial;
+        end
+        optParams.name = 'FpeQToF';        
+
+        optParams.value=  paramInit;
+        
+        simConfigTmp.flag_debugFitting=0;
+        fittingFraction=1;
+        npts=100;
+        [optErrorStart,optErrorValues,figDebugFittingFpeQ,...
+            ratFibrilModelsFittedUpd,benchRecord] =...
+            calcErrorTRSS2017RampFraction(optParams,...
+                       fittingFraction, ...
+                       npts, ...
+                       ratFibrilModelsFitted, ...
+                       expTRSS2017Raw,...
+                       simConfigTmp,...
+                       figDebugFittingFpeQ,...
+                       plotConfig.subPlotPanel,...
+                       plotConfig.lineColors.simTitinK,...
+                       benchRecord,...
+                       fittingConfig.fittingEvaluationMethod,...
+                       projectFolders);
+
+        optErrorBest=optErrorStart;
+        optErrorValuesBest=optErrorValues;
+        paramBest=paramInit;
+        paramDelta=paramInitDelta;
+        dirMap = [1,-1];
+
+
+
+        for i=1:1:fittingConfig.numberOfBisections
+          fprintf('%i/%i\n',i,fittingConfig.numberOfBisections);
+    
+          for j=1:1:size(paramPattern,1)
+
+            for k=1:1:length(dirMap)
+
+                paramTest = paramBest ...
+                  + (paramPattern(j,:)').*(paramDelta).*dirMap(1,k);
+                %disp(paramTest);
+                optParams.value = paramTest;
+                [optError,optErrorValues,figDebugFittingFpeQ,...
+                    ratFibrilModelsFittedUpd,benchRecord] =...
+                    calcErrorTRSS2017RampFraction(optParams,...
+                       fittingFraction, ...
+                       npts, ...
+                       ratFibrilModelsFitted, ...
+                       expTRSS2017Raw,...
+                       simConfigTmp,...
+                       figDebugFittingFpeQ,...
+                       plotConfig.subPlotPanel,...
+                       plotConfig.lineColors.simTitinK,...
+                       benchRecord,...
+                       fittingConfig.fittingEvaluationMethod,...
+                       projectFolders);
+
+                if(optError<optErrorBest)
+                    optErrorBest=optError;
+                    optErrorValuesBest=optErrorValues;
+                    paramIterationBest=optParams.value;
+                end
+            end
+
+          end
+          paramBest=paramIterationBest;
+          paramDelta=paramDelta*0.5;
+
+        end
+
+
+        fitType='FpeQToF';
+
+        %
+        % Update the parameter struct
+        % 
+        optParams.value=paramBest;
+        [optErrorBest,optErrorValuesBest, figDebugFittingFpeQ,...
+            ratFibrilModelsFittedUpd,benchRecordFitted] =...
+            calcErrorTRSS2017RampFraction(optParams,...
+                       fittingFraction, ...
+                       npts, ...
+                       ratFibrilModelsFitted, ...
+                       expTRSS2017Raw,...
+                       simConfigTmp,...
+                       figDebugFittingFpeQ,...
+                       plotConfig.subPlotPanel,...
+                       plotConfig.lineColors.simTitinK,...
+                       benchRecordFitted,...
+                       'simulateFullModel',...
+                       projectFolders);
+
+        if(fittingConfig.titin.individuallyFit==1)
+            fprintf('fitting trial %i: Fpe+Q nrmse force profile\n',idxTrial);
+            for k=1:1:length(paramInit)
+              fprintf('\t%e',paramInit(k));
+            end
+            fprintf('\tparam (start)\n');
+            fprintf('\t%e\tNRMSE (start)\n',optErrorStart); 
+            for k=1:1:length(paramBest)
+              fprintf('\t%e',paramBest(k));
+            end
+            fprintf('\tparam (end)\n');            
+            fprintf('\t%e\tNRMSE (end)\n',optErrorBest);
+        else
+            fprintf('fitting all: Fpe+Q nrmse force profile\n');
+            for k=1:1:length(paramInit)
+              fprintf('\t%e',paramInit(k));
+            end
+            fprintf('\tparam (start)\n');
+            fprintf('\t%e\tNRMSE (start)\n',optErrorStart); 
+            for k=1:1:length(paramBest)
+              fprintf('\t%e',paramBest(k));
+            end
+            fprintf('\tparam (end)\n');            
+            fprintf('\t%e\tNRMSE (end)\n',optErrorBest); 
+        end            
+        if(fittingConfig.titin.individuallyFit==1)
+            if(isnan(fitInfo.(fitType).rmse))
+                fitInfo.(fitType).x     = optErrorValuesBest.x(:,idxTrial);
+                fitInfo.(fitType).y     = optErrorValuesBest.y(:,idxTrial);
+                fitInfo.(fitType).yFit  = optErrorValuesBest.yFit(:,idxTrial);                    
+                fitInfo.(fitType).yErr  = optErrorValuesBest.yErr(:,idxTrial);
+                fitInfo.(fitType).rmse  = optErrorValuesBest.rmse(:,idxTrial);
+                fitInfo.(fitType).yStd  = optErrorValuesBest.yStd(:,idxTrial);
+                fitInfo.(fitType).yNErr = optErrorValuesBest.yNErr(:,idxTrial);
+                fitInfo.(fitType).nrmse = optErrorValuesBest.nrmse(:,idxTrial);
+
+                fitInfo.(fitType).arg  = paramBest';            
+                fitInfo.(fitType).argDelta = paramDelta*2;
+
+            else
+                fitInfo.(fitType).x     = [fitInfo.(fitType).x,     optErrorValuesBest.x(:,idxTrial)];
+                fitInfo.(fitType).y     = [fitInfo.(fitType).y,     optErrorValuesBest.y(:,idxTrial)];
+                fitInfo.(fitType).yFit  = [fitInfo.(fitType).yFit,  optErrorValuesBest.yFit(:,idxTrial)];
+                fitInfo.(fitType).yErr  = [fitInfo.(fitType).yErr,  optErrorValuesBest.yErr(:,idxTrial)];
+                fitInfo.(fitType).rmse  = [fitInfo.(fitType).rmse,  optErrorValuesBest.rmse(:,idxTrial)];
+                fitInfo.(fitType).yStd  = [fitInfo.(fitType).yStd,  optErrorValuesBest.yStd(:,idxTrial)];
+                fitInfo.(fitType).yNErr = [fitInfo.(fitType).yNErr, optErrorValuesBest.yNErr(:,idxTrial)];
+                fitInfo.(fitType).nrmse = [fitInfo.(fitType).nrmse, optErrorValuesBest.nrmse(:,idxTrial)];
+                
+                fitInfo.(fitType).arg  = [fitInfo.(fitType).arg,  paramBest'];            
+                fitInfo.(fitType).argDelta = paramDelta*2;
+            end
+        else
+            fitInfo.(fitType).x     = optErrorValuesBest.x;
+            fitInfo.(fitType).y     = optErrorValuesBest.y;
+            fitInfo.(fitType).yFit  = optErrorValuesBest.yFit;
+            fitInfo.(fitType).yErr  = optErrorValuesBest.yErr;
+            fitInfo.(fitType).rmse  = optErrorValuesBest.rmse;
+            fitInfo.(fitType).yStd  = optErrorValuesBest.yStd;
+            fitInfo.(fitType).yNErr = optErrorValuesBest.yNErr;
+            fitInfo.(fitType).nrmse = optErrorValuesBest.nrmse;
+
+            fitInfo.(fitType).arg  = paramBest';           
+            fitInfo.(fitType).argDelta = paramDelta*2;
+        end
+
+                      
+        if(fittingConfig.titin.individuallyFit==1)
+            ratFibrilModelsFitted(idxTrial)=ratFibrilModelsFittedUpd(idxTrial);
+        else
+            ratFibrilModelsFitted=ratFibrilModelsFittedUpd;
+        end
+
+
+
+
+    end
 
     
+
     %
     % If we are fitting just one of the trials, then update the others
     % to have the same fitted Q value
@@ -1047,7 +1282,8 @@ if(fittingConfig.fitQToF ==1 || fittingConfig.fitQToK == 1)
             && fittingConfig.titin.applyToAllTrials==1)
         for i=1:1:length(ratFibrilModelsFitted)
             if(i ~= fittingConfig.titin.trials(1,1))
-                ratFibrilModelsFitted(i)=ratFibrilModelsFitted(fittingConfig.titin.trials);
+                ratFibrilModelsFitted(i)...
+                  =ratFibrilModelsFitted(fittingConfig.titin.trials);
             end
         end
     end

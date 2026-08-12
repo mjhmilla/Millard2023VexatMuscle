@@ -1298,7 +1298,10 @@ for idx=simConfig.trials
     end
     if(~isempty(fitInfo.l1HNOffset.x))
         ffit = 'l1HNOffset';        
-    end    
+    end 
+    if(~isempty(fitInfo.FpeQToF.x))
+        ffit = 'FpeQToF';        
+    end     
 
     xErr = fitInfo.(ffit).x(end,idx)./lceOptMdl;
     yErr = (fitInfo.(ffit).y(end,idx) + fitInfo.(ffit).yFit(end,idx)).*0.5;
