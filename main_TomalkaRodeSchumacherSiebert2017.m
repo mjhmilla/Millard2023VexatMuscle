@@ -11,7 +11,8 @@ if(flag_OuterLoopMode==0)
     close all;
     clear all;
 
-    simConfigInput.runFitting              = 1; 
+    flag_OuterLoopMode=0;
+    simConfigInput.runFitting              = 0; 
     simConfigInput.generatePlots           = 1;
     simConfigInput.fitToIndividualTrials   = 1; 
     simConfigInput.manuallySetTimeConstant = 0;
@@ -61,7 +62,7 @@ fittingConfig.manuallySet.forceLengthCurveSettings = ...
          'kLow',2.1791e-6);
 
 
-fittingConfig.fittingEvaluationMethod = 'simulateFullModel';
+fittingConfig.fittingEvaluationMethod = 'approximationByStateCalculationMinimal';
 % 'approximationByStateCalculationMinimal'
 % 'approximationByStateCalculation'
 % 'approximationByInitialization'
@@ -85,8 +86,8 @@ assert(~(fittingConfig.fitTimeConstant ...
 %Lengthening time constant in Eqn. 16 of Millard, Franklin, Herzog
 
 fittingConfig.fitKx             =0;
-fittingConfig.fitQToF           =1;
-fittingConfig.fitFpeQToF        =0;
+fittingConfig.fitQToF           =0;
+fittingConfig.fitFpeQToF        =1;
 fittingConfig.fitQToK           =0;
 fittingConfig.fitf1HNPreload    =0;
 fittingConfig.fitl1HNOffset     =0;

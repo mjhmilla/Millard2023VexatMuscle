@@ -2,14 +2,16 @@ function [optError,optErrorValues, figDebugFitting,...
             ratFibrilModelsUpd,benchRecord] =...
             calcErrorTRSS2017RampFraction(...
                        optParams,...
-                       fittingFraction, npts, ...
+                       optErrorValues,...
+                       fittingFraction, ...
+                       npts, ...
                        ratFibrilModels, ...
                        expTRSS2017Raw,...
                        simConfig,...
                        figDebugFitting,...
                        subPlotPanel,...
                        lineColorsSimTRSS2017,...
-                       benchRecord,...
+                       benchRecord,...                       
                        evaluationMethod,...
                        projectFolders)
 
@@ -17,17 +19,7 @@ function [optError,optErrorValues, figDebugFitting,...
     errVec              = zeros(length(ratFibrilModelsUpd),npts);
     numberOfSimulations = simConfig.numberOfTrials;
     
-
     optError=0;
-    optErrorValues.x      = [];
-    optErrorValues.y      = [];
-    optErrorValues.yFit   = [];
-    optErrorValues.yErr   = [];    
-    optErrorValues.rmse   = [];
-    optErrorValues.yStd   = [];
-    optErrorValues.yNErr  = [];
-    optErrorValues.nrmse  = [];
-    
 
     for idxTrial = simConfig.trials
         
@@ -570,16 +562,23 @@ function [optError,optErrorValues, figDebugFitting,...
                     nerrV(k,1) = (expfN-fN)/expStdfN;
 
                 end
-                if(isempty(optErrorValues))
-                    optErrorValues.x    = zeros(npts,3);                    
-                    optErrorValues.y    = zeros(npts,3);
-                    optErrorValues.yFit   = zeros(npts,3);
-                    optErrorValues.yErr   = zeros(npts,3);
-                    optErrorValues.yStd   = zeros(npts,3);
-                    optErrorValues.yNErr  = zeros(npts,3);
-                    optErrorValues.rmse   = zeros(1,3);
-                    optErrorValues.nrmse  = zeros(1,3);
+
+                n = optParams.exp(1).x;
+                for idxTrial=1:1:length(optParams.exp)
+                  assert(length(optParams.exp(idxTrial).x)==n);
                 end
+            
+                if(isempty(optErrorValues))
+                  optErrorValues.x      = zeros(npts,numberOfSimulations);
+                  optErrorValues.y      = zeros(npts,numberOfSimulations);
+                  optErrorValues.yFit   = zeros(npts,numberOfSimulations);
+                  optErrorValues.yErr   = zeros(npts,numberOfSimulations);    
+                  optErrorValues.rmse   = zeros(1,numberOfSimulations);
+                  optErrorValues.yStd   = zeros(npts,numberOfSimulations);
+                  optErrorValues.yNErr  = zeros(npts,numberOfSimulations);
+                  optErrorValues.nrmse  = zeros(1,numberOfSimulations);
+                end
+
                 optErrorValues.x(:,idxTrial) = ...
                     benchRecord.normFiberLength(:,idxTrial).*lceOptMdl;
                 optErrorValues.y(:,idxTrial) = yV;
@@ -625,16 +624,18 @@ function [optError,optErrorValues, figDebugFitting,...
                     errV(k,1) = expfN-fN;
                     nerrV(k,1)= (expfN-fN)/expStdfN;
                 end
+
                 if(isempty(optErrorValues))
-                  optErrorValues.x     = zeros(npts,3);
-                    optErrorValues.y     = zeros(npts,3);
-                    optErrorValues.yFit  = zeros(npts,3);
-                    optErrorValues.yErr  = zeros(npts,3);
-                    optErrorValues.yStd  = zeros(npts,3);
-                    optErrorValues.yNErr = zeros(npts,3);
-                    optErrorValues.rmse   = zeros(1,3);
-                    optErrorValues.nrmse  = zeros(1,3);
-                end
+                  optErrorValues.x      = zeros(npts,numberOfSimulations);
+                  optErrorValues.y      = zeros(npts,numberOfSimulations);
+                  optErrorValues.yFit   = zeros(npts,numberOfSimulations);
+                  optErrorValues.yErr   = zeros(npts,numberOfSimulations);    
+                  optErrorValues.rmse   = zeros(1,numberOfSimulations);
+                  optErrorValues.yStd   = zeros(npts,numberOfSimulations);
+                  optErrorValues.yNErr  = zeros(npts,numberOfSimulations);
+                  optErrorValues.nrmse  = zeros(1,numberOfSimulations);
+                end                
+
                 optErrorValues.x(:,idxTrial) = ...
                     benchRecord.normFiberLength(:,idxTrial).*lceOptMdl;
                 optErrorValues.y(:,idxTrial)     = yV; 
@@ -671,17 +672,23 @@ function [optError,optErrorValues, figDebugFitting,...
                                      mdlX(i,1));                   
                end
 
-               if(isempty(optErrorValues))
-                 optErrorValues.x     = zeros(length(mdlX),3);
-                 optErrorValues.y     = zeros(length(mdlX),3);
-                 optErrorValues.yFit  = zeros(length(mdlX),3);
-                 optErrorValues.yErr  = zeros(length(mdlX),3);
-                 optErrorValues.yStd  = zeros(length(mdlX),3);
-                 optErrorValues.yNErr = zeros(length(mdlX),3);
-                 optErrorValues.rmse  = zeros(1,3);
-                 optErrorValues.nrmse = zeros(1,3);
-
+               n=length(optParams.exp(idxTrial).x);
+               for i=1:1:length(optParams.exp)
+                 assert(length(optParams.exp(i).x)==n);
                end
+
+               if(isempty(optErrorValues))
+                 optErrorValues.x      = zeros(n,numberOfSimulations);
+                 optErrorValues.y      = zeros(n,numberOfSimulations);
+                 optErrorValues.yFit   = zeros(n,numberOfSimulations);
+                 optErrorValues.yErr   = zeros(n,numberOfSimulations);    
+                 optErrorValues.rmse   = zeros(1,numberOfSimulations);
+                 optErrorValues.yStd   = zeros(n,numberOfSimulations);
+                 optErrorValues.yNErr  = zeros(n,numberOfSimulations);
+                 optErrorValues.nrmse  = zeros(1,numberOfSimulations);
+               end
+
+
                optErrorValues.x(:,idxTrial)      = mdlX;
                optErrorValues.y(:,idxTrial)      = optParams.exp(idxTrial).y;
                optErrorValues.yStd(:,idxTrial)   = optParams.exp(idxTrial).yStd;
@@ -740,11 +747,19 @@ function [optError,optErrorValues, figDebugFitting,...
                %
                % Calculate the error as the squared difference between the 
                % two slopes
-               %              
-               if(isempty(optErrorValues))
-                 optErrorValues.x = zeros(1,3);
-                 optErrorValues.y = zeros(1,3);
+               %    
+               n=length(optParams.exp(idxTrial).x);
+               for i=1:1:length(optParams.exp)
+                 assert(length(optParams.exp(i).x)==n);
                end
+               
+               if(isempty(optErrorValues))
+                 optErrorValues.x      = zeros(n,numberOfSimulations);
+                 optErrorValues.y      = zeros(n,numberOfSimulations);
+                 optErrorValues.yFit   = zeros(n,numberOfSimulations);
+                 optErrorValues.yErr   = zeros(n,numberOfSimulations);    
+               end
+
                optErrorValues.x(:,idxTrial) = [min(mdlX);max(mdlX)];                              
                optErrorValues.y(:,idxTrial)      = optParams.exp(idxTrial).dydx;
                optErrorValues.yFit(:,idxTrial)   = mdlSlope;
@@ -775,12 +790,18 @@ function [optError,optErrorValues, figDebugFitting,...
                                      mdlX(i,1));                   
                end
 
-               if(isempty(optErrorValues))
-                 optErrorValues.x     = zeros(length(mdlX),3);
-                 optErrorValues.y     = zeros(length(mdlX),3);
-                 optErrorValues.yFit  = zeros(length(mdlX),3);
-                 optErrorValues.yErr  = zeros(length(mdlX),3);
+               n=length(optParams.exp(idxTrial).x);
+               for i=1:1:length(optParams.exp)
+                 assert(length(optParams.exp(i).x)==n);
                end
+               
+               if(isempty(optErrorValues))
+                 optErrorValues.x      = zeros(n,numberOfSimulations);
+                 optErrorValues.y      = zeros(n,numberOfSimulations);
+                 optErrorValues.yFit   = zeros(n,numberOfSimulations);
+                 optErrorValues.yErr   = zeros(n,numberOfSimulations);    
+               end
+
                optErrorValues.x(:,idxTrial) = mdlX;
                optErrorValues.y(:,idxTrial)      = optParams.exp(idxTrial).y;               
                optErrorValues.yFit(:,idxTrial)   = mdlY;                              
@@ -810,12 +831,18 @@ function [optError,optErrorValues, figDebugFitting,...
                                      mdlX(i,1));                   
                end
 
-               if(isempty(optErrorValues))
-                 optErrorValues.x = zeros(length(mdlX),3);
-                 optErrorValues.y = zeros(length(mdlX),3);
-                 optErrorValues.yFit = zeros(length(mdlX),3);
-                 optErrorValues.yErr = zeros(length(mdlX),3);
+               n=length(optParams.exp(idxTrial).x);
+               for i=1:1:length(optParams.exp)
+                 assert(length(optParams.exp(i).x)==n);
                end
+               
+               if(isempty(optErrorValues))
+                 optErrorValues.x      = zeros(n,numberOfSimulations);
+                 optErrorValues.y      = zeros(n,numberOfSimulations);
+                 optErrorValues.yFit   = zeros(n,numberOfSimulations);
+                 optErrorValues.yErr   = zeros(n,numberOfSimulations);    
+               end
+
                optErrorValues.x(:,idxTrial) = mdlX;
                optErrorValues.y(:,idxTrial)      = optParams.exp(idxTrial).y;               
                optErrorValues.yFit(:,idxTrial)   = mdlY;                              
@@ -846,17 +873,22 @@ function [optError,optErrorValues, figDebugFitting,...
                              mdlX(i,1));                   
                end
 
-               if(isempty(optErrorValues))
-                 optErrorValues.x     = zeros(length(mdlX),3);
-                 optErrorValues.y     = zeros(length(mdlX),3);
-                 optErrorValues.yFit  = zeros(length(mdlX),3);
-                 optErrorValues.yErr  = zeros(length(mdlX),3);
-                 optErrorValues.yStd  = zeros(length(mdlX),3);
-                 optErrorValues.yNErr = zeros(length(mdlX),3);
-                 optErrorValues.rmse  = zeros(1,3);
-                 optErrorValues.nrmse = zeros(1,3);
-
+               n=length(optParams.exp(idxTrial).x);
+               for i=1:1:length(optParams.exp)
+                 assert(length(optParams.exp(i).x)==n);
                end
+               
+               if(isempty(optErrorValues))
+                 optErrorValues.x      = zeros(n,numberOfSimulations);
+                 optErrorValues.y      = zeros(n,numberOfSimulations);
+                 optErrorValues.yFit   = zeros(n,numberOfSimulations);
+                 optErrorValues.yErr   = zeros(n,numberOfSimulations);    
+                 optErrorValues.rmse   = zeros(1,numberOfSimulations);
+                 optErrorValues.yStd   = zeros(n,numberOfSimulations);
+                 optErrorValues.yNErr  = zeros(n,numberOfSimulations);
+                 optErrorValues.nrmse  = zeros(1,numberOfSimulations);
+               end
+
                optErrorValues.x(:,idxTrial)      = mdlX;
                optErrorValues.y(:,idxTrial)      = optParams.exp(idxTrial).y;
                optErrorValues.yStd(:,idxTrial)   = optParams.exp(idxTrial).yStd;
@@ -871,9 +903,6 @@ function [optError,optErrorValues, figDebugFitting,...
                 optErrorValues.nrmse(1,idxTrial) = ...
                   sqrt(mean(optErrorValues.yNErr(:,idxTrial).^2));               
                
-               %meanStd  = mean(optParams.exp(idxTrial).yStd);
-               %nrmse    = sqrt(mean((mdlY - optParams.exp(idxTrial).y).^2)) ...
-               %           /meanStd;
                
                optError = optError+optErrorValues.nrmse(1,idxTrial); 
 
