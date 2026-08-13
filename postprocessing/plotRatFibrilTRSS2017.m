@@ -1528,7 +1528,7 @@ box off;
 xlim([pubPlotOptions.lceNMin,pubPlotOptions.lceNMax]);
 ylim([0,pubPlotOptions.fceNMax]); 
 xlabel('Norm. Length ($$\ell/\ell_o^M$$)');
-ylabel('Norm. Length ($$f/f_o^M$$)');
+ylabel('Norm. Force ($$f/f_o^M$$)');
 
 % [lgdH, lgdIcons, lgdPlots, lgdTxt]=...
 %     legend('Location','northwest','FontSize',6*(9/11.7));
