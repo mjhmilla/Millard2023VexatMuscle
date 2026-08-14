@@ -12,7 +12,7 @@ if(flag_OuterLoopMode==0)
     clear all;
 
     flag_OuterLoopMode=0;
-    simConfigInput.runFitting              = 0; 
+    simConfigInput.runFitting              = 1; 
     simConfigInput.generatePlots           = 1;
     simConfigInput.fitToIndividualTrials   = 1; 
     simConfigInput.manuallySetTimeConstant = 0;
@@ -48,7 +48,7 @@ modelConfig.wlcOption        = ''; %WLC or ''6
 modelConfig.muscleName       = 'EDL';
 modelConfig.experimentName   = 'TRSS2017';
 
-fittingConfig.manuallySetTitinParameters = 1;
+fittingConfig.manuallySetTitinParameters = 0;
 if(flag_OuterLoopMode==1)
   fittingConfig.manuallySetTitinParameters = 0;
 end
@@ -85,9 +85,18 @@ assert(~(fittingConfig.fitTimeConstant ...
     'Error: it does not make sense to fit something that is set manually');
 %Lengthening time constant in Eqn. 16 of Millard, Franklin, Herzog
 
+%This is the main fitting method used in the paper
+fittingConfig.fitQToF           =1;
+
+%Used to solve for the passive force-length relation and Q for the titin
+% model that best fits the data of TRSS2017. This produces the teal line
+% in Figure 8 of the discussion.
+fittingConfig.fitFpeQToF        =0; 
+
+%These are other fitting methods I developed to test ideas of what
+%mechanism to explore in the VEXAT model that might explain the results
+%in TRSS2017.
 fittingConfig.fitKx             =0;
-fittingConfig.fitQToF           =0;
-fittingConfig.fitFpeQToF        =1;
 fittingConfig.fitQToK           =0;
 fittingConfig.fitf1HNPreload    =0;
 fittingConfig.fitl1HNOffset     =0;

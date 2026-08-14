@@ -115,38 +115,18 @@ flN.y=[];
 fvN.x=[];
 fvN.y=[];
 
-[b,a] = butter(2,30/500,'low');
+filterFrequencyBeforeNumericalDerivative=30;
+sampleFrequencyBeforeNumericalDerivative = 1000;
+flagFlvKeyPointDebuggingPlot=0;
+verboseFlvKeyPoints         =0;
+[flN, fvN]=extractTRSS2017ForceLengthVelocityFittingPoints(...
+                       expTRSS2017,...
+                       expTRSS2017Sets,...
+                       filterFrequencyBeforeNumericalDerivative,...
+                       sampleFrequencyBeforeNumericalDerivative,...
+                       flagFlvKeyPointDebuggingPlot,...
+                       verboseFlvKeyPoints);
 
-
-for i=1:1:length(expTRSS2017Sets)
-
-  vN = filtfilt(b,a,expTRSS2017.(expTRSS2017Sets{i}).lN);
-  dt =1/expTRSS2017.sampleFrequencyHz;
-  timeSeries = [0:1:(length(vN)-1)]' .* dt;
-
-  vN = calcCentralDifferenceDataSeries(timeSeries,vN);
-
-  idxA = expTRSS2017.keyIndices.(expTRSS2017Sets{i})(1);
-  idxB = expTRSS2017.keyIndices.(expTRSS2017Sets{i})(3);
-  if(i==1)
-    flN.x = expTRSS2017.(expTRSS2017Sets{i}).lN(idxA); 
-    flN.y = expTRSS2017.(expTRSS2017Sets{i}).fNavg(idxA);    
-    fvN.x = vN(idxA);
-
-    %This is an approximation but it works in this case 
-    fvN.y = expTRSS2017.(expTRSS2017Sets{i}).fNavg(idxB) ...
-           /expTRSS2017.(expTRSS2017Sets{i}).fNavg(idxA);
-  else
-    flN.x = [flN.x;expTRSS2017.(expTRSS2017Sets{i}).lN(idxA)]; 
-    flN.y = [flN.y;expTRSS2017.(expTRSS2017Sets{i}).fNavg(idxA)];
-
-    fvNVal= expTRSS2017.(expTRSS2017Sets{i}).fNavg(idxB) ...
-           /expTRSS2017.(expTRSS2017Sets{i}).fNavg(idxA);
-    fvN.x = [fvN.x;vN(idxA)];
-    fvN.y = [fvN.y;fvNVal];    
-  end
-
-end
 
 fittingDataSets.fl  = flN;
 fittingDataSets.fv  = fvN;
