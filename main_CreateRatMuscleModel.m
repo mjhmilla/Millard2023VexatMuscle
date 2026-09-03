@@ -5,7 +5,7 @@
 %
 %%
 
-flag_OuterLoopMode=0;
+flag_OuterLoopMode=1;
 
 if(flag_OuterLoopMode==0)
     clc;
@@ -58,10 +58,7 @@ switch experimentName
         assert(0,'Error: experimental series name not recognized');
 end
 
-flag_manuallySetTitinParameters = 1;
-if(flag_OuterLoopMode==1)
-  flag_manuallySetTitinParameters = 0;
-end
+flag_manuallySetTitinParameters = 0;
 
 manuallySet_forceLengthCurveSettings = ...
   struct('normLengthZero',0,...
@@ -868,17 +865,17 @@ idxSeries = [ratMuscleMetaData.index_SW1982; ...
                        ratMuscleMetaData.index_TRSS2017];
 
 labelSeries = {'SW1982 F (Exp)';'TRSS2017 F (Exp)'};
-colorSeriesActive            = [0.5,0.5,0.5; ...
-                                                    0,0,0];
+colorSeriesActive            = [0.67,0.67,0.67; ...
+                                0,0,0];
 colorSeriesActiveFace   = [1,1,1; ...
-                                                    0,0,0];
-colorSeriesPassive          = [0.5,0.5,0.5; ...
-                                                    0,0,0];%[0.75,0.75,1; 0.25,0.25,1];
-colorSeriesPassiveFace = [0.5,0.5,0.5; ...
-                                                    1,1,1];%[0.75,0.75,1; 0.25,0.25,1];
+                           1,1,1];
+colorSeriesPassive          = [0,0,0; ...
+                               0,0,0];
+colorSeriesPassiveFace = [1,1,1; ...
+                          0,0,0];%[0.75,0.75,1; 0.25,0.25,1];
 
 activeMarkSeries    = {'.','d'};
-passiveMarkSeries = {'+','o'};
+passiveMarkSeries = {'o','d'};
 seriesColors = [0.67,0.67,0.67;...
                 0.33,0.33,0.33];
 
@@ -894,8 +891,8 @@ for i=1:1:2
           ratMuscleData(idx).activeForceLengthData(j).y];
 
       activeForceLengthDataSeriesPlot(i).label = labelSeries{i};
-      activeForceLengthDataSeriesPlot(i).color = seriesColors(i,:);%colorSeriesActive(i,:);
-      activeForceLengthDataSeriesPlot(i).MarkerFaceColor = [1,1,1];%colorSeriesActiveFace(i,:);
+      activeForceLengthDataSeriesPlot(i).color = colorSeriesActive(i,:);
+      activeForceLengthDataSeriesPlot(i).MarkerFaceColor = colorSeriesActiveFace(i,:);
       activeForceLengthDataSeriesPlot(i).mark = activeMarkSeries{i};
   end
   for j=1:1:length(ratMuscleData(idx).passiveForceLengthData)  
@@ -908,8 +905,8 @@ for i=1:1:2
           ratMuscleData(idx).passiveForceLengthData(j).y];
 
       passiveForceLengthDataSeriesPlot(i).label = labelSeries{i};      
-      passiveForceLengthDataSeriesPlot(i).color = seriesColors(i,:);%colorSeriesPassive(i,:);
-      passiveForceLengthDataSeriesPlot(i).MarkerFaceColor = [1,1,1];%colorSeriesPassiveFace(i,:);
+      passiveForceLengthDataSeriesPlot(i).color = colorSeriesPassive(i,:);
+      passiveForceLengthDataSeriesPlot(i).MarkerFaceColor = colorSeriesPassiveFace(i,:);
       passiveForceLengthDataSeriesPlot(i).mark = passiveMarkSeries{i};
 
   end 

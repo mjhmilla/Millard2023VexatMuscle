@@ -24,7 +24,7 @@ To run the simulations that are presented in <em>Analysis and simulation of acti
 3. These simulations generate the following plots found in the paper:
   - Figures 1,6,7A,7B from the paper in <em>output/plots/TomalkaRodeSchumacherSiebert2017/fig_Sim_TRSS2017_123_Fl_Fv_QToF.pdf</em>
   - Figures 7C, and 7D from the paper in <em>output/plots/TomalkaRodeSchumacherSiebert2017/fig_Sim_TRSS2017_123_Fl_Fv_QToF_i.pdf</em>
-  - Figures 2 and 8 from the paper in <em>output/plots/MuscleCurves/fig_Pub_RatMuscleCurves_TRSS2017_0_Pub.pdf</em>
+  - Figures 4 and 9 from the paper in <em>output/plots/MuscleCurves/fig_Pub_RatMuscleCurves_TRSS2017_0_Pub.pdf</em>
   - Figure 2 in <em>output/plots/MuscleCurves/fig_Pub_RatMuscleCurves_TRSS2017_0.pdf</em>
 4. Initial model parameters (before fitting) can be found: 
   - <em>output/structs/FittedModels/ratTRSS2017EDLFibrilActiveTitin_0.mat</em>. 
@@ -47,7 +47,12 @@ To run the simulations that are presented in <em>Analysis and simulation of acti
     - <em>output/tables/TomalkaRodeSchumacherSiebert2017/fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF_i.tex</em>         
     - <em>output/structs/TomalkaRodeSchumacherSiebert2017/fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF_i.mat</em>  
     - <em>output/structs/fittingLog__123_Fl_Fv_QToF_i.txt</em>    
-
+7. To generate Figure 8:
+  - Open main_CreateRatMuscleModel.m
+  - On line 61 set flag_manuallySetTitinParameters = 1
+  - Run main_TomalkaRodeSchumacherSiebert2017_OuterLoop.m.
+  - Note: this will over-write all plots, structs, and generated tex files using the manually set titin parameters. Note that these parameters have been identified using optimisation. Due to the structure of the software written for this project it is easiest to update the model and simulations by manually copying these parameters over and re-running the data.
+  
 ## Code overview
 
 Here is a list of files to look at if the implementation interests you:

@@ -611,7 +611,7 @@ end
 
         if(flag_addFpeCurves==1)
           assert(length(fittingData.fpe)==2);
-          markTypes = {'+','o'};
+          markTypes = {'d','o'};
           lineColor = [0,0,0; 1,1,1];
           sourceTypes = {'TRSS2017 (fit)','SW1982 (fit)'};
           for i=1:1:length(fittingData.fpe)

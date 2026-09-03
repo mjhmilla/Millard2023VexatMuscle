@@ -4,7 +4,7 @@
 % SPDX-License-Identifier: MIT
 %
 %%
-flag_OuterLoopMode=0;
+flag_OuterLoopMode=1;
 
 if(flag_OuterLoopMode==0)
     %clc;
@@ -559,7 +559,7 @@ if(simConfig.generatePlots==1)
                         ['fig_Sim_TRSS2017',...
                         fittingConfig.trialStr,'.pdf']);
     
-    print('-dpdf', filePath); 
+    print(figPub,'-dpdf', filePath); 
     pause(0.1);
 
 end

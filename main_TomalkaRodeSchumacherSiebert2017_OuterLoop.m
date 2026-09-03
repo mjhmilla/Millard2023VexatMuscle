@@ -24,6 +24,8 @@ simConfigInput.manuallySetTimeConstant = 0;
 
 main_TomalkaRodeSchumacherSiebert2017;
 
+pause(1.0)
+
 clc;
 close all;
 clear all;
