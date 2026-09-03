@@ -49,8 +49,10 @@ To run the simulations that are presented in <em>Analysis and simulation of acti
     - <em>output/structs/fittingLog__123_Fl_Fv_QToF_i.txt</em>    
 7. To generate Figure 8:
   - Open main_TomalkaRodeSchumacherSiebert2017_OuterLoop.m
-  - Set all occurances of 
-      - simConfigInput.manuallySetTitinParameters = 1;
+  - Set all occurances of simConfigInput.manuallySetTitinParameters to 1. Its a little annoying to have 3 copies of this varible, but this is necessary because everything is cleared between calls to main_TomalkaRodeSchumacherSiebert2017.m 
+      - line 19: simConfigInput.manuallySetTitinParameters = 1;
+      - line 27: simConfigInput.manuallySetTitinParameters = 1;
+      - line 43: simConfigInput.manuallySetTitinParameters = 1;
   - Run main_TomalkaRodeSchumacherSiebert2017_OuterLoop.m.
   - Note 1: This will over-write all plots, structs, and generated tex files using the manually set titin parameters. Note that these parameters have been identified using optimisation. Due to the structure of the software written for this project it is easiest to update the model and simulations by manually copying these parameters over and re-running the data.
   - Note 2: To anyone working on the software, both main_CreateRatMuscleModel.m and main_TomalkaRodeSchumacherSiebert2017.m have structs that will manually set the force-length relation of titin that must be manually set to be identical.
