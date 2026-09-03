@@ -212,7 +212,6 @@ kAXHN      =   sarcomereProperties.normCrossBridgeStiffness;
 betaAXHN   =   sarcomereProperties.normCrossBridgeDamping;
 
 forceVelocityCalibrationFactor =   sarcomereProperties.forceVelocityCalibrationFactor;
-
 betafEcmHN =   sarcomereProperties.normECMDamping;
 
 betaTAaHN = sarcomereProperties.normMaxActiveTitinToActinDamping;
@@ -1436,11 +1435,14 @@ end
 %Position Information
 %%
 mtInfo.type = 'VEXAT';
+mtInfo.muscleLengthInfo.pathLength              = pathState(2);
+mtInfo.muscleLengthInfo.pathLengthDerivative    = pathState(1);
+
 mtInfo.muscleLengthInfo.tendonLength            = modelCachedValues.lt;        %length        m
 mtInfo.muscleLengthInfo.normTendonLength        = modelCachedValues.ltN;       %length/length m/m        
 mtInfo.muscleLengthInfo.tendonStrain            = modelCachedValues.et;        %length/length m/m        
 
-mtInfo.muscleLengthInfo.normFiberSlidingLength  = modelCachedValues.laH;
+mtInfo.muscleLengthInfo.normFiberSlidingLength  = modelCachedValues.laHN;
 mtInfo.muscleLengthInfo.fiberSlidingLength      = modelCachedValues.laHN*lceOpt;
 
 mtInfo.muscleLengthInfo.fiberLength             = modelCachedValues.lce;       %length        m  

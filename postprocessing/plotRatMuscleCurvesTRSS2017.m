@@ -13,20 +13,20 @@
 %%
 
 function [success] = plotRatMuscleCurvesTRSS2017( ...
-                                          muscleModel,...
-                                          humanSoleusMuscle,...                      
-                                          activeForceLengthCurveAnnotationPoints,...
-                                          fittingData,...
-                                          activeForceLengthData,...
-                                          passiveForceLengthData,...   
-                                          normFiberLengthAtOneNormPassiveForce,...
-                                          trialId,...  
-                                          flag_make2by2Plot,...
-                                          flag_addFpeCurves,...
-                                          updateTitinPlotsOnly,...
-                                          previousFilePathAndName,...
-                                          filePathAndName,...
-                                          projectFolders)
+                      muscleModel,...
+                      humanSoleusMuscle,...                      
+                      activeForceLengthCurveAnnotationPoints,...
+                      fittingData,...
+                      activeForceLengthData,...
+                      passiveForceLengthData,...   
+                      normFiberLengthAtOneNormPassiveForce,...
+                      trialId,...  
+                      flag_make2by2Plot,...
+                      flag_addFpeCurves,...
+                      updateTitinPlotsOnly,...
+                      previousFilePathAndName,...
+                      filePathAndName,...
+                      projectFolders)
 
 %%
 % 
@@ -169,7 +169,7 @@ end
   plotProps(idx).lineColor   = [0,0,0];
   plotProps(idx).lineWidth   = 0.5;
   plotProps(idx).xlabel = 'Strain ($$\ell/\ell^{T}_{S}-1$$)';
-  plotProps(idx).ylabel = 'Normalized Force ($$f/f^{M}_{o}$$)';
+  plotProps(idx).ylabel = 'Norm. Force ($$f/f^{M}_{o}$$)';
   plotProps(idx).title  = 'A. Tendon-force length ($$\mathbf{f}^T$$)';
 
   %%
@@ -209,11 +209,11 @@ end
   plotProps(idx).lineWidth   = 0.5;
 
   if(abs(scaleLength-1)<1e-3)
-      plotProps(idx).xlabel = 'Normalized Length ($$\ell/\ell^{M}_{o}$$)';
-      plotProps(idx).ylabel = 'Normalized Force ($$f/f^{M}_{o}$$)';
+      plotProps(idx).xlabel = 'Norm. Length ($$\ell/\ell^{M}_{o}$$)';
+      plotProps(idx).ylabel = 'Norm. Force ($$f/f^{M}_{o}$$)';
   else
       plotProps(idx).xlabel = 'Length ($$\mu$$m)';
-      plotProps(idx).ylabel = 'Normalized Force ($$f/f^{M}_{o}$$)';
+      plotProps(idx).ylabel = 'Norm. Force ($$f/f^{M}_{o}$$)';
   end
   plotProps(idx).title  ={ 'A. CE active force-length relation'};
 
@@ -238,8 +238,8 @@ end
   plotProps(idx).yticklabels = {0,1,num2str(round(plotProps(idx).yticks(1,end),2))};
   plotProps(idx).lineColor   = [0,0,0];
   plotProps(idx).lineWidth   = 0.5;
-  plotProps(idx).xlabel = 'Normalized Velocity ($$v/\ell^{M}_{o}$$)';
-  plotProps(idx).ylabel = 'Normalized Force ($$f/f^{M}_{o}$$)';
+  plotProps(idx).xlabel = 'Norm. Velocity ($$v/\ell^{M}_{o}$$)';
+  plotProps(idx).ylabel = 'Norm. Force ($$f/f^{M}_{o}$$)';
   plotProps(idx).title  = {'B. CE force-velocity relation'};
   %%
 
@@ -272,11 +272,11 @@ end
   plotProps(idx).lineColor   = [0,0,0];
   plotProps(idx).lineWidth   = 0.5;
   if(abs(scaleVelocity-1)<1e-3)  
-      plotProps(idx).xlabel = 'Normalized Length ($$\ell/\ell^{M}_{o}$$)';
+      plotProps(idx).xlabel = 'Norm. Length ($$\ell/\ell^{M}_{o}$$)';
   else
       plotProps(idx).xlabel = 'Length ($$\mu$$m)';
   end
-  plotProps(idx).ylabel = 'Normalized Force ($$f/f^{M}_{o}$$)';
+  plotProps(idx).ylabel = 'Norm. Force ($$f/f^{M}_{o}$$)';
   plotProps(idx).title  = 'A. ECM ($$\mathbf{f}^{ECM}$$) \& Titin ($$\mathbf{f}^{1}+\mathbf{f}^{2}$$)';  
   
   %%
@@ -476,11 +476,11 @@ end
   plotProps(idx).lineColor   = [0,0,0];
   plotProps(idx).lineWidth   = 0.5;
   if(abs(scaleLength-1)<1e-3)
-    plotProps(idx).xlabel = 'Normalized Length ($$\ell/\ell^{M}_{o}$$)';
+    plotProps(idx).xlabel = 'Norm. Length ($$\ell/\ell^{M}_{o}$$)';
   else
     plotProps(idx).xlabel = 'Length ($$\mu$$m)';      
   end
-  plotProps(idx).ylabel = 'Normalized Force ($$f/f^{M}_{o}$$)';
+  plotProps(idx).ylabel = 'Norm. Force ($$f/f^{M}_{o}$$)';
   plotProps(idx).title  = 'B. Titin segments ($$\mathbf{f}^{1}$$ and $$\mathbf{f}^{2}$$)';  
     
   
@@ -611,7 +611,7 @@ end
 
         if(flag_addFpeCurves==1)
           assert(length(fittingData.fpe)==2);
-          markTypes = {'+','o'};
+          markTypes = {'d','o'};
           lineColor = [0,0,0; 1,1,1];
           sourceTypes = {'TRSS2017 (fit)','SW1982 (fit)'};
           for i=1:1:length(fittingData.fpe)

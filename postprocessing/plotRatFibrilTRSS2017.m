@@ -1298,7 +1298,10 @@ for idx=simConfig.trials
     end
     if(~isempty(fitInfo.l1HNOffset.x))
         ffit = 'l1HNOffset';        
-    end    
+    end 
+    if(~isempty(fitInfo.FpeQToF.x))
+        ffit = 'FpeQToF';        
+    end     
 
     xErr = fitInfo.(ffit).x(end,idx)./lceOptMdl;
     yErr = (fitInfo.(ffit).y(end,idx) + fitInfo.(ffit).yFit(end,idx)).*0.5;
@@ -1525,7 +1528,7 @@ box off;
 xlim([pubPlotOptions.lceNMin,pubPlotOptions.lceNMax]);
 ylim([0,pubPlotOptions.fceNMax]); 
 xlabel('Norm. Length ($$\ell/\ell_o^M$$)');
-ylabel('Norm. Length ($$f/f_o^M$$)');
+ylabel('Norm. Force ($$f/f_o^M$$)');
 
 % [lgdH, lgdIcons, lgdPlots, lgdTxt]=...
 %     legend('Location','northwest','FontSize',6*(9/11.7));

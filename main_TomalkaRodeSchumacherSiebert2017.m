@@ -7,14 +7,16 @@
 flag_OuterLoopMode=1;
 
 if(flag_OuterLoopMode==0)
-    clc;
+    %clc;
     close all;
     clear all;
 
+    flag_OuterLoopMode=0;
     simConfigInput.runFitting              = 1; 
     simConfigInput.generatePlots           = 1;
     simConfigInput.fitToIndividualTrials   = 1; 
     simConfigInput.manuallySetTimeConstant = 0;
+    simConfigInput.manuallySetTitinParameters=0;
 
 end
 
@@ -34,16 +36,40 @@ simConfig.runSimUpdateResults     = 0;
 %Simulations for testing
 
 simConfig.trials                  = [1,2,3];
+simConfig.numberOfTrials          = length(simConfig.trials);
 simConfig.defaultTrialId          = 0; %Set to 1,2,3 to fit to just this trial
 simConfig.useDefaultModel         = 1;
-simConfig.flag_debugFitting       = 1;
+simConfig.flag_debugFitting       = 0;
 simConfig.numericalDiffLowPassFilterFrequencyHz=30; %
+
 
 
 modelConfig.fibrilOption     = 'Fibril'; %Fibril or ''
 modelConfig.wlcOption        = ''; %WLC or ''6
 modelConfig.muscleName       = 'EDL';
 modelConfig.experimentName   = 'TRSS2017';
+
+fittingConfig.manuallySetTitinParameters = ...
+  simConfigInput.manuallySetTitinParameters;
+
+fittingConfig.manuallySet.forceLengthCurveSettings = ...
+  struct('normLengthZero',0,...
+         'normLengthToe',1.502565925163631,...
+         'fToe',0.5,...
+         'kZero',1.220700000000000e-04,...
+         'kToe',1.666329565624102,...
+         'curviness',0.414550781250000,...
+         'kLow',2.1791e-6);
+
+
+fittingConfig.fittingEvaluationMethod = 'approximationByStateCalculationMinimal';
+% 'approximationByStateCalculationMinimal'
+% 'approximationByStateCalculation'
+% 'approximationByInitialization'
+% 'simulateFullModel'
+if(flag_OuterLoopMode==1)
+  fittingConfig.fittingEvaluationMethod = 'simulateFullModel';
+end
 
 fittingConfig.fitFl             =1;
 fittingConfig.fitFv             =1;
@@ -59,11 +85,32 @@ assert(~(fittingConfig.fitTimeConstant ...
     'Error: it does not make sense to fit something that is set manually');
 %Lengthening time constant in Eqn. 16 of Millard, Franklin, Herzog
 
-fittingConfig.fitKx             =0;
+%This is the main fitting method used in the paper
 fittingConfig.fitQToF           =1;
+
+%Used to solve for the passive force-length relation and Q for the titin
+% model that best fits the data of TRSS2017. This produces the teal line
+% in Figure 8 of the discussion.
+fittingConfig.fitFpeQToF        =0; 
+
+%These are other fitting methods I developed to test ideas of what
+%mechanism to explore in the VEXAT model that might explain the results
+%in TRSS2017.
+fittingConfig.fitKx             =0;
 fittingConfig.fitQToK           =0;
 fittingConfig.fitf1HNPreload    =0;
 fittingConfig.fitl1HNOffset     =0;
+
+if(flag_OuterLoopMode==1)
+  fittingConfig.fitKx             =0;
+  fittingConfig.fitQToF           =1;
+  fittingConfig.fitFpeQToF        =0;
+  fittingConfig.fitQToK           =0;
+  fittingConfig.fitf1HNPreload    =0;
+  fittingConfig.fitl1HNOffset     =0;
+end
+
+
 
 assert(~(fittingConfig.fitf1HNPreload && fittingConfig.fitl1HNOffset),...
     'Error: using both fitf1HNPreload and fitl1HNOffset does not make sense');
@@ -104,8 +151,6 @@ end
 
 %%
 % Set up the files
-%%
-
 rootDir         = getRootProjectDirectory();
 projectFolders  = getProjectFolders(rootDir);
 
@@ -115,6 +160,8 @@ addpath( genpath(projectFolders.experiments)    );
 addpath( genpath(projectFolders.simulation)     );
 addpath( genpath(projectFolders.models)         );
 addpath( genpath(projectFolders.postprocessing) );
+
+
 
 
 %%
@@ -268,6 +315,11 @@ for idxTrial = simConfig.trials
     
     ratFibrilModelsDefault(idxTrial).sarcomere.useVariableSlidingTimeConstant = 1;
 
+    if(fittingConfig.manuallySetTitinParameters==1)
+      ratFibrilModelsDefault(idxTrial).curves.forceLengthCurveSettings=...
+        fittingConfig.manuallySet.forceLengthCurveSettings;
+    end
+
 end
 
 %%
@@ -324,9 +376,11 @@ for i=1:1:length(fittingConfig.titin.trials)
 end
 
 for i=1:1:length(fittingNames)
-    if(fittingConfig.(fittingNames{i})==1)
-        fittingTrialsStr = [fittingTrialsStr,...
-            '_',fittingAbbr{i}];
+    if(~isstruct(fittingConfig.(fittingNames{i})))
+      if(fittingConfig.(fittingNames{i})==1)
+          fittingTrialsStr = [fittingTrialsStr,...
+              '_',fittingAbbr{i}];
+      end
     end
 end
 
@@ -382,10 +436,18 @@ if(simConfig.runSimUpdateResults==1)
     
     [optError,optErrorValues,figDebugFitting,...
         ratFibrilModelsFittedUpd,benchRecordFitted] =...
-        calcErrorTRSS2017RampFraction(optParams,fittingFraction,npts,...
-                   ratFibrilModelsFitted, expTRSS2017Digitized,simConfigTmp,...
-                   figDebugFitting,plotConfig.subPlotPanel,...
-                   plotConfig.lineColors.simTitinK);
+        calcErrorTRSS2017RampFraction(...
+            optParams,...
+            fittingFraction,...
+            npts,...
+            ratFibrilModelsFitted,...
+            expTRSS2017Digitized,...
+            simConfigTmp,...
+            figDebugFitting,...
+            plotConfig.subPlotPanel,...
+            plotConfig.lineColors.simTitinK,...
+            'simulateFullModel',...
+            projectFolders);
 
 
     save(fullfile(projectFolders.output_structs_FittedModels,...
@@ -469,7 +531,8 @@ if(simConfig.generatePlots==1)
     end
 
     success = writeTRSS2017ErrorTable(filePathTable,fitInfo,...
-                                   simConfig,projectFolders);
+                                   simConfig,fittingConfig,...
+                                   projectFolders);
 
     figPub=figure;
 
@@ -496,7 +559,7 @@ if(simConfig.generatePlots==1)
                         ['fig_Sim_TRSS2017',...
                         fittingConfig.trialStr,'.pdf']);
     
-    print('-dpdf', filePath); 
+    print(figPub,'-dpdf', filePath); 
     pause(0.1);
 
 end

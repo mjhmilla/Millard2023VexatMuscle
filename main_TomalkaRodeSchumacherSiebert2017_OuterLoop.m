@@ -15,23 +15,32 @@ clear all;
 %    on line  7
 %%
 
+
+simConfigInput.manuallySetTitinParameters = 0;
+
 main_CreateRatMuscleModel;
 
-simConfigInput.runFitting              = 1; 
-simConfigInput.generatePlots           = 1;
-simConfigInput.fitToIndividualTrials   = 1; %Individually fitted Q's
-simConfigInput.manuallySetTimeConstant = 0;
+simConfigInput.runFitting                 = 1; 
+simConfigInput.generatePlots              = 1;
+simConfigInput.fitToIndividualTrials      = 1; %Individually fitted Q's
+simConfigInput.manuallySetTimeConstant    = 0;
+simConfigInput.manuallySetTitinParameters = 0;
+
+
 
 main_TomalkaRodeSchumacherSiebert2017;
+
+pause(1.0)
 
 clc;
 close all;
 clear all;
 
-simConfigInput.runFitting              = 1; 
-simConfigInput.generatePlots           = 1;
-simConfigInput.fitToIndividualTrials   = 0;  %One Q for all trials
-simConfigInput.manuallySetTimeConstant = 0;
+simConfigInput.runFitting                 = 1; 
+simConfigInput.generatePlots              = 1;
+simConfigInput.fitToIndividualTrials      = 0;  %One Q for all trials
+simConfigInput.manuallySetTimeConstant    = 0;
+simConfigInput.manuallySetTitinParameters = 0;
 
 main_TomalkaRodeSchumacherSiebert2017;
 

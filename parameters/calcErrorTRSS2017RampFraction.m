@@ -2,30 +2,24 @@ function [optError,optErrorValues, figDebugFitting,...
             ratFibrilModelsUpd,benchRecord] =...
             calcErrorTRSS2017RampFraction(...
                        optParams,...
-                       fittingFraction, npts, ...
+                       optErrorValues,...
+                       fittingFraction, ...
+                       npts, ...
                        ratFibrilModels, ...
                        expTRSS2017Raw,...
                        simConfig,...
                        figDebugFitting,...
                        subPlotPanel,...
                        lineColorsSimTRSS2017,...
+                       benchRecord,...                       
+                       evaluationMethod,...
                        projectFolders)
 
     ratFibrilModelsUpd  = ratFibrilModels;
     errVec              = zeros(length(ratFibrilModelsUpd),npts);
-    numberOfSimulations = length(simConfig.trials);
-    benchRecord             = [];
-
-    optError=0;
-    optErrorValues.x      = [];
-    optErrorValues.y      = [];
-    optErrorValues.yFit   = [];
-    optErrorValues.yErr   = [];    
-    optErrorValues.rmse   = [];
-    optErrorValues.yStd   = [];
-    optErrorValues.yNErr  = [];
-    optErrorValues.nrmse  = [];
+    numberOfSimulations = simConfig.numberOfTrials;
     
+    optError=0;
 
     for idxTrial = simConfig.trials
         
@@ -110,6 +104,45 @@ function [optError,optErrorValues, figDebugFitting,...
             case 'l1HNOffset'
                 ratFibrilModelsUpd(idxTrial).sarcomere.l1HNOffset=...
                     optParams.value;
+
+            case 'FpeQToF'
+              ratFibrilModelsUpd(idxTrial).sarcomere.normPevkToActinAttachmentPoint = ...
+                  optParams.value(1);
+              ratFibrilModelsUpd(idxTrial).curves.forceLengthCurveSettings.kToe = ...
+                  optParams.value(2);
+              ratFibrilModelsUpd(idxTrial).curves.forceLengthCurveSettings.normLengthToe = ...
+                  optParams.value(3);
+              ratFibrilModelsUpd(idxTrial).curves.forceLengthCurveSettings.curviness = ...
+                  optParams.value(4);
+              if(optParams.value(4)>1 ||optParams.value(4)<0)
+                here=1;
+              end
+
+              [ratFibrilModelsUpd(idxTrial).curves.forceLengthProximalTitinCurve, ...
+                  ratFibrilModelsUpd(idxTrial).curves.forceLengthProximalTitinInverseCurve,...
+               ratFibrilModelsUpd(idxTrial).curves.forceLengthDistalTitinCurve, ...
+                  ratFibrilModelsUpd(idxTrial).curves.forceLengthDistalTitinInverseCurve,...
+               ratFibrilModelsUpd(idxTrial).curves.forceLengthIgPTitinCurve, ...
+                  ratFibrilModelsUpd(idxTrial).curves.forceLengthIgPTitinInverseCurve,...
+               ratFibrilModelsUpd(idxTrial).curves.forceLengthPevkTitinCurve, ...
+                  ratFibrilModelsUpd(idxTrial).curves.forceLengthPevkTitinInverseCurve,...
+               ratFibrilModelsUpd(idxTrial).curves.forceLengthIgDTitinCurve, ...
+                  ratFibrilModelsUpd(idxTrial).curves.forceLengthIgDTitinInverseCurve,...
+               ratFibrilModelsUpd(idxTrial).curves.fittingReferenceTitin] ...
+                        = createTitinCurves2025( ...
+                             ratFibrilModelsUpd(idxTrial).curves.fiberForceLengthCurve,...                                   
+                             ratFibrilModelsUpd(idxTrial).curves.forceLengthCurveSettings,...
+                             ratFibrilModelsUpd(idxTrial).curves.forceLengthECMHalfCurve,...
+                             ratFibrilModelsUpd(idxTrial).sarcomere,...
+                             ratFibrilModelsUpd(idxTrial).musculotendon.name,...
+                             ratFibrilModelsUpd(idxTrial).curves.setTitinSlackLengthToZero,...
+                             ratFibrilModelsUpd(idxTrial).curves.useWLCTitinModel,...
+                             ratFibrilModelsUpd(idxTrial).curves.flag_createTwoSidedCurves,...
+                             ratFibrilModelsUpd(idxTrial).curves.flag_computeCurveIntegrals,...
+                             ratFibrilModelsUpd(idxTrial).curves.flag_useElasticIgD,...
+                             ratFibrilModelsUpd(idxTrial).sarcomere.titinModelType,... 
+                             projectFolders,...
+                             ratFibrilModelsUpd(idxTrial).curves.flag_useOctave);                
             case 'simulate'
                 %nothing to do here.
             otherwise
@@ -194,6 +227,17 @@ function [optError,optErrorValues, figDebugFitting,...
         
         loopTolerance = min(benchConfig.relTol,benchConfig.absTol)/100;
         
+        %%
+        % Evaluate the cost
+        %%
+
+        exactEvaluation               =0;
+        approximationByInitialization =1;
+        approximationByStateSetting   =2;
+        approximationMinimal          =3;
+
+        flag_compareEvaluationMethods=1;
+
         %
         % Initialization 
         %
@@ -217,8 +261,11 @@ function [optError,optErrorValues, figDebugFitting,...
                     ratFibrilModelsUpd(idxTrial).musculotendon,...
                     ratFibrilModelsUpd(idxTrial).sarcomere,...
                     ratFibrilModelsUpd(idxTrial).curves,...
-                    modelConfig);
+                    modelConfig);  
 
+        %
+        % Create the derivative evaluation function
+        %
         muscleState0                = mtInfo.state.value;
         muscleState0(3,1)           = muscleState0(3,1) ...
             + ratFibrilModelsUpd(idxTrial).sarcomere.l1HNOffset;
@@ -229,39 +276,259 @@ function [optError,optErrorValues, figDebugFitting,...
         
         benchConfig.minimumActivation    = 0;
         benchConfig.name                 = 'Vexat';
-        benchConfig.eventFcn             = [];            
-        
-        calcMillard2023VexatMuscleInfoFcn = ...
-             @(activationState1,pathState2,mclState3) ...
-             calcMillard2023VexatMuscleInfo(    ...
-                activationState1,...
-                pathState2,...
-                mclState3,...
-                ratFibrilModelsUpd(idxTrial).musculotendon,...
-                ratFibrilModelsUpd(idxTrial).sarcomere,...
-                ratFibrilModelsUpd(idxTrial).curves,...
-                modelConfig);
-        
-        %
-        % Run the simulation
-        %
-        idx                     = idxTrial;
-        flag_appendEnergetics   = 0;
-        flag_useOctave          = 0;
-        
+        benchConfig.eventFcn             = [];      
         benchConfig.pathFcn               = pathLengthFcn;
-        benchConfig.excitationFcn         = excitationFcn;             
-        benchRecord = runPrescribedLengthActivationSimulation2025(...
-                                   calcMillard2023VexatMuscleInfoFcn,...
-                                   [],...
-                                   benchConfig,...
-                                   benchRecord,...
-                                   idx, ...
-                                   numberOfSimulations,...
-                                   flag_appendEnergetics,...
-                                   flag_useOctave);
+        benchConfig.excitationFcn         = excitationFcn;          
+        
+       
+        %%
+        %
+        % Evalaute the model
+        %
+        %%
+        flag_compareEvaluationMethods=0;
+        benchRecordApprox= [];
+        benchRecordExact = [];
+        durationApprox=0;
+        durationExact=0;
 
-        %fprintf('%i / %i\n', idx, numberOfSimulations);  
+
+        if(strcmp(evaluationMethod,'approximationByStateCalculationMinimal'))
+
+          tstart=tic;
+          nPts = 100;
+          timeVector = [0:(1/(nPts-1)):1]'.*(timeRampEnd-timeRampStart)...
+                       + timeRampStart;  
+          activationState0=[0,1];
+          calcStateDerFcn = ...
+            @(argt, argState)calcApproximationMillard2023VexatMuscleInfo(...
+                              argt,...
+                              argState,...
+                              muscleState0,...           
+                              activationState0,...                                            
+                              pathLengthFcn, ... 
+                              pathState0,...
+                              ratFibrilModelsUpd(idxTrial).musculotendon,...
+                              ratFibrilModelsUpd(idxTrial).sarcomere,...
+                              ratFibrilModelsUpd(idxTrial).curves,...
+                              modelConfig,...
+                              'quasiStaticSkinnedFiberApproximation');
+          [t,y]=ode15s(calcStateDerFcn,timeVector,muscleState0(3));
+
+          if(isempty(benchRecord))
+            benchRecord.normFiberForce=zeros(nPts,numberOfSimulations);
+            benchRecord.normFiberLength=zeros(nPts,numberOfSimulations);
+          end
+          
+          assert(sum(abs(t-timeVector))<1e-6);
+
+          for idxTime=1:1:nPts
+
+            [muscleStateDerivativeUpd, mtInfoUpd] ...
+              = calcApproximationMillard2023VexatMuscleInfo(...
+                    timeVector(idxTime),...
+                    y(idxTime),...
+                    muscleState0,...           
+                    activationState0,...                                            
+                    pathLengthFcn, ... 
+                    pathState0,...
+                    ratFibrilModelsUpd(idxTrial).musculotendon,...
+                    ratFibrilModelsUpd(idxTrial).sarcomere,...
+                    ratFibrilModelsUpd(idxTrial).curves,...
+                    modelConfig,...
+                    'quasiStaticSkinnedFiberApproximation');
+
+            benchRecord.normFiberForce(idxTime,idxTrial)= ...
+              mtInfoUpd.muscleDynamicsInfo.normFiberForce;
+            benchRecord.normFiberLength(idxTime,idxTrial)= ...
+              mtInfoUpd.muscleDynamicsInfo.normFiberLength;              
+          end
+
+          durationApprox=toc(tstart);
+          if(flag_compareEvaluationMethods==1)
+            benchRecordApprox=benchRecord;
+            fprintf('\n%1.3fs\tApprox-by-minimal-state-calculation simulation time\n',...
+                    durationApprox);
+          end
+        end
+
+        if(strcmp(evaluationMethod,'approximationByStateCalculation'))
+          tstart=tic;
+          nPts = 100;
+          timeVector = [0:(1/(nPts-1)):1]'.*(timeRampEnd-timeRampStart)...
+                       + timeRampStart;           
+          mtInfoUpd=mtInfo;        
+
+          for idxTime =1:1:nPts
+            activationStateUpd    = [0;excitationFcn(timeVector(idxTime))];
+            pathStateUpd          = pathLengthFcn(timeVector(idxTime));
+            muscleStateUpd        = zeros(nStates,1);
+          
+
+            muscleStateUpd = mtInfo.state.value;
+            muscleStateUpd(1) = pathStateUpd(1)*0.5;
+            muscleStateUpd(2) = muscleState0(2)...
+                + (pathStateUpd(2)-pathState0(2))*0.5;
+            modelConfig.initializeState =0;
+
+            mtInfoUpd= calcMillard2023VexatMuscleInfo(    ...
+                        activationStateUpd,...
+                        pathStateUpd,...
+                        muscleStateUpd,...
+                        ratFibrilModelsUpd(idxTrial).musculotendon,...
+                        ratFibrilModelsUpd(idxTrial).sarcomere,...
+                        ratFibrilModelsUpd(idxTrial).curves,...
+                        modelConfig);    
+
+            benchRecord = updateMillard2023VexatMuscleSimulationRecord(...
+                         mtInfoUpd,...
+                         benchConfig,...
+                         benchRecord,...
+                         idxTime,...
+                         idxTrial,...
+                         numberOfSimulations); 
+
+            falN = mtInfoUpd.muscleLengthInfo.fiberActiveForceLengthMultiplier;
+            fvN  = mtInfoUpd.fiberVelocityInfo.fiberForceVelocityMultiplier;
+            f2N = mtInfoUpd.muscleDynamicsInfo.normTitin2Force;
+
+            benchRecord.normFiberForce(idxTime,idxTrial) = falN*fvN+f2N;
+              
+%             if(idxTime==1)
+%             fprintf('idxTrial\tlp\tvp\tlaHN\tvceN\t\tflN\tfvN\tf2N\n')
+%             end
+%             fprintf('%i.\t%1.3f\t%1.3f\t%1.3f\t%1.3f\t\t%1.3f\t%1.3f\t%1.3f\n',...
+%               idxTime,...
+%               mtInfoUpd.muscleLengthInfo.pathLength,...
+%               mtInfoUpd.muscleLengthInfo.pathLengthDerivative,...
+%               mtInfoUpd.muscleLengthInfo.normFiberSlidingLength,...
+%               mtInfoUpd.muscleLengthInfo.normFiberSlidingVelocity,...
+%               falN,fvN,f2N);
+
+          end
+          durationApprox=toc(tstart);
+          if(flag_compareEvaluationMethods==1)
+            benchRecordApprox=benchRecord;
+            fprintf('\n%1.3fs\tApprox-by-state-calculation simulation time\n',...
+                    durationApprox);
+          end
+        end
+
+        if(strcmp(evaluationMethod,'approximationByInitialization'))  
+          tstart=tic;
+          nPts = 100;
+          timeVector = [0:(1/(nPts-1)):1]'.*(timeRampEnd-timeRampStart)...
+                       + timeRampStart;  
+          mtInfoUpd=mtInfo;              
+          
+          for idxTime =1:1:nPts
+            activationStateUpd    = [0;excitationFcn(timeVector(idxTime))];
+            pathStateUpd          = pathLengthFcn(timeVector(idxTime));
+            muscleStateUpd        = zeros(nStates,1);
+          
+            modelConfig.initializeState =1;
+
+
+            mtInfoUpd = calcMillard2023VexatMuscleInfo(...
+                        activationStateUpd,...
+                        pathStateUpd,...
+                        muscleStateUpd,...
+                        ratFibrilModelsUpd(idxTrial).musculotendon,...
+                        ratFibrilModelsUpd(idxTrial).sarcomere,...
+                        ratFibrilModelsUpd(idxTrial).curves,...
+                        modelConfig);  
+
+            %Set the titin state back to the starting value
+            muscleStateUpd = mtInfoUpd.state.value;
+            muscleStateUpd(3,1) = muscleState0(3,1);
+
+            modelConfig.initializeState =0;
+
+            mtInfoUpd= calcMillard2023VexatMuscleInfo(    ...
+                        activationStateUpd,...
+                        pathStateUpd,...
+                        muscleStateUpd,...
+                        ratFibrilModelsUpd(idxTrial).musculotendon,...
+                        ratFibrilModelsUpd(idxTrial).sarcomere,...
+                        ratFibrilModelsUpd(idxTrial).curves,...
+                        modelConfig);  
+
+            
+
+            benchRecord = updateMillard2023VexatMuscleSimulationRecord(...
+                         mtInfoUpd,...
+                         benchConfig,...
+                         benchRecord,...
+                         idxTime,...
+                         idxTrial,...
+                         numberOfSimulations);
+
+          end
+          durationApprox=toc(tstart);
+          if(flag_compareEvaluationMethods==1)
+            benchRecordApprox=benchRecord;
+            fprintf('\n%1.3fs\tApprox-by-initialization simulation time\n',...
+                    durationApprox);
+          end          
+        end 
+        if(strcmp(evaluationMethod,'simulateFullModel') ...
+            || flag_compareEvaluationMethods==1)
+          tstart=tic;
+          calcMillard2023VexatMuscleInfoFcn = ...
+               @(activationState1,pathState2,mclState3) ...
+               calcMillard2023VexatMuscleInfo(    ...
+                  activationState1,...
+                  pathState2,...
+                  mclState3,...
+                  ratFibrilModelsUpd(idxTrial).musculotendon,...
+                  ratFibrilModelsUpd(idxTrial).sarcomere,...
+                  ratFibrilModelsUpd(idxTrial).curves,...
+                  modelConfig);           
+            %
+            % Run the simulation
+            %
+
+            flag_appendEnergetics   = 0;
+            flag_useOctave          = 0;
+                       
+            tstart=tic;
+            benchRecord = runPrescribedLengthActivationSimulation2025(...
+                                       calcMillard2023VexatMuscleInfoFcn,...
+                                       [],...
+                                       benchConfig,...
+                                       benchRecord,...
+                                       idxTrial, ...
+                                       numberOfSimulations,...
+                                       flag_appendEnergetics,...
+                                       flag_useOctave);
+            durationExact=toc(tstart);
+            if(flag_compareEvaluationMethods==1)
+              benchRecordExact=benchRecord;
+              fprintf('\n%1.3fs\tFull-model simulation time\n',durationExact);
+            end
+        end
+        
+               
+        if(flag_compareEvaluationMethods==1 ...
+            && ~isempty(benchRecordExact) ...
+            && ~isempty(benchRecordApprox))
+
+          figComp=figure;
+            plot(benchRecordExact.normFiberLength,...
+                 benchRecordExact.normFiberForce,...
+                 '-k',...
+                 'DisplayName','Exact');            
+            hold on;
+            plot(benchRecordApprox.normFiberLength,...
+                 benchRecordApprox.normFiberForce,...
+                 '-b',...
+                 'DisplayName','Approximate');            
+            hold on;
+            xlabel('Norm. Length');
+            ylabel('Norm. Force');
+            here=1;
+            
+        end
 
         switch optParams.name
             case 'responseTimeScaling'
@@ -279,8 +546,8 @@ function [optError,optErrorValues, figDebugFitting,...
                 yFitV = zeros(npts,1);
                 yStdV = zeros(npts,1);
                 for k=1:1:npts
-                    lceN  = benchRecord.normFiberLength(k,idx).*lceOptMdl;
-                    fN    = benchRecord.normFiberForce(k,idx);
+                    lceN  = benchRecord.normFiberLength(k,idxTrial).*lceOptMdl;
+                    fN    = benchRecord.normFiberForce(k,idxTrial);
                     
                     expfN = interp1(expLceU,...
                                     expfNU,...
@@ -295,28 +562,35 @@ function [optError,optErrorValues, figDebugFitting,...
                     nerrV(k,1) = (expfN-fN)/expStdfN;
 
                 end
-                if(isempty(optErrorValues))
-                    optErrorValues.x    = zeros(npts,3);                    
-                    optErrorValues.y    = zeros(npts,3);
-                    optErrorValues.yFit   = zeros(npts,3);
-                    optErrorValues.yErr   = zeros(npts,3);
-                    optErrorValues.yStd   = zeros(npts,3);
-                    optErrorValues.yNErr  = zeros(npts,3);
-                    optErrorValues.rmse   = zeros(1,3);
-                    optErrorValues.nrmse  = zeros(1,3);
+
+                n = optParams.exp(1).x;
+                for idxTrial=1:1:length(optParams.exp)
+                  assert(length(optParams.exp(idxTrial).x)==n);
                 end
-                optErrorValues.x(:,idx) = ...
-                    benchRecord.normFiberLength(:,idx).*lceOptMdl;
-                optErrorValues.y(:,idx) = yV;
-                optErrorValues.yFit(:,idx) = yFitV;
-                optErrorValues.yErr(:,idx) = errV;
-                optErrorValues.yStd(:,idx) = yStdV;
-                optErrorValues.yNErr(:,idx)= nerrV;   
-                optErrorValues.rmse(1,idx) = ...
-                  sqrt(mean(optErrorValues.yErr(:,idx).^2));
-                optErrorValues.nrmse(1,idx) = ...
-                  sqrt(mean(optErrorValues.yNErr(:,idx).^2));
-                optError = optError+optErrorValues.nrmse(1,idx);                
+            
+                if(isempty(optErrorValues))
+                  optErrorValues.x      = zeros(npts,numberOfSimulations);
+                  optErrorValues.y      = zeros(npts,numberOfSimulations);
+                  optErrorValues.yFit   = zeros(npts,numberOfSimulations);
+                  optErrorValues.yErr   = zeros(npts,numberOfSimulations);    
+                  optErrorValues.rmse   = zeros(1,numberOfSimulations);
+                  optErrorValues.yStd   = zeros(npts,numberOfSimulations);
+                  optErrorValues.yNErr  = zeros(npts,numberOfSimulations);
+                  optErrorValues.nrmse  = zeros(1,numberOfSimulations);
+                end
+
+                optErrorValues.x(:,idxTrial) = ...
+                    benchRecord.normFiberLength(:,idxTrial).*lceOptMdl;
+                optErrorValues.y(:,idxTrial) = yV;
+                optErrorValues.yFit(:,idxTrial) = yFitV;
+                optErrorValues.yErr(:,idxTrial) = errV;
+                optErrorValues.yStd(:,idxTrial) = yStdV;
+                optErrorValues.yNErr(:,idxTrial)= nerrV;   
+                optErrorValues.rmse(1,idxTrial) = ...
+                  sqrt(mean(optErrorValues.yErr(:,idxTrial).^2));
+                optErrorValues.nrmse(1,idxTrial) = ...
+                  sqrt(mean(optErrorValues.yNErr(:,idxTrial).^2));
+                optError = optError+optErrorValues.nrmse(1,idxTrial);                
             case 'xeStiffnessDampingScaling'
                 %[expLceU,iq] = unique(expTRSS2017.activeLengtheningData(idxTrial).x);
                 %expfNU = expTRSS2017.activeLengtheningData(idxTrial).y(iq);
@@ -334,8 +608,8 @@ function [optError,optErrorValues, figDebugFitting,...
                 yStdV = zeros(npts,1);
                 
                 for k=1:1:npts
-                    lceN = benchRecord.normFiberLength(k,idx).*lceOptMdl;
-                    fN   = benchRecord.normFiberForce(k,idx);
+                    lceN = benchRecord.normFiberLength(k,idxTrial).*lceOptMdl;
+                    fN   = benchRecord.normFiberForce(k,idxTrial);
                     
                     expfN = interp1(expLceU,...
                                     expfNU,...
@@ -350,36 +624,38 @@ function [optError,optErrorValues, figDebugFitting,...
                     errV(k,1) = expfN-fN;
                     nerrV(k,1)= (expfN-fN)/expStdfN;
                 end
+
                 if(isempty(optErrorValues))
-                  optErrorValues.x     = zeros(npts,3);
-                    optErrorValues.y     = zeros(npts,3);
-                    optErrorValues.yFit  = zeros(npts,3);
-                    optErrorValues.yErr  = zeros(npts,3);
-                    optErrorValues.yStd  = zeros(npts,3);
-                    optErrorValues.yNErr = zeros(npts,3);
-                    optErrorValues.rmse   = zeros(1,3);
-                    optErrorValues.nrmse  = zeros(1,3);
-                end
-                optErrorValues.x(:,idx) = ...
-                    benchRecord.normFiberLength(:,idx).*lceOptMdl;
-                optErrorValues.y(:,idx)     = yV; 
-                optErrorValues.yFit(:,idx)  = yFitV; 
-                optErrorValues.yErr(:,idx)  = errV;
-                optErrorValues.yStd(:,idx)  = yStdV;
-                optErrorValues.yNErr(:,idx) = nerrV;
-                optErrorValues.rmse(1,idx)  = ...
-                  sqrt(mean(optErrorValues.yErr(:,idx).^2));
-                optErrorValues.nrmse(1,idx) = ...
-                  sqrt(mean(optErrorValues.yNErr(:,idx).^2));
+                  optErrorValues.x      = zeros(npts,numberOfSimulations);
+                  optErrorValues.y      = zeros(npts,numberOfSimulations);
+                  optErrorValues.yFit   = zeros(npts,numberOfSimulations);
+                  optErrorValues.yErr   = zeros(npts,numberOfSimulations);    
+                  optErrorValues.rmse   = zeros(1,numberOfSimulations);
+                  optErrorValues.yStd   = zeros(npts,numberOfSimulations);
+                  optErrorValues.yNErr  = zeros(npts,numberOfSimulations);
+                  optErrorValues.nrmse  = zeros(1,numberOfSimulations);
+                end                
+
+                optErrorValues.x(:,idxTrial) = ...
+                    benchRecord.normFiberLength(:,idxTrial).*lceOptMdl;
+                optErrorValues.y(:,idxTrial)     = yV; 
+                optErrorValues.yFit(:,idxTrial)  = yFitV; 
+                optErrorValues.yErr(:,idxTrial)  = errV;
+                optErrorValues.yStd(:,idxTrial)  = yStdV;
+                optErrorValues.yNErr(:,idxTrial) = nerrV;
+                optErrorValues.rmse(1,idxTrial)  = ...
+                  sqrt(mean(optErrorValues.yErr(:,idxTrial).^2));
+                optErrorValues.nrmse(1,idxTrial) = ...
+                  sqrt(mean(optErrorValues.yNErr(:,idxTrial).^2));
                 
-                optError = optError+optErrorValues.nrmse(1,idx);
+                optError = optError+optErrorValues.nrmse(1,idxTrial);
 
             case 'QToF'
                lopt = ratFibrilModelsUpd(idxTrial).sarcomere.optimalSarcomereLength;
 
                x0N = optParams.exp(idxTrial).x(1,1)/lopt;
                x1N = optParams.exp(idxTrial).x(end)/lopt;
-               idx0 = find(benchRecord.normFiberLength(:,idx)<x0N,1,'last');
+               idx0 = find(benchRecord.normFiberLength(:,idxTrial)<x0N,1,'last');
                idx1 = size(benchRecord.normFiberLength,1);
 
                %
@@ -391,41 +667,47 @@ function [optError,optErrorValues, figDebugFitting,...
 
                 
                for i=1:1:length(mdlX)
-                   mdlY(i,1)=interp1(benchRecord.normFiberLength(idx0:idx1,idx).*lopt,...
-                                     benchRecord.normFiberForce(idx0:idx1,idx),...
+                   mdlY(i,1)=interp1(benchRecord.normFiberLength(idx0:idx1,idxTrial).*lopt,...
+                                     benchRecord.normFiberForce(idx0:idx1,idxTrial),...
                                      mdlX(i,1));                   
                end
 
-               if(isempty(optErrorValues))
-                 optErrorValues.x     = zeros(length(mdlX),3);
-                 optErrorValues.y     = zeros(length(mdlX),3);
-                 optErrorValues.yFit  = zeros(length(mdlX),3);
-                 optErrorValues.yErr  = zeros(length(mdlX),3);
-                 optErrorValues.yStd  = zeros(length(mdlX),3);
-                 optErrorValues.yNErr = zeros(length(mdlX),3);
-                 optErrorValues.rmse  = zeros(1,3);
-                 optErrorValues.nrmse = zeros(1,3);
-
+               n=length(optParams.exp(idxTrial).x);
+               for i=1:1:length(optParams.exp)
+                 assert(length(optParams.exp(i).x)==n);
                end
-               optErrorValues.x(:,idx)      = mdlX;
-               optErrorValues.y(:,idx)      = optParams.exp(idxTrial).y;
-               optErrorValues.yStd(:,idx)   = optParams.exp(idxTrial).yStd;
-               optErrorValues.yFit(:,idx)   = mdlY;
-               optErrorValues.yErr(:,idx)   = ...
+
+               if(isempty(optErrorValues))
+                 optErrorValues.x      = zeros(n,numberOfSimulations);
+                 optErrorValues.y      = zeros(n,numberOfSimulations);
+                 optErrorValues.yFit   = zeros(n,numberOfSimulations);
+                 optErrorValues.yErr   = zeros(n,numberOfSimulations);    
+                 optErrorValues.rmse   = zeros(1,numberOfSimulations);
+                 optErrorValues.yStd   = zeros(n,numberOfSimulations);
+                 optErrorValues.yNErr  = zeros(n,numberOfSimulations);
+                 optErrorValues.nrmse  = zeros(1,numberOfSimulations);
+               end
+
+
+               optErrorValues.x(:,idxTrial)      = mdlX;
+               optErrorValues.y(:,idxTrial)      = optParams.exp(idxTrial).y;
+               optErrorValues.yStd(:,idxTrial)   = optParams.exp(idxTrial).yStd;
+               optErrorValues.yFit(:,idxTrial)   = mdlY;
+               optErrorValues.yErr(:,idxTrial)   = ...
                  (mdlY - optParams.exp(idxTrial).y); 
-               optErrorValues.yNErr(:,idx)  = ...
-                 optErrorValues.yErr(:,idx) ...
+               optErrorValues.yNErr(:,idxTrial)  = ...
+                 optErrorValues.yErr(:,idxTrial) ...
                  ./optParams.exp(idxTrial).yStd; 
-                optErrorValues.rmse(1,idx)  = ...
-                  sqrt(mean(optErrorValues.yErr(:,idx).^2));
-                optErrorValues.nrmse(1,idx) = ...
-                  sqrt(mean(optErrorValues.yNErr(:,idx).^2));               
+                optErrorValues.rmse(1,idxTrial)  = ...
+                  sqrt(mean(optErrorValues.yErr(:,idxTrial).^2));
+                optErrorValues.nrmse(1,idxTrial) = ...
+                  sqrt(mean(optErrorValues.yNErr(:,idxTrial).^2));               
                
                %meanStd  = mean(optParams.exp(idxTrial).yStd);
                %nrmse    = sqrt(mean((mdlY - optParams.exp(idxTrial).y).^2)) ...
                %           /meanStd;
                
-               optError = optError+optErrorValues.nrmse(1,idx);                       
+               optError = optError+optErrorValues.nrmse(1,idxTrial);                       
             case 'QToK'
 
                assert(0,['Error: QToK is out of date. The slope of every',...
@@ -438,7 +720,7 @@ function [optError,optErrorValues, figDebugFitting,...
 
                x0N = optParams.exp(idxTrial).x(1,1)/lopt;
                x1N = optParams.exp(idxTrial).x(end)/lopt;
-               idx0 = find(benchRecord.normFiberLength(:,idx)<x0N,1,'last');
+               idx0 = find(benchRecord.normFiberLength(:,idxTrial)<x0N,1,'last');
                idx1 = size(benchRecord.normFiberLength,1);
 
                %
@@ -449,8 +731,8 @@ function [optError,optErrorValues, figDebugFitting,...
                mdlY = zeros(size(optParams.exp(idxTrial).x));
 
                for i=1:1:length(mdlX)
-                   mdlY(i,1)=interp1(benchRecord.normFiberLength(idx0:idx1,idx).*lopt,...
-                                     benchRecord.normFiberForce(idx0:idx1,idx),...
+                   mdlY(i,1)=interp1(benchRecord.normFiberLength(idx0:idx1,idxTrial).*lopt,...
+                                     benchRecord.normFiberForce(idx0:idx1,idxTrial),...
                                      mdlX(i,1));                   
                end
                 
@@ -465,15 +747,23 @@ function [optError,optErrorValues, figDebugFitting,...
                %
                % Calculate the error as the squared difference between the 
                % two slopes
-               %              
-               if(isempty(optErrorValues))
-                 optErrorValues.x = zeros(1,3);
-                 optErrorValues.y = zeros(1,3);
+               %    
+               n=length(optParams.exp(idxTrial).x);
+               for i=1:1:length(optParams.exp)
+                 assert(length(optParams.exp(i).x)==n);
                end
-               optErrorValues.x(:,idx) = [min(mdlX);max(mdlX)];                              
-               optErrorValues.y(:,idx)      = optParams.exp(idxTrial).dydx;
-               optErrorValues.yFit(:,idx)   = mdlSlope;
-               optErrorValues.yErr(:,idx)   = (mdlSlope-optParams.exp(idxTrial).dydx);               
+               
+               if(isempty(optErrorValues))
+                 optErrorValues.x      = zeros(n,numberOfSimulations);
+                 optErrorValues.y      = zeros(n,numberOfSimulations);
+                 optErrorValues.yFit   = zeros(n,numberOfSimulations);
+                 optErrorValues.yErr   = zeros(n,numberOfSimulations);    
+               end
+
+               optErrorValues.x(:,idxTrial) = [min(mdlX);max(mdlX)];                              
+               optErrorValues.y(:,idxTrial)      = optParams.exp(idxTrial).dydx;
+               optErrorValues.yFit(:,idxTrial)   = mdlSlope;
+               optErrorValues.yErr(:,idxTrial)   = (mdlSlope-optParams.exp(idxTrial).dydx);               
 
                optError = optError+(mdlSlope-optParams.exp(idxTrial).dydx).^2;
                
@@ -484,7 +774,7 @@ function [optError,optErrorValues, figDebugFitting,...
 
                x0N = optParams.exp(idxTrial).x(1,1)/lopt;
                x1N = optParams.exp(idxTrial).x(end,1)/lopt;
-               idx0 = find(benchRecord.normFiberLength(:,idx)<x0N,1,'last');
+               idx0 = find(benchRecord.normFiberLength(:,idxTrial)<x0N,1,'last');
                idx1 = size(benchRecord.normFiberLength,1);
 
                %
@@ -495,21 +785,27 @@ function [optError,optErrorValues, figDebugFitting,...
                mdlY = zeros(size(optParams.exp(idxTrial).x));
 
                for i=1:1:length(mdlX)
-                   mdlY(i,1)=interp1(benchRecord.normFiberLength(idx0:idx1,idx).*lopt,...
-                                     benchRecord.normFiberForce(idx0:idx1,idx),...
+                   mdlY(i,1)=interp1(benchRecord.normFiberLength(idx0:idx1,idxTrial).*lopt,...
+                                     benchRecord.normFiberForce(idx0:idx1,idxTrial),...
                                      mdlX(i,1));                   
                end
 
-               if(isempty(optErrorValues))
-                 optErrorValues.x     = zeros(length(mdlX),3);
-                 optErrorValues.y     = zeros(length(mdlX),3);
-                 optErrorValues.yFit  = zeros(length(mdlX),3);
-                 optErrorValues.yErr  = zeros(length(mdlX),3);
+               n=length(optParams.exp(idxTrial).x);
+               for i=1:1:length(optParams.exp)
+                 assert(length(optParams.exp(i).x)==n);
                end
-               optErrorValues.x(:,idx) = mdlX;
-               optErrorValues.y(:,idx)      = optParams.exp(idxTrial).y;               
-               optErrorValues.yFit(:,idx)   = mdlY;                              
-               optErrorValues.yErr(:,idx)   = optParams.exp(idxTrial).y-mdlY;               
+               
+               if(isempty(optErrorValues))
+                 optErrorValues.x      = zeros(n,numberOfSimulations);
+                 optErrorValues.y      = zeros(n,numberOfSimulations);
+                 optErrorValues.yFit   = zeros(n,numberOfSimulations);
+                 optErrorValues.yErr   = zeros(n,numberOfSimulations);    
+               end
+
+               optErrorValues.x(:,idxTrial) = mdlX;
+               optErrorValues.y(:,idxTrial)      = optParams.exp(idxTrial).y;               
+               optErrorValues.yFit(:,idxTrial)   = mdlY;                              
+               optErrorValues.yErr(:,idxTrial)   = optParams.exp(idxTrial).y-mdlY;               
 
                optError = optError+sqrt(mean((mdlY - optParams.exp(idxTrial).y).^2));
 
@@ -519,7 +815,7 @@ function [optError,optErrorValues, figDebugFitting,...
 
                x0N = optParams.exp(idxTrial).x(1,1)/lopt;
                x1N = optParams.exp(idxTrial).x(end,1)/lopt;
-               idx0 = find(benchRecord.normFiberLength(:,idx)<x0N,1,'last');
+               idx0 = find(benchRecord.normFiberLength(:,idxTrial)<x0N,1,'last');
                idx1 = size(benchRecord.normFiberLength,1);
 
                %
@@ -530,24 +826,85 @@ function [optError,optErrorValues, figDebugFitting,...
                mdlY = zeros(size(optParams.exp(idxTrial).x));
 
                for i=1:1:length(mdlX)
-                   mdlY(i,1)=interp1(benchRecord.normFiberLength(idx0:idx1,idx).*lopt,...
-                                     benchRecord.normFiberForce(idx0:idx1,idx),...
+                   mdlY(i,1)=interp1(benchRecord.normFiberLength(idx0:idx1,idxTrial).*lopt,...
+                                     benchRecord.normFiberForce(idx0:idx1,idxTrial),...
                                      mdlX(i,1));                   
                end
 
-               if(isempty(optErrorValues))
-                 optErrorValues.x = zeros(length(mdlX),3);
-                 optErrorValues.y = zeros(length(mdlX),3);
-                 optErrorValues.yFit = zeros(length(mdlX),3);
-                 optErrorValues.yErr = zeros(length(mdlX),3);
+               n=length(optParams.exp(idxTrial).x);
+               for i=1:1:length(optParams.exp)
+                 assert(length(optParams.exp(i).x)==n);
                end
-               optErrorValues.x(:,idx) = mdlX;
-               optErrorValues.y(:,idx)      = optParams.exp(idxTrial).y;               
-               optErrorValues.yFit(:,idx)   = mdlY;                              
-               optErrorValues.yErr(:,idx)   = optParams.exp(idxTrial).y-mdlY;               
+               
+               if(isempty(optErrorValues))
+                 optErrorValues.x      = zeros(n,numberOfSimulations);
+                 optErrorValues.y      = zeros(n,numberOfSimulations);
+                 optErrorValues.yFit   = zeros(n,numberOfSimulations);
+                 optErrorValues.yErr   = zeros(n,numberOfSimulations);    
+               end
+
+               optErrorValues.x(:,idxTrial) = mdlX;
+               optErrorValues.y(:,idxTrial)      = optParams.exp(idxTrial).y;               
+               optErrorValues.yFit(:,idxTrial)   = mdlY;                              
+               optErrorValues.yErr(:,idxTrial)   = optParams.exp(idxTrial).y-mdlY;               
 
                optError = optError+sqrt(mean((mdlY - optParams.exp(idxTrial).y).^2));
 
+            case 'FpeQToF'
+               lopt = ratFibrilModelsUpd(idxTrial).sarcomere.optimalSarcomereLength;
+
+               x0N = optParams.exp(idxTrial).x(1,1)/lopt;
+               x1N = optParams.exp(idxTrial).x(end)/lopt;
+               idx0 = find(benchRecord.normFiberLength(:,idxTrial)<x0N,1,'last');
+               idx1 = size(benchRecord.normFiberLength,1);
+
+               %
+               % Sample the simulation record at the same lengths as the
+               % experimental data
+               %
+               mdlX = optParams.exp(idxTrial).x;               
+               mdlY = zeros(size(optParams.exp(idxTrial).x));
+
+                
+               for i=1:1:length(mdlX)
+                   mdlY(i,1)=...
+                     interp1(benchRecord.normFiberLength(idx0:idx1,idxTrial).*lopt,...
+                             benchRecord.normFiberForce(idx0:idx1,idxTrial),...
+                             mdlX(i,1));                   
+               end
+
+               n=length(optParams.exp(idxTrial).x);
+               for i=1:1:length(optParams.exp)
+                 assert(length(optParams.exp(i).x)==n);
+               end
+               
+               if(isempty(optErrorValues))
+                 optErrorValues.x      = zeros(n,numberOfSimulations);
+                 optErrorValues.y      = zeros(n,numberOfSimulations);
+                 optErrorValues.yFit   = zeros(n,numberOfSimulations);
+                 optErrorValues.yErr   = zeros(n,numberOfSimulations);    
+                 optErrorValues.rmse   = zeros(1,numberOfSimulations);
+                 optErrorValues.yStd   = zeros(n,numberOfSimulations);
+                 optErrorValues.yNErr  = zeros(n,numberOfSimulations);
+                 optErrorValues.nrmse  = zeros(1,numberOfSimulations);
+               end
+
+               optErrorValues.x(:,idxTrial)      = mdlX;
+               optErrorValues.y(:,idxTrial)      = optParams.exp(idxTrial).y;
+               optErrorValues.yStd(:,idxTrial)   = optParams.exp(idxTrial).yStd;
+               optErrorValues.yFit(:,idxTrial)   = mdlY;
+               optErrorValues.yErr(:,idxTrial)   = ...
+                 (mdlY - optParams.exp(idxTrial).y); 
+               optErrorValues.yNErr(:,idxTrial)  = ...
+                 optErrorValues.yErr(:,idxTrial) ...
+                 ./optParams.exp(idxTrial).yStd; 
+                optErrorValues.rmse(1,idxTrial)  = ...
+                  sqrt(mean(optErrorValues.yErr(:,idxTrial).^2));
+                optErrorValues.nrmse(1,idxTrial) = ...
+                  sqrt(mean(optErrorValues.yNErr(:,idxTrial).^2));               
+               
+               
+               optError = optError+optErrorValues.nrmse(1,idxTrial); 
 
             case 'simulate'
                 optError=nan;
@@ -565,86 +922,100 @@ function [optError,optErrorValues, figDebugFitting,...
     
             switch optParams.name
                 case 'responseTimeScaling'
-                    %txtName = expTRSS2017.activeLengtheningData(idx).seriesName;
+                    %txtName = expTRSS2017.activeLengtheningData(idxTrial).seriesName;
                     %i0=strfind(txtName,'Exp.');
                     %txtName(1,i0:4)='Sim.';
-                    seriesName = expTRSS2017Raw.trials{idx};
+                    seriesName = expTRSS2017Raw.trials{idxTrial};
                     txtName = ['Sim. ', seriesName];
 
-                    plot(benchRecord.normFiberLength(:,idx).*lceOptMdl,...
-                         benchRecord.normCrossBridgeForceAlongTendon(:,idx),...
-                         '-','Color',lineColorsSimTRSS2017(idx,:),...
+                    plot(benchRecord.normFiberLength(:,idxTrial).*lceOptMdl,...
+                         benchRecord.normCrossBridgeForceAlongTendon(:,idxTrial),...
+                         '-','Color',lineColorsSimTRSS2017(idxTrial,:),...
                          'DisplayName',...
                          txtName);
                     hold on;
                     
                 case 'xeStiffnessDampingScaling'
-                    %txtName = expTRSS2017.activeLengtheningData(idx).seriesName;
+                    %txtName = expTRSS2017.activeLengtheningData(idxTrial).seriesName;
                     %i0=strfind(txtName,'Exp.');
                     %txtName(1,i0:4)='Sim.';
-                    seriesName = expTRSS2017Raw.trials{idx};
+                    seriesName = expTRSS2017Raw.trials{idxTrial};
                     txtName = ['Sim. ', seriesName];
             
-                    plot(benchRecord.normFiberLength(:,idx).*lceOptMdl,...
-                         benchRecord.normCrossBridgeForceAlongTendon(:,idx),...
-                         '-','Color',lineColorsSimTRSS2017(idx,:),...
+                    plot(benchRecord.normFiberLength(:,idxTrial).*lceOptMdl,...
+                         benchRecord.normCrossBridgeForceAlongTendon(:,idxTrial),...
+                         '-','Color',lineColorsSimTRSS2017(idxTrial,:),...
                          'DisplayName',...
                          txtName);
                     hold on;
                     
                 case 'QToF'
-                    %txtName = expTRSS2017.activeLengtheningData(idx).seriesName;
+                    %txtName = expTRSS2017.activeLengtheningData(idxTrial).seriesName;
                     %i0=strfind(txtName,'Exp.');
                     %txtName(1,i0:4)='Sim.';
-                    seriesName = expTRSS2017Raw.trials{idx};
+                    seriesName = expTRSS2017Raw.trials{idxTrial};
                     txtName = ['Sim. ', seriesName];            
                     
-                    plot(benchRecord.normFiberLength(:,idx).*lceOptMdl,...
-                         benchRecord.normFiberForce(:,idx),...
-                         '-','Color',lineColorsSimTRSS2017(idx,:),...
+                    plot(benchRecord.normFiberLength(:,idxTrial).*lceOptMdl,...
+                         benchRecord.normFiberForce(:,idxTrial),...
+                         '-','Color',lineColorsSimTRSS2017(idxTrial,:),...
                          'DisplayName',...
                          txtName);
                     hold on;
 
                 case 'QToK'
-                    %txtName = expTRSS2017.activeLengtheningData(idx).seriesName;
+                    %txtName = expTRSS2017.activeLengtheningData(idxTrial).seriesName;
                     %i0=strfind(txtName,'Exp.');
                     %txtName(1,i0:4)='Sim.';
-                    seriesName = expTRSS2017Raw.trials{idx};
+                    seriesName = expTRSS2017Raw.trials{idxTrial};
                     txtName = ['Sim. ', seriesName];                    
             
-                    plot(benchRecord.normFiberLength(:,idx).*lceOptMdl,...
-                         benchRecord.normFiberForce(:,idx),...
-                         '-','Color',lineColorsSimTRSS2017(idx,:),...
+                    plot(benchRecord.normFiberLength(:,idxTrial).*lceOptMdl,...
+                         benchRecord.normFiberForce(:,idxTrial),...
+                         '-','Color',lineColorsSimTRSS2017(idxTrial,:),...
                          'DisplayName',...
                          txtName);
                     hold on;
     
                     
                 case 'f1HNPreload'
-                    %txtName = expTRSS2017.activeLengtheningData(idx).seriesName;
+                    %txtName = expTRSS2017.activeLengtheningData(idxTrial).seriesName;
                     %i0=strfind(txtName,'Exp.');
                     %txtName(1,i0:4)='Sim.';
-                    seriesName = expTRSS2017Raw.trials{idx};
+                    seriesName = expTRSS2017Raw.trials{idxTrial};
                     txtName = ['Sim. ', seriesName];            
                     
-                    plot(benchRecord.normFiberLength(:,idx).*lceOptMdl,...
-                         benchRecord.normFiberForce(:,idx),...
-                         '-','Color',lineColorsSimTRSS2017(idx,:),...
+                    plot(benchRecord.normFiberLength(:,idxTrial).*lceOptMdl,...
+                         benchRecord.normFiberForce(:,idxTrial),...
+                         '-','Color',lineColorsSimTRSS2017(idxTrial,:),...
                          'DisplayName',...
                          txtName);
                     hold on;
     
                 case 'l1HNOffset'
-                    %txtName = expTRSS2017.activeLengtheningData(idx).seriesName;
+                    %txtName = expTRSS2017.activeLengtheningData(idxTrial).seriesName;
                     %i0=strfind(txtName,'Exp.');
                     %txtName(1,i0:4)='Sim.';
-                    seriesName = expTRSS2017Raw.trials{idx};
+                    seriesName = expTRSS2017Raw.trials{idxTrial};
                     txtName = ['Sim. ', seriesName];
 
-                    plot(benchRecord.normFiberLength(:,idx).*lceOptMdl,...
-                         benchRecord.normFiberForce(:,idx),...
-                         '-','Color',lineColorsSimTRSS2017(idx,:),...
+                    plot(benchRecord.normFiberLength(:,idxTrial).*lceOptMdl,...
+                         benchRecord.normFiberForce(:,idxTrial),...
+                         '-','Color',lineColorsSimTRSS2017(idxTrial,:),...
+                         'DisplayName',...
+                         txtName);
+                    hold on;
+
+                case 'FpeQToF'
+                    %txtName = expTRSS2017.activeLengtheningData(idxTrial).seriesName;
+                    %i0=strfind(txtName,'Exp.');
+                    %txtName(1,i0:4)='Sim.';
+                    seriesName = expTRSS2017Raw.trials{idxTrial};
+                    txtName = ['Sim. ', seriesName];            
+                    
+                    plot(benchRecord.normFiberLength(:,idxTrial).*lceOptMdl,...
+                         benchRecord.normFiberForce(:,idxTrial),...
+                         '-','Color',lineColorsSimTRSS2017(idxTrial,:),...
                          'DisplayName',...
                          txtName);
                     hold on;

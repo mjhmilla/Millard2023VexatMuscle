@@ -22,9 +22,10 @@ To run the simulations that are presented in <em>Analysis and simulation of acti
   - Windows 11 Pro + Matlab version 9.13.0.2105380 (R2022b) Update 2
 2. The function main_TomalkaRodeSchumacherSiebert2017_OuterLoop.m requires about 10 minutes to terminate on a 2.80 GHz Intel machine with 32 GB ram, and a SSD.
 3. These simulations generate the following plots found in the paper:
-  - Figure 2 from the paper in <em>output/plots/MuscleCurves/fig_Pub_RatMuscleCurves_TRSS2017_0.pdf</em>
-  - Figure 4 and Figure 5A,B,C in <em>output/structs/plots/TomalkaRodeSchumacherSiebert2017/fig_Sim_TRSS2017_123_Fl_Fv_QToF.pdf</em>
-  - Figure 4 and Figure 5D,E,F in <em>output/structs/plots/TomalkaRodeSchumacherSiebert2017/fig_Sim_TRSS2017_123_Fl_Fv_QToF_i.pdf</em>
+  - Figures 1,6,7A,7B from the paper in <em>output/plots/TomalkaRodeSchumacherSiebert2017/fig_Sim_TRSS2017_123_Fl_Fv_QToF.pdf</em>
+  - Figures 7C, and 7D from the paper in <em>output/plots/TomalkaRodeSchumacherSiebert2017/fig_Sim_TRSS2017_123_Fl_Fv_QToF_i.pdf</em>
+  - Figures 4 and 9 from the paper in <em>output/plots/MuscleCurves/fig_Pub_RatMuscleCurves_TRSS2017_0_Pub.pdf</em>
+  - Figure 2 in <em>output/plots/MuscleCurves/fig_Pub_RatMuscleCurves_TRSS2017_0.pdf</em>
 4. Initial model parameters (before fitting) can be found: 
   - <em>output/structs/FittedModels/ratTRSS2017EDLFibrilActiveTitin_0.mat</em>. 
   - Note that <em>ratTRSS2017EDLFibrilActiveTitin_1.mat</em> and <em>ratTRSS2017EDLFibrilActiveTitin_2.mat</em> are identical to <em>ratTRSS2017EDLFibrilActiveTitin_0.mat</em>
@@ -34,8 +35,8 @@ To run the simulations that are presented in <em>Analysis and simulation of acti
   - Time-series data of the fitted simulations: 
     - <em>output/structs/TomalkaRodeSchumacherSiebert2017/benchRecordVexat_TRSS2017_fitted_123_Fl_Fv_QToF.mat</em>
   - Fitted parameters and error information
-    - <em>output/tables/fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF.tex</em>    
-    - <em>output/structs/fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF.mat</em>  
+    - <em>output/tables/TomalkaRodeSchumacherSiebert2017/fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF.tex</em>   
+    - <em>output/structs/TomalkaRodeSchumacherSiebert2017/fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF.mat</em>  
     - <em>output/structs/fittingLog__123_Fl_Fv_QToF.txt</em>
 6. Outputs related to fitting with a Q value for each trial (Q_1, Q_2, and Q_3). Note that the file names have <em>_i</em> appended
   - Fitted model parameters: 
@@ -43,10 +44,24 @@ To run the simulations that are presented in <em>Analysis and simulation of acti
   - Time-series data of the fitted simulations: 
     - <em>output/structs/TomalkaRodeSchumacherSiebert2017/benchRecordVexat_TRSS2017_fitted_123_Fl_Fv_QToF_i.mat</em>
   - Fitted parameters and error information
-    - <em>output/tables/fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF_i.tex</em>    
-    - <em>output/structs/fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF_i.mat</em>  
-    - <em>output/structs/fittingLog__123_Fl_Fv_QToF_i.txt</em>
-
+    - <em>output/tables/TomalkaRodeSchumacherSiebert2017/fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF_i.tex</em>         
+    - <em>output/structs/TomalkaRodeSchumacherSiebert2017/fittingInfo_ratTRSS2017EDLFibrilActiveTitinFitted_123_Fl_Fv_QToF_i.mat</em>  
+    - <em>output/structs/fittingLog__123_Fl_Fv_QToF_i.txt</em>    
+7. To generate Figure 8:
+  - Open main_TomalkaRodeSchumacherSiebert2017_OuterLoop.m
+  - Set all occurances of 
+      - simConfigInput.manuallySetTitinParameters = 1;
+  - Run main_TomalkaRodeSchumacherSiebert2017_OuterLoop.m.
+  - Note 1: This will over-write all plots, structs, and generated tex files using the manually set titin parameters. Note that these parameters have been identified using optimisation. Due to the structure of the software written for this project it is easiest to update the model and simulations by manually copying these parameters over and re-running the data.
+  - Note 2: To anyone working on the software, both main_CreateRatMuscleModel.m and main_TomalkaRodeSchumacherSiebert2017.m have structs that will manually set the force-length relation of titin that must be manually set to be identical.
+  - Note 3: If you would like to solve for the passive force-length parameters of titin that were used in Figure 8,
+      - Open main_TomalkaRodeSchumacherSiebert2018.m
+      - line 7 update: flag_OuterLoopMode=0;      
+      - line 89 update: fittingConfig.fitQToF=0;
+      - line 94 update: fittingConfig.fitFpeQToF=1; 
+      - Re-run main_TomalkaRodeSchumacherSiebert2018.m
+      - As before, this may overwrite plots/tables/structs produced by this script.
+      
 ## Code overview
 
 Here is a list of files to look at if the implementation interests you:
